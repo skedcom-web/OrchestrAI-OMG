@@ -126,7 +126,7 @@ export interface AuditLog {
   userName: string;
   userRole: string;
   action: string;
-  entityType: 'Asset' | 'User' | 'Ownership' | 'Risk' | 'Decision' | 'Validation' | 'Evidence' | 'Finding' | 'DecisionPackage' | 'ComplianceAssessment' | 'CompliancePackage' | 'KillSwitch' | 'Override' | 'Incident' | 'Retirement' | 'ScheduledReview' | 'CorrectiveAction' | 'GovernanceReviewPackage';
+  entityType: 'Asset' | 'User' | 'Ownership' | 'Risk' | 'Decision' | 'Validation' | 'Evidence' | 'Finding' | 'DecisionPackage' | 'ComplianceAssessment' | 'CompliancePackage' | 'KillSwitch' | 'Override' | 'Incident' | 'Retirement' | 'ScheduledReview' | 'CorrectiveAction' | 'GovernanceReviewPackage' | 'Policy' | 'PolicyMapping' | 'PolicyViolation' | 'ExecutiveReport';
   entityId: string;
   entityName: string;
   details: string;
@@ -598,4 +598,227 @@ export interface RiskHeatmapCell {
   category: string;
   riskLevel: RiskLevel;
   count: number;
+}
+
+// ------------------- PHASE 9 TYPES -------------------
+// Executive Governance Hub & Policy Governance
+
+export type PolicyCategory =
+  | 'Governance Policies'
+  | 'Risk Policies'
+  | 'Security Policies'
+  | 'Privacy Policies'
+  | 'Vendor Policies';
+
+export type PolicyStatus = 'Active' | 'Draft' | 'Under Review' | 'Retired';
+
+export interface Policy {
+  id: string;
+  /** Human-facing policy reference, e.g. POL-GOV-001. */
+  policyRef: string;
+  name: string;
+  category: PolicyCategory;
+  owner: string;
+  ownerRole: string;
+  effectiveDate: string;
+  reviewDate: string;
+  status: PolicyStatus;
+  description: string;
+  /** Mandatory policies produce a violation whenever their control fails. */
+  mandatory: boolean;
+  /** Enforcement rule key used to auto-detect violations from governance state. */
+  enforcementRule?: PolicyEnforcementRule;
+}
+
+/**
+ * Enforcement rules let a policy be evaluated against live governance state
+ * rather than relying on manually logged violations only.
+ */
+export type PolicyEnforcementRule =
+  | 'REQUIRE_FULL_OWNERSHIP'
+  | 'REQUIRE_DECISION_BEFORE_PRODUCTION'
+  | 'REQUIRE_VALIDATION_FOR_HIGH_RISK'
+  | 'REQUIRE_EVIDENCE_FOR_PRODUCTION'
+  | 'REQUIRE_HUMAN_OVERSIGHT_HIGH_RISK'
+  | 'REQUIRE_PERIODIC_REVIEW'
+  | 'REQUIRE_VENDOR_REVIEW';
+
+export type PolicyTargetType =
+  | 'AI Asset'
+  | 'Asset Type'
+  | 'Vendor'
+  | 'Business Unit';
+
+export interface PolicyMapping {
+  id: string;
+  policyId: string;
+  policyName: string;
+  targetType: PolicyTargetType;
+  /** Asset id, asset type name, vendor name or business unit name. */
+  targetId: string;
+  targetName: string;
+  mappedBy: string;
+  mappedDate: string;
+  notes?: string;
+}
+
+export type PolicyViolationStatus =
+  | 'Open'
+  | 'Under Review'
+  | 'Accepted'
+  | 'Remediated'
+  | 'Closed';
+
+export type PolicyViolationSeverity = 'Low' | 'Medium' | 'High' | 'Critical';
+
+export interface PolicyViolation {
+  id: string;
+  policyId: string;
+  policyName: string;
+  violationType: string;
+  assetId: string;
+  assetName: string;
+  severity: PolicyViolationSeverity;
+  owner: string;
+  detectionDate: string;
+  status: PolicyViolationStatus;
+  description: string;
+  remediationNotes?: string;
+  /** Auto-detected violations are derived from live state and cannot be deleted. */
+  autoDetected?: boolean;
+}
+
+/* ---------------------- Governance Scorecards (WS2) ---------------------- */
+
+export interface ScorecardMetric {
+  label: string;
+  value: number;
+  tone: 'success' | 'warning' | 'danger' | 'info' | 'neutral';
+}
+
+export interface GovernanceScorecard {
+  id: 'ownership' | 'risk' | 'validation' | 'evidence' | 'decision';
+  title: string;
+  icon: string;
+  /** 0-100 rollup for this governance dimension. */
+  score: number;
+  metrics: ScorecardMetric[];
+  /** Where an executive goes to act on this scorecard. */
+  actionPath: string;
+}
+
+/* ------------------- Executive Governance Hub (WS1) --------------------- */
+
+export interface AiEstateSummary {
+  totalAssets: number;
+  applications: number;
+  agents: number;
+  models: number;
+  copilots: number;
+  ragSystems: number;
+  thirdPartyAi: number;
+}
+
+export type ExecutiveAlertType =
+  | 'Critical Risk'
+  | 'Missing Ownership'
+  | 'Policy Violation'
+  | 'Expired Review';
+
+export interface ExecutiveAlert {
+  id: string;
+  type: ExecutiveAlertType;
+  severity: PolicyViolationSeverity;
+  assetId: string;
+  assetName: string;
+  message: string;
+  actionPath: string;
+}
+
+export interface GovernanceHealthIndex {
+  score: number;
+  band: 'Strong' | 'Stable' | 'Fragile' | 'Critical';
+  dimensions: { label: string; score: number; weight: number }[];
+}
+
+/* ----------------------- Executive Heatmaps (WS6) ----------------------- */
+
+export interface HeatmapMatrixRow {
+  label: string;
+  icon?: string;
+  cells: Record<RiskLevel, number>;
+  total: number;
+  /** Governance health of this slice, 0-100. */
+  health: number;
+}
+
+/* ---------------------- Governance Insights (WS7) ----------------------- */
+
+export interface TrendPoint {
+  period: string;
+  value: number;
+}
+
+export interface GovernanceTrendSeries {
+  id: string;
+  label: string;
+  icon: string;
+  points: TrendPoint[];
+  /** Positive direction means "up is good". */
+  higherIsBetter: boolean;
+  unit?: string;
+}
+
+export interface ExecutiveInsight {
+  id: string;
+  title: string;
+  detail: string;
+  count: number;
+  severity: PolicyViolationSeverity;
+  actionLabel: string;
+  actionPath: string;
+}
+
+/* ------------------ Board & Regulator Reporting (WS8) ------------------- */
+
+export interface ExecutiveGovernanceReport {
+  id: string;
+  generatedAt: string;
+  generatedBy: string;
+  inventory: AiEstateSummary;
+  riskSummary: Record<RiskLevel, number>;
+  policyCompliance: {
+    totalPolicies: number;
+    activePolicies: number;
+    openViolations: number;
+    complianceRate: number;
+  };
+  decisions: Record<DecisionOutcome, number>;
+  outstandingActions: number;
+  governanceHealthScore: number;
+}
+
+export interface AuditReadinessReport {
+  id: string;
+  generatedAt: string;
+  generatedBy: string;
+  evidenceStatus: { complete: number; missing: number; reviewRequired: number };
+  approvalHistoryCount: number;
+  decisionHistoryCount: number;
+  reviewHistoryCount: number;
+  auditReadinessScore: number;
+}
+
+/* ------------------- Role-Based Executive Views (WS9) ------------------- */
+
+export type ExecutiveViewId = 'cio' | 'cro' | 'compliance' | 'board';
+
+export interface ExecutiveViewDefinition {
+  id: ExecutiveViewId;
+  label: string;
+  audience: string;
+  icon: string;
+  question: string;
+  /** Ordered section keys rendered for this view. */
+  sections: string[];
 }

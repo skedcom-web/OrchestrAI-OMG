@@ -118,7 +118,10 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       '/governance-monitoring', '/governance-alerts', '/review-calendar', '/corrective-actions', '/governance-trends',
       '/users', '/audit-logs',
       // Phase 8 — Governance Operating System
-      '/asset-lifecycle', '/rbac', '/tenant-settings', '/platform-overview'
+      '/asset-lifecycle', '/rbac', '/tenant-settings', '/platform-overview',
+      // Phase 9 — Executive Governance & Policy Governance
+      '/executive-hub', '/governance-scorecards', '/executive-heatmaps', '/governance-insights',
+      '/board-reporting', '/policy-management', '/policy-mapping', '/policy-violations'
     ],
   },
   {
@@ -138,7 +141,10 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       '/governance-monitoring', '/governance-alerts', '/review-calendar', '/corrective-actions', '/governance-trends',
       '/audit-logs',
       // Phase 8 — Governance Operating System
-      '/asset-lifecycle', '/tenant-settings', '/platform-overview'
+      '/asset-lifecycle', '/tenant-settings', '/platform-overview',
+      // Phase 9 — Executive Governance & Policy Governance
+      '/executive-hub', '/governance-scorecards', '/executive-heatmaps', '/governance-insights',
+      '/board-reporting', '/policy-management', '/policy-mapping', '/policy-violations'
     ],
   },
   {
@@ -156,7 +162,10 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       '/operations-center', '/kill-switch', '/override-center', '/incidents', '/operations-dashboard', '/governance-timeline',
       '/governance-monitoring', '/governance-alerts', '/review-calendar', '/corrective-actions', '/governance-trends', '/audit-logs',
       // Phase 8 — Governance Operating System
-      '/asset-lifecycle', '/platform-overview'
+      '/asset-lifecycle', '/platform-overview',
+      // Phase 9 — Executive Governance & Policy Governance
+      '/executive-hub', '/governance-scorecards', '/executive-heatmaps', '/governance-insights',
+      '/policy-management', '/policy-violations'
     ],
   },
   {
@@ -172,7 +181,9 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       '/compliance-center', '/operations-center', '/kill-switch', '/incidents', '/governance-timeline',
       '/governance-monitoring', '/review-calendar', '/corrective-actions',
       // Phase 8 — Governance Operating System
-      '/asset-lifecycle', '/platform-overview'
+      '/asset-lifecycle', '/platform-overview',
+      // Phase 9 — Executive Governance & Policy Governance
+      '/executive-hub', '/policy-management', '/policy-violations'
     ],
   },
   {
@@ -188,7 +199,9 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       '/validation-dashboard', '/decision-intelligence', '/compliance-assessment', '/incidents', '/governance-timeline',
       '/governance-monitoring', '/corrective-actions',
       // Phase 8 — Governance Operating System
-      '/asset-lifecycle', '/platform-overview'
+      '/asset-lifecycle', '/platform-overview',
+      // Phase 9 — Executive Governance & Policy Governance
+      '/governance-scorecards', '/policy-management', '/policy-violations'
     ],
   },
   {
@@ -205,7 +218,10 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       '/operations-center', '/kill-switch', '/override-center', '/incidents', '/operations-dashboard', '/retirement', '/governance-timeline',
       '/governance-monitoring', '/governance-alerts', '/review-calendar', '/corrective-actions', '/governance-trends', '/audit-logs',
       // Phase 8 — Governance Operating System
-      '/asset-lifecycle', '/rbac', '/platform-overview'
+      '/asset-lifecycle', '/rbac', '/platform-overview',
+      // Phase 9 — Executive Governance & Policy Governance
+      '/executive-hub', '/governance-scorecards', '/executive-heatmaps', '/governance-insights',
+      '/board-reporting', '/policy-management', '/policy-mapping', '/policy-violations'
     ],
   },
   {
@@ -219,7 +235,9 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
     allowedNav: [
       '/', '/dashboard', '/assets', '/validation-dashboard', '/decision-dashboard', '/compliance-dashboard', '/operations-dashboard', '/governance-trends',
       // Phase 8 — Governance Operating System
-      '/asset-lifecycle', '/platform-overview'
+      '/asset-lifecycle', '/platform-overview',
+      // Phase 9 — Executive Governance (board observer, read-only surfaces)
+      '/executive-hub', '/governance-scorecards', '/executive-heatmaps', '/governance-insights'
     ],
   },
 ];

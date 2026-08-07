@@ -64,6 +64,89 @@ export const EXECUTIVE_DASHBOARD: NavModule = {
 
 export const NAV_DOMAINS: NavDomain[] = [
   {
+    id: 'executive',
+    label: 'Executive Governance',
+    question: 'Is enterprise AI under control?',
+    icon: '🏛️',
+    accent: '#F59E0B',
+    modules: [
+      {
+        path: '/executive-hub',
+        label: 'Executive Hub',
+        icon: '🏛️',
+        description:
+          'Executive AI governance posture in five minutes, tuned to the CIO, CRO, Compliance or Board lens.',
+        keywords: ['executive', 'cio', 'cro', 'board', 'hub', 'leadership'],
+        badge: 'Phase 9',
+      },
+      {
+        path: '/governance-scorecards',
+        label: 'Governance Scorecards',
+        icon: '🗂️',
+        description:
+          'Ownership, risk, validation, evidence and decision readiness scored across the estate.',
+        keywords: ['scorecard', 'health index', 'readiness', 'score'],
+      },
+      {
+        path: '/executive-heatmaps',
+        label: 'Executive Heatmaps',
+        icon: '🔥',
+        description:
+          'Risk concentration by business unit, AI category and governance lifecycle stage.',
+        keywords: ['heatmap', 'business unit', 'concentration', 'exposure'],
+      },
+      {
+        path: '/governance-insights',
+        label: 'Governance Insights',
+        icon: '💡',
+        description: 'Trends and the shortest path from governance posture to executive action.',
+        keywords: ['insight', 'trend', 'analytics', 'direction'],
+      },
+      {
+        path: '/board-reporting',
+        label: 'Board & Regulator Reporting',
+        icon: '📑',
+        description:
+          'Executive Governance Report and Audit Readiness Report generated from the live record.',
+        keywords: ['board', 'regulator', 'report', 'pack', 'audit readiness'],
+      },
+    ],
+  },
+  {
+    id: 'policy',
+    label: 'Policy Governance',
+    question: 'What rules govern our AI?',
+    icon: '📕',
+    accent: '#EC4899',
+    modules: [
+      {
+        path: '/policy-management',
+        label: 'Policy Registry',
+        icon: '📕',
+        description:
+          'The enterprise AI rulebook: governance, risk, security, privacy and vendor policy.',
+        keywords: ['policy', 'rulebook', 'registry', 'standard'],
+        badge: 'Phase 9',
+      },
+      {
+        path: '/policy-mapping',
+        label: 'Policy Mapping',
+        icon: '🔗',
+        description:
+          'Bind policies to assets, asset types, vendors and business units; coverage is computed.',
+        keywords: ['mapping', 'binding', 'coverage', 'applies to'],
+      },
+      {
+        path: '/policy-violations',
+        label: 'Policy Violations',
+        icon: '🚨',
+        description:
+          'Detected and logged policy breaches through to accepted, remediated or closed.',
+        keywords: ['violation', 'breach', 'non-compliance', 'exception'],
+      },
+    ],
+  },
+  {
     id: 'registry',
     label: 'AI Governance Registry',
     question: 'What AI exists?',
@@ -382,32 +465,6 @@ export interface FutureModule extends NavModule {
 
 export const FUTURE_MODULES: FutureModule[] = [
   {
-    path: '/executive-hub',
-    label: 'Executive Governance Hub',
-    icon: '🌐',
-    phase: 'Phase 9',
-    description: 'Board-level governance narrative, committee packs and executive attestation.',
-    capabilities: [
-      'Board & committee reporting packs',
-      'Executive attestation workflow',
-      'Governance narrative generation',
-      'Cross-domain escalation routing',
-    ],
-  },
-  {
-    path: '/policy-management',
-    label: 'Policy Management',
-    icon: '📕',
-    phase: 'Phase 10',
-    description: 'Authoring, versioning and attestation of enterprise AI policy.',
-    capabilities: [
-      'Policy authoring & versioning',
-      'Policy-to-control mapping',
-      'Attestation & acknowledgement tracking',
-      'Exception and waiver register',
-    ],
-  },
-  {
     path: '/regulatory-compliance-center',
     label: 'Regulatory Compliance Center',
     icon: '🏛️',
@@ -457,12 +514,30 @@ export const EXECUTIVE_NAV: { label: string; modules: NavModule[] }[] = [
     label: 'Executive Surface',
     modules: [
       COMMAND_CENTER,
+      {
+        path: '/executive-hub',
+        label: 'Executive Hub',
+        icon: '🏛️',
+        description: 'Governance posture through the CIO, CRO, Compliance or Board lens.',
+      },
       EXECUTIVE_DASHBOARD,
       {
         path: '/decision-dashboard',
         label: 'Decision Queue',
         icon: '🗳️',
         description: 'Pending, conditional and approved AI decisions awaiting authority.',
+      },
+      {
+        path: '/board-reporting',
+        label: 'Board Reporting',
+        icon: '📑',
+        description: 'Executive governance and audit readiness reports for the board pack.',
+      },
+      {
+        path: '/policy-violations',
+        label: 'Policy Violations',
+        icon: '🚨',
+        description: 'Breaches of enterprise AI policy awaiting disposition.',
       },
       {
         path: '/risk',

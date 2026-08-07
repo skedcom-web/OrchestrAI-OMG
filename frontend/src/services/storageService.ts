@@ -93,7 +93,7 @@ export function addAuditLog(
   userName: string,
   userRole: string,
   action: string,
-  entityType: 'Asset' | 'User' | 'Ownership' | 'Risk' | 'Decision' | 'Validation' | 'Evidence' | 'Finding' | 'DecisionPackage' | 'ComplianceAssessment' | 'CompliancePackage' | 'KillSwitch' | 'Override' | 'Incident' | 'Retirement' | 'ScheduledReview' | 'CorrectiveAction' | 'GovernanceReviewPackage',
+  entityType: AuditLog['entityType'],
   entityId: string,
   entityName: string,
   details: string

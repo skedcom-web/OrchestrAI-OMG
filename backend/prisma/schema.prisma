@@ -108,6 +108,7 @@ model AIAsset {
   correctiveActions CorrectiveAction[]
   alerts           GovernanceAlert[]
   auditLogs        AuditLog[]
+  policyViolations PolicyViolation[]
 
   @@map("ai_assets")
 }
@@ -323,6 +324,101 @@ model GovernanceAlert {
   resolutionPath String
 
   @@map("governance_alerts")
+}
+
+// ---------------------------------------------------------------------------
+// PHASE 9 — Policy Governance
+// OMG moves from governing assets to governing the rules that bind them.
+// ---------------------------------------------------------------------------
+
+enum PolicyCategory {
+  GOVERNANCE
+  RISK
+  SECURITY
+  PRIVACY
+  VENDOR
+}
+
+enum PolicyStatus {
+  ACTIVE
+  DRAFT
+  UNDER_REVIEW
+  RETIRED
+}
+
+enum PolicyTargetType {
+  AI_ASSET
+  ASSET_TYPE
+  VENDOR
+  BUSINESS_UNIT
+}
+
+enum PolicyViolationStatus {
+  OPEN
+  UNDER_REVIEW
+  ACCEPTED
+  REMEDIATED
+  CLOSED
+}
+
+model Policy {
+  id              String          @id @default(uuid())
+  policyRef       String          @unique
+  name            String
+  category        PolicyCategory  @default(GOVERNANCE)
+  owner           String
+  ownerRole       String
+  effectiveDate   DateTime
+  reviewDate      DateTime
+  status          PolicyStatus    @default(DRAFT)
+  description     String          @db.Text
+  mandatory       Boolean         @default(false)
+  /// Enforcement rule key evaluated against live governance state.
+  enforcementRule String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  mappings   PolicyMapping[]
+  violations PolicyViolation[]
+
+  @@map("policies")
+}
+
+model PolicyMapping {
+  id         String           @id @default(uuid())
+  policyId   String
+  policy     Policy           @relation(fields: [policyId], references: [id], onDelete: Cascade)
+  targetType PolicyTargetType
+  /// Asset id, asset type, vendor key or business unit name depending on targetType.
+  targetId   String
+  targetName String
+  mappedBy   String
+  mappedDate DateTime         @default(now())
+  notes      String?          @db.Text
+
+  @@unique([policyId, targetType, targetId])
+  @@map("policy_mappings")
+}
+
+model PolicyViolation {
+  id                String                @id @default(uuid())
+  policyId          String
+  policy            Policy                @relation(fields: [policyId], references: [id], onDelete: Cascade)
+  violationType     String
+  assetId           String
+  asset             AIAsset               @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  severity          String
+  owner             String
+  detectionDate     DateTime              @default(now())
+  status            PolicyViolationStatus @default(OPEN)
+  description       String                @db.Text
+  remediationNotes  String?               @db.Text
+  /// True when raised by the enforcement engine rather than logged by a human.
+  autoDetected      Boolean               @default(false)
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+
+  @@map("policy_violations")
 }
 
 model AuditLog {

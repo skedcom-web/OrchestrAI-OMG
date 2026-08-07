@@ -58,11 +58,33 @@ import { TenantSettingsPage } from './pages/TenantSettingsPage';
 import { PlatformOverviewPage } from './pages/PlatformOverviewPage';
 import { FutureModulePage } from './pages/FutureModulePage';
 
+// Phase 9 Pages — Executive Governance Hub & Policy Governance
+import { ExecutiveGovernanceHubPage } from './pages/ExecutiveGovernanceHubPage';
+import { GovernanceScorecardsPage } from './pages/GovernanceScorecardsPage';
+import { ExecutiveHeatmapsPage } from './pages/ExecutiveHeatmapsPage';
+import { GovernanceInsightsPage } from './pages/GovernanceInsightsPage';
+import { BoardReportingPage } from './pages/BoardReportingPage';
+import { PolicyRegistryPage } from './pages/PolicyRegistryPage';
+import { PolicyMappingPage } from './pages/PolicyMappingPage';
+import { PolicyViolationsPage } from './pages/PolicyViolationsPage';
+
 /** Every governed route declared once, guarded by the same RBAC boundary. */
 const GOVERNED_ROUTES: { path: string; element: React.ReactNode }[] = [
   // Command surfaces
   { path: '/', element: <CommandCenterPage /> },
   { path: '/dashboard', element: <DashboardPage /> },
+
+  // Domain — Executive Governance (Phase 9)
+  { path: '/executive-hub', element: <ExecutiveGovernanceHubPage /> },
+  { path: '/governance-scorecards', element: <GovernanceScorecardsPage /> },
+  { path: '/executive-heatmaps', element: <ExecutiveHeatmapsPage /> },
+  { path: '/governance-insights', element: <GovernanceInsightsPage /> },
+  { path: '/board-reporting', element: <BoardReportingPage /> },
+
+  // Domain — Policy Governance (Phase 9)
+  { path: '/policy-management', element: <PolicyRegistryPage /> },
+  { path: '/policy-mapping', element: <PolicyMappingPage /> },
+  { path: '/policy-violations', element: <PolicyViolationsPage /> },
 
   // Domain 1 — AI Governance Registry
   { path: '/assets', element: <AssetRegistryPage /> },
@@ -117,8 +139,6 @@ const GOVERNED_ROUTES: { path: string; element: React.ReactNode }[] = [
  * keys are stable before the capabilities themselves land.
  */
 const FUTURE_ROUTES = [
-  '/executive-hub',
-  '/policy-management',
   '/regulatory-compliance-center',
   '/ai-control-library',
   '/enterprise-reporting',

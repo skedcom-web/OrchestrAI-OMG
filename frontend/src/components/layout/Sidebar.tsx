@@ -259,7 +259,7 @@ export const Sidebar: React.FC = () => {
             </span>
           </div>
           <p className="text-[10px] text-[var(--text-muted)] mt-1">
-            Phase 8 · Governance Operating System
+            Phase 9 · Executive Governance Command Center
           </p>
         </div>
       </div>

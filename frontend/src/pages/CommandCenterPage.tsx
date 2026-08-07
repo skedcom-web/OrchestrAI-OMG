@@ -108,11 +108,18 @@ export const CommandCenterPage: React.FC = () => {
 
             <div className="flex flex-wrap items-center gap-2.5 pt-1">
               <button
-                onClick={() => navigate('/decision-workbench-v4')}
+                onClick={() => navigate('/executive-hub')}
                 className="px-4 py-2.5 rounded-xl text-[13px] font-bold text-white shadow-md hover:shadow-lg transition-all active:scale-[0.98] cursor-pointer"
                 style={{ background: 'var(--grad-brand)' }}
               >
-                Open Decision Authority
+                Open Executive Hub
+              </button>
+              <button
+                onClick={() => navigate('/decision-workbench-v4')}
+                data-noglass
+                className="px-4 py-2.5 rounded-xl text-[13px] font-bold bg-[var(--bg-card)] border border-[var(--border-color)] text-[var(--text-primary)] hover:border-[var(--accent-border)] transition-all cursor-pointer"
+              >
+                Decision Authority
               </button>
               <button
                 onClick={() => navigate('/assets')}
