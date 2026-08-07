@@ -55,7 +55,7 @@ import { CommandCenterPage } from './pages/CommandCenterPage';
 import { AssetLifecyclePage } from './pages/AssetLifecyclePage';
 import { RbacAdministrationPage } from './pages/RbacAdministrationPage';
 import { TenantSettingsPage } from './pages/TenantSettingsPage';
-import { PlatformOverviewPage } from './pages/PlatformOverviewPage';
+import { OmgOverviewPage } from './pages/OmgOverviewPage';
 import { FutureModulePage } from './pages/FutureModulePage';
 
 // Phase 9 Pages — Executive Governance Hub & Policy Governance
@@ -68,10 +68,18 @@ import { PolicyRegistryPage } from './pages/PolicyRegistryPage';
 import { PolicyMappingPage } from './pages/PolicyMappingPage';
 import { PolicyViolationsPage } from './pages/PolicyViolationsPage';
 
+// Phase 10 Pages — Governance Change Management
+import { ChangeRequestCenterPage } from './pages/ChangeRequestCenterPage';
+import { ChangeImpactPage } from './pages/ChangeImpactPage';
+import { ChangeGovernanceDashboardPage } from './pages/ChangeGovernanceDashboardPage';
+import { ChangeHistoryPage } from './pages/ChangeHistoryPage';
+import { GovernanceTriggersPage } from './pages/GovernanceTriggersPage';
+
 /** Every governed route declared once, guarded by the same RBAC boundary. */
 const GOVERNED_ROUTES: { path: string; element: React.ReactNode }[] = [
-  // Command surfaces
-  { path: '/', element: <CommandCenterPage /> },
+  // Command surfaces — OMG Overview is the landing page, then the operational view.
+  { path: '/', element: <OmgOverviewPage /> },
+  { path: '/command-center', element: <CommandCenterPage /> },
   { path: '/dashboard', element: <DashboardPage /> },
 
   // Domain — Executive Governance (Phase 9)
@@ -85,6 +93,13 @@ const GOVERNED_ROUTES: { path: string; element: React.ReactNode }[] = [
   { path: '/policy-management', element: <PolicyRegistryPage /> },
   { path: '/policy-mapping', element: <PolicyMappingPage /> },
   { path: '/policy-violations', element: <PolicyViolationsPage /> },
+
+  // Domain — Change Governance (Phase 10)
+  { path: '/change-requests', element: <ChangeRequestCenterPage /> },
+  { path: '/change-impact', element: <ChangeImpactPage /> },
+  { path: '/change-dashboard', element: <ChangeGovernanceDashboardPage /> },
+  { path: '/change-history', element: <ChangeHistoryPage /> },
+  { path: '/governance-triggers', element: <GovernanceTriggersPage /> },
 
   // Domain 1 — AI Governance Registry
   { path: '/assets', element: <AssetRegistryPage /> },
@@ -131,7 +146,6 @@ const GOVERNED_ROUTES: { path: string; element: React.ReactNode }[] = [
   { path: '/users', element: <UserManagementPage /> },
   { path: '/rbac', element: <RbacAdministrationPage /> },
   { path: '/tenant-settings', element: <TenantSettingsPage /> },
-  { path: '/platform-overview', element: <PlatformOverviewPage /> },
 ];
 
 /**
@@ -182,7 +196,7 @@ export const App: React.FC = () => {
                         />
                       ))}
 
-                      <Route path="*" element={<CommandCenterPage />} />
+                      <Route path="*" element={<OmgOverviewPage />} />
                     </Routes>
                   </AppLayout>
                 }

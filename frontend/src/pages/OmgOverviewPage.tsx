@@ -12,7 +12,7 @@ import type { AssetType } from '../types';
  * Command Center; this page retains the "what / why / how" narrative used for
  * onboarding, executive briefings and vendor review.
  */
-export const PlatformOverviewPage: React.FC = () => {
+export const OmgOverviewPage: React.FC = () => {
   const navigate = useNavigate();
   const metrics = getGovernanceMetrics();
 
@@ -75,7 +75,7 @@ export const PlatformOverviewPage: React.FC = () => {
           </p>
 
           <div className="flex flex-wrap items-center gap-4 pt-2">
-            <Button size="lg" onClick={() => navigate('/')}>
+            <Button size="lg" onClick={() => navigate('/command-center')}>
               <span>Open Command Center</span>
             </Button>
             <Button size="lg" variant="secondary" onClick={() => navigate('/assets')}>

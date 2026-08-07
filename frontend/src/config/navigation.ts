@@ -45,13 +45,25 @@ export interface NavDomain {
   modules: NavModule[];
 }
 
-/** Command Center sits above the domain structure — it is the landing surface. */
-export const COMMAND_CENTER: NavModule = {
+/**
+ * OMG Overview is the landing surface. Anyone signing in should first
+ * understand what OMG is and why it exists, before the operational detail.
+ */
+export const OMG_OVERVIEW: NavModule = {
   path: '/',
+  label: 'OMG Overview',
+  icon: '📘',
+  description: 'What OMG governs, why it exists and how the operating model works.',
+  keywords: ['home', 'about', 'introduction', 'overview', 'start', 'what is omg', 'platform'],
+};
+
+/** The operational landing surface once the reader knows what OMG is. */
+export const COMMAND_CENTER: NavModule = {
+  path: '/command-center',
   label: 'Command Center',
   icon: '◎',
   description: 'Enterprise Governance Command Center — portfolio-wide governance posture.',
-  keywords: ['home', 'overview', 'executive', 'kpi', 'start'],
+  keywords: ['command', 'executive', 'kpi', 'posture', 'dashboard'],
 };
 
 export const EXECUTIVE_DASHBOARD: NavModule = {
@@ -143,6 +155,56 @@ export const NAV_DOMAINS: NavDomain[] = [
         description:
           'Detected and logged policy breaches through to accepted, remediated or closed.',
         keywords: ['violation', 'breach', 'non-compliance', 'exception'],
+      },
+    ],
+  },
+  {
+    id: 'change',
+    label: 'Change Governance',
+    question: 'What changed, and who approved it?',
+    icon: '🔁',
+    accent: '#14B8A6',
+    modules: [
+      {
+        path: '/change-requests',
+        label: 'Change Request Center',
+        icon: '🔁',
+        description:
+          'Raise, classify, impact-assess and route every significant change to a governed AI asset.',
+        keywords: ['change', 'request', 'crq', 'amendment', 'modification'],
+        badge: 'Phase 10',
+      },
+      {
+        path: '/change-impact',
+        label: 'Impact & Reassessment',
+        icon: '🔬',
+        description:
+          'Governance impact profile across seven areas, and the rules that decide who must reapprove.',
+        keywords: ['impact', 'reassessment', 'rules', 'magnitude', 'routing'],
+      },
+      {
+        path: '/change-dashboard',
+        label: 'Change Dashboard',
+        icon: '📊',
+        description:
+          'Executive visibility into change activity, bottlenecks and pending reapprovals.',
+        keywords: ['change dashboard', 'bottleneck', 'throughput', 'pipeline'],
+      },
+      {
+        path: '/change-history',
+        label: 'Change History & States',
+        icon: '📜',
+        description:
+          'Immutable change audit trail and the governance state machine for every asset.',
+        keywords: ['history', 'state machine', 'transition', 'lifecycle', 'trail'],
+      },
+      {
+        path: '/governance-triggers',
+        label: 'Governance Triggers',
+        icon: '🔔',
+        description:
+          'Rules that convert change conditions into governance work automatically.',
+        keywords: ['trigger', 'automation', 'escalation', 'rule'],
       },
     ],
   },
@@ -443,13 +505,6 @@ export const NAV_DOMAINS: NavDomain[] = [
         description: 'Tenant profile, governance thresholds and platform experience defaults.',
         keywords: ['settings', 'configuration', 'tenant', 'thresholds'],
       },
-      {
-        path: '/platform-overview',
-        label: 'Platform Overview',
-        icon: '📘',
-        description: 'What OMG governs, why it exists and how the operating model works.',
-        keywords: ['about', 'help', 'overview', 'introduction'],
-      },
     ],
   },
 ];
@@ -513,6 +568,7 @@ export const EXECUTIVE_NAV: { label: string; modules: NavModule[] }[] = [
   {
     label: 'Executive Surface',
     modules: [
+      OMG_OVERVIEW,
       COMMAND_CENTER,
       {
         path: '/executive-hub',
@@ -572,6 +628,7 @@ export interface ModuleLocation {
 
 const MODULE_INDEX: Record<string, ModuleLocation> = (() => {
   const index: Record<string, ModuleLocation> = {
+    [OMG_OVERVIEW.path]: { module: OMG_OVERVIEW },
     [COMMAND_CENTER.path]: { module: COMMAND_CENTER },
     [EXECUTIVE_DASHBOARD.path]: { module: EXECUTIVE_DASHBOARD },
   };
@@ -592,6 +649,7 @@ export function findModule(path: string): ModuleLocation | undefined {
 
 /** All navigable module paths (excluding future placeholders). */
 export const ALL_MODULE_PATHS: string[] = [
+  OMG_OVERVIEW.path,
   COMMAND_CENTER.path,
   EXECUTIVE_DASHBOARD.path,
   ...NAV_DOMAINS.flatMap(d => d.modules.map(m => m.path)),
@@ -599,6 +657,7 @@ export const ALL_MODULE_PATHS: string[] = [
 
 /** Flat, searchable module list used by the command palette. */
 export const SEARCHABLE_MODULES: { module: NavModule; domainLabel: string }[] = [
+  { module: OMG_OVERVIEW, domainLabel: 'Start Here' },
   { module: COMMAND_CENTER, domainLabel: 'Command Center' },
   { module: EXECUTIVE_DASHBOARD, domainLabel: 'Command Center' },
   ...NAV_DOMAINS.flatMap(domain =>

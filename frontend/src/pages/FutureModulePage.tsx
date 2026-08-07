@@ -126,7 +126,7 @@ export const FutureModulePage: React.FC = () => {
         </div>
 
         <button
-          onClick={() => navigate('/')}
+          onClick={() => navigate('/command-center')}
           className="self-start px-4 py-2.5 rounded-xl text-[13px] font-bold text-white shadow-md hover:shadow-lg transition-all active:scale-[0.98] cursor-pointer"
           style={{ background: 'var(--grad-brand)' }}
         >

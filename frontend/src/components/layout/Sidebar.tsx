@@ -9,6 +9,7 @@ import {
   EXECUTIVE_NAV,
   FUTURE_MODULES,
   NAV_DOMAINS,
+  OMG_OVERVIEW,
 } from '../../config/navigation';
 import type { NavModule } from '../../config/navigation';
 
@@ -130,7 +131,7 @@ export const Sidebar: React.FC = () => {
       <nav className="flex-1 overflow-y-auto px-4 pb-4 flex flex-col gap-1">
         {/* Always-present command surfaces */}
         <div className="flex flex-col gap-0.5 mb-3">
-          {[COMMAND_CENTER, EXECUTIVE_DASHBOARD]
+          {[OMG_OVERVIEW, COMMAND_CENTER, EXECUTIVE_DASHBOARD]
             .filter(m => hasPermission(m.path) && matches(m))
             .map(m => (
               <NavRow key={m.path} module={m} />
@@ -145,7 +146,12 @@ export const Sidebar: React.FC = () => {
               </p>
               <div className="flex flex-col gap-0.5">
                 {group.modules
-                  .filter(m => m.path !== '/' && m.path !== '/dashboard')
+                  .filter(
+                    m =>
+                      m.path !== OMG_OVERVIEW.path &&
+                      m.path !== COMMAND_CENTER.path &&
+                      m.path !== EXECUTIVE_DASHBOARD.path
+                  )
                   .map(m => (
                     <NavRow key={m.path} module={m} />
                   ))}

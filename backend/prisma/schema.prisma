@@ -109,6 +109,8 @@ model AIAsset {
   alerts           GovernanceAlert[]
   auditLogs        AuditLog[]
   policyViolations PolicyViolation[]
+  changeRequests   ChangeRequest[]
+  stateTransitions StateTransition[]
 
   @@map("ai_assets")
 }
@@ -419,6 +421,174 @@ model PolicyViolation {
   updatedAt         DateTime              @updatedAt
 
   @@map("policy_violations")
+}
+
+// ---------------------------------------------------------------------------
+// PHASE 10 — Governance Change Management
+// Approval is not permanent. Every significant change to an AI asset must be
+// evaluated, governed and approved before it proceeds.
+// ---------------------------------------------------------------------------
+
+enum ChangeStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  IMPLEMENTED
+  CLOSED
+}
+
+enum ChangeCategory {
+  MODEL
+  VENDOR
+  DATA
+  PROMPT
+  POLICY
+  OPERATIONAL
+}
+
+enum ChangeMagnitude {
+  MINOR
+  MODERATE
+  MAJOR
+  CRITICAL
+}
+
+enum ReassessmentRequirement {
+  NO_REASSESSMENT
+  RISK_REVIEW_REQUIRED
+  FULL_GOVERNANCE_REVIEW
+  EXECUTIVE_APPROVAL_REQUIRED
+}
+
+enum ApproverRole {
+  ASSET_OWNER
+  REVIEWER
+  GOVERNANCE_LEAD
+  RISK_MANAGER
+  COMPLIANCE_OFFICER
+  EXECUTIVE_APPROVER
+}
+
+enum ApprovalDecision {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum GovernanceState {
+  DRAFT
+  REVIEW
+  APPROVED
+  PRODUCTION
+  MONITORING
+  CHANGE_REQUESTED
+  IMPACT_ASSESSMENT
+  REASSESSMENT
+  REAPPROVED
+  RETIREMENT
+}
+
+model ChangeRequest {
+  id                    String                   @id @default(uuid())
+  changeRef             String                   @unique
+  title                 String
+  description           String                   @db.Text
+  assetId               String
+  asset                 AIAsset                  @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  requestedBy           String
+  requestedByRole       String
+  category              ChangeCategory
+  businessJustification String                   @db.Text
+  requestedDate         DateTime                 @default(now())
+  status                ChangeStatus             @default(DRAFT)
+
+  /// WS3 — impact outcome per governance impact area, keyed by area name.
+  impact                Json?
+  /// WS4 — weighted 0-100 impact score derived from the assessment.
+  impactScore           Int?
+  magnitude             ChangeMagnitude?
+  reassessment          ReassessmentRequirement?
+
+  submittedDate         DateTime?
+  decidedDate           DateTime?
+  implementedDate       DateTime?
+  closedDate            DateTime?
+  decisionRationale     String?                  @db.Text
+
+  createdAt             DateTime                 @default(now())
+  updatedAt             DateTime                 @updatedAt
+
+  approvals             ChangeApproval[]
+  transitions           StateTransition[]
+  historyEntries        ChangeHistoryEntry[]
+
+  @@map("change_requests")
+}
+
+model ChangeApproval {
+  id         String           @id @default(uuid())
+  changeId   String
+  change     ChangeRequest    @relation(fields: [changeId], references: [id], onDelete: Cascade)
+  role       ApproverRole
+  approver   String
+  decision   ApprovalDecision @default(PENDING)
+  decidedAt  DateTime?
+  notes      String?          @db.Text
+
+  @@unique([changeId, role])
+  @@map("change_approvals")
+}
+
+model StateTransition {
+  id        String          @id @default(uuid())
+  assetId   String
+  asset     AIAsset         @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  fromState GovernanceState
+  toState   GovernanceState
+  changeId  String?
+  change    ChangeRequest?  @relation(fields: [changeId], references: [id], onDelete: SetNull)
+  actor     String
+  reason    String          @db.Text
+  timestamp DateTime        @default(now())
+
+  @@map("state_transitions")
+}
+
+model ChangeHistoryEntry {
+  id         String        @id @default(uuid())
+  changeId   String
+  change     ChangeRequest @relation(fields: [changeId], references: [id], onDelete: Cascade)
+  assetId    String
+  /// What changed.
+  action     String
+  /// Who changed it.
+  actor      String
+  actorRole  String
+  /// Why it changed.
+  rationale  String        @db.Text
+  /// Who approved it, where applicable.
+  approvedBy String?
+  fromStatus ChangeStatus?
+  toStatus   ChangeStatus?
+  timestamp  DateTime      @default(now())
+
+  @@map("change_history")
+}
+
+model GovernanceTriggerRule {
+  id          String   @id @default(uuid())
+  condition   String
+  action      String
+  description String   @db.Text
+  /// Change categories that arm this rule.
+  categories  ChangeCategory[]
+  enabled     Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("governance_trigger_rules")
 }
 
 model AuditLog {
