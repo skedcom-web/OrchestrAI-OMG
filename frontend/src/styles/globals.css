@@ -23,32 +23,47 @@
   }
 }
 
-/* 💎 World-Class Aurora Mesh Background for Glassmorphism Mode */
-[data-theme='glass'] body {
-  background-color: #060913;
+/* 💎 TRUE WORLD-CLASS GLASSMORPHISM THEME OVERRIDES */
+html[data-theme='glass'] body {
+  background-color: #050814 !important;
   background-image: 
-    radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.25) 0px, transparent 50%),
-    radial-gradient(at 100% 0%, rgba(6, 182, 212, 0.25) 0px, transparent 50%),
-    radial-gradient(at 50% 100%, rgba(236, 72, 153, 0.2) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, rgba(249, 115, 22, 0.15) 0px, transparent 50%);
-  background-attachment: fixed;
+    radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.35) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(6, 182, 212, 0.35) 0px, transparent 50%),
+    radial-gradient(at 50% 50%, rgba(236, 72, 153, 0.25) 0px, transparent 55%),
+    radial-gradient(at 0% 100%, rgba(139, 92, 246, 0.3) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(249, 115, 22, 0.2) 0px, transparent 50%) !important;
+  background-attachment: fixed !important;
 }
 
-[data-theme='glass'] .glass-panel,
-[data-theme='glass'] [class*="bg-\\[var\\(--bg-card\\)\\]"] {
-  background: rgba(255, 255, 255, 0.05) !important;
-  backdrop-filter: blur(20px) !important;
-  -webkit-backdrop-filter: blur(20px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.15) !important;
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37), inset 0 0 20px rgba(255, 255, 255, 0.03) !important;
+/* Glass Sidebar & Topbar */
+html[data-theme='glass'] aside,
+html[data-theme='glass'] header {
+  background: rgba(10, 15, 30, 0.45) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4) !important;
 }
 
-[data-theme='glass'] [class*="bg-\\[var\\(--bg-sidebar\\)\\]"],
-[data-theme='glass'] [class*="bg-\\[var\\(--bg-topbar\\)\\]"] {
-  background: rgba(10, 15, 30, 0.6) !important;
-  backdrop-filter: blur(24px) !important;
-  -webkit-backdrop-filter: blur(24px) !important;
-  border-color: rgba(255, 255, 255, 0.12) !important;
+/* Glass Cards & Containers */
+html[data-theme='glass'] .rounded-2xl,
+html[data-theme='glass'] .rounded-3xl,
+html[data-theme='glass'] .rounded-xl {
+  background: rgba(255, 255, 255, 0.06) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37), inset 0 1px 0 0 rgba(255, 255, 255, 0.25) !important;
+}
+
+/* Glass Inputs & Modals */
+html[data-theme='glass'] input,
+html[data-theme='glass'] select,
+html[data-theme='glass'] textarea {
+  background: rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(16px) !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
+  color: #FFFFFF !important;
 }
 
 /* Custom Scrollbars */

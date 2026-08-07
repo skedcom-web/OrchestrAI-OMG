@@ -1,7 +1,7 @@
 /* OMG Design System Tokens - Supporting Light, Dark, and Glassmorphism */
 
 :root {
-  /* Common Brand Identity Colors (From OrchestrAI Brand Sheet) */
+  /* Common Brand Identity Colors */
   --color-brand-blue: #2563EB;
   --color-brand-purple: #8B5CF6;
   --color-brand-cyan: #06B6D4;
@@ -47,7 +47,7 @@
   --backdrop-blur: blur(8px);
 }
 
-/* 🌙 DARK MODE */
+/* 🌙 DARK MODE (Solid Enterprise Command Center) */
 [data-theme='dark'] {
   --bg-app: #0B0F19;
   --bg-sidebar: #111827;
@@ -82,37 +82,37 @@
   --backdrop-blur: blur(12px);
 }
 
-/* 💎 GLASSMORPHISM MODE (Stunning World-Class Frosted Aesthetic) */
+/* 💎 GLASSMORPHISM MODE (Frosted Aurora Mesh Aesthetic) */
 [data-theme='glass'] {
-  --bg-app: #060913;
-  --bg-sidebar: rgba(10, 15, 30, 0.55);
-  --bg-topbar: rgba(10, 15, 30, 0.55);
-  --bg-card: rgba(255, 255, 255, 0.05);
-  --bg-card-hover: rgba(255, 255, 255, 0.1);
-  --bg-input: rgba(255, 255, 255, 0.07);
+  --bg-app: #050814;
+  --bg-sidebar: rgba(10, 15, 30, 0.45);
+  --bg-topbar: rgba(10, 15, 30, 0.45);
+  --bg-card: rgba(255, 255, 255, 0.06);
+  --bg-card-hover: rgba(255, 255, 255, 0.12);
+  --bg-input: rgba(255, 255, 255, 0.08);
   --bg-modal: rgba(15, 20, 38, 0.85);
   --bg-badge: rgba(255, 255, 255, 0.09);
 
-  --border-color: rgba(255, 255, 255, 0.14);
-  --border-subtle: rgba(255, 255, 255, 0.07);
+  --border-color: rgba(255, 255, 255, 0.2);
+  --border-subtle: rgba(255, 255, 255, 0.1);
   --border-focus: #38BDF8;
 
   --text-primary: #FFFFFF;
   --text-secondary: #E2E8F0;
   --text-muted: #94A3B8;
-  --text-inverse: #060913;
+  --text-inverse: #050814;
 
   --accent-primary: #38BDF8;
   --accent-hover: #0284C7;
-  --accent-light: rgba(56, 189, 248, 0.2);
+  --accent-light: rgba(56, 189, 248, 0.25);
   --accent-border: rgba(56, 189, 248, 0.5);
 
   --shadow-sm: 0 4px 16px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
   --shadow-lg: 0 16px 48px 0 rgba(0, 0, 0, 0.6);
-  --shadow-glow: 0 0 35px rgba(56, 189, 248, 0.4);
+  --shadow-glow: 0 0 35px rgba(56, 189, 248, 0.45);
 
   --glass-bg: rgba(255, 255, 255, 0.06);
-  --glass-border: rgba(255, 255, 255, 0.16);
+  --glass-border: rgba(255, 255, 255, 0.2);
   --backdrop-blur: blur(24px);
 }
