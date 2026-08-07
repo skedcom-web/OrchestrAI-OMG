@@ -1,9 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { OrchestraiLogo } from '../components/common/OrchestraiLogo';
-import { Card } from '../components/ui/Card';
-import { Button } from '../components/ui/Button';
-import { Input } from '../components/ui/Input';
 import { ThemeSwitcher } from '../components/ui/ThemeSwitcher';
 import { useAuth } from '../contexts/AuthContext';
 import { DEMO_PERSONAS } from '../services/mockData';
@@ -12,11 +9,12 @@ import type { UserRole } from '../types';
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const { login, switchPersona } = useAuth();
-  const [email, setEmail] = useState('sarah.jenkins@enterprise-bank.com');
-  const [password, setPassword] = useState('••••••••••••');
+  const [email, setEmail] = useState('');
+  const [showDemoPersonas, setShowDemoPersonas] = useState(true);
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email) return;
     login(email);
     navigate('/');
   };
@@ -27,98 +25,172 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-[var(--bg-app)] text-[var(--text-primary)] relative">
-      {/* Topbar Controls */}
-      <div className="absolute top-6 right-8 flex items-center gap-4">
+    <div className="min-h-screen flex items-center justify-center p-4 sm:p-8 bg-[var(--bg-app)] text-[var(--text-primary)] relative">
+      {/* Floating Theme Switcher at Top Right */}
+      <div className="absolute top-6 right-8 z-30">
         <ThemeSwitcher />
       </div>
 
-      <div className="w-full max-w-5xl flex flex-col gap-8 my-auto py-12">
-        {/* Brand Header */}
-        <div className="flex flex-col items-center text-center gap-3">
-          <OrchestraiLogo size="lg" showTagline={true} />
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/10 text-red-500 text-xs font-bold border border-red-500/20 mt-2">
-            <span>🔐 Phase 2.5 — Governance Identity & RBAC Foundation</span>
+      {/* Main Container matching Reference Layout */}
+      <div className="w-full max-w-6xl rounded-3xl overflow-hidden shadow-2xl border border-[var(--border-color)] bg-[var(--bg-card)] grid grid-cols-1 lg:grid-cols-12 min-h-[640px]">
+        
+        {/* LEFT COLUMN: Gradient Brand & Value Proposition Panel */}
+        <div className="lg:col-span-6 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 p-8 sm:p-12 text-white flex flex-col justify-between relative overflow-hidden">
+          {/* Subtle Ambient Orbital Glow */}
+          <div className="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-cyan-400/20 blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-24 -right-24 w-96 h-96 rounded-full bg-pink-500/20 blur-3xl pointer-events-none" />
+
+          {/* Top Badges */}
+          <div className="flex items-center gap-2 relative z-10">
+            <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md text-[11px] font-extrabold uppercase tracking-wider border border-white/20">
+              <span className="w-2 h-2 rounded-full bg-cyan-300 animate-pulse" />
+              ORCHESTRAI
+            </span>
+            <span className="px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-[11px] font-extrabold uppercase tracking-wider border border-white/15">
+              MODEL GOVERNANCE
+            </span>
+          </div>
+
+          {/* Core Headline & Mission */}
+          <div className="my-8 flex flex-col gap-4 relative z-10">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight text-white">
+              Govern Enterprise AI Assets with Accountability
+            </h1>
+            <p className="text-sm text-blue-100/90 leading-relaxed max-w-lg font-normal">
+              Built on the state-of-the-art <strong className="text-white">OrchestrAI Framework</strong>. A centralized command center for inventory, ownership, risk, validation, auditability, and control of enterprise AI assets.
+            </p>
+          </div>
+
+          {/* Governance Stats Banner */}
+          <div className="relative z-10 flex flex-col gap-4">
+            <div className="p-5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 grid grid-cols-2 gap-4">
+              <div>
+                <span className="text-[10px] font-extrabold uppercase tracking-widest text-blue-200">
+                  GOVERNED ASSETS
+                </span>
+                <p className="text-2xl font-black text-white mt-0.5">9 Asset Classes</p>
+                <span className="text-[10px] text-cyan-300 font-semibold">100% Visibility</span>
+              </div>
+              <div>
+                <span className="text-[10px] font-extrabold uppercase tracking-widest text-blue-200">
+                  DECISION ENGINE
+                </span>
+                <p className="text-2xl font-black text-white mt-0.5">GO / NO GO</p>
+                <span className="text-[10px] text-emerald-300 font-semibold">Gatekeeper Enforced</span>
+              </div>
+            </div>
+
+            {/* Security Guarantee Box */}
+            <div className="p-4 rounded-xl bg-black/20 backdrop-blur-md border border-white/10 text-xs text-blue-100 flex items-start gap-3">
+              <span className="text-base shrink-0">🛡️</span>
+              <div className="leading-relaxed text-[11px]">
+                <strong className="text-white block font-bold">End-to-End Governance Security</strong>
+                Every action is secured by Role-Based Access Control (RBAC) and recorded to a Day-1 compliance audit log.
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Main 2-Column Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          {/* Left: Email Login Form */}
-          <Card className="lg:col-span-5 flex flex-col gap-6 !p-8 shadow-2xl">
-            <div>
-              <h2 className="text-xl font-extrabold text-[var(--text-primary)]">Enterprise Single Sign-On</h2>
-              <p className="text-xs text-[var(--text-secondary)] mt-1">Authenticate with your corporate credentials</p>
+        {/* RIGHT COLUMN: Authentication & Demo Persona Switcher */}
+        <div className="lg:col-span-6 p-8 sm:p-12 flex flex-col justify-between bg-[var(--bg-card)]">
+          <div className="flex flex-col gap-6">
+            {/* Logo & Welcome Header */}
+            <div className="flex flex-col items-center text-center gap-3">
+              <OrchestraiLogo size="lg" showTagline={false} />
+              <div className="mt-2">
+                <h2 className="text-2xl font-extrabold text-[var(--text-primary)] tracking-tight">
+                  Welcome to OrchestrAI OMG
+                </h2>
+                <p className="text-xs text-[var(--text-secondary)] mt-1">
+                  Connect your corporate account to access your governance workspace.
+                </p>
+              </div>
             </div>
 
-            <form onSubmit={handleFormSubmit} className="flex flex-col gap-4">
-              <Input
-                label="Corporate Email"
-                type="email"
-                required
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                placeholder="officer@enterprise-bank.com"
-              />
-              <Input
-                label="Password"
-                type="password"
-                required
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-              />
+            {/* Email SSO Form */}
+            <form onSubmit={handleFormSubmit} className="flex flex-col gap-4 mt-2">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] font-extrabold text-[var(--text-muted)] uppercase tracking-wider">
+                  CORPORATE EMAIL ADDRESS
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
+                    ✉️
+                  </span>
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    placeholder="officer@enterprise-bank.com"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-[var(--bg-input)] text-[var(--text-primary)] border border-[var(--border-color)] text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                  />
+                </div>
+              </div>
 
-              <Button type="submit" size="lg" className="w-full mt-2">
-                Sign In to Command Center
-              </Button>
+              <button
+                type="submit"
+                className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold text-sm shadow-md hover:shadow-lg transition-all transform active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <span>Continue</span>
+                <span>→</span>
+              </button>
             </form>
 
-            <div className="p-3 rounded-xl bg-[var(--bg-badge)] border border-[var(--border-color)] text-[11px] text-[var(--text-muted)] text-center">
-              Secured with Firebase Auth & Role-Based Access Control
-            </div>
-          </Card>
-
-          {/* Right: 7 Seeded Demo Access Cards */}
-          <div className="lg:col-span-7 flex flex-col gap-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-bold text-[var(--text-primary)]">Seeded Demo Access Personas</h3>
-              <span className="text-xs font-semibold text-[var(--accent-primary)]">1-Click Switch</span>
+            {/* Divider */}
+            <div className="relative my-2 flex items-center justify-center">
+              <div className="w-full border-t border-[var(--border-color)]" />
+              <span className="absolute px-3 bg-[var(--bg-card)] text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">
+                OR SEEDED DEMO ACCESS
+              </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {DEMO_PERSONAS.map(p => (
-                <div
-                  key={p.role}
-                  onClick={() => handlePersonaClick(p.role)}
-                  className="p-4 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] hover:border-[var(--accent-border)] hover:bg-[var(--bg-card-hover)] cursor-pointer transition-all flex flex-col gap-2 group shadow-sm hover:shadow-md"
+            {/* Seeded Demo Access Cards Toggle */}
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-[var(--text-primary)]">Select Demo Persona Role (1-Click)</span>
+                <button
+                  type="button"
+                  onClick={() => setShowDemoPersonas(!showDemoPersonas)}
+                  className="text-xs font-bold text-blue-500 hover:underline"
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xl">{p.icon}</span>
-                      <span className="text-xs font-black text-[var(--text-primary)] group-hover:text-[var(--accent-primary)] transition-colors">
-                        {p.title}
+                  {showDemoPersonas ? 'Hide Personas' : 'Show All 7 Roles'}
+                </button>
+              </div>
+
+              {showDemoPersonas && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-[220px] overflow-y-auto pr-1">
+                  {DEMO_PERSONAS.map(p => (
+                    <div
+                      key={p.role}
+                      onClick={() => handlePersonaClick(p.role)}
+                      className="p-3 rounded-xl bg-[var(--bg-badge)] border border-[var(--border-color)] hover:border-blue-500/50 hover:bg-[var(--bg-card-hover)] cursor-pointer transition-all flex items-center justify-between group shadow-2xs"
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-lg shrink-0">{p.icon}</span>
+                        <div className="flex flex-col min-w-0">
+                          <span className="text-xs font-bold text-[var(--text-primary)] truncate group-hover:text-blue-500 transition-colors">
+                            {p.title}
+                          </span>
+                          <span className="text-[9px] text-[var(--text-muted)] truncate">{p.name}</span>
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-bold text-blue-500 group-hover:translate-x-1 transition-transform">
+                        Login →
                       </span>
                     </div>
-                    <span className="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded bg-[var(--accent-light)] text-[var(--accent-primary)] border border-[var(--accent-border)]">
-                      {p.role}
-                    </span>
-                  </div>
-
-                  <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed line-clamp-2">
-                    {p.description}
-                  </p>
-
-                  <div className="flex items-center justify-between pt-2 border-t border-[var(--border-color)] text-[10px] text-[var(--text-muted)]">
-                    <span>{p.name}</span>
-                    <span className="font-bold text-[var(--accent-primary)] group-hover:translate-x-1 transition-transform">
-                      Login →
-                    </span>
-                  </div>
+                  ))}
                 </div>
-              ))}
+              )}
             </div>
           </div>
+
+          {/* Footer Disclaimer matching Reference Layout */}
+          <div className="pt-6 border-t border-[var(--border-color)] text-center text-[10px] text-[var(--text-muted)] leading-relaxed">
+            By continuing, you connect to the enterprise governance engine and enable secure RBAC role execution.
+          </div>
         </div>
+
       </div>
     </div>
   );

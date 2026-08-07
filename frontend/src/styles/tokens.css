@@ -1,7 +1,8 @@
 /* OMG Design System Tokens - Supporting Light, Dark, and Glassmorphism */
 
 :root {
-  /* Common Brand Identity Colors */
+  /* Common Brand Identity Colors (From OrchestrAI Brand Sheet) */
+  --color-brand-blue: #2563EB;
   --color-brand-purple: #8B5CF6;
   --color-brand-cyan: #06B6D4;
   --color-brand-magenta: #EC4899;
@@ -11,7 +12,7 @@
   --font-family-heading: 'Outfit', 'Inter', sans-serif;
 }
 
-/* ☀️ LIGHT MODE (Default) */
+/* ☀️ LIGHT MODE */
 [data-theme='light'] {
   --bg-app: #F8FAFC;
   --bg-sidebar: #FFFFFF;
@@ -24,22 +25,22 @@
 
   --border-color: #E2E8F0;
   --border-subtle: #F1F5F9;
-  --border-focus: #DC2626;
+  --border-focus: #2563EB;
 
   --text-primary: #0F172A;
   --text-secondary: #475569;
   --text-muted: #94A3B8;
   --text-inverse: #FFFFFF;
 
-  --accent-primary: #DC2626;
-  --accent-hover: #B91C1C;
-  --accent-light: #FEF2F2;
-  --accent-border: #FCA5A5;
+  --accent-primary: #2563EB;
+  --accent-hover: #1D4ED8;
+  --accent-light: #EFF6FF;
+  --accent-border: #93C5FD;
 
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
-  --shadow-glow: 0 0 15px rgba(220, 38, 38, 0.15);
+  --shadow-glow: 0 0 15px rgba(37, 99, 235, 0.15);
 
   --glass-bg: rgba(255, 255, 255, 0.85);
   --glass-border: rgba(226, 232, 240, 0.8);
@@ -59,59 +60,59 @@
 
   --border-color: #1E293B;
   --border-subtle: #151C2C;
-  --border-focus: #EF4444;
+  --border-focus: #3B82F6;
 
   --text-primary: #F8FAFC;
   --text-secondary: #94A3B8;
   --text-muted: #64748B;
   --text-inverse: #0F172A;
 
-  --accent-primary: #EF4444;
-  --accent-hover: #DC2626;
-  --accent-light: rgba(239, 68, 68, 0.12);
-  --accent-border: rgba(239, 68, 68, 0.3);
+  --accent-primary: #3B82F6;
+  --accent-hover: #2563EB;
+  --accent-light: rgba(59, 130, 246, 0.15);
+  --accent-border: rgba(59, 130, 246, 0.35);
 
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.5);
-  --shadow-glow: 0 0 20px rgba(239, 68, 68, 0.25);
+  --shadow-glow: 0 0 20px rgba(59, 130, 246, 0.25);
 
   --glass-bg: rgba(17, 24, 39, 0.75);
   --glass-border: rgba(255, 255, 255, 0.08);
   --backdrop-blur: blur(12px);
 }
 
-/* 💎 GLASSMORPHISM MODE */
+/* 💎 GLASSMORPHISM MODE (Stunning World-Class Frosted Aesthetic) */
 [data-theme='glass'] {
-  --bg-app: #070A12;
-  --bg-sidebar: rgba(13, 18, 30, 0.65);
-  --bg-topbar: rgba(13, 18, 30, 0.65);
-  --bg-card: rgba(255, 255, 255, 0.04);
-  --bg-card-hover: rgba(255, 255, 255, 0.08);
-  --bg-input: rgba(255, 255, 255, 0.06);
-  --bg-modal: rgba(18, 24, 40, 0.85);
-  --bg-badge: rgba(255, 255, 255, 0.08);
+  --bg-app: #060913;
+  --bg-sidebar: rgba(10, 15, 30, 0.55);
+  --bg-topbar: rgba(10, 15, 30, 0.55);
+  --bg-card: rgba(255, 255, 255, 0.05);
+  --bg-card-hover: rgba(255, 255, 255, 0.1);
+  --bg-input: rgba(255, 255, 255, 0.07);
+  --bg-modal: rgba(15, 20, 38, 0.85);
+  --bg-badge: rgba(255, 255, 255, 0.09);
 
-  --border-color: rgba(255, 255, 255, 0.1);
-  --border-subtle: rgba(255, 255, 255, 0.05);
-  --border-focus: #F43F5E;
+  --border-color: rgba(255, 255, 255, 0.14);
+  --border-subtle: rgba(255, 255, 255, 0.07);
+  --border-focus: #38BDF8;
 
-  --text-primary: #F1F5F9;
-  --text-secondary: #CBD5E1;
-  --text-muted: #64748B;
-  --text-inverse: #070A12;
+  --text-primary: #FFFFFF;
+  --text-secondary: #E2E8F0;
+  --text-muted: #94A3B8;
+  --text-inverse: #060913;
 
-  --accent-primary: #F43F5E;
-  --accent-hover: #E11D48;
-  --accent-light: rgba(244, 63, 94, 0.18);
-  --accent-border: rgba(244, 63, 94, 0.4);
+  --accent-primary: #38BDF8;
+  --accent-hover: #0284C7;
+  --accent-light: rgba(56, 189, 248, 0.2);
+  --accent-border: rgba(56, 189, 248, 0.5);
 
-  --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.2);
-  --shadow-md: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-  --shadow-lg: 0 16px 48px 0 rgba(0, 0, 0, 0.5);
-  --shadow-glow: 0 0 30px rgba(244, 63, 94, 0.35);
+  --shadow-sm: 0 4px 16px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  --shadow-lg: 0 16px 48px 0 rgba(0, 0, 0, 0.6);
+  --shadow-glow: 0 0 35px rgba(56, 189, 248, 0.4);
 
-  --glass-bg: rgba(255, 255, 255, 0.05);
-  --glass-border: rgba(255, 255, 255, 0.12);
-  --backdrop-blur: blur(20px);
+  --glass-bg: rgba(255, 255, 255, 0.06);
+  --glass-border: rgba(255, 255, 255, 0.16);
+  --backdrop-blur: blur(24px);
 }
