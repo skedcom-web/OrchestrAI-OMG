@@ -104,6 +104,9 @@ model AIAsset {
   overrides        OverrideRecord[]
   incidents        GovernanceIncident[]
   retirements      RetirementRecord[]
+  scheduledReviews ScheduledReview[]
+  correctiveActions CorrectiveAction[]
+  alerts           GovernanceAlert[]
   auditLogs        AuditLog[]
 
   @@map("ai_assets")
@@ -279,6 +282,47 @@ model RetirementRecord {
   notes                 String   @db.Text
 
   @@map("retirements")
+}
+
+model ScheduledReview {
+  id         String   @id @default(uuid())
+  assetId    String
+  asset      AIAsset  @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  reviewType String
+  owner      String
+  dueDate    DateTime
+  status     String   @default("Scheduled")
+  outcome    String?  @db.Text
+
+  @@map("scheduled_reviews")
+}
+
+model CorrectiveAction {
+  id                String   @id @default(uuid())
+  assetId           String
+  asset             AIAsset  @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  title             String
+  status            String   @default("Open")
+  severity          String
+  assignedTo        String
+  dueDate           DateTime
+  description       String   @db.Text
+  verificationNotes String?  @db.Text
+
+  @@map("corrective_actions")
+}
+
+model GovernanceAlert {
+  id             String   @id @default(uuid())
+  assetId        String
+  asset          AIAsset  @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  alertType      String
+  severity       String
+  createdAt      DateTime @default(now())
+  message        String   @db.Text
+  resolutionPath String
+
+  @@map("governance_alerts")
 }
 
 model AuditLog {

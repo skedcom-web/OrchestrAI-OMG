@@ -31,6 +31,11 @@ export const Sidebar: React.FC = () => {
     { path: '/operations-dashboard', label: 'Operations Dashboard', icon: '📉', badge: 'Runtime' },
     { path: '/retirement', label: 'Asset Retirement', icon: '📦', badge: 'Archive' },
     { path: '/governance-timeline', label: 'Governance Timeline', icon: '⏱️', badge: 'Lifecycle' },
+    { path: '/governance-monitoring', label: 'Governance Monitoring', icon: '👁️', badge: 'Phase 7' },
+    { path: '/governance-alerts', label: 'Governance Alerts', icon: '🚨', badge: 'Exceptions' },
+    { path: '/review-calendar', label: 'Review Calendar', icon: '📅', badge: 'Cadence' },
+    { path: '/corrective-actions', label: 'Corrective Actions', icon: '🛠️', badge: 'Remediation' },
+    { path: '/governance-trends', label: 'Governance Trends', icon: '📈', badge: 'Health' },
     { path: '/users', label: 'User Management', icon: '🔐', badge: 'RBAC' },
     { path: '/audit-logs', label: 'Audit Logs', icon: '📜', badge: 'Day 1' },
   ];
@@ -38,7 +43,7 @@ export const Sidebar: React.FC = () => {
   const visibleNavItems = allNavItems.filter(item => hasPermission(item.path));
 
   const futureModules = [
-    { label: 'Continuous Monitoring', icon: '👁️' },
+    { label: 'Executive Governance Hub', icon: '🌐' },
   ];
 
   return (
@@ -100,7 +105,7 @@ export const Sidebar: React.FC = () => {
                 <span>{item.label}</span>
               </div>
               <span className="text-[9px] font-semibold uppercase px-1.5 py-0.5 rounded bg-[var(--bg-badge)] border border-[var(--border-color)]">
-                Phase 7
+                Phase 8
               </span>
             </div>
           ))}
@@ -113,7 +118,7 @@ export const Sidebar: React.FC = () => {
           <span className="font-semibold text-[var(--text-secondary)]">Governance Engine</span>
           <span className="flex items-center gap-1.5 text-emerald-400 font-bold">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            Phase 6 Engine
+            Phase 7 Engine
           </span>
         </div>
         <p className="text-[10px] text-[var(--text-muted)] mt-1">

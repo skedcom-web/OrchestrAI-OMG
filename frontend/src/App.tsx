@@ -43,6 +43,13 @@ import { OperationalDashboardPage } from './pages/OperationalDashboardPage';
 import { RetirementCenterPage } from './pages/RetirementCenterPage';
 import { GovernanceTimelinePage } from './pages/GovernanceTimelinePage';
 
+// Phase 7 Pages
+import { GovernanceMonitoringPage } from './pages/GovernanceMonitoringPage';
+import { GovernanceAlertsPage } from './pages/GovernanceAlertsPage';
+import { ReviewCalendarPage } from './pages/ReviewCalendarPage';
+import { CorrectiveActionsPage } from './pages/CorrectiveActionsPage';
+import { GovernanceTrendsDashboardPage } from './pages/GovernanceTrendsDashboardPage';
+
 export const App: React.FC = () => {
   return (
     <ThemeProvider>
@@ -271,6 +278,48 @@ export const App: React.FC = () => {
                       element={
                         <ProtectedRoute path="/governance-timeline">
                           <GovernanceTimelinePage />
+                        </ProtectedRoute>
+                      }
+                    />
+
+                    {/* Phase 7 Routes */}
+                    <Route
+                      path="/governance-monitoring"
+                      element={
+                        <ProtectedRoute path="/governance-monitoring">
+                          <GovernanceMonitoringPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/governance-alerts"
+                      element={
+                        <ProtectedRoute path="/governance-alerts">
+                          <GovernanceAlertsPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/review-calendar"
+                      element={
+                        <ProtectedRoute path="/review-calendar">
+                          <ReviewCalendarPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/corrective-actions"
+                      element={
+                        <ProtectedRoute path="/corrective-actions">
+                          <CorrectiveActionsPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/governance-trends"
+                      element={
+                        <ProtectedRoute path="/governance-trends">
+                          <GovernanceTrendsDashboardPage />
                         </ProtectedRoute>
                       }
                     />

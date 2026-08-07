@@ -13,7 +13,7 @@ export class AppController {
     return {
       status: 'OPERATIONAL',
       app: 'OrchestrAI Model Governance (OMG)',
-      version: 'Phase 6 (Operational Governance & Kill Switch Center)',
+      version: 'Phase 7 (Continuous Monitoring & Governance Review Center)',
       timestamp: new Date().toISOString(),
     };
   }
@@ -31,53 +31,64 @@ export class AppController {
         killSwitches: true,
         overrides: true,
         incidents: true,
-        retirements: true
+        retirements: true,
+        scheduledReviews: true,
+        correctiveActions: true,
+        alerts: true
       },
       orderBy: { createdAt: 'desc' },
     });
   }
 
-  // --- PHASE 6: OPERATIONAL ENDPOINTS ---
-  @Get('operations/kill-switches')
-  async getKillSwitches() {
-    return this.prisma.killSwitchRecord.findMany({
-      orderBy: { activatedAt: 'desc' },
+  // --- PHASE 7: CONTINUOUS MONITORING ENDPOINTS ---
+  @Get('monitoring/alerts')
+  async getAlerts() {
+    return this.prisma.governanceAlert.findMany({
+      orderBy: { createdAt: 'desc' },
     });
   }
 
-  @Post('operations/kill-switches')
+  @Get('monitoring/reviews')
+  async getScheduledReviews() {
+    return this.prisma.scheduledReview.findMany({
+      orderBy: { dueDate: 'asc' },
+    });
+  }
+
+  @Post('monitoring/reviews')
   @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER')
-  async requestKillSwitch(@Body() body: any) {
-    const ks = await this.prisma.killSwitchRecord.create({
+  async scheduleReview(@Body() body: any) {
+    return this.prisma.scheduledReview.create({
       data: {
         assetId: body.assetId,
-        triggerCategory: body.triggerCategory || 'Critical Incident',
-        status: body.status || 'Activated',
-        requestedBy: body.requestedBy || 'Sarah Jenkins (Super Admin)',
-        approvedBy: body.approvedBy || 'Sarah Jenkins (Super Admin)',
-        reason: body.reason || 'Emergency circuit breaker engaged.',
+        reviewType: body.reviewType || 'Quarterly Review',
+        owner: body.owner || 'David Chen (Governance Admin)',
+        dueDate: new Date(body.dueDate || Date.now()),
+        status: body.status || 'Scheduled',
       },
     });
-
-    await this.prisma.aIAsset.update({
-      where: { id: body.assetId },
-      data: { operationalStatus: 'Suspended' },
-    });
-
-    return ks;
   }
 
-  @Get('operations/overrides')
-  async getOverrides() {
-    return this.prisma.overrideRecord.findMany({
-      orderBy: { timestamp: 'desc' },
+  @Get('monitoring/corrective-actions')
+  async getCorrectiveActions() {
+    return this.prisma.correctiveAction.findMany({
+      orderBy: { dueDate: 'asc' },
     });
   }
 
-  @Get('operations/incidents')
-  async getIncidents() {
-    return this.prisma.governanceIncident.findMany({
-      orderBy: { createdAt: 'desc' },
+  @Post('monitoring/corrective-actions')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER', 'VALIDATOR')
+  async createCorrectiveAction(@Body() body: any) {
+    return this.prisma.correctiveAction.create({
+      data: {
+        assetId: body.assetId,
+        title: body.title,
+        status: body.status || 'Open',
+        severity: body.severity || 'Medium',
+        assignedTo: body.assignedTo || 'Sarah Jenkins',
+        dueDate: new Date(body.dueDate || Date.now()),
+        description: body.description || '',
+      },
     });
   }
 

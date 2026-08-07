@@ -126,7 +126,7 @@ export interface AuditLog {
   userName: string;
   userRole: string;
   action: string;
-  entityType: 'Asset' | 'User' | 'Ownership' | 'Risk' | 'Decision' | 'Validation' | 'Evidence' | 'Finding' | 'DecisionPackage' | 'ComplianceAssessment' | 'CompliancePackage' | 'KillSwitch' | 'Override' | 'Incident' | 'Retirement';
+  entityType: 'Asset' | 'User' | 'Ownership' | 'Risk' | 'Decision' | 'Validation' | 'Evidence' | 'Finding' | 'DecisionPackage' | 'ComplianceAssessment' | 'CompliancePackage' | 'KillSwitch' | 'Override' | 'Incident' | 'Retirement' | 'ScheduledReview' | 'CorrectiveAction' | 'GovernanceReviewPackage';
   entityId: string;
   entityName: string;
   details: string;
@@ -158,7 +158,6 @@ export interface GovernanceMetrics {
   partiallyCompliantAssetsCount: number;
   nonCompliantAssetsCount: number;
   openComplianceGapsCount: number;
-  // Phase 6 Extensions
   activeOperationalAssetsCount: number;
   suspendedAssetsCount: number;
   killSwitchEventsCount: number;
@@ -166,6 +165,14 @@ export interface GovernanceMetrics {
   openIncidentsCount: number;
   criticalIncidentsCount: number;
   retiredAssetsCount: number;
+  // Phase 7 Extensions
+  tenantGovernanceHealthScore: number; // 0-100%
+  healthyAssetsCount: number;
+  watchlistAssetsCount: number;
+  attentionRequiredAssetsCount: number;
+  activeGovernanceAlertsCount: number;
+  upcomingReviewsCount: number;
+  openCorrectiveActionsCount: number;
 }
 
 export interface PersonaDemoUser {
@@ -320,7 +327,7 @@ export type ComplianceControlCategory =
   | 'Enterprise Policy';
 
 export interface ComplianceControl {
-  id: string; // e.g. 'RBI-001'
+  id: string;
   controlName: string;
   category: ComplianceControlCategory;
   source: 'RBI Standards' | 'Internal Policy';
@@ -459,4 +466,70 @@ export interface GovernanceTimelineEvent {
   actor: string;
   details: string;
   type: 'registration' | 'risk' | 'validation' | 'decision' | 'compliance' | 'override' | 'killswitch' | 'retirement';
+}
+
+// ------------------- PHASE 7 TYPES -------------------
+
+export type GovernanceHealthStatus = 'Healthy' | 'Watchlist' | 'Attention Required';
+
+export interface GovernanceHealthBreakdown {
+  ownershipHealth: PillarScoreDetail;
+  riskHealth: PillarScoreDetail;
+  validationHealth: PillarScoreDetail;
+  complianceHealth: PillarScoreDetail;
+  operationalHealth: PillarScoreDetail;
+  overallHealthScore: number; // 0 - 100
+  healthStatus: GovernanceHealthStatus;
+}
+
+export interface GovernanceAlert {
+  id: string;
+  assetId: string;
+  assetName: string;
+  alertType: 'Validation Expired' | 'Compliance Review Overdue' | 'Risk Review Overdue' | 'Critical Incident Open' | 'Kill Switch Event' | 'Unresolved Critical Finding';
+  severity: FindingSeverity;
+  createdAt: string;
+  message: string;
+  resolutionPath: string;
+}
+
+export type ReviewType = 'Monthly Review' | 'Quarterly Review' | 'Annual Review' | 'Incident Review' | 'Executive Review';
+export type ReviewStatus = 'Scheduled' | 'In Progress' | 'Completed' | 'Overdue';
+
+export interface ScheduledReview {
+  id: string;
+  assetId: string;
+  assetName: string;
+  reviewType: ReviewType;
+  owner: string;
+  dueDate: string;
+  status: ReviewStatus;
+  outcome?: string;
+}
+
+export type CorrectiveActionStatus = 'Open' | 'Assigned' | 'In Progress' | 'Completed' | 'Verified';
+
+export interface CorrectiveAction {
+  id: string;
+  assetId: string;
+  assetName: string;
+  title: string;
+  status: CorrectiveActionStatus;
+  severity: FindingSeverity;
+  assignedTo: string;
+  dueDate: string;
+  description: string;
+  verificationNotes?: string;
+}
+
+export interface GovernanceReviewPackage {
+  id: string;
+  assetId: string;
+  assetName: string;
+  generatedAt: string;
+  generatedBy: string;
+  healthScore: number;
+  healthStatus: GovernanceHealthStatus;
+  openIncidentsCount: number;
+  openActionsCount: number;
 }

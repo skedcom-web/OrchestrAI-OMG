@@ -21,7 +21,13 @@ import type {
   OverrideRecord,
   GovernanceIncident,
   RetirementRecord,
-  GovernanceTimelineEvent
+  GovernanceTimelineEvent,
+  GovernanceHealthBreakdown,
+  GovernanceAlert,
+  ScheduledReview,
+  CorrectiveAction,
+  GovernanceReviewPackage,
+  GovernanceHealthStatus
 } from '../types';
 import { 
   INITIAL_ASSETS, 
@@ -35,25 +41,32 @@ import {
   INITIAL_KILL_SWITCH_RECORDS,
   INITIAL_OVERRIDE_RECORDS,
   INITIAL_GOVERNANCE_INCIDENTS,
-  INITIAL_RETIREMENT_RECORDS
+  INITIAL_RETIREMENT_RECORDS,
+  INITIAL_GOVERNANCE_ALERTS,
+  INITIAL_SCHEDULED_REVIEWS,
+  INITIAL_CORRECTIVE_ACTIONS
 } from './mockData';
 
 const STORAGE_KEYS = {
-  ASSETS: 'omg_assets_v6',
-  USERS: 'omg_users_v6',
-  AUDIT_LOGS: 'omg_audit_logs_v6',
-  RISK_ASSESSMENTS: 'omg_risk_assessments_v6',
-  DECISIONS: 'omg_decisions_v6',
-  VALIDATIONS: 'omg_validations_v6',
-  EVIDENCE: 'omg_evidence_v6',
-  FINDINGS: 'omg_findings_v6',
-  PACKAGES: 'omg_decision_packages_v6',
-  COMPLIANCE_ASSESSMENTS: 'omg_compliance_assessments_v6',
-  COMPLIANCE_PACKAGES: 'omg_compliance_packages_v6',
-  KILL_SWITCHES: 'omg_kill_switches_v6',
-  OVERRIDES: 'omg_overrides_v6',
-  INCIDENTS: 'omg_incidents_v6',
-  RETIREMENTS: 'omg_retirements_v6',
+  ASSETS: 'omg_assets_v7',
+  USERS: 'omg_users_v7',
+  AUDIT_LOGS: 'omg_audit_logs_v7',
+  RISK_ASSESSMENTS: 'omg_risk_assessments_v7',
+  DECISIONS: 'omg_decisions_v7',
+  VALIDATIONS: 'omg_validations_v7',
+  EVIDENCE: 'omg_evidence_v7',
+  FINDINGS: 'omg_findings_v7',
+  PACKAGES: 'omg_decision_packages_v7',
+  COMPLIANCE_ASSESSMENTS: 'omg_compliance_assessments_v7',
+  COMPLIANCE_PACKAGES: 'omg_compliance_packages_v7',
+  KILL_SWITCHES: 'omg_kill_switches_v7',
+  OVERRIDES: 'omg_overrides_v7',
+  INCIDENTS: 'omg_incidents_v7',
+  RETIREMENTS: 'omg_retirements_v7',
+  ALERTS: 'omg_alerts_v7',
+  SCHEDULED_REVIEWS: 'omg_scheduled_reviews_v7',
+  CORRECTIVE_ACTIONS: 'omg_corrective_actions_v7',
+  HEALTH_PACKAGES: 'omg_health_packages_v7',
 };
 
 function getItem<T>(key: string, defaultData: T): T {
@@ -80,7 +93,7 @@ export function addAuditLog(
   userName: string,
   userRole: string,
   action: string,
-  entityType: 'Asset' | 'User' | 'Ownership' | 'Risk' | 'Decision' | 'Validation' | 'Evidence' | 'Finding' | 'DecisionPackage' | 'ComplianceAssessment' | 'CompliancePackage' | 'KillSwitch' | 'Override' | 'Incident' | 'Retirement',
+  entityType: 'Asset' | 'User' | 'Ownership' | 'Risk' | 'Decision' | 'Validation' | 'Evidence' | 'Finding' | 'DecisionPackage' | 'ComplianceAssessment' | 'CompliancePackage' | 'KillSwitch' | 'Override' | 'Incident' | 'Retirement' | 'ScheduledReview' | 'CorrectiveAction' | 'GovernanceReviewPackage',
   entityId: string,
   entityName: string,
   details: string
@@ -1009,7 +1022,6 @@ export function retireAsset(data: Partial<RetirementRecord>): RetirementRecord {
   return newRet;
 }
 
-// --- GOVERNANCE EVENT TIMELINE GENERATOR ---
 export function getGovernanceTimeline(assetId: string): GovernanceTimelineEvent[] {
   const asset = getAssetById(assetId);
   if (!asset) return [];
@@ -1105,7 +1117,200 @@ export function getGovernanceTimeline(assetId: string): GovernanceTimelineEvent[
   return timeline.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 }
 
-// --- METRICS WITH PHASE 6 EXTENSIONS ---
+// --- PHASE 7: CONTINUOUS MONITORING & GOVERNANCE HEALTH ENGINE ---
+
+export function calculateAssetGovernanceHealthScore(assetId: string): GovernanceHealthBreakdown {
+  const asset = getAssetById(assetId);
+  const validations = getValidations().filter(v => v.assetId === assetId);
+  const compliance = calculateAssetComplianceScore(assetId);
+  const incidents = getIncidents().filter(i => i.assetId === assetId && i.status !== 'Closed');
+  const killSwitches = getKillSwitches().filter(k => k.assetId === assetId && k.status === 'Activated');
+
+  if (!asset) {
+    return {
+      ownershipHealth: { score: 0, passed: false, message: 'Asset not found' },
+      riskHealth: { score: 0, passed: false, message: 'Asset not found' },
+      validationHealth: { score: 0, passed: false, message: 'Asset not found' },
+      complianceHealth: { score: 0, passed: false, message: 'Asset not found' },
+      operationalHealth: { score: 0, passed: false, message: 'Asset not found' },
+      overallHealthScore: 0,
+      healthStatus: 'Attention Required',
+    };
+  }
+
+  // 1. Ownership Health (20%)
+  const o = asset.ownership || {};
+  const ownPassed = !!(o.businessOwner && o.technicalOwner && o.riskOwner);
+  const ownScore = ownPassed ? 20 : 10;
+
+  // 2. Risk Health (20%)
+  const riskPassed = !!asset.riskLevel;
+  const riskScore = riskPassed ? 20 : 10;
+
+  // 3. Validation Health (20%)
+  const approvedVals = validations.filter(v => v.status === 'Approved');
+  const valPassed = approvedVals.length > 0 && (asset.validationScore || 0) >= 80;
+  const valScore = valPassed ? 20 : 10;
+
+  // 4. Compliance Health (20%)
+  const compPassed = compliance.score >= 80;
+  const compScore = compPassed ? 20 : compliance.score >= 50 ? 10 : 0;
+
+  // 5. Operational Health (20%)
+  const opPassed = incidents.length === 0 && killSwitches.length === 0;
+  const opScore = opPassed ? 20 : killSwitches.length > 0 ? 0 : 10;
+
+  const overallHealthScore = ownScore + riskScore + valScore + compScore + opScore;
+
+  let healthStatus: GovernanceHealthStatus = 'Attention Required';
+  if (overallHealthScore >= 90) healthStatus = 'Healthy';
+  else if (overallHealthScore >= 70) healthStatus = 'Watchlist';
+
+  return {
+    ownershipHealth: { score: ownScore, passed: ownPassed, message: ownPassed ? 'Ownership complete' : 'Incomplete owners' },
+    riskHealth: { score: riskScore, passed: riskPassed, message: riskPassed ? 'Risk profile active' : 'Risk unassessed' },
+    validationHealth: { score: valScore, passed: valPassed, message: valPassed ? 'Validations current' : 'Validation outdated' },
+    complianceHealth: { score: compScore, passed: compPassed, message: `Compliance score: ${compliance.score}%` },
+    operationalHealth: { score: opScore, passed: opPassed, message: opPassed ? 'Zero active incidents' : 'Operational exception active' },
+    overallHealthScore,
+    healthStatus,
+  };
+}
+
+export function getGovernanceAlerts(): GovernanceAlert[] {
+  return getItem<GovernanceAlert[]>(STORAGE_KEYS.ALERTS, INITIAL_GOVERNANCE_ALERTS);
+}
+
+export function getScheduledReviews(): ScheduledReview[] {
+  return getItem<ScheduledReview[]>(STORAGE_KEYS.SCHEDULED_REVIEWS, INITIAL_SCHEDULED_REVIEWS);
+}
+
+export function saveScheduledReview(data: Partial<ScheduledReview>): ScheduledReview {
+  const list = getScheduledReviews();
+  const asset = getAssetById(data.assetId || '');
+  const now = new Date().toISOString().split('T')[0];
+
+  if (data.id) {
+    const idx = list.findIndex(r => r.id === data.id);
+    if (idx !== -1) {
+      list[idx] = { ...list[idx], ...data };
+      setItem(STORAGE_KEYS.SCHEDULED_REVIEWS, list);
+      return list[idx];
+    }
+  }
+
+  const newRev: ScheduledReview = {
+    id: `sch-${Date.now().toString().slice(-4)}`,
+    assetId: data.assetId || '',
+    assetName: asset?.name || 'AI Asset',
+    reviewType: data.reviewType || 'Quarterly Review',
+    owner: data.owner || 'David Chen (Governance Admin)',
+    dueDate: data.dueDate || now,
+    status: data.status || 'Scheduled',
+  };
+
+  const updated = [newRev, ...list];
+  setItem(STORAGE_KEYS.SCHEDULED_REVIEWS, updated);
+
+  addAuditLog(
+    'usr-2',
+    newRev.owner,
+    'GOVERNANCE_ADMIN',
+    'REVIEW_SCHEDULED',
+    'ScheduledReview',
+    newRev.id,
+    newRev.assetName,
+    `Scheduled ${newRev.reviewType} for ${newRev.assetName} due on ${newRev.dueDate}`
+  );
+
+  return newRev;
+}
+
+export function getCorrectiveActions(): CorrectiveAction[] {
+  return getItem<CorrectiveAction[]>(STORAGE_KEYS.CORRECTIVE_ACTIONS, INITIAL_CORRECTIVE_ACTIONS);
+}
+
+export function saveCorrectiveAction(data: Partial<CorrectiveAction>): CorrectiveAction {
+  const list = getCorrectiveActions();
+  const asset = getAssetById(data.assetId || '');
+  const now = new Date().toISOString().split('T')[0];
+
+  if (data.id) {
+    const idx = list.findIndex(a => a.id === data.id);
+    if (idx !== -1) {
+      list[idx] = { ...list[idx], ...data };
+      setItem(STORAGE_KEYS.CORRECTIVE_ACTIONS, list);
+      return list[idx];
+    }
+  }
+
+  const newAct: CorrectiveAction = {
+    id: `act-${Date.now().toString().slice(-4)}`,
+    assetId: data.assetId || '',
+    assetName: asset?.name || 'AI Asset',
+    title: data.title || 'Governance Remediation Task',
+    status: data.status || 'Open',
+    severity: data.severity || 'Medium',
+    assignedTo: data.assignedTo || 'Sarah Jenkins',
+    dueDate: data.dueDate || now,
+    description: data.description || '',
+  };
+
+  const updated = [newAct, ...list];
+  setItem(STORAGE_KEYS.CORRECTIVE_ACTIONS, updated);
+
+  addAuditLog(
+    'usr-2',
+    newAct.assignedTo,
+    'GOVERNANCE_ADMIN',
+    'CORRECTIVE_ACTION_CREATED',
+    'CorrectiveAction',
+    newAct.id,
+    newAct.assetName,
+    `Assigned ${newAct.severity} Corrective Action: ${newAct.title} to ${newAct.assignedTo}`
+  );
+
+  return newAct;
+}
+
+export function generateGovernanceReviewPackage(assetId: string, authorName: string): GovernanceReviewPackage {
+  const packages = getItem<GovernanceReviewPackage[]>(STORAGE_KEYS.HEALTH_PACKAGES, []);
+  const asset = getAssetById(assetId) || getAssets()[0];
+  const healthDetails = calculateAssetGovernanceHealthScore(asset.id);
+  const incidents = getIncidents().filter(i => i.assetId === asset.id && i.status !== 'Closed');
+  const actions = getCorrectiveActions().filter(a => a.assetId === asset.id && a.status !== 'Completed');
+  const now = new Date().toISOString().split('T')[0];
+
+  const pkg: GovernanceReviewPackage = {
+    id: `h-pkg-${Date.now().toString().slice(-4)}`,
+    assetId: asset.id,
+    assetName: asset.name,
+    generatedAt: now,
+    generatedBy: authorName,
+    healthScore: healthDetails.overallHealthScore,
+    healthStatus: healthDetails.healthStatus,
+    openIncidentsCount: incidents.length,
+    openActionsCount: actions.length,
+  };
+
+  const updated = [pkg, ...packages];
+  setItem(STORAGE_KEYS.HEALTH_PACKAGES, updated);
+
+  addAuditLog(
+    'usr-2',
+    authorName,
+    'GOVERNANCE_ADMIN',
+    'HEALTH_PACKAGE_GENERATED',
+    'GovernanceReviewPackage',
+    pkg.id,
+    pkg.assetName,
+    `Generated Governance Health Review Package for ${pkg.assetName}. Score: ${pkg.healthScore}/100`
+  );
+
+  return pkg;
+}
+
+// --- METRICS WITH PHASE 7 EXTENSIONS ---
 export function getGovernanceMetrics(): GovernanceMetrics {
   const assets = getAssets();
   const validations = getValidations();
@@ -1118,6 +1323,9 @@ export function getGovernanceMetrics(): GovernanceMetrics {
   const overrides = getOverrides();
   const incidents = getIncidents();
   const retirements = getRetirements();
+  const alerts = getGovernanceAlerts();
+  const reviews = getScheduledReviews();
+  const actions = getCorrectiveActions();
 
   let readyCount = 0;
   let condReadyCount = 0;
@@ -1131,6 +1339,11 @@ export function getGovernanceMetrics(): GovernanceMetrics {
   let activeOpCount = 0;
   let suspendedOpCount = 0;
   let retiredOpCount = 0;
+
+  let healthyCount = 0;
+  let watchlistCount = 0;
+  let attentionCount = 0;
+  let totalHealthScore = 0;
 
   assets.forEach(asset => {
     const score = calculateAssetGovernanceScore(asset.id);
@@ -1148,9 +1361,16 @@ export function getGovernanceMetrics(): GovernanceMetrics {
     if (opStatus === 'Active') activeOpCount++;
     else if (opStatus === 'Suspended') suspendedOpCount++;
     else if (opStatus === 'Retired') retiredOpCount++;
+
+    const healthDetails = calculateAssetGovernanceHealthScore(asset.id);
+    totalHealthScore += healthDetails.overallHealthScore;
+    if (healthDetails.healthStatus === 'Healthy') healthyCount++;
+    else if (healthDetails.healthStatus === 'Watchlist') watchlistCount++;
+    else attentionCount++;
   });
 
   const tenantCompScore = assets.length > 0 ? Math.round(totalCompScore / assets.length) : 0;
+  const tenantHealthScore = assets.length > 0 ? Math.round(totalHealthScore / assets.length) : 0;
   const rbiAlignment = Math.min(100, Math.round((assessments.filter(a => a.status === 'Compliant').length / Math.max(1, SEEDED_COMPLIANCE_CONTROLS.length * assets.length)) * 100) + 75);
 
   const metrics: GovernanceMetrics = {
@@ -1189,6 +1409,13 @@ export function getGovernanceMetrics(): GovernanceMetrics {
     openIncidentsCount: incidents.filter(i => i.status === 'Open' || i.status === 'Investigating').length,
     criticalIncidentsCount: incidents.filter(i => i.severity === 'Critical' && i.status !== 'Closed').length,
     retiredAssetsCount: retirements.length,
+    tenantGovernanceHealthScore: tenantHealthScore,
+    healthyAssetsCount: healthyCount,
+    watchlistAssetsCount: watchlistCount,
+    attentionRequiredAssetsCount: attentionCount,
+    activeGovernanceAlertsCount: alerts.length,
+    upcomingReviewsCount: reviews.filter(r => r.status === 'Scheduled' || r.status === 'In Progress').length,
+    openCorrectiveActionsCount: actions.filter(a => a.status !== 'Completed' && a.status !== 'Verified').length,
   };
 
   let completeOwnershipCount = 0;
