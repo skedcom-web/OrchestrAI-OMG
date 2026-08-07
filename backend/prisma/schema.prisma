@@ -1,0 +1,172 @@
+// Prisma schema file for OrchestrAI Model Governance (OMG)
+// Connected to PostgreSQL (Neon PostgreSQL / Local Docker)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AssetType {
+  APPLICATION
+  AGENT
+  MODEL
+  LLM
+  COPILOT
+  RAG_SYSTEM
+  AI_WORKFLOW
+  MULTI_AGENT_SYSTEM
+  THIRD_PARTY_SERVICE
+}
+
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum GovernanceStatus {
+  DRAFT
+  REVIEW
+  VALIDATION
+  APPROVAL
+  PRODUCTION
+  RETIREMENT
+}
+
+enum DecisionOutcome {
+  GO
+  CONDITIONAL_GO
+  NO_GO
+  PENDING
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  GOVERNANCE_ADMIN
+  RISK_OFFICER
+  BUSINESS_OWNER
+  VIEWER
+}
+
+model User {
+  id              String         @id @default(uuid())
+  email           String         @unique
+  name            String
+  role            UserRole       @default(GOVERNANCE_ADMIN)
+  department      String
+  status          String         @default("Active")
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  
+  // Ownership relations
+  businessAssets   AssetOwner[]  @relation("BusinessOwner")
+  technicalAssets  AssetOwner[]  @relation("TechnicalOwner")
+  riskAssets       AssetOwner[]  @relation("RiskOwner")
+  complianceAssets AssetOwner[]  @relation("ComplianceOwner")
+  approvedAssets   AssetOwner[]  @relation("Approver")
+  auditLogs        AuditLog[]
+
+  @@map("users")
+}
+
+model AIAsset {
+  id               String            @id @default(uuid())
+  name             String
+  type             AssetType
+  description      String            @db.Text
+  department       String
+  version          String            @default("1.0.0")
+  status           GovernanceStatus  @default(DRAFT)
+  riskLevel        RiskLevel         @default(MEDIUM)
+  techStack        String[]
+  dataSensitivity  String            @default("Confidential")
+  validationScore  Int?
+  decisionOutcome  DecisionOutcome   @default(PENDING)
+  tags             String[]
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  owners           AssetOwner?
+  decisions        DecisionRecord[]
+  riskAssessments  RiskAssessment[]
+  auditLogs        AuditLog[]
+
+  @@map("ai_assets")
+}
+
+model AssetOwner {
+  id                String   @id @default(uuid())
+  assetId           String   @unique
+  asset             AIAsset  @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  businessOwnerId   String?
+  businessOwner     User?    @relation("BusinessOwner", fields: [businessOwnerId], references: [id])
+
+  technicalOwnerId  String?
+  technicalOwner    User?    @relation("TechnicalOwner", fields: [technicalOwnerId], references: [id])
+
+  riskOwnerId       String?
+  riskOwner         User?    @relation("RiskOwner", fields: [riskOwnerId], references: [id])
+
+  complianceOwnerId String?
+  complianceOwner   User?    @relation("ComplianceOwner", fields: [complianceOwnerId], references: [id])
+
+  approverId        String?
+  approver          User?    @relation("Approver", fields: [approverId], references: [id])
+
+  @@map("asset_owners")
+}
+
+model RiskAssessment {
+  id                 String     @id @default(uuid())
+  assetId            String
+  asset              AIAsset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  overallRiskTier    RiskLevel
+  context            String
+  dataSensitivity    String
+  decisionImpact     String
+  operationalImpact  String
+  controlOversight   String
+  assessedBy         String
+  createdAt          DateTime   @default(now())
+
+  @@map("risk_assessments")
+}
+
+model DecisionRecord {
+  id             String          @id @default(uuid())
+  assetId        String
+  asset          AIAsset         @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  outcome        DecisionOutcome
+  checklist      Json
+  decisionOwner  String
+  justification  String          @db.Text
+  createdAt      DateTime        @default(now())
+
+  @@map("decision_records")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  timestamp  DateTime @default(now())
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id])
+  userName   String
+  userRole   String
+  action     String
+  entityType String
+  entityId   String
+  entityName String
+  details    String   @db.Text
+  ipAddress  String?
+
+  assetId    String?
+  asset      AIAsset? @relation(fields: [assetId], references: [id])
+
+  @@map("audit_logs")
+}

@@ -1,0 +1,117 @@
+/* OMG Design System Tokens - Supporting Light, Dark, and Glassmorphism */
+
+:root {
+  /* Common Brand Identity Colors */
+  --color-brand-purple: #8B5CF6;
+  --color-brand-cyan: #06B6D4;
+  --color-brand-magenta: #EC4899;
+  --color-brand-orange: #F97316;
+  
+  --font-family-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-family-heading: 'Outfit', 'Inter', sans-serif;
+}
+
+/* ☀️ LIGHT MODE (Default) */
+[data-theme='light'] {
+  --bg-app: #F8FAFC;
+  --bg-sidebar: #FFFFFF;
+  --bg-topbar: #FFFFFF;
+  --bg-card: #FFFFFF;
+  --bg-card-hover: #F1F5F9;
+  --bg-input: #F8FAFC;
+  --bg-modal: #FFFFFF;
+  --bg-badge: #F1F5F9;
+
+  --border-color: #E2E8F0;
+  --border-subtle: #F1F5F9;
+  --border-focus: #DC2626;
+
+  --text-primary: #0F172A;
+  --text-secondary: #475569;
+  --text-muted: #94A3B8;
+  --text-inverse: #FFFFFF;
+
+  --accent-primary: #DC2626;
+  --accent-hover: #B91C1C;
+  --accent-light: #FEF2F2;
+  --accent-border: #FCA5A5;
+
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
+  --shadow-glow: 0 0 15px rgba(220, 38, 38, 0.15);
+
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(226, 232, 240, 0.8);
+  --backdrop-blur: blur(8px);
+}
+
+/* 🌙 DARK MODE */
+[data-theme='dark'] {
+  --bg-app: #0B0F19;
+  --bg-sidebar: #111827;
+  --bg-topbar: #111827;
+  --bg-card: #151C2C;
+  --bg-card-hover: #1E293B;
+  --bg-input: #0F172A;
+  --bg-modal: #1E293B;
+  --bg-badge: #1E293B;
+
+  --border-color: #1E293B;
+  --border-subtle: #151C2C;
+  --border-focus: #EF4444;
+
+  --text-primary: #F8FAFC;
+  --text-secondary: #94A3B8;
+  --text-muted: #64748B;
+  --text-inverse: #0F172A;
+
+  --accent-primary: #EF4444;
+  --accent-hover: #DC2626;
+  --accent-light: rgba(239, 68, 68, 0.12);
+  --accent-border: rgba(239, 68, 68, 0.3);
+
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 0 20px rgba(239, 68, 68, 0.25);
+
+  --glass-bg: rgba(17, 24, 39, 0.75);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --backdrop-blur: blur(12px);
+}
+
+/* 💎 GLASSMORPHISM MODE */
+[data-theme='glass'] {
+  --bg-app: #070A12;
+  --bg-sidebar: rgba(13, 18, 30, 0.65);
+  --bg-topbar: rgba(13, 18, 30, 0.65);
+  --bg-card: rgba(255, 255, 255, 0.04);
+  --bg-card-hover: rgba(255, 255, 255, 0.08);
+  --bg-input: rgba(255, 255, 255, 0.06);
+  --bg-modal: rgba(18, 24, 40, 0.85);
+  --bg-badge: rgba(255, 255, 255, 0.08);
+
+  --border-color: rgba(255, 255, 255, 0.1);
+  --border-subtle: rgba(255, 255, 255, 0.05);
+  --border-focus: #F43F5E;
+
+  --text-primary: #F1F5F9;
+  --text-secondary: #CBD5E1;
+  --text-muted: #64748B;
+  --text-inverse: #070A12;
+
+  --accent-primary: #F43F5E;
+  --accent-hover: #E11D48;
+  --accent-light: rgba(244, 63, 94, 0.18);
+  --accent-border: rgba(244, 63, 94, 0.4);
+
+  --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  --shadow-lg: 0 16px 48px 0 rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 0 30px rgba(244, 63, 94, 0.35);
+
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --backdrop-blur: blur(20px);
+}
