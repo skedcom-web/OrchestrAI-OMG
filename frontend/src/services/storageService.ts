@@ -15,7 +15,13 @@ import type {
   ComplianceAssessmentRecord,
   ComplianceGap,
   CompliancePackage,
-  ComplianceEvaluationStatus
+  ComplianceEvaluationStatus,
+  OperationalStatus,
+  KillSwitchRecord,
+  OverrideRecord,
+  GovernanceIncident,
+  RetirementRecord,
+  GovernanceTimelineEvent
 } from '../types';
 import { 
   INITIAL_ASSETS, 
@@ -25,21 +31,29 @@ import {
   INITIAL_EVIDENCE, 
   INITIAL_FINDINGS,
   SEEDED_COMPLIANCE_CONTROLS,
-  INITIAL_COMPLIANCE_ASSESSMENTS
+  INITIAL_COMPLIANCE_ASSESSMENTS,
+  INITIAL_KILL_SWITCH_RECORDS,
+  INITIAL_OVERRIDE_RECORDS,
+  INITIAL_GOVERNANCE_INCIDENTS,
+  INITIAL_RETIREMENT_RECORDS
 } from './mockData';
 
 const STORAGE_KEYS = {
-  ASSETS: 'omg_assets_v5',
-  USERS: 'omg_users_v5',
-  AUDIT_LOGS: 'omg_audit_logs_v5',
-  RISK_ASSESSMENTS: 'omg_risk_assessments_v5',
-  DECISIONS: 'omg_decisions_v5',
-  VALIDATIONS: 'omg_validations_v5',
-  EVIDENCE: 'omg_evidence_v5',
-  FINDINGS: 'omg_findings_v5',
-  PACKAGES: 'omg_decision_packages_v5',
-  COMPLIANCE_ASSESSMENTS: 'omg_compliance_assessments_v5',
-  COMPLIANCE_PACKAGES: 'omg_compliance_packages_v5',
+  ASSETS: 'omg_assets_v6',
+  USERS: 'omg_users_v6',
+  AUDIT_LOGS: 'omg_audit_logs_v6',
+  RISK_ASSESSMENTS: 'omg_risk_assessments_v6',
+  DECISIONS: 'omg_decisions_v6',
+  VALIDATIONS: 'omg_validations_v6',
+  EVIDENCE: 'omg_evidence_v6',
+  FINDINGS: 'omg_findings_v6',
+  PACKAGES: 'omg_decision_packages_v6',
+  COMPLIANCE_ASSESSMENTS: 'omg_compliance_assessments_v6',
+  COMPLIANCE_PACKAGES: 'omg_compliance_packages_v6',
+  KILL_SWITCHES: 'omg_kill_switches_v6',
+  OVERRIDES: 'omg_overrides_v6',
+  INCIDENTS: 'omg_incidents_v6',
+  RETIREMENTS: 'omg_retirements_v6',
 };
 
 function getItem<T>(key: string, defaultData: T): T {
@@ -66,7 +80,7 @@ export function addAuditLog(
   userName: string,
   userRole: string,
   action: string,
-  entityType: 'Asset' | 'User' | 'Ownership' | 'Risk' | 'Decision' | 'Validation' | 'Evidence' | 'Finding' | 'DecisionPackage' | 'ComplianceAssessment' | 'CompliancePackage',
+  entityType: 'Asset' | 'User' | 'Ownership' | 'Risk' | 'Decision' | 'Validation' | 'Evidence' | 'Finding' | 'DecisionPackage' | 'ComplianceAssessment' | 'CompliancePackage' | 'KillSwitch' | 'Override' | 'Incident' | 'Retirement',
   entityId: string,
   entityName: string,
   details: string
@@ -130,7 +144,7 @@ export function saveAsset(assetData: Partial<AIAsset>): AIAsset {
         'Asset',
         updatedAsset.id,
         updatedAsset.name,
-        `Updated asset details for ${updatedAsset.name} (v${updatedAsset.version})`
+        `Updated asset details for ${updatedAsset.name} (Operational Status: ${updatedAsset.operationalStatus || 'Active'})`
       );
 
       return updatedAsset;
@@ -145,6 +159,7 @@ export function saveAsset(assetData: Partial<AIAsset>): AIAsset {
     department: assetData.department || 'Enterprise AI',
     version: assetData.version || '1.0.0',
     status: assetData.status || 'Draft',
+    operationalStatus: assetData.operationalStatus || 'Active',
     riskLevel: assetData.riskLevel || 'Medium',
     ownership: assetData.ownership || {},
     techStack: assetData.techStack || [],
@@ -191,6 +206,25 @@ export function deleteAsset(id: string): void {
       `Deleted asset ${target.name} from registry.`
     );
   }
+}
+
+export function updateAssetOperationalStatus(id: string, operationalStatus: OperationalStatus, user: string): void {
+  const asset = getAssetById(id);
+  if (!asset) return;
+
+  asset.operationalStatus = operationalStatus;
+  saveAsset(asset);
+
+  addAuditLog(
+    'usr-1',
+    user,
+    'GOVERNANCE_ADMIN',
+    'OPERATIONAL_STATUS_CHANGED',
+    'Asset',
+    id,
+    asset.name,
+    `Changed operational status of ${asset.name} to '${operationalStatus}'`
+  );
 }
 
 // --- USERS SERVICE ---
@@ -396,7 +430,100 @@ export function saveFinding(findingData: Partial<Finding>): Finding {
   return newFinding;
 }
 
-// --- PHASE 4 SCORING & BLOCKERS ---
+// --- DECISION GATEKEEPER & PACKAGE SERVICE ---
+export function recordDecision(recordData: Partial<DecisionRecord>): DecisionRecord {
+  const decisions = getItem<DecisionRecord[]>(STORAGE_KEYS.DECISIONS, []);
+  const now = new Date().toISOString().split('T')[0];
+
+  const newRecord: DecisionRecord = {
+    id: `dec-${Date.now().toString().slice(-4)}`,
+    assetId: recordData.assetId || '',
+    outcome: recordData.outcome || 'PENDING',
+    checklist: recordData.checklist || {
+      ownershipComplete: false,
+      riskAssessmentComplete: false,
+      requiredReviewsComplete: false,
+      validationComplete: false,
+      monitoringDefined: false,
+      auditRequirementsMet: false,
+      humanOverrideAvailable: false,
+      killSwitchDefined: false,
+    },
+    decisionOwner: recordData.decisionOwner || 'David Chen',
+    decisionDate: now,
+    justification: recordData.justification || '',
+    conditions: recordData.conditions || [],
+  };
+
+  const updated = [newRecord, ...decisions];
+  setItem(STORAGE_KEYS.DECISIONS, updated);
+
+  if (recordData.assetId) {
+    const asset = getAssetById(recordData.assetId);
+    if (asset) {
+      asset.decisionOutcome = recordData.outcome;
+      if (recordData.outcome === 'GO') asset.status = 'Production';
+      saveAsset(asset);
+    }
+  }
+
+  addAuditLog(
+    'usr-2',
+    newRecord.decisionOwner,
+    'GOVERNANCE_ADMIN',
+    'DECISION_EXECUTED',
+    'Decision',
+    newRecord.assetId,
+    'Decision Gatekeeper',
+    `Executed Decision Outcome: ${newRecord.outcome}. Justification: ${newRecord.justification}`
+  );
+
+  return newRecord;
+}
+
+export function generateDecisionPackage(assetId: string, authorName: string): DecisionPackage {
+  const packages = getItem<DecisionPackage[]>(STORAGE_KEYS.PACKAGES, []);
+  const asset = getAssetById(assetId) || getAssets()[0];
+  const scoreBreakdown = calculateAssetGovernanceScore(asset.id);
+  const evidence = getEvidence().filter(e => e.assetId === asset.id);
+  const findings = getFindings().filter(f => f.assetId === asset.id);
+  const now = new Date().toISOString().split('T')[0];
+
+  const pkg: DecisionPackage = {
+    id: `pkg-${Date.now().toString().slice(-4)}`,
+    assetId: asset.id,
+    assetName: asset.name,
+    assetType: asset.type,
+    generatedAt: now,
+    generatedBy: authorName,
+    governanceScore: scoreBreakdown.overallScore,
+    readinessTier: scoreBreakdown.readinessTier,
+    recommendedOutcome: scoreBreakdown.recommendedOutcome,
+    actualOutcome: asset.decisionOutcome || scoreBreakdown.recommendedOutcome,
+    justification: `Executive Decision Briefing Package generated for ${asset.name}. Governance score: ${scoreBreakdown.overallScore}/100.`,
+    deliverablesCount: evidence.length,
+    findingsCount: findings.length,
+    ownersSummary: asset.ownership || {},
+  };
+
+  const updated = [pkg, ...packages];
+  setItem(STORAGE_KEYS.PACKAGES, updated);
+
+  addAuditLog(
+    'usr-1',
+    authorName,
+    'GOVERNANCE_ADMIN',
+    'DECISION_PACKAGE_GENERATED',
+    'DecisionPackage',
+    pkg.id,
+    pkg.assetName,
+    `Generated Executive Governance Decision Briefing Package for ${pkg.assetName}`
+  );
+
+  return pkg;
+}
+
+// --- PHASE 4 & 5 CALCULATIONS ---
 export function calculateAssetGovernanceScore(assetId: string): GovernanceScoreBreakdown {
   const asset = getAssetById(assetId);
   const validations = getValidations().filter(v => v.assetId === assetId);
@@ -544,100 +671,6 @@ export function getGovernanceBlockers(assetId?: string): GovernanceBlocker[] {
   return blockers;
 }
 
-export function recordDecision(recordData: Partial<DecisionRecord>): DecisionRecord {
-  const decisions = getItem<DecisionRecord[]>(STORAGE_KEYS.DECISIONS, []);
-  const now = new Date().toISOString().split('T')[0];
-
-  const newRecord: DecisionRecord = {
-    id: `dec-${Date.now().toString().slice(-4)}`,
-    assetId: recordData.assetId || '',
-    outcome: recordData.outcome || 'PENDING',
-    checklist: recordData.checklist || {
-      ownershipComplete: false,
-      riskAssessmentComplete: false,
-      requiredReviewsComplete: false,
-      validationComplete: false,
-      monitoringDefined: false,
-      auditRequirementsMet: false,
-      humanOverrideAvailable: false,
-      killSwitchDefined: false,
-    },
-    decisionOwner: recordData.decisionOwner || 'David Chen',
-    decisionDate: now,
-    justification: recordData.justification || '',
-    conditions: recordData.conditions || [],
-  };
-
-  const updated = [newRecord, ...decisions];
-  setItem(STORAGE_KEYS.DECISIONS, updated);
-
-  if (recordData.assetId) {
-    const asset = getAssetById(recordData.assetId);
-    if (asset) {
-      asset.decisionOutcome = recordData.outcome;
-      if (recordData.outcome === 'GO') asset.status = 'Production';
-      saveAsset(asset);
-    }
-  }
-
-  addAuditLog(
-    'usr-2',
-    newRecord.decisionOwner,
-    'GOVERNANCE_ADMIN',
-    'DECISION_EXECUTED',
-    'Decision',
-    newRecord.assetId,
-    'Decision Gatekeeper',
-    `Executed Decision Outcome: ${newRecord.outcome}. Justification: ${newRecord.justification}`
-  );
-
-  return newRecord;
-}
-
-export function generateDecisionPackage(assetId: string, authorName: string): DecisionPackage {
-  const packages = getItem<DecisionPackage[]>(STORAGE_KEYS.PACKAGES, []);
-  const asset = getAssetById(assetId) || getAssets()[0];
-  const scoreBreakdown = calculateAssetGovernanceScore(asset.id);
-  const evidence = getEvidence().filter(e => e.assetId === asset.id);
-  const findings = getFindings().filter(f => f.assetId === asset.id);
-  const now = new Date().toISOString().split('T')[0];
-
-  const pkg: DecisionPackage = {
-    id: `pkg-${Date.now().toString().slice(-4)}`,
-    assetId: asset.id,
-    assetName: asset.name,
-    assetType: asset.type,
-    generatedAt: now,
-    generatedBy: authorName,
-    governanceScore: scoreBreakdown.overallScore,
-    readinessTier: scoreBreakdown.readinessTier,
-    recommendedOutcome: scoreBreakdown.recommendedOutcome,
-    actualOutcome: asset.decisionOutcome || scoreBreakdown.recommendedOutcome,
-    justification: `Executive Decision Briefing Package generated for ${asset.name}. Governance score: ${scoreBreakdown.overallScore}/100.`,
-    deliverablesCount: evidence.length,
-    findingsCount: findings.length,
-    ownersSummary: asset.ownership || {},
-  };
-
-  const updated = [pkg, ...packages];
-  setItem(STORAGE_KEYS.PACKAGES, updated);
-
-  addAuditLog(
-    'usr-1',
-    authorName,
-    'GOVERNANCE_ADMIN',
-    'DECISION_PACKAGE_GENERATED',
-    'DecisionPackage',
-    pkg.id,
-    pkg.assetName,
-    `Generated Executive Governance Decision Briefing Package for ${pkg.assetName}`
-  );
-
-  return pkg;
-}
-
-// --- PHASE 5: COMPLIANCE & REGULATORY INTELLIGENCE SERVICE ---
-
 export function getComplianceControls(): ComplianceControl[] {
   return SEEDED_COMPLIANCE_CONTROLS;
 }
@@ -772,7 +805,307 @@ export function generateCompliancePackage(assetId: string, authorName: string): 
   return pkg;
 }
 
-// --- METRICS WITH PHASE 5 EXTENSIONS ---
+// --- PHASE 6: OPERATIONAL GOVERNANCE & KILL SWITCH SERVICES ---
+
+export function getKillSwitches(): KillSwitchRecord[] {
+  return getItem<KillSwitchRecord[]>(STORAGE_KEYS.KILL_SWITCHES, INITIAL_KILL_SWITCH_RECORDS);
+}
+
+export function requestKillSwitch(data: Partial<KillSwitchRecord>): KillSwitchRecord {
+  const list = getKillSwitches();
+  const asset = getAssetById(data.assetId || '');
+  const now = new Date().toISOString().replace('T', ' ').slice(0, 16);
+
+  const newRecord: KillSwitchRecord = {
+    id: `ks-${Date.now().toString().slice(-4)}`,
+    assetId: data.assetId || '',
+    assetName: asset?.name || 'AI Asset',
+    triggerCategory: data.triggerCategory || 'Critical Incident',
+    status: 'Activated',
+    requestedBy: data.requestedBy || 'Sarah Jenkins (Super Admin)',
+    approvedBy: data.approvedBy || 'Sarah Jenkins (Super Admin)',
+    activatedAt: now,
+    reason: data.reason || 'Emergency circuit breaker engaged.',
+    resolutionNotes: 'Under root cause analysis by Governance Team.',
+  };
+
+  const updated = [newRecord, ...list];
+  setItem(STORAGE_KEYS.KILL_SWITCHES, updated);
+
+  if (asset) {
+    asset.operationalStatus = 'Suspended';
+    saveAsset(asset);
+  }
+
+  addAuditLog(
+    'usr-1',
+    newRecord.requestedBy,
+    'SUPER_ADMIN',
+    'KILL_SWITCH_ACTIVATED',
+    'KillSwitch',
+    newRecord.id,
+    newRecord.assetName,
+    `Engaged Emergency Kill Switch for ${newRecord.assetName}. Category: ${newRecord.triggerCategory}. Reason: ${newRecord.reason}`
+  );
+
+  return newRecord;
+}
+
+export function releaseKillSwitch(killSwitchId: string, releasedBy: string, notes: string): void {
+  const list = getKillSwitches();
+  const idx = list.findIndex(k => k.id === killSwitchId);
+  if (idx !== -1) {
+    list[idx].status = 'Released';
+    list[idx].resolutionNotes = notes;
+    setItem(STORAGE_KEYS.KILL_SWITCHES, list);
+
+    const asset = getAssetById(list[idx].assetId);
+    if (asset) {
+      asset.operationalStatus = 'Active';
+      saveAsset(asset);
+    }
+
+    addAuditLog(
+      'usr-1',
+      releasedBy,
+      'SUPER_ADMIN',
+      'KILL_SWITCH_RELEASED',
+      'KillSwitch',
+      killSwitchId,
+      list[idx].assetName,
+      `Released Kill Switch for ${list[idx].assetName}. Restored to Active operation. Rationale: ${notes}`
+    );
+  }
+}
+
+export function getOverrides(): OverrideRecord[] {
+  return getItem<OverrideRecord[]>(STORAGE_KEYS.OVERRIDES, INITIAL_OVERRIDE_RECORDS);
+}
+
+export function recordOverride(data: Partial<OverrideRecord>): OverrideRecord {
+  const list = getOverrides();
+  const asset = getAssetById(data.assetId || '');
+  const now = new Date().toISOString().replace('T', ' ').slice(0, 16);
+
+  const newRecord: OverrideRecord = {
+    id: `ovr-${Date.now().toString().slice(-4)}`,
+    assetId: data.assetId || '',
+    assetName: asset?.name || 'AI Asset',
+    triggerReason: data.triggerReason || 'Human supervisor manual decision override',
+    requestedBy: data.requestedBy || 'Marcus Vance (Business Owner)',
+    approvedBy: data.approvedBy || 'David Chen (Governance Admin)',
+    timestamp: now,
+    actionTaken: data.actionTaken || 'AI Decision Reversed & Manually Approved.',
+  };
+
+  const updated = [newRecord, ...list];
+  setItem(STORAGE_KEYS.OVERRIDES, updated);
+
+  addAuditLog(
+    'usr-4',
+    newRecord.requestedBy,
+    'BUSINESS_OWNER',
+    'HUMAN_OVERRIDE_EXECUTED',
+    'Override',
+    newRecord.id,
+    newRecord.assetName,
+    `Executed Human Override for ${newRecord.assetName}. Action: ${newRecord.actionTaken}`
+  );
+
+  return newRecord;
+}
+
+export function getIncidents(): GovernanceIncident[] {
+  return getItem<GovernanceIncident[]>(STORAGE_KEYS.INCIDENTS, INITIAL_GOVERNANCE_INCIDENTS);
+}
+
+export function saveIncident(data: Partial<GovernanceIncident>): GovernanceIncident {
+  const list = getIncidents();
+  const asset = getAssetById(data.assetId || '');
+  const now = new Date().toISOString().replace('T', ' ').slice(0, 16);
+
+  if (data.id) {
+    const idx = list.findIndex(i => i.id === data.id);
+    if (idx !== -1) {
+      list[idx] = { ...list[idx], ...data };
+      setItem(STORAGE_KEYS.INCIDENTS, list);
+      return list[idx];
+    }
+  }
+
+  const newInc: GovernanceIncident = {
+    id: `inc-${Date.now().toString().slice(-4)}`,
+    assetId: data.assetId || '',
+    assetName: asset?.name || 'AI Asset',
+    title: data.title || 'Operational Governance Anomaly',
+    type: data.type || 'Operational Failure',
+    severity: data.severity || 'Medium',
+    status: data.status || 'Open',
+    reportedBy: data.reportedBy || 'Dr. Aris Thorne',
+    assignedTo: data.assignedTo || 'Sarah Jenkins',
+    createdAt: now,
+    description: data.description || '',
+  };
+
+  const updated = [newInc, ...list];
+  setItem(STORAGE_KEYS.INCIDENTS, updated);
+
+  addAuditLog(
+    'usr-5',
+    newInc.reportedBy,
+    'VALIDATOR',
+    'INCIDENT_LOGGED',
+    'Incident',
+    newInc.id,
+    newInc.assetName,
+    `Logged ${newInc.severity} Governance Incident: ${newInc.title} for ${newInc.assetName}`
+  );
+
+  return newInc;
+}
+
+export function getRetirements(): RetirementRecord[] {
+  return getItem<RetirementRecord[]>(STORAGE_KEYS.RETIREMENTS, INITIAL_RETIREMENT_RECORDS);
+}
+
+export function retireAsset(data: Partial<RetirementRecord>): RetirementRecord {
+  const list = getRetirements();
+  const asset = getAssetById(data.assetId || '');
+  const now = new Date().toISOString().split('T')[0];
+  const evidenceCount = getEvidence().filter(e => e.assetId === data.assetId).length;
+
+  const newRet: RetirementRecord = {
+    id: `ret-${Date.now().toString().slice(-4)}`,
+    assetId: data.assetId || '',
+    assetName: asset?.name || 'AI Asset',
+    reason: data.reason || 'End of Life',
+    requestedBy: data.requestedBy || 'Marcus Vance',
+    approvedBy: data.approvedBy || 'David Chen',
+    retiredAt: now,
+    evidenceArchivedCount: evidenceCount,
+    notes: data.notes || 'Governed decommissioning completed and evidence archived.',
+  };
+
+  const updated = [newRet, ...list];
+  setItem(STORAGE_KEYS.RETIREMENTS, updated);
+
+  if (asset) {
+    asset.status = 'Retirement';
+    asset.operationalStatus = 'Retired';
+    saveAsset(asset);
+  }
+
+  addAuditLog(
+    'usr-2',
+    newRet.approvedBy,
+    'GOVERNANCE_ADMIN',
+    'ASSET_RETIRED',
+    'Retirement',
+    newRet.id,
+    newRet.assetName,
+    `Executed controlled retirement for ${newRet.assetName}. Reason: ${newRet.reason}`
+  );
+
+  return newRet;
+}
+
+// --- GOVERNANCE EVENT TIMELINE GENERATOR ---
+export function getGovernanceTimeline(assetId: string): GovernanceTimelineEvent[] {
+  const asset = getAssetById(assetId);
+  if (!asset) return [];
+
+  const timeline: GovernanceTimelineEvent[] = [];
+
+  timeline.push({
+    id: `tl-reg-${asset.id}`,
+    assetId: asset.id,
+    timestamp: asset.createdAt,
+    stage: '1. AI Asset Registration',
+    actor: asset.ownership.businessOwner || 'Sarah Jenkins',
+    details: `Registered asset ${asset.name} (Type: ${asset.type}) in ${asset.department}`,
+    type: 'registration',
+  });
+
+  if (asset.riskLevel) {
+    timeline.push({
+      id: `tl-risk-${asset.id}`,
+      assetId: asset.id,
+      timestamp: asset.createdAt,
+      stage: '2. Risk Assessment Wizard',
+      actor: asset.ownership.riskOwner || 'Elena Rostova',
+      details: `Classified as ${asset.riskLevel} Risk Tier. Sensitivity: ${asset.dataSensitivity || 'Confidential'}`,
+      type: 'risk',
+    });
+  }
+
+  const validations = getValidations().filter(v => v.assetId === assetId);
+  validations.forEach(v => {
+    timeline.push({
+      id: `tl-val-${v.id}`,
+      assetId: asset.id,
+      timestamp: v.reviewDate,
+      stage: `3. Validation Review (${v.category})`,
+      actor: v.reviewer,
+      details: `Validation Outcome: ${v.status} (Score: ${v.score}%)`,
+      type: 'validation',
+    });
+  });
+
+  if (asset.decisionOutcome && asset.decisionOutcome !== 'PENDING') {
+    timeline.push({
+      id: `tl-dec-${asset.id}`,
+      assetId: asset.id,
+      timestamp: asset.updatedAt,
+      stage: '4. Decision Authority Gatekeeper',
+      actor: asset.ownership.approver || 'David Chen',
+      details: `Signed Decision Outcome: ${asset.decisionOutcome}`,
+      type: 'decision',
+    });
+  }
+
+  const killSwitches = getKillSwitches().filter(k => k.assetId === assetId);
+  killSwitches.forEach(k => {
+    timeline.push({
+      id: `tl-ks-${k.id}`,
+      assetId: asset.id,
+      timestamp: k.activatedAt,
+      stage: `5. Kill Switch ${k.status}`,
+      actor: k.requestedBy,
+      details: `Trigger: ${k.triggerCategory}. Reason: ${k.reason}`,
+      type: 'killswitch',
+    });
+  });
+
+  const overrides = getOverrides().filter(o => o.assetId === assetId);
+  overrides.forEach(o => {
+    timeline.push({
+      id: `tl-ovr-${o.id}`,
+      assetId: asset.id,
+      timestamp: o.timestamp,
+      stage: '6. Human Override Executed',
+      actor: o.requestedBy,
+      details: `Action: ${o.actionTaken}`,
+      type: 'override',
+    });
+  });
+
+  const retirements = getRetirements().filter(r => r.assetId === assetId);
+  retirements.forEach(r => {
+    timeline.push({
+      id: `tl-ret-${r.id}`,
+      assetId: asset.id,
+      timestamp: r.retiredAt,
+      stage: '7. Controlled Decommissioning',
+      actor: r.approvedBy,
+      details: `Asset Retired. Reason: ${r.reason}`,
+      type: 'retirement',
+    });
+  });
+
+  return timeline.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+}
+
+// --- METRICS WITH PHASE 6 EXTENSIONS ---
 export function getGovernanceMetrics(): GovernanceMetrics {
   const assets = getAssets();
   const validations = getValidations();
@@ -781,6 +1114,10 @@ export function getGovernanceMetrics(): GovernanceMetrics {
   const blockers = getGovernanceBlockers();
   const assessments = getComplianceAssessments();
   const gaps = getComplianceGaps();
+  const killSwitches = getKillSwitches();
+  const overrides = getOverrides();
+  const incidents = getIncidents();
+  const retirements = getRetirements();
 
   let readyCount = 0;
   let condReadyCount = 0;
@@ -790,6 +1127,10 @@ export function getGovernanceMetrics(): GovernanceMetrics {
   let partCompliantCount = 0;
   let nonCompliantCount = 0;
   let totalCompScore = 0;
+
+  let activeOpCount = 0;
+  let suspendedOpCount = 0;
+  let retiredOpCount = 0;
 
   assets.forEach(asset => {
     const score = calculateAssetGovernanceScore(asset.id);
@@ -802,6 +1143,11 @@ export function getGovernanceMetrics(): GovernanceMetrics {
     if (compDetails.status === 'Compliant') compliantCount++;
     else if (compDetails.status === 'Partially Compliant') partCompliantCount++;
     else nonCompliantCount++;
+
+    const opStatus = asset.operationalStatus || 'Active';
+    if (opStatus === 'Active') activeOpCount++;
+    else if (opStatus === 'Suspended') suspendedOpCount++;
+    else if (opStatus === 'Retired') retiredOpCount++;
   });
 
   const tenantCompScore = assets.length > 0 ? Math.round(totalCompScore / assets.length) : 0;
@@ -836,6 +1182,13 @@ export function getGovernanceMetrics(): GovernanceMetrics {
     partiallyCompliantAssetsCount: partCompliantCount,
     nonCompliantAssetsCount: nonCompliantCount,
     openComplianceGapsCount: gaps.length,
+    activeOperationalAssetsCount: activeOpCount,
+    suspendedAssetsCount: suspendedOpCount,
+    killSwitchEventsCount: killSwitches.length,
+    overridesExecutedCount: overrides.length,
+    openIncidentsCount: incidents.filter(i => i.status === 'Open' || i.status === 'Investigating').length,
+    criticalIncidentsCount: incidents.filter(i => i.severity === 'Critical' && i.status !== 'Closed').length,
+    retiredAssetsCount: retirements.length,
   };
 
   let completeOwnershipCount = 0;

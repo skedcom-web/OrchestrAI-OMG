@@ -7,7 +7,11 @@ import type {
   EvidenceDocument, 
   Finding,
   ComplianceControl,
-  ComplianceAssessmentRecord
+  ComplianceAssessmentRecord,
+  KillSwitchRecord,
+  OverrideRecord,
+  GovernanceIncident,
+  RetirementRecord
 } from '../types';
 
 export const SEEDED_COMPLIANCE_CONTROLS: ComplianceControl[] = [
@@ -100,14 +104,15 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
     name: 'Sarah Jenkins',
     email: 'sarah.jenkins@enterprise-bank.com',
     department: 'Enterprise AI & Architecture',
-    description: 'Platform Owner • Full system access, user management, platform settings & compliance config.',
+    description: 'Platform Owner • Full system access, user management, platform settings & kill switch authority.',
     icon: '👑',
     allowedNav: [
       '/', '/dashboard', '/assets', '/ownership', '/risk', 
       '/validation', '/evidence', '/review-workbench', '/findings', '/validation-dashboard', 
       '/decision-intelligence', '/governance-blockers', '/decision-workbench-v4', '/decision-dashboard',
       '/compliance-center', '/regulatory-library', '/compliance-assessment', '/compliance-findings', '/compliance-dashboard',
-      '/decision-governance', '/users', '/audit-logs'
+      '/operations-center', '/kill-switch', '/override-center', '/incidents', '/operations-dashboard', '/retirement', '/governance-timeline',
+      '/users', '/audit-logs'
     ],
   },
   {
@@ -116,14 +121,15 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
     name: 'David Chen',
     email: 'david.chen@enterprise-bank.com',
     department: 'AI Governance Office',
-    description: 'Program Manager • Manage AI Assets, RBI Compliance Assessments, Evidence & Decision Intelligence.',
+    description: 'Program Manager • Manage AI Assets, Operational Governance, Kill Switch & Compliance Intelligence.',
     icon: '🛡️',
     allowedNav: [
       '/', '/dashboard', '/assets', '/ownership', '/risk', 
       '/validation', '/evidence', '/review-workbench', '/findings', '/validation-dashboard', 
       '/decision-intelligence', '/governance-blockers', '/decision-workbench-v4', '/decision-dashboard',
       '/compliance-center', '/regulatory-library', '/compliance-assessment', '/compliance-findings', '/compliance-dashboard',
-      '/decision-governance', '/audit-logs'
+      '/operations-center', '/kill-switch', '/override-center', '/incidents', '/operations-dashboard', '/retirement', '/governance-timeline',
+      '/audit-logs'
     ],
   },
   {
@@ -132,12 +138,13 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
     name: 'Elena Rostova',
     email: 'elena.rostova@enterprise-bank.com',
     department: 'Model Risk Management',
-    description: 'Risk Governance • Perform Risk Assessment Wizard, RBI Risk Controls & Compliance Gaps.',
+    description: 'Risk Governance • Monitor operational incidents, kill switch requests & override logs.',
     icon: '⚡',
     allowedNav: [
       '/', '/dashboard', '/assets', '/risk', '/evidence', '/review-workbench', '/findings', 
       '/decision-intelligence', '/governance-blockers', '/decision-dashboard',
-      '/compliance-center', '/regulatory-library', '/compliance-findings', '/compliance-dashboard', '/audit-logs'
+      '/compliance-center', '/regulatory-library', '/compliance-findings', '/compliance-dashboard',
+      '/operations-center', '/kill-switch', '/override-center', '/incidents', '/operations-dashboard', '/governance-timeline', '/audit-logs'
     ],
   },
   {
@@ -146,9 +153,12 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
     name: 'Marcus Vance',
     email: 'marcus.vance@enterprise-bank.com',
     department: 'Retail Banking & Wealth',
-    description: 'Business Accountability • Create assets, submit evidence, manage assigned compliance controls.',
+    description: 'Business Accountability • Track asset operational status, submit kill switch requests & view timeline.',
     icon: '💼',
-    allowedNav: ['/', '/dashboard', '/assets', '/ownership', '/evidence', '/decision-intelligence', '/compliance-center'],
+    allowedNav: [
+      '/', '/dashboard', '/assets', '/ownership', '/evidence', '/decision-intelligence', 
+      '/compliance-center', '/operations-center', '/kill-switch', '/incidents', '/governance-timeline'
+    ],
   },
   {
     role: 'VALIDATOR',
@@ -156,11 +166,11 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
     name: 'Dr. Aris Thorne',
     email: 'aris.thorne@enterprise-bank.com',
     department: 'AI Validation & Testing Center',
-    description: 'Validation Officer • Model validation reviews, RBI validation controls & evidence scorecards.',
+    description: 'Validation Officer • Model validation reviews, operational evidence & incident investigations.',
     icon: '🧪',
     allowedNav: [
       '/', '/dashboard', '/assets', '/validation', '/evidence', '/review-workbench', '/findings', 
-      '/validation-dashboard', '/decision-intelligence', '/compliance-assessment'
+      '/validation-dashboard', '/decision-intelligence', '/compliance-assessment', '/incidents', '/governance-timeline'
     ],
   },
   {
@@ -169,11 +179,12 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
     name: 'Robert Vance',
     email: 'robert.vance@enterprise-bank.com',
     department: 'Internal Audit & Compliance',
-    description: 'Independent Auditor • Read-only audit logs, RBI compliance review & regulatory reporting.',
+    description: 'Independent Auditor • Read-only operational logs, kill switch audit trail & retirement records.',
     icon: '📜',
     allowedNav: [
       '/', '/dashboard', '/assets', '/evidence', '/findings', '/decision-dashboard',
-      '/compliance-center', '/regulatory-library', '/compliance-findings', '/compliance-dashboard', '/audit-logs'
+      '/compliance-center', '/regulatory-library', '/compliance-findings', '/compliance-dashboard',
+      '/operations-center', '/kill-switch', '/override-center', '/incidents', '/operations-dashboard', '/retirement', '/governance-timeline', '/audit-logs'
     ],
   },
   {
@@ -182,9 +193,9 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
     name: 'Claire Sterling',
     email: 'claire.sterling@enterprise-bank.com',
     department: 'Executive Board Observer',
-    description: 'Executive Viewer • Executive Dashboard visibility & compliance posture reporting.',
+    description: 'Executive Viewer • Operational Review Dashboard & Kill Switch status visibility.',
     icon: '👁️',
-    allowedNav: ['/', '/dashboard', '/assets', '/validation-dashboard', '/decision-dashboard', '/compliance-dashboard'],
+    allowedNav: ['/', '/dashboard', '/assets', '/validation-dashboard', '/decision-dashboard', '/compliance-dashboard', '/operations-dashboard'],
   },
 ];
 
@@ -208,6 +219,7 @@ export const INITIAL_ASSETS: AIAsset[] = [
     department: 'Cyber Security & Fraud',
     version: '2.4.0',
     status: 'Production',
+    operationalStatus: 'Active',
     riskLevel: 'Critical',
     ownership: {
       businessOwner: 'Marcus Vance',
@@ -233,6 +245,7 @@ export const INITIAL_ASSETS: AIAsset[] = [
     department: 'Retail Credit & Underwriting',
     version: '3.1.2',
     status: 'Validation',
+    operationalStatus: 'Under Review',
     riskLevel: 'High',
     ownership: {
       businessOwner: 'Marcus Vance',
@@ -257,6 +270,7 @@ export const INITIAL_ASSETS: AIAsset[] = [
     department: 'Customer Operations',
     version: '1.2.0',
     status: 'Production',
+    operationalStatus: 'Active',
     riskLevel: 'Medium',
     ownership: {
       businessOwner: 'Marcus Vance',
@@ -282,6 +296,7 @@ export const INITIAL_ASSETS: AIAsset[] = [
     department: 'Financial Crime & AML',
     version: '1.0.4',
     status: 'Review',
+    operationalStatus: 'Planned',
     riskLevel: 'High',
     ownership: {
       businessOwner: 'David Chen',
@@ -305,6 +320,7 @@ export const INITIAL_ASSETS: AIAsset[] = [
     department: 'Mortgage Services',
     version: '2.0.1',
     status: 'Production',
+    operationalStatus: 'Active',
     riskLevel: 'Medium',
     ownership: {
       businessOwner: 'Marcus Vance',
@@ -330,6 +346,7 @@ export const INITIAL_ASSETS: AIAsset[] = [
     department: 'Capital Markets & Wealth',
     version: '0.9.1',
     status: 'Draft',
+    operationalStatus: 'Suspended',
     riskLevel: 'Critical',
     ownership: {
       businessOwner: 'Marcus Vance',
@@ -342,6 +359,78 @@ export const INITIAL_ASSETS: AIAsset[] = [
     updatedAt: '2026-08-04',
     decisionOutcome: 'NO GO',
     tags: ['Trading', 'Multi-Agent', 'High-Risk'],
+  },
+];
+
+export const INITIAL_KILL_SWITCH_RECORDS: KillSwitchRecord[] = [
+  {
+    id: 'ks-601',
+    assetId: 'ast-106',
+    assetName: 'Enterprise Portfolio Multi-Agent System',
+    triggerCategory: 'Critical Incident',
+    status: 'Activated',
+    requestedBy: 'Elena Rostova (Risk Officer)',
+    approvedBy: 'Sarah Jenkins (Super Admin)',
+    activatedAt: '2026-08-06 14:22',
+    reason: 'Swarm agent loop exhibited unauthorized high-frequency trade rebalancing simulation during volatility test.',
+    resolutionNotes: 'Under root-cause investigation by AI Validation & Risk teams.',
+  },
+];
+
+export const INITIAL_OVERRIDE_RECORDS: OverrideRecord[] = [
+  {
+    id: 'ovr-601',
+    assetId: 'ast-101',
+    assetName: 'Fraud Detection Sentinel Agent',
+    triggerReason: 'High-value corporate wire transfer flagged as anomaly during system migration window.',
+    requestedBy: 'Marcus Vance (Business Owner)',
+    approvedBy: 'David Chen (Governance Admin)',
+    timestamp: '2026-08-04 11:15',
+    actionTaken: 'Human Supervisor approved transaction override after manual phone verification.',
+  },
+];
+
+export const INITIAL_GOVERNANCE_INCIDENTS: GovernanceIncident[] = [
+  {
+    id: 'inc-601',
+    assetId: 'ast-106',
+    assetName: 'Enterprise Portfolio Multi-Agent System',
+    title: 'Swarm Consensus Loop Volatility Anomaly',
+    type: 'Operational Failure',
+    severity: 'Critical',
+    status: 'Investigating',
+    reportedBy: 'Dr. Aris Thorne',
+    assignedTo: 'Sarah Jenkins',
+    createdAt: '2026-08-06 14:10',
+    description: 'Autonomous agents engaged in infinite consensus verification loop during simulated stress test.',
+  },
+  {
+    id: 'inc-602',
+    assetId: 'ast-103',
+    assetName: 'Customer Concierge Copilot',
+    title: 'Minor Knowledge Retrieval Drift',
+    type: 'Model Drift',
+    severity: 'Low',
+    status: 'Resolved',
+    reportedBy: 'Marcus Vance',
+    assignedTo: 'Sarah Jenkins',
+    createdAt: '2026-08-01 09:30',
+    description: 'Vector embeddings indexed outdated fee schedule for 4 hours prior to cache refresh.',
+    resolutionNotes: 'Updated Pinecone vector index and purged stale Redis cache.',
+  },
+];
+
+export const INITIAL_RETIREMENT_RECORDS: RetirementRecord[] = [
+  {
+    id: 'ret-601',
+    assetId: 'ast-099',
+    assetName: 'Legacy Credit Rating Decision Tree (v1.0)',
+    reason: 'Technology Replacement',
+    requestedBy: 'Marcus Vance',
+    approvedBy: 'David Chen',
+    retiredAt: '2026-05-10',
+    evidenceArchivedCount: 6,
+    notes: 'Replaced by Retail Credit Scoring Engine (ast-102). Evidence archived in S3 Glacier.',
   },
 ];
 
@@ -360,20 +449,6 @@ export const INITIAL_VALIDATIONS: ValidationRecord[] = [
     recommendations: 'Enable automated daily key rotation in HashiCorp Vault.',
     evidenceRefs: ['evd-301', 'evd-302'],
   },
-  {
-    id: 'val-202',
-    assetId: 'ast-101',
-    assetName: 'Fraud Detection Sentinel Agent',
-    category: 'Model',
-    reviewer: 'Elena Rostova',
-    reviewerRole: 'RISK_OFFICER',
-    reviewDate: '2026-08-03',
-    status: 'Approved',
-    score: 100,
-    findings: 'Model bias audit completed across demographic segments. Precision rate 96.4%, Recall 94.2%.',
-    recommendations: 'Maintain monthly drift monitoring on graph embeddings.',
-    evidenceRefs: ['evd-303'],
-  },
 ];
 
 export const INITIAL_EVIDENCE: EvidenceDocument[] = [
@@ -389,19 +464,6 @@ export const INITIAL_EVIDENCE: EvidenceDocument[] = [
     version: '2.0',
     status: 'Approved',
     description: 'Comprehensive security review, threat model, and 3rd party penetration test evidence for Sentinel Agent.',
-  },
-  {
-    id: 'evd-302',
-    title: 'Sentinel API Design & OAuth Authorization Specs',
-    category: 'Technical Evidence',
-    deliverableType: 'API Design Specification',
-    assetId: 'ast-101',
-    assetName: 'Fraud Detection Sentinel Agent',
-    uploadedBy: 'Sarah Jenkins',
-    uploadDate: '2026-07-25',
-    version: '1.4',
-    status: 'Approved',
-    description: 'REST API endpoints, JSON schemas, rate-limiting rules, and JWT auth flow specs.',
   },
 ];
 
@@ -420,7 +482,6 @@ export const INITIAL_FINDINGS: Finding[] = [
   },
 ];
 
-// Seeded Phase 5 Compliance Assessment Records
 export const INITIAL_COMPLIANCE_ASSESSMENTS: ComplianceAssessmentRecord[] = [
   {
     id: 'cmp-501',
@@ -435,32 +496,6 @@ export const INITIAL_COMPLIANCE_ASSESSMENTS: ComplianceAssessmentRecord[] = [
     assessedDate: '2026-08-05',
     notes: 'All 5 RACIS ownership roles assigned and verified.',
   },
-  {
-    id: 'cmp-502',
-    assetId: 'ast-101',
-    assetName: 'Fraud Detection Sentinel Agent',
-    controlId: 'RBI-003',
-    controlName: 'Independent Multi-Disciplinary Validation',
-    status: 'Compliant',
-    score: 100,
-    evidenceRefs: ['evd-301', 'evd-303'],
-    assessor: 'Robert Vance (Auditor)',
-    assessedDate: '2026-08-05',
-    notes: 'Validation score 94% exceeds 80% threshold.',
-  },
-  {
-    id: 'cmp-503',
-    assetId: 'ast-106',
-    assetName: 'Enterprise Portfolio Multi-Agent System',
-    controlId: 'RBI-008',
-    controlName: 'Emergency Kill Switch & Suspension Capability',
-    status: 'Non-Compliant',
-    score: 0,
-    evidenceRefs: [],
-    assessor: 'Robert Vance (Auditor)',
-    assessedDate: '2026-08-06',
-    notes: 'Swarm agent loop failed emergency break-out test.',
-  },
 ];
 
 export const INITIAL_AUDIT_LOGS: AuditLog[] = [
@@ -470,11 +505,11 @@ export const INITIAL_AUDIT_LOGS: AuditLog[] = [
     userId: 'usr-2',
     userName: 'David Chen',
     userRole: 'GOVERNANCE_ADMIN',
-    action: 'DECISION_EXECUTED',
-    entityType: 'Decision',
-    entityId: 'ast-101',
-    entityName: 'Fraud Detection Sentinel Agent',
-    details: 'Executed Decision: GO for Fraud Detection Sentinel Agent (v2.4.0) after human override verification.',
+    action: 'KILL_SWITCH_ACTIVATED',
+    entityType: 'KillSwitch',
+    entityId: 'ast-106',
+    entityName: 'Enterprise Portfolio Multi-Agent System',
+    details: 'Engaged Emergency Kill Switch for Enterprise Portfolio Multi-Agent System following critical volatility incident.',
     ipAddress: '10.240.12.88',
   },
 ];

@@ -84,6 +84,8 @@ export interface DecisionRecord {
   conditions?: string[];
 }
 
+export type OperationalStatus = 'Planned' | 'Active' | 'Suspended' | 'Under Review' | 'Retired';
+
 export interface AIAsset {
   id: string;
   name: string;
@@ -92,6 +94,7 @@ export interface AIAsset {
   department: string;
   version: string;
   status: GovernanceStatus;
+  operationalStatus?: OperationalStatus;
   riskLevel: RiskLevel;
   ownership: OwnershipAssignment;
   techStack?: string[];
@@ -123,7 +126,7 @@ export interface AuditLog {
   userName: string;
   userRole: string;
   action: string;
-  entityType: 'Asset' | 'User' | 'Ownership' | 'Risk' | 'Decision' | 'Validation' | 'Evidence' | 'Finding' | 'DecisionPackage' | 'ComplianceAssessment' | 'CompliancePackage';
+  entityType: 'Asset' | 'User' | 'Ownership' | 'Risk' | 'Decision' | 'Validation' | 'Evidence' | 'Finding' | 'DecisionPackage' | 'ComplianceAssessment' | 'CompliancePackage' | 'KillSwitch' | 'Override' | 'Incident' | 'Retirement';
   entityId: string;
   entityName: string;
   details: string;
@@ -149,13 +152,20 @@ export interface GovernanceMetrics {
   conditionallyReadyAssetsCount: number;
   notReadyAssetsCount: number;
   totalBlockersCount: number;
-  // Phase 5 Extensions
   tenantComplianceScore: number; // 0-100%
   rbiAlignmentPercentage: number; // 0-100%
   compliantAssetsCount: number;
   partiallyCompliantAssetsCount: number;
   nonCompliantAssetsCount: number;
   openComplianceGapsCount: number;
+  // Phase 6 Extensions
+  activeOperationalAssetsCount: number;
+  suspendedAssetsCount: number;
+  killSwitchEventsCount: number;
+  overridesExecutedCount: number;
+  openIncidentsCount: number;
+  criticalIncidentsCount: number;
+  retiredAssetsCount: number;
 }
 
 export interface PersonaDemoUser {
@@ -325,7 +335,7 @@ export interface ComplianceAssessmentRecord {
   controlId: string;
   controlName: string;
   status: ComplianceEvaluationStatus;
-  score: number; // 100 for Compliant, 50 for Partial, 0 for Non-Compliant
+  score: number;
   evidenceRefs: string[];
   assessor: string;
   assessedDate: string;
@@ -349,9 +359,104 @@ export interface CompliancePackage {
   assetName: string;
   generatedAt: string;
   generatedBy: string;
-  complianceScore: number; // 0 - 100%
+  complianceScore: number;
   status: 'Compliant' | 'Partially Compliant' | 'Non-Compliant';
   controlsEvaluatedCount: number;
   evidenceCount: number;
   openGapsCount: number;
+}
+
+// ------------------- PHASE 6 TYPES -------------------
+
+export type KillSwitchTriggerCategory = 
+  | 'Critical Incident'
+  | 'Compliance Violation'
+  | 'Security Breach'
+  | 'Model Failure'
+  | 'Unauthorized Behavior'
+  | 'Executive Directive';
+
+export type KillSwitchStatus = 
+  | 'Requested'
+  | 'Approved'
+  | 'Activated'
+  | 'Under Investigation'
+  | 'Released';
+
+export interface KillSwitchRecord {
+  id: string;
+  assetId: string;
+  assetName: string;
+  triggerCategory: KillSwitchTriggerCategory;
+  status: KillSwitchStatus;
+  requestedBy: string;
+  approvedBy: string;
+  activatedAt: string;
+  reason: string;
+  resolutionNotes?: string;
+}
+
+export interface OverrideRecord {
+  id: string;
+  assetId: string;
+  assetName: string;
+  triggerReason: string;
+  requestedBy: string;
+  approvedBy: string;
+  timestamp: string;
+  actionTaken: string;
+}
+
+export type IncidentType = 
+  | 'Model Drift'
+  | 'Hallucination Event'
+  | 'Security Incident'
+  | 'Compliance Breach'
+  | 'Operational Failure';
+
+export type IncidentSeverity = 'Low' | 'Medium' | 'High' | 'Critical';
+export type IncidentStatus = 'Open' | 'Investigating' | 'Mitigation' | 'Resolved' | 'Closed';
+
+export interface GovernanceIncident {
+  id: string;
+  assetId: string;
+  assetName: string;
+  title: string;
+  type: IncidentType;
+  severity: IncidentSeverity;
+  status: IncidentStatus;
+  reportedBy: string;
+  assignedTo: string;
+  createdAt: string;
+  description: string;
+  resolutionNotes?: string;
+}
+
+export type RetirementReason = 
+  | 'End of Life'
+  | 'Regulatory Requirement'
+  | 'Business Decision'
+  | 'Technology Replacement'
+  | 'Risk Decision';
+
+export interface RetirementRecord {
+  id: string;
+  assetId: string;
+  assetName: string;
+  reason: RetirementReason;
+  requestedBy: string;
+  approvedBy: string;
+  retiredAt: string;
+  evidenceArchivedCount: number;
+  notes: string;
+}
+
+export interface GovernanceTimelineEvent {
+  id: string;
+  assetId: string;
+  timestamp: string;
+  stage: string;
+  actor: string;
+  details: string;
+  type: 'registration' | 'risk' | 'validation' | 'decision' | 'compliance' | 'override' | 'killswitch' | 'retirement';
 }

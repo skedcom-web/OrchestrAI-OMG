@@ -34,6 +34,15 @@ import { ComplianceAssessmentPage } from './pages/ComplianceAssessmentPage';
 import { ComplianceFindingsPage } from './pages/ComplianceFindingsPage';
 import { ComplianceDashboardPage } from './pages/ComplianceDashboardPage';
 
+// Phase 6 Pages
+import { OperationsCenterPage } from './pages/OperationsCenterPage';
+import { KillSwitchCenterPage } from './pages/KillSwitchCenterPage';
+import { OverrideCenterPage } from './pages/OverrideCenterPage';
+import { IncidentManagementPage } from './pages/IncidentManagementPage';
+import { OperationalDashboardPage } from './pages/OperationalDashboardPage';
+import { RetirementCenterPage } from './pages/RetirementCenterPage';
+import { GovernanceTimelinePage } from './pages/GovernanceTimelinePage';
+
 export const App: React.FC = () => {
   return (
     <ThemeProvider>
@@ -204,6 +213,64 @@ export const App: React.FC = () => {
                       element={
                         <ProtectedRoute path="/compliance-dashboard">
                           <ComplianceDashboardPage />
+                        </ProtectedRoute>
+                      }
+                    />
+
+                    {/* Phase 6 Routes */}
+                    <Route
+                      path="/operations-center"
+                      element={
+                        <ProtectedRoute path="/operations-center">
+                          <OperationsCenterPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/kill-switch"
+                      element={
+                        <ProtectedRoute path="/kill-switch">
+                          <KillSwitchCenterPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/override-center"
+                      element={
+                        <ProtectedRoute path="/override-center">
+                          <OverrideCenterPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/incidents"
+                      element={
+                        <ProtectedRoute path="/incidents">
+                          <IncidentManagementPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/operations-dashboard"
+                      element={
+                        <ProtectedRoute path="/operations-dashboard">
+                          <OperationalDashboardPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/retirement"
+                      element={
+                        <ProtectedRoute path="/retirement">
+                          <RetirementCenterPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/governance-timeline"
+                      element={
+                        <ProtectedRoute path="/governance-timeline">
+                          <GovernanceTimelinePage />
                         </ProtectedRoute>
                       }
                     />

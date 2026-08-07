@@ -83,6 +83,7 @@ model AIAsset {
   department       String
   version          String            @default("1.0.0")
   status           GovernanceStatus  @default(DRAFT)
+  operationalStatus String           @default("Active")
   riskLevel        RiskLevel         @default(MEDIUM)
   techStack        String[]
   dataSensitivity  String            @default("Confidential")
@@ -99,6 +100,10 @@ model AIAsset {
   evidence         EvidenceDocument[]
   findings         Finding[]
   complianceAssessments ComplianceAssessmentRecord[]
+  killSwitches     KillSwitchRecord[]
+  overrides        OverrideRecord[]
+  incidents        GovernanceIncident[]
+  retirements      RetirementRecord[]
   auditLogs        AuditLog[]
 
   @@map("ai_assets")
@@ -216,6 +221,64 @@ model ComplianceAssessmentRecord {
   notes        String   @db.Text
 
   @@map("compliance_assessments")
+}
+
+model KillSwitchRecord {
+  id              String   @id @default(uuid())
+  assetId         String
+  asset           AIAsset  @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  triggerCategory String
+  status          String
+  requestedBy     String
+  approvedBy      String
+  activatedAt     DateTime @default(now())
+  reason          String   @db.Text
+  resolutionNotes String?  @db.Text
+
+  @@map("kill_switches")
+}
+
+model OverrideRecord {
+  id            String   @id @default(uuid())
+  assetId       String
+  asset         AIAsset  @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  triggerReason String   @db.Text
+  requestedBy   String
+  approvedBy    String
+  timestamp     DateTime @default(now())
+  actionTaken   String   @db.Text
+
+  @@map("overrides")
+}
+
+model GovernanceIncident {
+  id          String   @id @default(uuid())
+  assetId     String
+  asset       AIAsset  @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  title       String
+  type        String
+  severity    String
+  status      String
+  reportedBy  String
+  assignedTo  String
+  createdAt   DateTime @default(now())
+  description String   @db.Text
+
+  @@map("incidents")
+}
+
+model RetirementRecord {
+  id                    String   @id @default(uuid())
+  assetId               String
+  asset                 AIAsset  @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  reason                String
+  requestedBy           String
+  approvedBy            String
+  retiredAt             DateTime @default(now())
+  evidenceArchivedCount Int      @default(0)
+  notes                 String   @db.Text
+
+  @@map("retirements")
 }
 
 model AuditLog {
