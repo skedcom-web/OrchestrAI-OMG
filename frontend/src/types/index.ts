@@ -123,7 +123,7 @@ export interface AuditLog {
   userName: string;
   userRole: string;
   action: string;
-  entityType: 'Asset' | 'User' | 'Ownership' | 'Risk' | 'Decision';
+  entityType: 'Asset' | 'User' | 'Ownership' | 'Risk' | 'Decision' | 'Validation' | 'Evidence' | 'Finding';
   entityId: string;
   entityName: string;
   details: string;
@@ -138,8 +138,13 @@ export interface GovernanceMetrics {
   pendingReviewsCount: number;
   pendingValidationCount: number;
   decisionBreakdown: Record<DecisionOutcome, number>;
-  ownershipCompletionRate: number; // Percentage
+  ownershipCompletionRate: number;
   highRiskUnapprovedCount: number;
+  totalValidations: number;
+  passedValidations: number;
+  failedValidations: number;
+  openFindingsCount: number;
+  totalEvidenceCount: number;
 }
 
 export interface PersonaDemoUser {
@@ -151,4 +156,86 @@ export interface PersonaDemoUser {
   description: string;
   icon: string;
   allowedNav: string[];
+}
+
+// ------------------- PHASE 3 TYPES -------------------
+
+export type ValidationCategory = 
+  | 'Business'
+  | 'Technical'
+  | 'Security'
+  | 'Compliance'
+  | 'Operational'
+  | 'Model';
+
+export type ValidationStatus = 'Draft' | 'In Review' | 'Approved' | 'Rejected';
+
+export interface ValidationRecord {
+  id: string;
+  assetId: string;
+  assetName: string;
+  category: ValidationCategory;
+  reviewer: string;
+  reviewerRole: UserRole;
+  reviewDate: string;
+  status: ValidationStatus;
+  score: number; // 100 for Pass, 0 for Fail
+  findings: string;
+  recommendations: string;
+  evidenceRefs: string[];
+}
+
+export type EvidenceCategory = 
+  | 'Business Evidence'
+  | 'Technical Evidence'
+  | 'Security Evidence'
+  | 'Compliance Evidence'
+  | 'Operational Evidence'
+  | 'Model Evidence';
+
+export type EvidenceStatus = 'Draft' | 'Submitted' | 'Approved' | 'Rejected' | 'Archived';
+
+// Maps to the 10 Mandatory Deliverables in OrchestrAI Governance Blueprint v1
+export type GovernanceDeliverableType = 
+  | 'Executive Solution Blueprint'
+  | 'Functional Requirements Specification'
+  | 'Solution Architecture Blueprint'
+  | 'Database Design Document'
+  | 'API Design Specification'
+  | 'Security Review Document'
+  | 'Test Strategy & Evidence'
+  | 'Deployment Blueprint'
+  | 'Production Readiness Assessment'
+  | 'Project Closure Report';
+
+export interface EvidenceDocument {
+  id: string;
+  title: string;
+  category: EvidenceCategory;
+  deliverableType: GovernanceDeliverableType;
+  assetId: string;
+  assetName: string;
+  uploadedBy: string;
+  uploadDate: string;
+  version: string;
+  status: EvidenceStatus;
+  fileUrl?: string;
+  description: string;
+}
+
+export type FindingSeverity = 'Low' | 'Medium' | 'High' | 'Critical';
+export type FindingStatus = 'Open' | 'In Progress' | 'Resolved' | 'Verified';
+
+export interface Finding {
+  id: string;
+  title: string;
+  assetId: string;
+  assetName: string;
+  severity: FindingSeverity;
+  status: FindingStatus;
+  assignedTo: string;
+  reportedBy: string;
+  reportedDate: string;
+  description: string;
+  resolutionNotes?: string;
 }

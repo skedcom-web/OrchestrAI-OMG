@@ -11,7 +11,12 @@ export const Sidebar: React.FC = () => {
     { path: '/dashboard', label: 'Executive Dashboard', icon: '📊', badge: 'Live' },
     { path: '/assets', label: 'AI Asset Registry', icon: '🗂️', badge: 'Inventory' },
     { path: '/ownership', label: 'Ownership Matrix', icon: '👥', badge: 'RACIS' },
-    { path: '/risk', label: 'Risk Assessment', icon: '⚡', badge: 'Phase 2' },
+    { path: '/risk', label: 'Risk Center', icon: '⚡', badge: 'Phase 2' },
+    { path: '/validation', label: 'Validation Center', icon: '🧪', badge: 'Phase 3' },
+    { path: '/evidence', label: 'Evidence Center', icon: '📄', badge: 'ODF v1' },
+    { path: '/review-workbench', label: 'Review Workbench', icon: '🧰', badge: 'Reviewer' },
+    { path: '/findings', label: 'Findings Tracker', icon: '⚠️', badge: 'Defects' },
+    { path: '/validation-dashboard', label: 'Validation Dashboard', icon: '📈', badge: 'Scores' },
     { path: '/decision-governance', label: 'Decision Governance', icon: '⚖️', badge: 'Gatekeeper' },
     { path: '/users', label: 'User Management', icon: '🔐', badge: 'RBAC' },
     { path: '/audit-logs', label: 'Audit Logs', icon: '📜', badge: 'Day 1' },
@@ -20,7 +25,6 @@ export const Sidebar: React.FC = () => {
   const visibleNavItems = allNavItems.filter(item => hasPermission(item.path));
 
   const futureModules = [
-    { label: 'Validation Center', icon: '🧪' },
     { label: 'Compliance Center', icon: '📋' },
     { label: 'Kill Switch Console', icon: '🚨' },
   ];
@@ -84,7 +88,7 @@ export const Sidebar: React.FC = () => {
                 <span>{item.label}</span>
               </div>
               <span className="text-[9px] font-semibold uppercase px-1.5 py-0.5 rounded bg-[var(--bg-badge)] border border-[var(--border-color)]">
-                Phase 3
+                Phase 4
               </span>
             </div>
           ))}
@@ -97,7 +101,7 @@ export const Sidebar: React.FC = () => {
           <span className="font-semibold text-[var(--text-secondary)]">Governance Engine</span>
           <span className="flex items-center gap-1.5 text-emerald-400 font-bold">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            RBAC v2.5
+            Phase 3 Engine
           </span>
         </div>
         <p className="text-[10px] text-[var(--text-muted)] mt-1">

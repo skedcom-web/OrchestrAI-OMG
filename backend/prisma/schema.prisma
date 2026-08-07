@@ -65,7 +65,6 @@ model User {
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
   
-  // Ownership relations
   businessAssets   AssetOwner[]  @relation("BusinessOwner")
   technicalAssets  AssetOwner[]  @relation("TechnicalOwner")
   riskAssets       AssetOwner[]  @relation("RiskOwner")
@@ -96,6 +95,9 @@ model AIAsset {
   owners           AssetOwner?
   decisions        DecisionRecord[]
   riskAssessments  RiskAssessment[]
+  validations      ValidationRecord[]
+  evidence         EvidenceDocument[]
+  findings         Finding[]
   auditLogs        AuditLog[]
 
   @@map("ai_assets")
@@ -151,6 +153,53 @@ model DecisionRecord {
   createdAt      DateTime        @default(now())
 
   @@map("decision_records")
+}
+
+model ValidationRecord {
+  id              String   @id @default(uuid())
+  assetId         String
+  asset           AIAsset  @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  category        String
+  reviewer        String
+  reviewerRole    String
+  reviewDate      DateTime @default(now())
+  status          String
+  score           Int
+  findings        String   @db.Text
+  recommendations String   @db.Text
+
+  @@map("validation_records")
+}
+
+model EvidenceDocument {
+  id              String   @id @default(uuid())
+  title           String
+  category        String
+  deliverableType String
+  assetId         String
+  asset           AIAsset  @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  uploadedBy      String
+  uploadDate      DateTime @default(now())
+  version         String
+  status          String
+  description     String   @db.Text
+
+  @@map("evidence_documents")
+}
+
+model Finding {
+  id           String   @id @default(uuid())
+  title        String
+  assetId      String
+  asset        AIAsset  @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  severity     String
+  status       String
+  assignedTo   String
+  reportedBy   String
+  reportedDate DateTime @default(now())
+  description  String   @db.Text
+
+  @@map("findings")
 }
 
 model AuditLog {

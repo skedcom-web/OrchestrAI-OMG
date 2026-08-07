@@ -15,6 +15,13 @@ import { RiskCenterPage } from './pages/RiskCenterPage';
 import { DecisionGovernancePage } from './pages/DecisionGovernancePage';
 import { AuditLogsPage } from './pages/AuditLogsPage';
 
+// Phase 3 Pages
+import { ValidationCenterPage } from './pages/ValidationCenterPage';
+import { EvidenceCenterPage } from './pages/EvidenceCenterPage';
+import { ReviewWorkbenchPage } from './pages/ReviewWorkbenchPage';
+import { FindingsPage } from './pages/FindingsPage';
+import { ValidationDashboardPage } from './pages/ValidationDashboardPage';
+
 export const App: React.FC = () => {
   return (
     <ThemeProvider>
@@ -70,6 +77,48 @@ export const App: React.FC = () => {
                         </ProtectedRoute>
                       }
                     />
+                    {/* Phase 3 Routes */}
+                    <Route
+                      path="/validation"
+                      element={
+                        <ProtectedRoute path="/validation">
+                          <ValidationCenterPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/evidence"
+                      element={
+                        <ProtectedRoute path="/evidence">
+                          <EvidenceCenterPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/review-workbench"
+                      element={
+                        <ProtectedRoute path="/review-workbench">
+                          <ReviewWorkbenchPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/findings"
+                      element={
+                        <ProtectedRoute path="/findings">
+                          <FindingsPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/validation-dashboard"
+                      element={
+                        <ProtectedRoute path="/validation-dashboard">
+                          <ValidationDashboardPage />
+                        </ProtectedRoute>
+                      }
+                    />
+
                     <Route
                       path="/decision-governance"
                       element={

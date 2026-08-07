@@ -65,9 +65,13 @@ export const DecisionGovernancePage: React.FC = () => {
 
   const handleExecuteDecision = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedAssetId || !justification) return;
-
-    recordDecision(selectedAssetId, outcome, justification, checklist);
+    recordDecision({
+      assetId: selectedAssetId,
+      outcome,
+      justification,
+      checklist,
+      decisionOwner: 'David Chen',
+    });
     setAssets(getAssets());
     alert(`Governance Decision '${outcome}' logged successfully for asset ID: ${selectedAssetId}!`);
     setJustification('');
