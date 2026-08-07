@@ -5,7 +5,14 @@ import { Button } from '../components/ui/Button';
 import { getGovernanceMetrics } from '../services/storageService';
 import type { AssetType } from '../types';
 
-export const HomePage: React.FC = () => {
+/**
+ * Platform Overview — the explanatory surface for OMG.
+ *
+ * Phase 8B moved the executive landing experience to the Enterprise Governance
+ * Command Center; this page retains the "what / why / how" narrative used for
+ * onboarding, executive briefings and vendor review.
+ */
+export const PlatformOverviewPage: React.FC = () => {
   const navigate = useNavigate();
   const metrics = getGovernanceMetrics();
 
@@ -42,36 +49,50 @@ export const HomePage: React.FC = () => {
   return (
     <div className="flex flex-col gap-12 pb-12">
       {/* SECTION 1: HERO */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[var(--bg-card)] via-[var(--bg-card)] to-[var(--accent-light)] border border-[var(--border-color)] p-8 sm:p-12">
+      <section
+        className="relative overflow-hidden rounded-3xl border border-[var(--border-color)] p-8 sm:p-12"
+        style={{ background: 'var(--grad-hero)' }}
+      >
+        <div className="absolute inset-0 enterprise-grid opacity-50 pointer-events-none" aria-hidden />
         <div className="max-w-3xl flex flex-col gap-6 relative z-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--accent-primary)]/10 text-[var(--accent-primary)] text-xs font-bold border border-[var(--accent-border)] w-fit">
-            <span>🛡️ Enterprise AI Command Center</span>
+          <div
+            data-noglass
+            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--accent-light)] text-[var(--accent-primary)] text-[11px] font-extrabold uppercase tracking-[0.12em] border border-[var(--accent-border)] w-fit"
+          >
+            <span>🛡️ Platform Overview</span>
           </div>
 
           <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-[var(--text-primary)] leading-tight">
-            Welcome to <span className="bg-gradient-to-r from-purple-500 via-cyan-400 to-red-500 bg-clip-text text-transparent">OMG</span>
+            The Enterprise AI Governance{' '}
+            <span className="text-gradient-brand">Operating System</span>
           </h1>
 
           <p className="text-lg text-[var(--text-secondary)] leading-relaxed">
-            OrchestrAI Model Governance is the enterprise central command center for governing AI applications, agents, models, copilots, RAG systems, and third-party services.
+            OrchestrAI Model Governance governs every form of enterprise artificial intelligence —
+            applications, agents, models, copilots, RAG systems and third-party services — through
+            one accountable operating model: govern every AI, control every decision, prove every
+            outcome.
           </p>
 
           <div className="flex flex-wrap items-center gap-4 pt-2">
-            <Button size="lg" onClick={() => navigate('/assets')}>
+            <Button size="lg" onClick={() => navigate('/')}>
+              <span>Open Command Center</span>
+            </Button>
+            <Button size="lg" variant="secondary" onClick={() => navigate('/assets')}>
               <span>Register AI Asset</span>
             </Button>
-            <Button size="lg" variant="secondary" onClick={() => navigate('/dashboard')}>
-              <span>View Executive Dashboard</span>
-            </Button>
-            <Button size="lg" variant="outline" onClick={() => navigate('/decision-governance')}>
+            <Button size="lg" variant="outline" onClick={() => navigate('/decision-workbench-v4')}>
               <span>Decision Authority</span>
             </Button>
           </div>
         </div>
 
-        {/* Decorative Graphic */}
+        {/* Decorative orbital */}
         <div className="absolute right-6 top-1/2 -translate-y-1/2 hidden lg:block opacity-20 pointer-events-none">
-          <div className="w-80 h-80 rounded-full border-4 stroke-dashed border-red-500/40 animate-spin" style={{ animationDuration: '40s' }} />
+          <div
+            className="w-80 h-80 rounded-full border-4 border-[var(--accent-primary)]/40 animate-spin"
+            style={{ animationDuration: '40s' }}
+          />
         </div>
       </section>
 

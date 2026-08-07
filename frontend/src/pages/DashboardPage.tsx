@@ -30,7 +30,7 @@ export const DashboardPage: React.FC = () => {
           <Button variant="secondary" onClick={() => navigate('/assets')}>
             View Registry
           </Button>
-          <Button onClick={() => navigate('/decision-governance')}>
+          <Button onClick={() => navigate('/decision-workbench-v4')}>
             Decision Authority Center
           </Button>
         </div>

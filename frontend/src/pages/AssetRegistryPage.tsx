@@ -264,7 +264,7 @@ export const AssetRegistryPage: React.FC = () => {
                 <Button variant="secondary" size="sm" onClick={() => navigate(`/ownership?assetId=${selectedAsset.id}`)}>
                   Manage Ownership
                 </Button>
-                <Button size="sm" onClick={() => navigate(`/decision-governance?assetId=${selectedAsset.id}`)}>
+                <Button size="sm" onClick={() => navigate(`/decision-workbench-v4?assetId=${selectedAsset.id}`)}>
                   Decision Gatekeeper
                 </Button>
               </div>

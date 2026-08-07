@@ -533,3 +533,69 @@ export interface GovernanceReviewPackage {
   openIncidentsCount: number;
   openActionsCount: number;
 }
+
+// ------------------- PHASE 8 TYPES -------------------
+
+/**
+ * The eight-stage OMG governance journey. Every AI asset travels this path
+ * and Phase 8C visualises the portfolio's position across it.
+ */
+export type JourneyStageKey =
+  | 'asset'
+  | 'ownership'
+  | 'risk'
+  | 'validation'
+  | 'evidence'
+  | 'decision'
+  | 'production'
+  | 'monitoring';
+
+export interface GovernanceJourneyStage {
+  key: JourneyStageKey;
+  label: string;
+  icon: string;
+  /** What this stage proves. */
+  purpose: string;
+  /** Assets that have reached (or must pass) this stage. */
+  total: number;
+  approved: number;
+  pending: number;
+  blocked: number;
+  /** Percentage of in-scope assets that have cleared this stage. */
+  clearanceRate: number;
+}
+
+export type JourneyStageState = 'approved' | 'pending' | 'blocked';
+
+export interface AssetJourneyPosition {
+  assetId: string;
+  assetName: string;
+  assetType: AssetType;
+  riskLevel: RiskLevel;
+  /** Furthest stage cleared, 0-indexed against the eight stages. */
+  currentStageIndex: number;
+  currentStageLabel: string;
+  stageStates: Record<JourneyStageKey, JourneyStageState>;
+  governanceScore: number;
+  healthScore: number;
+  blockerCount: number;
+}
+
+export type ComplianceReadinessTier = 'Audit Ready' | 'Review Required' | 'Non-Compliant';
+
+export interface ExecutiveKpiSnapshot {
+  totalGovernedAssets: number;
+  productionApprovedAssets: number;
+  highRiskAssets: number;
+  pendingReviews: number;
+  governanceBlockers: number;
+  activeDecisions: number;
+  complianceHealth: number;
+  auditReadiness: number;
+}
+
+export interface RiskHeatmapCell {
+  category: string;
+  riskLevel: RiskLevel;
+  count: number;
+}

@@ -5,9 +5,18 @@ import { useAuth } from '../../contexts/AuthContext';
 interface ProtectedRouteProps {
   children: React.ReactNode;
   path: string;
+  /**
+   * Phase 8G roadmap placeholders are authenticated but not permission-gated —
+   * they describe future capability rather than exposing governance data.
+   */
+  requirePermission?: boolean;
 }
 
-export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, path }) => {
+export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
+  children,
+  path,
+  requirePermission = true,
+}) => {
   const { isAuthenticated, hasPermission } = useAuth();
   const location = useLocation();
 
@@ -15,7 +24,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, path }
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (!hasPermission(path)) {
+  if (requirePermission && !hasPermission(path)) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center p-8">
         <div className="p-4 rounded-full bg-red-500/10 text-red-500 text-4xl border border-red-500/20">

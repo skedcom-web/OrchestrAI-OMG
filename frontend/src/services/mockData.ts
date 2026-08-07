@@ -116,7 +116,9 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       '/compliance-center', '/regulatory-library', '/compliance-assessment', '/compliance-findings', '/compliance-dashboard',
       '/operations-center', '/kill-switch', '/override-center', '/incidents', '/operations-dashboard', '/retirement', '/governance-timeline',
       '/governance-monitoring', '/governance-alerts', '/review-calendar', '/corrective-actions', '/governance-trends',
-      '/users', '/audit-logs'
+      '/users', '/audit-logs',
+      // Phase 8 — Governance Operating System
+      '/asset-lifecycle', '/rbac', '/tenant-settings', '/platform-overview'
     ],
   },
   {
@@ -134,7 +136,9 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       '/compliance-center', '/regulatory-library', '/compliance-assessment', '/compliance-findings', '/compliance-dashboard',
       '/operations-center', '/kill-switch', '/override-center', '/incidents', '/operations-dashboard', '/retirement', '/governance-timeline',
       '/governance-monitoring', '/governance-alerts', '/review-calendar', '/corrective-actions', '/governance-trends',
-      '/audit-logs'
+      '/audit-logs',
+      // Phase 8 — Governance Operating System
+      '/asset-lifecycle', '/tenant-settings', '/platform-overview'
     ],
   },
   {
@@ -150,7 +154,9 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       '/decision-intelligence', '/governance-blockers', '/decision-dashboard',
       '/compliance-center', '/regulatory-library', '/compliance-findings', '/compliance-dashboard',
       '/operations-center', '/kill-switch', '/override-center', '/incidents', '/operations-dashboard', '/governance-timeline',
-      '/governance-monitoring', '/governance-alerts', '/review-calendar', '/corrective-actions', '/governance-trends', '/audit-logs'
+      '/governance-monitoring', '/governance-alerts', '/review-calendar', '/corrective-actions', '/governance-trends', '/audit-logs',
+      // Phase 8 — Governance Operating System
+      '/asset-lifecycle', '/platform-overview'
     ],
   },
   {
@@ -164,7 +170,9 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
     allowedNav: [
       '/', '/dashboard', '/assets', '/ownership', '/evidence', '/decision-intelligence', 
       '/compliance-center', '/operations-center', '/kill-switch', '/incidents', '/governance-timeline',
-      '/governance-monitoring', '/review-calendar', '/corrective-actions'
+      '/governance-monitoring', '/review-calendar', '/corrective-actions',
+      // Phase 8 — Governance Operating System
+      '/asset-lifecycle', '/platform-overview'
     ],
   },
   {
@@ -178,7 +186,9 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
     allowedNav: [
       '/', '/dashboard', '/assets', '/validation', '/evidence', '/review-workbench', '/findings', 
       '/validation-dashboard', '/decision-intelligence', '/compliance-assessment', '/incidents', '/governance-timeline',
-      '/governance-monitoring', '/corrective-actions'
+      '/governance-monitoring', '/corrective-actions',
+      // Phase 8 — Governance Operating System
+      '/asset-lifecycle', '/platform-overview'
     ],
   },
   {
@@ -193,7 +203,9 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       '/', '/dashboard', '/assets', '/evidence', '/findings', '/decision-dashboard',
       '/compliance-center', '/regulatory-library', '/compliance-findings', '/compliance-dashboard',
       '/operations-center', '/kill-switch', '/override-center', '/incidents', '/operations-dashboard', '/retirement', '/governance-timeline',
-      '/governance-monitoring', '/governance-alerts', '/review-calendar', '/corrective-actions', '/governance-trends', '/audit-logs'
+      '/governance-monitoring', '/governance-alerts', '/review-calendar', '/corrective-actions', '/governance-trends', '/audit-logs',
+      // Phase 8 — Governance Operating System
+      '/asset-lifecycle', '/rbac', '/platform-overview'
     ],
   },
   {
@@ -205,7 +217,9 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
     description: 'Executive Viewer • Governance Trends Dashboard & portfolio health score visibility.',
     icon: '👁️',
     allowedNav: [
-      '/', '/dashboard', '/assets', '/validation-dashboard', '/decision-dashboard', '/compliance-dashboard', '/operations-dashboard', '/governance-trends'
+      '/', '/dashboard', '/assets', '/validation-dashboard', '/decision-dashboard', '/compliance-dashboard', '/operations-dashboard', '/governance-trends',
+      // Phase 8 — Governance Operating System
+      '/asset-lifecycle', '/platform-overview'
     ],
   },
 ];
