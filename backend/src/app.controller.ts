@@ -1,13 +1,22 @@
-import { Controller, Get, Post, Body, Param, Put, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common';
 import { PrismaService } from './prisma.service';
+import { Roles } from './auth/roles.decorator';
+import { RolesGuard } from './auth/roles.guard';
+import { UserRole } from '@prisma/client';
 
 @Controller('api')
+@UseGuards(RolesGuard)
 export class AppController {
   constructor(private readonly prisma: PrismaService) {}
 
   @Get('health')
   getHealth() {
-    return { status: 'OPERATIONAL', app: 'OrchestrAI Model Governance (OMG)', timestamp: new Date().toISOString() };
+    return {
+      status: 'OPERATIONAL',
+      app: 'OrchestrAI Model Governance (OMG)',
+      version: 'Phase 2.5 (RBAC Foundation)',
+      timestamp: new Date().toISOString(),
+    };
   }
 
   // --- ASSETS ENDPOINTS ---
@@ -20,6 +29,7 @@ export class AppController {
   }
 
   @Post('assets')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'BUSINESS_OWNER')
   async createAsset(@Body() body: any) {
     return this.prisma.aIAsset.create({
       data: {
@@ -43,6 +53,7 @@ export class AppController {
   }
 
   @Post('users')
+  @Roles('SUPER_ADMIN')
   async createUser(@Body() body: any) {
     return this.prisma.user.create({
       data: {
@@ -56,6 +67,7 @@ export class AppController {
 
   // --- AUDIT LOGS ENDPOINTS ---
   @Get('audit-logs')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER', 'AUDITOR')
   async getAuditLogs() {
     return this.prisma.auditLog.findMany({
       orderBy: { timestamp: 'desc' },

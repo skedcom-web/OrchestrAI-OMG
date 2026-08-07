@@ -22,11 +22,13 @@ export type GovernanceStatus =
   | 'Retirement';
 
 export type UserRole = 
-  | 'Super Admin'
-  | 'Governance Admin'
-  | 'Risk Officer'
-  | 'Business Owner'
-  | 'Viewer';
+  | 'SUPER_ADMIN'
+  | 'GOVERNANCE_ADMIN'
+  | 'RISK_OFFICER'
+  | 'BUSINESS_OWNER'
+  | 'VALIDATOR'
+  | 'AUDITOR'
+  | 'VIEWER';
 
 export type OwnershipRoleType = 
   | 'businessOwner'
@@ -138,4 +140,15 @@ export interface GovernanceMetrics {
   decisionBreakdown: Record<DecisionOutcome, number>;
   ownershipCompletionRate: number; // Percentage
   highRiskUnapprovedCount: number;
+}
+
+export interface PersonaDemoUser {
+  role: UserRole;
+  title: string;
+  name: string;
+  email: string;
+  department: string;
+  description: string;
+  icon: string;
+  allowedNav: string[];
 }

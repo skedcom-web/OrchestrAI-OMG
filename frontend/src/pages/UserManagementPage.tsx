@@ -20,7 +20,7 @@ export const UserManagementPage: React.FC = () => {
     setEditingUser({
       name: '',
       email: '',
-      role: 'Governance Admin',
+      role: 'GOVERNANCE_ADMIN',
       department: 'AI Governance Office',
       status: 'Active',
     });
@@ -47,12 +47,14 @@ export const UserManagementPage: React.FC = () => {
     refreshUsers();
   };
 
-  const roleOptions = [
-    { value: 'Super Admin', label: 'Super Admin' },
-    { value: 'Governance Admin', label: 'Governance Admin' },
-    { value: 'Risk Officer', label: 'Risk Officer' },
-    { value: 'Business Owner', label: 'Business Owner' },
-    { value: 'Viewer', label: 'Viewer' },
+  const roleOptions: { value: UserRole; label: string }[] = [
+    { value: 'SUPER_ADMIN', label: 'Super Admin (Platform Owner)' },
+    { value: 'GOVERNANCE_ADMIN', label: 'Governance Admin (Program Manager)' },
+    { value: 'RISK_OFFICER', label: 'Risk Officer (Risk Governance)' },
+    { value: 'BUSINESS_OWNER', label: 'Business Owner (Business Accountability)' },
+    { value: 'VALIDATOR', label: 'Validator (AI Testing & Scorecards)' },
+    { value: 'AUDITOR', label: 'Auditor (Independent Compliance Audit)' },
+    { value: 'VIEWER', label: 'Viewer (Executive Visibility)' },
   ];
 
   return (
@@ -60,14 +62,24 @@ export const UserManagementPage: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-[var(--text-primary)]">User Management</h1>
+          <h1 className="text-3xl font-extrabold text-[var(--text-primary)]">User Management & RBAC Directory</h1>
           <p className="text-sm text-[var(--text-secondary)] mt-1">
-            Role-Based Access Control (RBAC) & Governance Officer Directory
+            Phase 2.5 Governance Identity Layer • 7 Standardized Governance Roles
           </p>
         </div>
         <Button onClick={handleOpenCreateModal} icon={<span>➕</span>}>
           Create Governance User
         </Button>
+      </div>
+
+      {/* Role Badges Legend Banner */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
+        {roleOptions.map(r => (
+          <div key={r.value} className="p-2.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] text-center flex flex-col gap-1">
+            <span className="text-[10px] font-black uppercase text-[var(--accent-primary)]">{r.value}</span>
+            <span className="text-[10px] text-[var(--text-secondary)] line-clamp-1">{r.label.split('(')[1]?.replace(')', '')}</span>
+          </div>
+        ))}
       </div>
 
       {/* User Table */}
@@ -76,7 +88,7 @@ export const UserManagementPage: React.FC = () => {
           <table className="w-full text-left text-sm border-collapse">
             <thead className="bg-[var(--bg-badge)] border-b border-[var(--border-color)] text-xs uppercase font-bold text-[var(--text-muted)] tracking-wider">
               <tr>
-                <th className="p-4">User</th>
+                <th className="p-4">User Identity</th>
                 <th className="p-4">Governance Role</th>
                 <th className="p-4">Department</th>
                 <th className="p-4">Assigned Assets</th>
@@ -89,7 +101,7 @@ export const UserManagementPage: React.FC = () => {
                 <tr key={user.id} className="hover:bg-[var(--bg-card-hover)] transition-colors">
                   <td className="p-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-purple-500 to-red-500 flex items-center justify-center text-white font-bold text-xs">
+                      <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-purple-500 to-red-500 flex items-center justify-center text-white font-bold text-xs shadow-sm">
                         {user.name.split(' ').map(n => n[0]).join('')}
                       </div>
                       <div className="flex flex-col">
@@ -136,8 +148,8 @@ export const UserManagementPage: React.FC = () => {
         <Modal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-          title={editingUser.id ? 'Edit User Role' : 'Create Governance User'}
-          subtitle="Enterprise Role-Based Access Control Setup"
+          title={editingUser.id ? 'Edit Governance User Role' : 'Create Governance User'}
+          subtitle="Phase 2.5 Role-Based Access Control Setup"
           maxWidth="md"
         >
           <form onSubmit={handleSave} className="flex flex-col gap-4 py-2">
@@ -154,12 +166,12 @@ export const UserManagementPage: React.FC = () => {
               required
               value={editingUser.email || ''}
               onChange={e => setEditingUser({ ...editingUser, email: e.target.value })}
-              placeholder="sarah.jenkins@enterprise-bank.com"
+              placeholder="officer@enterprise-bank.com"
             />
             <Select
-              label="Governance Role"
+              label="Governance Role (7 Roles Supported)"
               options={roleOptions}
-              value={editingUser.role || 'Governance Admin'}
+              value={editingUser.role || 'GOVERNANCE_ADMIN'}
               onChange={e => setEditingUser({ ...editingUser, role: e.target.value as UserRole })}
             />
             <Input
@@ -174,7 +186,7 @@ export const UserManagementPage: React.FC = () => {
                 Cancel
               </Button>
               <Button type="submit">
-                {editingUser.id ? 'Save User' : 'Create User'}
+                {editingUser.id ? 'Save User Role' : 'Create User'}
               </Button>
             </div>
           </form>

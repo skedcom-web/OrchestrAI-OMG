@@ -1,8 +1,11 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { AuthProvider } from './contexts/AuthContext';
 import { AppLayout } from './components/layout/AppLayout';
+import { ProtectedRoute } from './components/common/ProtectedRoute';
 
+import { LoginPage } from './pages/LoginPage';
 import { HomePage } from './pages/HomePage';
 import { DashboardPage } from './pages/DashboardPage';
 import { AssetRegistryPage } from './pages/AssetRegistryPage';
@@ -15,20 +18,89 @@ import { AuditLogsPage } from './pages/AuditLogsPage';
 export const App: React.FC = () => {
   return (
     <ThemeProvider>
-      <BrowserRouter>
-        <AppLayout>
+      <AuthProvider>
+        <BrowserRouter>
           <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/assets" element={<AssetRegistryPage />} />
-            <Route path="/ownership" element={<OwnershipMatrixPage />} />
-            <Route path="/users" element={<UserManagementPage />} />
-            <Route path="/risk" element={<RiskCenterPage />} />
-            <Route path="/decision-governance" element={<DecisionGovernancePage />} />
-            <Route path="/audit-logs" element={<AuditLogsPage />} />
+            {/* Unprotected Login Page */}
+            <Route path="/login" element={<LoginPage />} />
+
+            {/* Protected Routes inside AppLayout */}
+            <Route
+              path="/*"
+              element={
+                <AppLayout>
+                  <Routes>
+                    <Route
+                      path="/"
+                      element={
+                        <ProtectedRoute path="/">
+                          <HomePage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/dashboard"
+                      element={
+                        <ProtectedRoute path="/dashboard">
+                          <DashboardPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/assets"
+                      element={
+                        <ProtectedRoute path="/assets">
+                          <AssetRegistryPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/ownership"
+                      element={
+                        <ProtectedRoute path="/ownership">
+                          <OwnershipMatrixPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/risk"
+                      element={
+                        <ProtectedRoute path="/risk">
+                          <RiskCenterPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/decision-governance"
+                      element={
+                        <ProtectedRoute path="/decision-governance">
+                          <DecisionGovernancePage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/users"
+                      element={
+                        <ProtectedRoute path="/users">
+                          <UserManagementPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/audit-logs"
+                      element={
+                        <ProtectedRoute path="/audit-logs">
+                          <AuditLogsPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                  </Routes>
+                </AppLayout>
+              }
+            />
           </Routes>
-        </AppLayout>
-      </BrowserRouter>
+        </BrowserRouter>
+      </AuthProvider>
     </ThemeProvider>
   );
 };

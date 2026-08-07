@@ -1,18 +1,23 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { OrchestraiLogo } from '../common/OrchestraiLogo';
+import { useAuth } from '../../contexts/AuthContext';
 
 export const Sidebar: React.FC = () => {
-  const activeNavItems = [
+  const { hasPermission, currentPersona } = useAuth();
+
+  const allNavItems = [
     { path: '/', label: 'OMG Home', icon: '🏠', badge: 'Core' },
     { path: '/dashboard', label: 'Executive Dashboard', icon: '📊', badge: 'Live' },
     { path: '/assets', label: 'AI Asset Registry', icon: '🗂️', badge: 'Inventory' },
     { path: '/ownership', label: 'Ownership Matrix', icon: '👥', badge: 'RACIS' },
-    { path: '/users', label: 'User Management', icon: '🔐', badge: 'RBAC' },
     { path: '/risk', label: 'Risk Assessment', icon: '⚡', badge: 'Phase 2' },
     { path: '/decision-governance', label: 'Decision Governance', icon: '⚖️', badge: 'Gatekeeper' },
+    { path: '/users', label: 'User Management', icon: '🔐', badge: 'RBAC' },
     { path: '/audit-logs', label: 'Audit Logs', icon: '📜', badge: 'Day 1' },
   ];
+
+  const visibleNavItems = allNavItems.filter(item => hasPermission(item.path));
 
   const futureModules = [
     { label: 'Validation Center', icon: '🧪' },
@@ -30,10 +35,16 @@ export const Sidebar: React.FC = () => {
 
         {/* Active Navigation */}
         <div className="flex flex-col gap-1">
-          <p className="px-3 text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">
-            Active Governance Modules
-          </p>
-          {activeNavItems.map(item => (
+          <div className="flex items-center justify-between px-3 mb-2">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">
+              Authorized Modules
+            </p>
+            <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-[var(--accent-light)] text-[var(--accent-primary)] border border-[var(--accent-border)]">
+              {currentPersona?.title || 'SUPER_ADMIN'}
+            </span>
+          </div>
+
+          {visibleNavItems.map(item => (
             <NavLink
               key={item.path}
               to={item.path}
@@ -73,7 +84,7 @@ export const Sidebar: React.FC = () => {
                 <span>{item.label}</span>
               </div>
               <span className="text-[9px] font-semibold uppercase px-1.5 py-0.5 rounded bg-[var(--bg-badge)] border border-[var(--border-color)]">
-                Soon
+                Phase 3
               </span>
             </div>
           ))}
@@ -83,14 +94,14 @@ export const Sidebar: React.FC = () => {
       {/* Footer System Status Card */}
       <div className="mt-6 p-4 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)]">
         <div className="flex items-center justify-between text-xs">
-          <span className="font-semibold text-[var(--text-secondary)]">Governance Status</span>
+          <span className="font-semibold text-[var(--text-secondary)]">Governance Engine</span>
           <span className="flex items-center gap-1.5 text-emerald-400 font-bold">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            OPERATIONAL
+            RBAC v2.5
           </span>
         </div>
         <p className="text-[10px] text-[var(--text-muted)] mt-1">
-          OMG Version 2.0 • Phase 1 & 2 Engine
+          Active Role: {currentPersona?.title || 'Super Admin'}
         </p>
       </div>
     </aside>
