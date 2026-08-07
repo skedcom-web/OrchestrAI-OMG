@@ -17,7 +17,12 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
     department: 'Enterprise AI & Architecture',
     description: 'Platform Owner • Full system access, user management, platform settings & governance config.',
     icon: '👑',
-    allowedNav: ['/', '/dashboard', '/assets', '/ownership', '/risk', '/validation', '/evidence', '/review-workbench', '/findings', '/validation-dashboard', '/decision-governance', '/users', '/audit-logs'],
+    allowedNav: [
+      '/', '/dashboard', '/assets', '/ownership', '/risk', 
+      '/validation', '/evidence', '/review-workbench', '/findings', '/validation-dashboard', 
+      '/decision-intelligence', '/governance-blockers', '/decision-workbench-v4', '/decision-dashboard',
+      '/decision-governance', '/users', '/audit-logs'
+    ],
   },
   {
     role: 'GOVERNANCE_ADMIN',
@@ -25,9 +30,14 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
     name: 'David Chen',
     email: 'david.chen@enterprise-bank.com',
     department: 'AI Governance Office',
-    description: 'Program Manager • Manage AI Assets, Validations, Evidence & Decision Gatekeeper.',
+    description: 'Program Manager • Manage AI Assets, Validations, Evidence & Decision Intelligence.',
     icon: '🛡️',
-    allowedNav: ['/', '/dashboard', '/assets', '/ownership', '/risk', '/validation', '/evidence', '/review-workbench', '/findings', '/validation-dashboard', '/decision-governance', '/audit-logs'],
+    allowedNav: [
+      '/', '/dashboard', '/assets', '/ownership', '/risk', 
+      '/validation', '/evidence', '/review-workbench', '/findings', '/validation-dashboard', 
+      '/decision-intelligence', '/governance-blockers', '/decision-workbench-v4', '/decision-dashboard',
+      '/decision-governance', '/audit-logs'
+    ],
   },
   {
     role: 'RISK_OFFICER',
@@ -35,9 +45,12 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
     name: 'Elena Rostova',
     email: 'elena.rostova@enterprise-bank.com',
     department: 'Model Risk Management',
-    description: 'Risk Governance • Perform Risk Assessment Wizard, Risk Evidence Reviews & Findings.',
+    description: 'Risk Governance • Perform Risk Assessment Wizard, Risk Evidence Reviews & Blockers.',
     icon: '⚡',
-    allowedNav: ['/', '/dashboard', '/assets', '/risk', '/evidence', '/review-workbench', '/findings', '/validation-dashboard', '/audit-logs'],
+    allowedNav: [
+      '/', '/dashboard', '/assets', '/risk', '/evidence', '/review-workbench', '/findings', 
+      '/decision-intelligence', '/governance-blockers', '/decision-dashboard', '/audit-logs'
+    ],
   },
   {
     role: 'BUSINESS_OWNER',
@@ -47,7 +60,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
     department: 'Retail Banking & Wealth',
     description: 'Business Accountability • Create assets, submit evidence, manage assigned assets.',
     icon: '💼',
-    allowedNav: ['/', '/dashboard', '/assets', '/ownership', '/evidence'],
+    allowedNav: ['/', '/dashboard', '/assets', '/ownership', '/evidence', '/decision-intelligence'],
   },
   {
     role: 'VALIDATOR',
@@ -57,7 +70,10 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
     department: 'AI Validation & Testing Center',
     description: 'Validation Officer • Model validation reviews, test evidence submission & scorecards.',
     icon: '🧪',
-    allowedNav: ['/', '/dashboard', '/assets', '/validation', '/evidence', '/review-workbench', '/findings', '/validation-dashboard'],
+    allowedNav: [
+      '/', '/dashboard', '/assets', '/validation', '/evidence', '/review-workbench', '/findings', 
+      '/validation-dashboard', '/decision-intelligence'
+    ],
   },
   {
     role: 'AUDITOR',
@@ -67,7 +83,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
     department: 'Internal Audit & Compliance',
     description: 'Independent Auditor • Read-only audit logs, evidence review & compliance verification.',
     icon: '📜',
-    allowedNav: ['/', '/dashboard', '/assets', '/evidence', '/findings', '/audit-logs'],
+    allowedNav: ['/', '/dashboard', '/assets', '/evidence', '/findings', '/decision-dashboard', '/audit-logs'],
   },
   {
     role: 'VIEWER',
@@ -77,7 +93,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
     department: 'Executive Board Observer',
     description: 'Executive Viewer • Executive Dashboard visibility & read-only reporting.',
     icon: '👁️',
-    allowedNav: ['/', '/dashboard', '/assets', '/validation-dashboard'],
+    allowedNav: ['/', '/dashboard', '/assets', '/validation-dashboard', '/decision-dashboard'],
   },
 ];
 
@@ -238,7 +254,6 @@ export const INITIAL_ASSETS: AIAsset[] = [
   },
 ];
 
-// Seeded Phase 3 Validation Records
 export const INITIAL_VALIDATIONS: ValidationRecord[] = [
   {
     id: 'val-201',
@@ -298,7 +313,6 @@ export const INITIAL_VALIDATIONS: ValidationRecord[] = [
   },
 ];
 
-// Seeded Phase 3 Evidence Documents (Mapped to 10 Mandatory Governance Blueprint v1 Deliverables)
 export const INITIAL_EVIDENCE: EvidenceDocument[] = [
   {
     id: 'evd-301',
@@ -367,7 +381,6 @@ export const INITIAL_EVIDENCE: EvidenceDocument[] = [
   },
 ];
 
-// Seeded Phase 3 Findings
 export const INITIAL_FINDINGS: Finding[] = [
   {
     id: 'fnd-401',
@@ -409,18 +422,5 @@ export const INITIAL_AUDIT_LOGS: AuditLog[] = [
     entityName: 'Fraud Detection Sentinel Agent',
     details: 'Executed Decision: GO for Fraud Detection Sentinel Agent (v2.4.0) after human override verification.',
     ipAddress: '10.240.12.88',
-  },
-  {
-    id: 'log-1002',
-    timestamp: '2026-08-06 16:20:04',
-    userId: 'usr-3',
-    userName: 'Elena Rostova',
-    userRole: 'RISK_OFFICER',
-    action: 'RISK_ASSESSMENT_COMPLETED',
-    entityType: 'Risk',
-    entityId: 'ast-106',
-    entityName: 'Enterprise Portfolio Multi-Agent System',
-    details: 'Completed Risk Assessment wizard. Classified risk tier as CRITICAL due to unmonitored trade execution authority.',
-    ipAddress: '10.240.14.12',
   },
 ];

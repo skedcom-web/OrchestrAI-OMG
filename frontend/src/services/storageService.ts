@@ -6,7 +6,11 @@ import type {
   DecisionRecord,
   ValidationRecord,
   EvidenceDocument,
-  Finding
+  Finding,
+  GovernanceScoreBreakdown,
+  GovernanceBlocker,
+  DecisionPackage,
+  DecisionOutcome
 } from '../types';
 import { 
   INITIAL_ASSETS, 
@@ -18,17 +22,17 @@ import {
 } from './mockData';
 
 const STORAGE_KEYS = {
-  ASSETS: 'omg_assets_v3',
-  USERS: 'omg_users_v3',
-  AUDIT_LOGS: 'omg_audit_logs_v3',
-  RISK_ASSESSMENTS: 'omg_risk_assessments_v3',
-  DECISIONS: 'omg_decisions_v3',
-  VALIDATIONS: 'omg_validations_v3',
-  EVIDENCE: 'omg_evidence_v3',
-  FINDINGS: 'omg_findings_v3',
+  ASSETS: 'omg_assets_v4',
+  USERS: 'omg_users_v4',
+  AUDIT_LOGS: 'omg_audit_logs_v4',
+  RISK_ASSESSMENTS: 'omg_risk_assessments_v4',
+  DECISIONS: 'omg_decisions_v4',
+  VALIDATIONS: 'omg_validations_v4',
+  EVIDENCE: 'omg_evidence_v4',
+  FINDINGS: 'omg_findings_v4',
+  PACKAGES: 'omg_decision_packages_v4',
 };
 
-// Helper: Generic LocalStorage Getter
 function getItem<T>(key: string, defaultData: T): T {
   try {
     const item = localStorage.getItem(key);
@@ -39,7 +43,6 @@ function getItem<T>(key: string, defaultData: T): T {
   }
 }
 
-// Helper: Generic LocalStorage Setter
 function setItem<T>(key: string, data: T): void {
   try {
     localStorage.setItem(key, JSON.stringify(data));
@@ -54,7 +57,7 @@ export function addAuditLog(
   userName: string,
   userRole: string,
   action: string,
-  entityType: 'Asset' | 'User' | 'Ownership' | 'Risk' | 'Decision' | 'Validation' | 'Evidence' | 'Finding',
+  entityType: 'Asset' | 'User' | 'Ownership' | 'Risk' | 'Decision' | 'Validation' | 'Evidence' | 'Finding' | 'DecisionPackage',
   entityId: string,
   entityName: string,
   details: string
@@ -125,7 +128,6 @@ export function saveAsset(assetData: Partial<AIAsset>): AIAsset {
     }
   }
 
-  // Create New Asset
   const newAsset: AIAsset = {
     id: `ast-${Date.now().toString().slice(-4)}`,
     name: assetData.name || 'New AI Asset',
@@ -182,58 +184,6 @@ export function deleteAsset(id: string): void {
   }
 }
 
-// --- DECISION GOVERNANCE SERVICE ---
-export function recordDecision(recordData: Partial<DecisionRecord>): DecisionRecord {
-  const decisions = getItem<DecisionRecord[]>(STORAGE_KEYS.DECISIONS, []);
-  const now = new Date().toISOString().split('T')[0];
-
-  const newRecord: DecisionRecord = {
-    id: `dec-${Date.now().toString().slice(-4)}`,
-    assetId: recordData.assetId || '',
-    outcome: recordData.outcome || 'PENDING',
-    checklist: recordData.checklist || {
-      ownershipComplete: false,
-      riskAssessmentComplete: false,
-      requiredReviewsComplete: false,
-      validationComplete: false,
-      monitoringDefined: false,
-      auditRequirementsMet: false,
-      humanOverrideAvailable: false,
-      killSwitchDefined: false,
-    },
-    decisionOwner: recordData.decisionOwner || 'David Chen',
-    decisionDate: now,
-    justification: recordData.justification || '',
-    conditions: recordData.conditions || [],
-  };
-
-  const updated = [newRecord, ...decisions];
-  setItem(STORAGE_KEYS.DECISIONS, updated);
-
-  // Update AI Asset Decision Outcome
-  if (recordData.assetId) {
-    const asset = getAssetById(recordData.assetId);
-    if (asset) {
-      asset.decisionOutcome = recordData.outcome;
-      if (recordData.outcome === 'GO') asset.status = 'Production';
-      saveAsset(asset);
-    }
-  }
-
-  addAuditLog(
-    'usr-2',
-    newRecord.decisionOwner,
-    'GOVERNANCE_ADMIN',
-    'DECISION_EXECUTED',
-    'Decision',
-    newRecord.assetId,
-    'Decision Gatekeeper',
-    `Executed Decision Outcome: ${newRecord.outcome}. Justification: ${newRecord.justification}`
-  );
-
-  return newRecord;
-}
-
 // --- USERS SERVICE ---
 export function getUsers(): User[] {
   return getItem<User[]>(STORAGE_KEYS.USERS, INITIAL_USERS);
@@ -274,7 +224,7 @@ export function toggleUserStatus(id: string): void {
   }
 }
 
-// --- PHASE 3: VALIDATION SERVICE ---
+// --- VALIDATION SERVICE ---
 export function getValidations(): ValidationRecord[] {
   return getItem<ValidationRecord[]>(STORAGE_KEYS.VALIDATIONS, INITIAL_VALIDATIONS);
 }
@@ -340,7 +290,7 @@ function recalculateAssetValidationScore(assetId: string) {
   saveAsset(asset);
 }
 
-// --- PHASE 3: EVIDENCE SERVICE ---
+// --- EVIDENCE SERVICE ---
 export function getEvidence(): EvidenceDocument[] {
   return getItem<EvidenceDocument[]>(STORAGE_KEYS.EVIDENCE, INITIAL_EVIDENCE);
 }
@@ -389,7 +339,7 @@ export function saveEvidence(evdData: Partial<EvidenceDocument>): EvidenceDocume
   return newEvd;
 }
 
-// --- PHASE 3: FINDINGS SERVICE ---
+// --- FINDINGS SERVICE ---
 export function getFindings(): Finding[] {
   return getItem<Finding[]>(STORAGE_KEYS.FINDINGS, INITIAL_FINDINGS);
 }
@@ -437,12 +387,272 @@ export function saveFinding(findingData: Partial<Finding>): Finding {
   return newFinding;
 }
 
-// --- GOVERNANCE METRICS CALCULATION ---
+// --- PHASE 4: 5-PILLAR GOVERNANCE SCORING ENGINE (20% x 5 = 100 TOTAL) ---
+export function calculateAssetGovernanceScore(assetId: string): GovernanceScoreBreakdown {
+  const asset = getAssetById(assetId);
+  const validations = getValidations().filter(v => v.assetId === assetId);
+  const evidence = getEvidence().filter(e => e.assetId === assetId);
+  const findings = getFindings().filter(f => f.assetId === assetId);
+
+  if (!asset) {
+    return {
+      ownership: { score: 0, passed: false, message: 'Asset not found' },
+      risk: { score: 0, passed: false, message: 'Asset not found' },
+      validation: { score: 0, passed: false, message: 'Asset not found' },
+      evidence: { score: 0, passed: false, message: 'Asset not found' },
+      findings: { score: 0, passed: false, message: 'Asset not found' },
+      overallScore: 0,
+      readinessTier: 'Not Ready',
+      recommendedOutcome: 'NO GO',
+    };
+  }
+
+  // Pillar 1: Ownership (20%)
+  const o = asset.ownership || {};
+  const ownershipPassed = !!(o.businessOwner && o.technicalOwner && o.riskOwner);
+  const ownershipScore = ownershipPassed ? 20 : o.businessOwner ? 10 : 0;
+
+  // Pillar 2: Risk (20%)
+  const riskPassed = !!asset.riskLevel && asset.riskLevel !== 'Low'; // Risk assessment executed
+  const riskScore = riskPassed ? 20 : 10;
+
+  // Pillar 3: Validation (20%)
+  const approvedVals = validations.filter(v => v.status === 'Approved');
+  const valPassed = approvedVals.length > 0 && (asset.validationScore || 0) >= 80;
+  const validationScore = valPassed ? 20 : approvedVals.length > 0 ? 10 : 0;
+
+  // Pillar 4: Evidence (20%)
+  const approvedEvd = evidence.filter(e => e.status === 'Approved');
+  const evidencePassed = approvedEvd.length > 0;
+  const evidenceScore = evidencePassed ? 20 : evidence.length > 0 ? 10 : 0;
+
+  // Pillar 5: Findings (20%)
+  const criticalOpen = findings.some(f => f.severity === 'Critical' && f.status !== 'Resolved' && f.status !== 'Verified');
+  const highOpen = findings.some(f => f.severity === 'High' && f.status !== 'Resolved' && f.status !== 'Verified');
+  const findingsPassed = !criticalOpen && !highOpen;
+  const findingsScore = findingsPassed ? 20 : criticalOpen ? 0 : 10;
+
+  const overallScore = ownershipScore + riskScore + validationScore + evidenceScore + findingsScore;
+
+  let readinessTier: 'Ready' | 'Conditionally Ready' | 'Not Ready' = 'Not Ready';
+  let recommendedOutcome: DecisionOutcome = 'NO GO';
+
+  if (overallScore >= 90 && !criticalOpen) {
+    readinessTier = 'Ready';
+    recommendedOutcome = 'GO';
+  } else if (overallScore >= 70 && !criticalOpen) {
+    readinessTier = 'Conditionally Ready';
+    recommendedOutcome = 'CONDITIONAL GO';
+  } else {
+    readinessTier = 'Not Ready';
+    recommendedOutcome = 'NO GO';
+  }
+
+  return {
+    ownership: {
+      score: ownershipScore,
+      passed: ownershipPassed,
+      message: ownershipPassed ? 'All key ownership roles assigned.' : 'Missing Business, Technical, or Risk Owner.',
+    },
+    risk: {
+      score: riskScore,
+      passed: riskPassed,
+      message: riskPassed ? `Risk Assessment complete (Tier: ${asset.riskLevel}).` : 'Risk Assessment incomplete.',
+    },
+    validation: {
+      score: validationScore,
+      passed: valPassed,
+      message: valPassed ? `Validation Score: ${asset.validationScore}% (>=80% threshold passed).` : 'Validation incomplete or score < 80%.',
+    },
+    evidence: {
+      score: evidenceScore,
+      passed: evidencePassed,
+      message: evidencePassed ? `${approvedEvd.length} Evidence Artifacts approved.` : 'No approved evidence uploaded.',
+    },
+    findings: {
+      score: findingsScore,
+      passed: findingsPassed,
+      message: findingsPassed ? 'Zero critical or high risk findings open.' : criticalOpen ? 'CRITICAL FINDING OPEN - Blocker' : 'High findings pending resolution.',
+    },
+    overallScore,
+    readinessTier,
+    recommendedOutcome,
+  };
+}
+
+// --- PHASE 4: GOVERNANCE BLOCKERS EVALUATOR ---
+export function getGovernanceBlockers(assetId?: string): GovernanceBlocker[] {
+  const assets = assetId ? getAssets().filter(a => a.id === assetId) : getAssets();
+  const blockers: GovernanceBlocker[] = [];
+
+  assets.forEach(asset => {
+    const o = asset.ownership || {};
+    if (!o.businessOwner || !o.technicalOwner || !o.riskOwner) {
+      blockers.push({
+        id: `blk-${asset.id}-own`,
+        assetId: asset.id,
+        assetName: asset.name,
+        category: 'Ownership',
+        blockerMessage: `Incomplete Ownership Matrix for ${asset.name}. Missing assigned owners.`,
+        severity: 'High',
+        remediationPath: '/ownership',
+      });
+    }
+
+    const scoreDetails = calculateAssetGovernanceScore(asset.id);
+    if (!scoreDetails.validation.passed) {
+      blockers.push({
+        id: `blk-${asset.id}-val`,
+        assetId: asset.id,
+        assetName: asset.name,
+        category: 'Validation',
+        blockerMessage: `Validation score is ${asset.validationScore || 0}% (Required >= 80%).`,
+        severity: 'High',
+        remediationPath: '/validation',
+      });
+    }
+
+    if (!scoreDetails.evidence.passed) {
+      blockers.push({
+        id: `blk-${asset.id}-evd`,
+        assetId: asset.id,
+        assetName: asset.name,
+        category: 'Evidence',
+        blockerMessage: `No approved evidence artifacts uploaded for ODF Blueprint v1 deliverables.`,
+        severity: 'Medium',
+        remediationPath: '/evidence',
+      });
+    }
+
+    const openCriticalFinding = getFindings().find(f => f.assetId === asset.id && f.severity === 'Critical' && f.status !== 'Resolved' && f.status !== 'Verified');
+    if (openCriticalFinding) {
+      blockers.push({
+        id: `blk-${asset.id}-fnd`,
+        assetId: asset.id,
+        assetName: asset.name,
+        category: 'Findings',
+        blockerMessage: `Critical Finding Open: '${openCriticalFinding.title}'.`,
+        severity: 'Critical',
+        remediationPath: '/findings',
+      });
+    }
+  });
+
+  return blockers;
+}
+
+// --- DECISION GOVERNANCE RECORD SERVICE ---
+export function recordDecision(recordData: Partial<DecisionRecord>): DecisionRecord {
+  const decisions = getItem<DecisionRecord[]>(STORAGE_KEYS.DECISIONS, []);
+  const now = new Date().toISOString().split('T')[0];
+
+  const newRecord: DecisionRecord = {
+    id: `dec-${Date.now().toString().slice(-4)}`,
+    assetId: recordData.assetId || '',
+    outcome: recordData.outcome || 'PENDING',
+    checklist: recordData.checklist || {
+      ownershipComplete: false,
+      riskAssessmentComplete: false,
+      requiredReviewsComplete: false,
+      validationComplete: false,
+      monitoringDefined: false,
+      auditRequirementsMet: false,
+      humanOverrideAvailable: false,
+      killSwitchDefined: false,
+    },
+    decisionOwner: recordData.decisionOwner || 'David Chen',
+    decisionDate: now,
+    justification: recordData.justification || '',
+    conditions: recordData.conditions || [],
+  };
+
+  const updated = [newRecord, ...decisions];
+  setItem(STORAGE_KEYS.DECISIONS, updated);
+
+  if (recordData.assetId) {
+    const asset = getAssetById(recordData.assetId);
+    if (asset) {
+      asset.decisionOutcome = recordData.outcome;
+      if (recordData.outcome === 'GO') asset.status = 'Production';
+      saveAsset(asset);
+    }
+  }
+
+  addAuditLog(
+    'usr-2',
+    newRecord.decisionOwner,
+    'GOVERNANCE_ADMIN',
+    'DECISION_EXECUTED',
+    'Decision',
+    newRecord.assetId,
+    'Decision Gatekeeper',
+    `Executed Decision Outcome: ${newRecord.outcome}. Justification: ${newRecord.justification}`
+  );
+
+  return newRecord;
+}
+
+// --- PHASE 4: EXECUTIVE DECISION PACKAGE GENERATOR ---
+export function generateDecisionPackage(assetId: string, authorName: string): DecisionPackage {
+  const packages = getItem<DecisionPackage[]>(STORAGE_KEYS.PACKAGES, []);
+  const asset = getAssetById(assetId) || getAssets()[0];
+  const scoreBreakdown = calculateAssetGovernanceScore(asset.id);
+  const evidence = getEvidence().filter(e => e.assetId === asset.id);
+  const findings = getFindings().filter(f => f.assetId === asset.id);
+  const now = new Date().toISOString().split('T')[0];
+
+  const pkg: DecisionPackage = {
+    id: `pkg-${Date.now().toString().slice(-4)}`,
+    assetId: asset.id,
+    assetName: asset.name,
+    assetType: asset.type,
+    generatedAt: now,
+    generatedBy: authorName,
+    governanceScore: scoreBreakdown.overallScore,
+    readinessTier: scoreBreakdown.readinessTier,
+    recommendedOutcome: scoreBreakdown.recommendedOutcome,
+    actualOutcome: asset.decisionOutcome || scoreBreakdown.recommendedOutcome,
+    justification: `Executive Decision Briefing Package generated for ${asset.name}. Governance score: ${scoreBreakdown.overallScore}/100.`,
+    deliverablesCount: evidence.length,
+    findingsCount: findings.length,
+    ownersSummary: asset.ownership || {},
+  };
+
+  const updated = [pkg, ...packages];
+  setItem(STORAGE_KEYS.PACKAGES, updated);
+
+  addAuditLog(
+    'usr-1',
+    authorName,
+    'GOVERNANCE_ADMIN',
+    'DECISION_PACKAGE_GENERATED',
+    'DecisionPackage',
+    pkg.id,
+    pkg.assetName,
+    `Generated Executive Governance Decision Briefing Package for ${pkg.assetName}`
+  );
+
+  return pkg;
+}
+
+// --- METRICS WITH PHASE 4 EXTENSIONS ---
 export function getGovernanceMetrics(): GovernanceMetrics {
   const assets = getAssets();
   const validations = getValidations();
   const findings = getFindings();
   const evidence = getEvidence();
+  const blockers = getGovernanceBlockers();
+
+  let readyCount = 0;
+  let condReadyCount = 0;
+  let notReadyCount = 0;
+
+  assets.forEach(asset => {
+    const score = calculateAssetGovernanceScore(asset.id);
+    if (score.readinessTier === 'Ready') readyCount++;
+    else if (score.readinessTier === 'Conditionally Ready') condReadyCount++;
+    else notReadyCount++;
+  });
 
   const metrics: GovernanceMetrics = {
     totalAssets: assets.length,
@@ -463,6 +673,10 @@ export function getGovernanceMetrics(): GovernanceMetrics {
     failedValidations: validations.filter(v => v.status === 'Rejected').length,
     openFindingsCount: findings.filter(f => f.status === 'Open' || f.status === 'In Progress').length,
     totalEvidenceCount: evidence.length,
+    readyAssetsCount: readyCount,
+    conditionallyReadyAssetsCount: condReadyCount,
+    notReadyAssetsCount: notReadyCount,
+    totalBlockersCount: blockers.length,
   };
 
   let completeOwnershipCount = 0;

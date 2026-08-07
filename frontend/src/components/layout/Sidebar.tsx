@@ -16,8 +16,10 @@ export const Sidebar: React.FC = () => {
     { path: '/evidence', label: 'Evidence Center', icon: '📄', badge: 'ODF v1' },
     { path: '/review-workbench', label: 'Review Workbench', icon: '🧰', badge: 'Reviewer' },
     { path: '/findings', label: 'Findings Tracker', icon: '⚠️', badge: 'Defects' },
-    { path: '/validation-dashboard', label: 'Validation Dashboard', icon: '📈', badge: 'Scores' },
-    { path: '/decision-governance', label: 'Decision Governance', icon: '⚖️', badge: 'Gatekeeper' },
+    { path: '/decision-intelligence', label: 'Decision Intelligence', icon: '⚖️', badge: 'Phase 4' },
+    { path: '/governance-blockers', label: 'Governance Blockers', icon: '🧱', badge: 'Blockers' },
+    { path: '/decision-workbench-v4', label: 'Decision Authority', icon: '🖋️', badge: 'Workbench' },
+    { path: '/decision-dashboard', label: 'Decision Dashboard', icon: '📈', badge: 'Scores' },
     { path: '/users', label: 'User Management', icon: '🔐', badge: 'RBAC' },
     { path: '/audit-logs', label: 'Audit Logs', icon: '📜', badge: 'Day 1' },
   ];
@@ -25,7 +27,7 @@ export const Sidebar: React.FC = () => {
   const visibleNavItems = allNavItems.filter(item => hasPermission(item.path));
 
   const futureModules = [
-    { label: 'Compliance Center', icon: '📋' },
+    { label: 'Compliance & Regulatory', icon: '📋' },
     { label: 'Kill Switch Console', icon: '🚨' },
   ];
 
@@ -88,7 +90,7 @@ export const Sidebar: React.FC = () => {
                 <span>{item.label}</span>
               </div>
               <span className="text-[9px] font-semibold uppercase px-1.5 py-0.5 rounded bg-[var(--bg-badge)] border border-[var(--border-color)]">
-                Phase 4
+                Phase 5
               </span>
             </div>
           ))}
@@ -101,7 +103,7 @@ export const Sidebar: React.FC = () => {
           <span className="font-semibold text-[var(--text-secondary)]">Governance Engine</span>
           <span className="flex items-center gap-1.5 text-emerald-400 font-bold">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            Phase 3 Engine
+            Phase 4 Engine
           </span>
         </div>
         <p className="text-[10px] text-[var(--text-muted)] mt-1">

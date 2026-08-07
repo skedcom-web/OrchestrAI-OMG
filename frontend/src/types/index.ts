@@ -123,7 +123,7 @@ export interface AuditLog {
   userName: string;
   userRole: string;
   action: string;
-  entityType: 'Asset' | 'User' | 'Ownership' | 'Risk' | 'Decision' | 'Validation' | 'Evidence' | 'Finding';
+  entityType: 'Asset' | 'User' | 'Ownership' | 'Risk' | 'Decision' | 'Validation' | 'Evidence' | 'Finding' | 'DecisionPackage';
   entityId: string;
   entityName: string;
   details: string;
@@ -145,6 +145,11 @@ export interface GovernanceMetrics {
   failedValidations: number;
   openFindingsCount: number;
   totalEvidenceCount: number;
+  // Phase 4 Extensions
+  readyAssetsCount: number; // 90-100
+  conditionallyReadyAssetsCount: number; // 70-89
+  notReadyAssetsCount: number; // <70
+  totalBlockersCount: number;
 }
 
 export interface PersonaDemoUser {
@@ -179,7 +184,7 @@ export interface ValidationRecord {
   reviewerRole: UserRole;
   reviewDate: string;
   status: ValidationStatus;
-  score: number; // 100 for Pass, 0 for Fail
+  score: number;
   findings: string;
   recommendations: string;
   evidenceRefs: string[];
@@ -195,7 +200,6 @@ export type EvidenceCategory =
 
 export type EvidenceStatus = 'Draft' | 'Submitted' | 'Approved' | 'Rejected' | 'Archived';
 
-// Maps to the 10 Mandatory Deliverables in OrchestrAI Governance Blueprint v1
 export type GovernanceDeliverableType = 
   | 'Executive Solution Blueprint'
   | 'Functional Requirements Specification'
@@ -238,4 +242,52 @@ export interface Finding {
   reportedDate: string;
   description: string;
   resolutionNotes?: string;
+}
+
+// ------------------- PHASE 4 TYPES -------------------
+
+export interface PillarScoreDetail {
+  score: number; // 0 - 20
+  passed: boolean;
+  message: string;
+}
+
+export type GovernanceReadinessTier = 'Ready' | 'Conditionally Ready' | 'Not Ready';
+
+export interface GovernanceScoreBreakdown {
+  ownership: PillarScoreDetail; // 20%
+  risk: PillarScoreDetail; // 20%
+  validation: PillarScoreDetail; // 20%
+  evidence: PillarScoreDetail; // 20%
+  findings: PillarScoreDetail; // 20%
+  overallScore: number; // 0 - 100
+  readinessTier: GovernanceReadinessTier;
+  recommendedOutcome: DecisionOutcome;
+}
+
+export interface GovernanceBlocker {
+  id: string;
+  assetId: string;
+  assetName: string;
+  category: 'Ownership' | 'Risk' | 'Validation' | 'Evidence' | 'Findings';
+  blockerMessage: string;
+  severity: 'Critical' | 'High' | 'Medium';
+  remediationPath: string;
+}
+
+export interface DecisionPackage {
+  id: string;
+  assetId: string;
+  assetName: string;
+  assetType: AssetType;
+  generatedAt: string;
+  generatedBy: string;
+  governanceScore: number;
+  readinessTier: GovernanceReadinessTier;
+  recommendedOutcome: DecisionOutcome;
+  actualOutcome: DecisionOutcome;
+  justification: string;
+  deliverablesCount: number;
+  findingsCount: number;
+  ownersSummary: OwnershipAssignment;
 }

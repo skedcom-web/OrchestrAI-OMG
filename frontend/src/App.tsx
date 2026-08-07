@@ -12,7 +12,6 @@ import { AssetRegistryPage } from './pages/AssetRegistryPage';
 import { OwnershipMatrixPage } from './pages/OwnershipMatrixPage';
 import { UserManagementPage } from './pages/UserManagementPage';
 import { RiskCenterPage } from './pages/RiskCenterPage';
-import { DecisionGovernancePage } from './pages/DecisionGovernancePage';
 import { AuditLogsPage } from './pages/AuditLogsPage';
 
 // Phase 3 Pages
@@ -21,6 +20,12 @@ import { EvidenceCenterPage } from './pages/EvidenceCenterPage';
 import { ReviewWorkbenchPage } from './pages/ReviewWorkbenchPage';
 import { FindingsPage } from './pages/FindingsPage';
 import { ValidationDashboardPage } from './pages/ValidationDashboardPage';
+
+// Phase 4 Pages
+import { DecisionIntelligencePage } from './pages/DecisionIntelligencePage';
+import { GovernanceBlockersPage } from './pages/GovernanceBlockersPage';
+import { DecisionWorkbenchPageV4 } from './pages/DecisionWorkbenchPageV4';
+import { DecisionDashboardPage } from './pages/DecisionDashboardPage';
 
 export const App: React.FC = () => {
   return (
@@ -77,6 +82,7 @@ export const App: React.FC = () => {
                         </ProtectedRoute>
                       }
                     />
+
                     {/* Phase 3 Routes */}
                     <Route
                       path="/validation"
@@ -119,14 +125,40 @@ export const App: React.FC = () => {
                       }
                     />
 
+                    {/* Phase 4 Routes */}
                     <Route
-                      path="/decision-governance"
+                      path="/decision-intelligence"
                       element={
-                        <ProtectedRoute path="/decision-governance">
-                          <DecisionGovernancePage />
+                        <ProtectedRoute path="/decision-intelligence">
+                          <DecisionIntelligencePage />
                         </ProtectedRoute>
                       }
                     />
+                    <Route
+                      path="/governance-blockers"
+                      element={
+                        <ProtectedRoute path="/governance-blockers">
+                          <GovernanceBlockersPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/decision-workbench-v4"
+                      element={
+                        <ProtectedRoute path="/decision-workbench-v4">
+                          <DecisionWorkbenchPageV4 />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/decision-dashboard"
+                      element={
+                        <ProtectedRoute path="/decision-dashboard">
+                          <DecisionDashboardPage />
+                        </ProtectedRoute>
+                      }
+                    />
+
                     <Route
                       path="/users"
                       element={
