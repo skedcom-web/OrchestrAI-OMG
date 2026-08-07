@@ -19,7 +19,11 @@ export const Sidebar: React.FC = () => {
     { path: '/decision-intelligence', label: 'Decision Intelligence', icon: '⚖️', badge: 'Phase 4' },
     { path: '/governance-blockers', label: 'Governance Blockers', icon: '🧱', badge: 'Blockers' },
     { path: '/decision-workbench-v4', label: 'Decision Authority', icon: '🖋️', badge: 'Workbench' },
-    { path: '/decision-dashboard', label: 'Decision Dashboard', icon: '📈', badge: 'Scores' },
+    { path: '/compliance-center', label: 'Compliance Center', icon: '🏛️', badge: 'Phase 5' },
+    { path: '/regulatory-library', label: 'Regulatory Library', icon: '📚', badge: 'RBI' },
+    { path: '/compliance-assessment', label: 'Compliance Tool', icon: '📋', badge: 'Audit' },
+    { path: '/compliance-findings', label: 'Compliance Gaps', icon: '🚨', badge: 'Gaps' },
+    { path: '/compliance-dashboard', label: 'Compliance Dashboard', icon: '📈', badge: 'RBI Score' },
     { path: '/users', label: 'User Management', icon: '🔐', badge: 'RBAC' },
     { path: '/audit-logs', label: 'Audit Logs', icon: '📜', badge: 'Day 1' },
   ];
@@ -27,7 +31,6 @@ export const Sidebar: React.FC = () => {
   const visibleNavItems = allNavItems.filter(item => hasPermission(item.path));
 
   const futureModules = [
-    { label: 'Compliance & Regulatory', icon: '📋' },
     { label: 'Kill Switch Console', icon: '🚨' },
   ];
 
@@ -90,7 +93,7 @@ export const Sidebar: React.FC = () => {
                 <span>{item.label}</span>
               </div>
               <span className="text-[9px] font-semibold uppercase px-1.5 py-0.5 rounded bg-[var(--bg-badge)] border border-[var(--border-color)]">
-                Phase 5
+                Phase 6
               </span>
             </div>
           ))}
@@ -103,7 +106,7 @@ export const Sidebar: React.FC = () => {
           <span className="font-semibold text-[var(--text-secondary)]">Governance Engine</span>
           <span className="flex items-center gap-1.5 text-emerald-400 font-bold">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            Phase 4 Engine
+            Phase 5 Engine
           </span>
         </div>
         <p className="text-[10px] text-[var(--text-muted)] mt-1">

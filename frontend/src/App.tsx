@@ -27,6 +27,13 @@ import { GovernanceBlockersPage } from './pages/GovernanceBlockersPage';
 import { DecisionWorkbenchPageV4 } from './pages/DecisionWorkbenchPageV4';
 import { DecisionDashboardPage } from './pages/DecisionDashboardPage';
 
+// Phase 5 Pages
+import { ComplianceCenterPage } from './pages/ComplianceCenterPage';
+import { RegulatoryLibraryPage } from './pages/RegulatoryLibraryPage';
+import { ComplianceAssessmentPage } from './pages/ComplianceAssessmentPage';
+import { ComplianceFindingsPage } from './pages/ComplianceFindingsPage';
+import { ComplianceDashboardPage } from './pages/ComplianceDashboardPage';
+
 export const App: React.FC = () => {
   return (
     <ThemeProvider>
@@ -155,6 +162,48 @@ export const App: React.FC = () => {
                       element={
                         <ProtectedRoute path="/decision-dashboard">
                           <DecisionDashboardPage />
+                        </ProtectedRoute>
+                      }
+                    />
+
+                    {/* Phase 5 Routes */}
+                    <Route
+                      path="/compliance-center"
+                      element={
+                        <ProtectedRoute path="/compliance-center">
+                          <ComplianceCenterPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/regulatory-library"
+                      element={
+                        <ProtectedRoute path="/regulatory-library">
+                          <RegulatoryLibraryPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/compliance-assessment"
+                      element={
+                        <ProtectedRoute path="/compliance-assessment">
+                          <ComplianceAssessmentPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/compliance-findings"
+                      element={
+                        <ProtectedRoute path="/compliance-findings">
+                          <ComplianceFindingsPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/compliance-dashboard"
+                      element={
+                        <ProtectedRoute path="/compliance-dashboard">
+                          <ComplianceDashboardPage />
                         </ProtectedRoute>
                       }
                     />

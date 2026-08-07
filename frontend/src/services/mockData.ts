@@ -5,8 +5,93 @@ import type {
   PersonaDemoUser, 
   ValidationRecord, 
   EvidenceDocument, 
-  Finding 
+  Finding,
+  ComplianceControl,
+  ComplianceAssessmentRecord
 } from '../types';
+
+export const SEEDED_COMPLIANCE_CONTROLS: ComplianceControl[] = [
+  {
+    id: 'RBI-001',
+    controlName: 'Named Accountable Ownership Required',
+    category: 'RBI AI Governance',
+    source: 'RBI Standards',
+    description: 'Every AI asset must have explicit Business, Technical, and Risk Owners assigned in the RACIS matrix.',
+    mandatory: true,
+  },
+  {
+    id: 'RBI-002',
+    controlName: 'Centralized AI & Model Inventory',
+    category: 'RBI AI Governance',
+    source: 'RBI Standards',
+    description: '100% of enterprise AI applications, models, agents, copilots, and RAG systems must be registered in the central asset registry.',
+    mandatory: true,
+  },
+  {
+    id: 'RBI-003',
+    controlName: 'Independent Multi-Disciplinary Validation',
+    category: 'RBI AI Governance',
+    source: 'RBI Standards',
+    description: 'Independent validation reviews across Security, Model, Compliance, and Technical domains with score >= 80%.',
+    mandatory: true,
+  },
+  {
+    id: 'RBI-004',
+    controlName: 'Human Oversight & Override Control',
+    category: 'RBI AI Governance',
+    source: 'RBI Standards',
+    description: 'High and Critical risk AI systems must enforce human-in-the-loop or human-on-the-loop override authority.',
+    mandatory: true,
+  },
+  {
+    id: 'RBI-005',
+    controlName: 'Day-1 Immutable Auditability',
+    category: 'RBI AI Governance',
+    source: 'RBI Standards',
+    description: 'All governance actions, reviews, approvals, and decisions must generate immutable audit log records.',
+    mandatory: true,
+  },
+  {
+    id: 'RBI-006',
+    controlName: 'Risk Classification & Tiering Assessment',
+    category: 'RBI AI Governance',
+    source: 'RBI Standards',
+    description: 'Formal risk tier assessment evaluating data sensitivity, decision impact, and operational impact.',
+    mandatory: true,
+  },
+  {
+    id: 'RBI-007',
+    controlName: 'Third-Party AI Service Accountability',
+    category: 'RBI AI Governance',
+    source: 'RBI Standards',
+    description: 'SaaS and 3rd party AI services must undergo vendor security review and data privacy compliance verification.',
+    mandatory: true,
+  },
+  {
+    id: 'RBI-008',
+    controlName: 'Emergency Kill Switch & Suspension Capability',
+    category: 'RBI AI Governance',
+    source: 'RBI Standards',
+    description: 'Operational kill switch or circuit breaker protocol defined to suspend autonomous AI execution instantly.',
+    mandatory: true,
+  },
+  {
+    id: 'POL-101',
+    controlName: 'Information Security & PII Protection',
+    category: 'Information Security',
+    source: 'Internal Policy',
+    description: 'Strict encryption in transit & at rest for PII/Sensitive and Restricted data sensitivity classifications.',
+    mandatory: true,
+  },
+  {
+    id: 'POL-102',
+    controlName: 'Algorithmic Fairness & Bias Audit',
+    category: 'Data Privacy',
+    source: 'Internal Policy',
+    description: 'Demographic disparate impact and model explainability audit for customer-impacting AI models.',
+    mandatory: false,
+  },
+];
 
 export const DEMO_PERSONAS: PersonaDemoUser[] = [
   {
@@ -15,12 +100,13 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
     name: 'Sarah Jenkins',
     email: 'sarah.jenkins@enterprise-bank.com',
     department: 'Enterprise AI & Architecture',
-    description: 'Platform Owner • Full system access, user management, platform settings & governance config.',
+    description: 'Platform Owner • Full system access, user management, platform settings & compliance config.',
     icon: '👑',
     allowedNav: [
       '/', '/dashboard', '/assets', '/ownership', '/risk', 
       '/validation', '/evidence', '/review-workbench', '/findings', '/validation-dashboard', 
       '/decision-intelligence', '/governance-blockers', '/decision-workbench-v4', '/decision-dashboard',
+      '/compliance-center', '/regulatory-library', '/compliance-assessment', '/compliance-findings', '/compliance-dashboard',
       '/decision-governance', '/users', '/audit-logs'
     ],
   },
@@ -30,12 +116,13 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
     name: 'David Chen',
     email: 'david.chen@enterprise-bank.com',
     department: 'AI Governance Office',
-    description: 'Program Manager • Manage AI Assets, Validations, Evidence & Decision Intelligence.',
+    description: 'Program Manager • Manage AI Assets, RBI Compliance Assessments, Evidence & Decision Intelligence.',
     icon: '🛡️',
     allowedNav: [
       '/', '/dashboard', '/assets', '/ownership', '/risk', 
       '/validation', '/evidence', '/review-workbench', '/findings', '/validation-dashboard', 
       '/decision-intelligence', '/governance-blockers', '/decision-workbench-v4', '/decision-dashboard',
+      '/compliance-center', '/regulatory-library', '/compliance-assessment', '/compliance-findings', '/compliance-dashboard',
       '/decision-governance', '/audit-logs'
     ],
   },
@@ -45,11 +132,12 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
     name: 'Elena Rostova',
     email: 'elena.rostova@enterprise-bank.com',
     department: 'Model Risk Management',
-    description: 'Risk Governance • Perform Risk Assessment Wizard, Risk Evidence Reviews & Blockers.',
+    description: 'Risk Governance • Perform Risk Assessment Wizard, RBI Risk Controls & Compliance Gaps.',
     icon: '⚡',
     allowedNav: [
       '/', '/dashboard', '/assets', '/risk', '/evidence', '/review-workbench', '/findings', 
-      '/decision-intelligence', '/governance-blockers', '/decision-dashboard', '/audit-logs'
+      '/decision-intelligence', '/governance-blockers', '/decision-dashboard',
+      '/compliance-center', '/regulatory-library', '/compliance-findings', '/compliance-dashboard', '/audit-logs'
     ],
   },
   {
@@ -58,9 +146,9 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
     name: 'Marcus Vance',
     email: 'marcus.vance@enterprise-bank.com',
     department: 'Retail Banking & Wealth',
-    description: 'Business Accountability • Create assets, submit evidence, manage assigned assets.',
+    description: 'Business Accountability • Create assets, submit evidence, manage assigned compliance controls.',
     icon: '💼',
-    allowedNav: ['/', '/dashboard', '/assets', '/ownership', '/evidence', '/decision-intelligence'],
+    allowedNav: ['/', '/dashboard', '/assets', '/ownership', '/evidence', '/decision-intelligence', '/compliance-center'],
   },
   {
     role: 'VALIDATOR',
@@ -68,11 +156,11 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
     name: 'Dr. Aris Thorne',
     email: 'aris.thorne@enterprise-bank.com',
     department: 'AI Validation & Testing Center',
-    description: 'Validation Officer • Model validation reviews, test evidence submission & scorecards.',
+    description: 'Validation Officer • Model validation reviews, RBI validation controls & evidence scorecards.',
     icon: '🧪',
     allowedNav: [
       '/', '/dashboard', '/assets', '/validation', '/evidence', '/review-workbench', '/findings', 
-      '/validation-dashboard', '/decision-intelligence'
+      '/validation-dashboard', '/decision-intelligence', '/compliance-assessment'
     ],
   },
   {
@@ -81,9 +169,12 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
     name: 'Robert Vance',
     email: 'robert.vance@enterprise-bank.com',
     department: 'Internal Audit & Compliance',
-    description: 'Independent Auditor • Read-only audit logs, evidence review & compliance verification.',
+    description: 'Independent Auditor • Read-only audit logs, RBI compliance review & regulatory reporting.',
     icon: '📜',
-    allowedNav: ['/', '/dashboard', '/assets', '/evidence', '/findings', '/decision-dashboard', '/audit-logs'],
+    allowedNav: [
+      '/', '/dashboard', '/assets', '/evidence', '/findings', '/decision-dashboard',
+      '/compliance-center', '/regulatory-library', '/compliance-findings', '/compliance-dashboard', '/audit-logs'
+    ],
   },
   {
     role: 'VIEWER',
@@ -91,9 +182,9 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
     name: 'Claire Sterling',
     email: 'claire.sterling@enterprise-bank.com',
     department: 'Executive Board Observer',
-    description: 'Executive Viewer • Executive Dashboard visibility & read-only reporting.',
+    description: 'Executive Viewer • Executive Dashboard visibility & compliance posture reporting.',
     icon: '👁️',
-    allowedNav: ['/', '/dashboard', '/assets', '/validation-dashboard', '/decision-dashboard'],
+    allowedNav: ['/', '/dashboard', '/assets', '/validation-dashboard', '/decision-dashboard', '/compliance-dashboard'],
   },
 ];
 
@@ -283,34 +374,6 @@ export const INITIAL_VALIDATIONS: ValidationRecord[] = [
     recommendations: 'Maintain monthly drift monitoring on graph embeddings.',
     evidenceRefs: ['evd-303'],
   },
-  {
-    id: 'val-203',
-    assetId: 'ast-102',
-    assetName: 'Retail Credit Scoring Engine',
-    category: 'Compliance',
-    reviewer: 'David Chen',
-    reviewerRole: 'GOVERNANCE_ADMIN',
-    reviewDate: '2026-08-04',
-    status: 'Approved',
-    score: 100,
-    findings: 'Fair Lending compliance assessment verified adverse action explanation generation.',
-    recommendations: 'Re-validate decision tree explainability quarterly.',
-    evidenceRefs: ['evd-304'],
-  },
-  {
-    id: 'val-204',
-    assetId: 'ast-106',
-    assetName: 'Enterprise Portfolio Multi-Agent System',
-    category: 'Technical',
-    reviewer: 'Dr. Aris Thorne',
-    reviewerRole: 'VALIDATOR',
-    reviewDate: '2026-08-05',
-    status: 'Rejected',
-    score: 0,
-    findings: 'Swarm agent loop failed emergency break-out test under market volatility simulation.',
-    recommendations: 'Implement mandatory circuit-breaker pattern before re-submitting for validation.',
-    evidenceRefs: ['evd-305'],
-  },
 ];
 
 export const INITIAL_EVIDENCE: EvidenceDocument[] = [
@@ -340,45 +403,6 @@ export const INITIAL_EVIDENCE: EvidenceDocument[] = [
     status: 'Approved',
     description: 'REST API endpoints, JSON schemas, rate-limiting rules, and JWT auth flow specs.',
   },
-  {
-    id: 'evd-303',
-    title: 'Model Fairness & Demographic Bias Audit Report',
-    category: 'Model Evidence',
-    deliverableType: 'Test Strategy & Evidence',
-    assetId: 'ast-101',
-    assetName: 'Fraud Detection Sentinel Agent',
-    uploadedBy: 'Elena Rostova',
-    uploadDate: '2026-07-29',
-    version: '1.0',
-    status: 'Approved',
-    description: 'Independent model risk management evaluation of disparate impact and false positive distribution.',
-  },
-  {
-    id: 'evd-304',
-    title: 'Retail Credit Scoring Functional Requirements Spec',
-    category: 'Business Evidence',
-    deliverableType: 'Functional Requirements Specification',
-    assetId: 'ast-102',
-    assetName: 'Retail Credit Scoring Engine',
-    uploadedBy: 'Marcus Vance',
-    uploadDate: '2026-07-10',
-    version: '3.1',
-    status: 'Approved',
-    description: 'Underwriting rules, adverse action notification logic, and credit tier boundaries.',
-  },
-  {
-    id: 'evd-305',
-    title: 'Multi-Agent Stress Testing & Volatility Simulation Logs',
-    category: 'Technical Evidence',
-    deliverableType: 'Test Strategy & Evidence',
-    assetId: 'ast-106',
-    assetName: 'Enterprise Portfolio Multi-Agent System',
-    uploadedBy: 'Dr. Aris Thorne',
-    uploadDate: '2026-08-04',
-    version: '0.9',
-    status: 'Rejected',
-    description: 'Simulation run output revealing deadlocks during agent consensus on flash crash scenario.',
-  },
 ];
 
 export const INITIAL_FINDINGS: Finding[] = [
@@ -394,18 +418,48 @@ export const INITIAL_FINDINGS: Finding[] = [
     reportedDate: '2026-08-05',
     description: 'Multi-agent swarm lacks hard-coded execution kill switch if market volatility exceeds 15% threshold within 60 seconds.',
   },
+];
+
+// Seeded Phase 5 Compliance Assessment Records
+export const INITIAL_COMPLIANCE_ASSESSMENTS: ComplianceAssessmentRecord[] = [
   {
-    id: 'fnd-402',
-    title: 'Vault Key Rotation Automation Unverified',
+    id: 'cmp-501',
     assetId: 'ast-101',
     assetName: 'Fraud Detection Sentinel Agent',
-    severity: 'Low',
-    status: 'In Progress',
-    assignedTo: 'Sarah Jenkins',
-    reportedBy: 'Dr. Aris Thorne',
-    reportedDate: '2026-08-02',
-    description: 'Daily key rotation cron job configuration needs automated health check probe.',
-    resolutionNotes: 'Configuring Kubernetes CronJob probe.',
+    controlId: 'RBI-001',
+    controlName: 'Named Accountable Ownership Required',
+    status: 'Compliant',
+    score: 100,
+    evidenceRefs: ['evd-301'],
+    assessor: 'Robert Vance (Auditor)',
+    assessedDate: '2026-08-05',
+    notes: 'All 5 RACIS ownership roles assigned and verified.',
+  },
+  {
+    id: 'cmp-502',
+    assetId: 'ast-101',
+    assetName: 'Fraud Detection Sentinel Agent',
+    controlId: 'RBI-003',
+    controlName: 'Independent Multi-Disciplinary Validation',
+    status: 'Compliant',
+    score: 100,
+    evidenceRefs: ['evd-301', 'evd-303'],
+    assessor: 'Robert Vance (Auditor)',
+    assessedDate: '2026-08-05',
+    notes: 'Validation score 94% exceeds 80% threshold.',
+  },
+  {
+    id: 'cmp-503',
+    assetId: 'ast-106',
+    assetName: 'Enterprise Portfolio Multi-Agent System',
+    controlId: 'RBI-008',
+    controlName: 'Emergency Kill Switch & Suspension Capability',
+    status: 'Non-Compliant',
+    score: 0,
+    evidenceRefs: [],
+    assessor: 'Robert Vance (Auditor)',
+    assessedDate: '2026-08-06',
+    notes: 'Swarm agent loop failed emergency break-out test.',
   },
 ];
 

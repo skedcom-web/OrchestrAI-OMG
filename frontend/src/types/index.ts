@@ -123,7 +123,7 @@ export interface AuditLog {
   userName: string;
   userRole: string;
   action: string;
-  entityType: 'Asset' | 'User' | 'Ownership' | 'Risk' | 'Decision' | 'Validation' | 'Evidence' | 'Finding' | 'DecisionPackage';
+  entityType: 'Asset' | 'User' | 'Ownership' | 'Risk' | 'Decision' | 'Validation' | 'Evidence' | 'Finding' | 'DecisionPackage' | 'ComplianceAssessment' | 'CompliancePackage';
   entityId: string;
   entityName: string;
   details: string;
@@ -145,11 +145,17 @@ export interface GovernanceMetrics {
   failedValidations: number;
   openFindingsCount: number;
   totalEvidenceCount: number;
-  // Phase 4 Extensions
-  readyAssetsCount: number; // 90-100
-  conditionallyReadyAssetsCount: number; // 70-89
-  notReadyAssetsCount: number; // <70
+  readyAssetsCount: number;
+  conditionallyReadyAssetsCount: number;
+  notReadyAssetsCount: number;
   totalBlockersCount: number;
+  // Phase 5 Extensions
+  tenantComplianceScore: number; // 0-100%
+  rbiAlignmentPercentage: number; // 0-100%
+  compliantAssetsCount: number;
+  partiallyCompliantAssetsCount: number;
+  nonCompliantAssetsCount: number;
+  openComplianceGapsCount: number;
 }
 
 export interface PersonaDemoUser {
@@ -247,7 +253,7 @@ export interface Finding {
 // ------------------- PHASE 4 TYPES -------------------
 
 export interface PillarScoreDetail {
-  score: number; // 0 - 20
+  score: number;
   passed: boolean;
   message: string;
 }
@@ -255,12 +261,12 @@ export interface PillarScoreDetail {
 export type GovernanceReadinessTier = 'Ready' | 'Conditionally Ready' | 'Not Ready';
 
 export interface GovernanceScoreBreakdown {
-  ownership: PillarScoreDetail; // 20%
-  risk: PillarScoreDetail; // 20%
-  validation: PillarScoreDetail; // 20%
-  evidence: PillarScoreDetail; // 20%
-  findings: PillarScoreDetail; // 20%
-  overallScore: number; // 0 - 100
+  ownership: PillarScoreDetail;
+  risk: PillarScoreDetail;
+  validation: PillarScoreDetail;
+  evidence: PillarScoreDetail;
+  findings: PillarScoreDetail;
+  overallScore: number;
   readinessTier: GovernanceReadinessTier;
   recommendedOutcome: DecisionOutcome;
 }
@@ -290,4 +296,62 @@ export interface DecisionPackage {
   deliverablesCount: number;
   findingsCount: number;
   ownersSummary: OwnershipAssignment;
+}
+
+// ------------------- PHASE 5 TYPES -------------------
+
+export type ComplianceEvaluationStatus = 'Compliant' | 'Partially Compliant' | 'Non-Compliant' | 'Not Applicable';
+
+export type ComplianceControlCategory = 
+  | 'RBI AI Governance'
+  | 'Information Security'
+  | 'Data Privacy'
+  | 'Model Risk Management'
+  | 'Enterprise Policy';
+
+export interface ComplianceControl {
+  id: string; // e.g. 'RBI-001'
+  controlName: string;
+  category: ComplianceControlCategory;
+  source: 'RBI Standards' | 'Internal Policy';
+  description: string;
+  mandatory: boolean;
+}
+
+export interface ComplianceAssessmentRecord {
+  id: string;
+  assetId: string;
+  assetName: string;
+  controlId: string;
+  controlName: string;
+  status: ComplianceEvaluationStatus;
+  score: number; // 100 for Compliant, 50 for Partial, 0 for Non-Compliant
+  evidenceRefs: string[];
+  assessor: string;
+  assessedDate: string;
+  notes: string;
+}
+
+export interface ComplianceGap {
+  id: string;
+  assetId: string;
+  assetName: string;
+  controlId: string;
+  controlName: string;
+  severity: FindingSeverity;
+  status: 'Open' | 'In Progress' | 'Remediated';
+  remediationNotes: string;
+}
+
+export interface CompliancePackage {
+  id: string;
+  assetId: string;
+  assetName: string;
+  generatedAt: string;
+  generatedBy: string;
+  complianceScore: number; // 0 - 100%
+  status: 'Compliant' | 'Partially Compliant' | 'Non-Compliant';
+  controlsEvaluatedCount: number;
+  evidenceCount: number;
+  openGapsCount: number;
 }

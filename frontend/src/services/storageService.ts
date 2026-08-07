@@ -10,7 +10,12 @@ import type {
   GovernanceScoreBreakdown,
   GovernanceBlocker,
   DecisionPackage,
-  DecisionOutcome
+  DecisionOutcome,
+  ComplianceControl,
+  ComplianceAssessmentRecord,
+  ComplianceGap,
+  CompliancePackage,
+  ComplianceEvaluationStatus
 } from '../types';
 import { 
   INITIAL_ASSETS, 
@@ -18,19 +23,23 @@ import {
   INITIAL_AUDIT_LOGS, 
   INITIAL_VALIDATIONS, 
   INITIAL_EVIDENCE, 
-  INITIAL_FINDINGS 
+  INITIAL_FINDINGS,
+  SEEDED_COMPLIANCE_CONTROLS,
+  INITIAL_COMPLIANCE_ASSESSMENTS
 } from './mockData';
 
 const STORAGE_KEYS = {
-  ASSETS: 'omg_assets_v4',
-  USERS: 'omg_users_v4',
-  AUDIT_LOGS: 'omg_audit_logs_v4',
-  RISK_ASSESSMENTS: 'omg_risk_assessments_v4',
-  DECISIONS: 'omg_decisions_v4',
-  VALIDATIONS: 'omg_validations_v4',
-  EVIDENCE: 'omg_evidence_v4',
-  FINDINGS: 'omg_findings_v4',
-  PACKAGES: 'omg_decision_packages_v4',
+  ASSETS: 'omg_assets_v5',
+  USERS: 'omg_users_v5',
+  AUDIT_LOGS: 'omg_audit_logs_v5',
+  RISK_ASSESSMENTS: 'omg_risk_assessments_v5',
+  DECISIONS: 'omg_decisions_v5',
+  VALIDATIONS: 'omg_validations_v5',
+  EVIDENCE: 'omg_evidence_v5',
+  FINDINGS: 'omg_findings_v5',
+  PACKAGES: 'omg_decision_packages_v5',
+  COMPLIANCE_ASSESSMENTS: 'omg_compliance_assessments_v5',
+  COMPLIANCE_PACKAGES: 'omg_compliance_packages_v5',
 };
 
 function getItem<T>(key: string, defaultData: T): T {
@@ -57,7 +66,7 @@ export function addAuditLog(
   userName: string,
   userRole: string,
   action: string,
-  entityType: 'Asset' | 'User' | 'Ownership' | 'Risk' | 'Decision' | 'Validation' | 'Evidence' | 'Finding' | 'DecisionPackage',
+  entityType: 'Asset' | 'User' | 'Ownership' | 'Risk' | 'Decision' | 'Validation' | 'Evidence' | 'Finding' | 'DecisionPackage' | 'ComplianceAssessment' | 'CompliancePackage',
   entityId: string,
   entityName: string,
   details: string
@@ -387,7 +396,7 @@ export function saveFinding(findingData: Partial<Finding>): Finding {
   return newFinding;
 }
 
-// --- PHASE 4: 5-PILLAR GOVERNANCE SCORING ENGINE (20% x 5 = 100 TOTAL) ---
+// --- PHASE 4 SCORING & BLOCKERS ---
 export function calculateAssetGovernanceScore(assetId: string): GovernanceScoreBreakdown {
   const asset = getAssetById(assetId);
   const validations = getValidations().filter(v => v.assetId === assetId);
@@ -407,26 +416,21 @@ export function calculateAssetGovernanceScore(assetId: string): GovernanceScoreB
     };
   }
 
-  // Pillar 1: Ownership (20%)
   const o = asset.ownership || {};
   const ownershipPassed = !!(o.businessOwner && o.technicalOwner && o.riskOwner);
   const ownershipScore = ownershipPassed ? 20 : o.businessOwner ? 10 : 0;
 
-  // Pillar 2: Risk (20%)
-  const riskPassed = !!asset.riskLevel && asset.riskLevel !== 'Low'; // Risk assessment executed
+  const riskPassed = !!asset.riskLevel && asset.riskLevel !== 'Low';
   const riskScore = riskPassed ? 20 : 10;
 
-  // Pillar 3: Validation (20%)
   const approvedVals = validations.filter(v => v.status === 'Approved');
   const valPassed = approvedVals.length > 0 && (asset.validationScore || 0) >= 80;
   const validationScore = valPassed ? 20 : approvedVals.length > 0 ? 10 : 0;
 
-  // Pillar 4: Evidence (20%)
   const approvedEvd = evidence.filter(e => e.status === 'Approved');
   const evidencePassed = approvedEvd.length > 0;
   const evidenceScore = evidencePassed ? 20 : evidence.length > 0 ? 10 : 0;
 
-  // Pillar 5: Findings (20%)
   const criticalOpen = findings.some(f => f.severity === 'Critical' && f.status !== 'Resolved' && f.status !== 'Verified');
   const highOpen = findings.some(f => f.severity === 'High' && f.status !== 'Resolved' && f.status !== 'Verified');
   const findingsPassed = !criticalOpen && !highOpen;
@@ -480,7 +484,6 @@ export function calculateAssetGovernanceScore(assetId: string): GovernanceScoreB
   };
 }
 
-// --- PHASE 4: GOVERNANCE BLOCKERS EVALUATOR ---
 export function getGovernanceBlockers(assetId?: string): GovernanceBlocker[] {
   const assets = assetId ? getAssets().filter(a => a.id === assetId) : getAssets();
   const blockers: GovernanceBlocker[] = [];
@@ -541,7 +544,6 @@ export function getGovernanceBlockers(assetId?: string): GovernanceBlocker[] {
   return blockers;
 }
 
-// --- DECISION GOVERNANCE RECORD SERVICE ---
 export function recordDecision(recordData: Partial<DecisionRecord>): DecisionRecord {
   const decisions = getItem<DecisionRecord[]>(STORAGE_KEYS.DECISIONS, []);
   const now = new Date().toISOString().split('T')[0];
@@ -592,7 +594,6 @@ export function recordDecision(recordData: Partial<DecisionRecord>): DecisionRec
   return newRecord;
 }
 
-// --- PHASE 4: EXECUTIVE DECISION PACKAGE GENERATOR ---
 export function generateDecisionPackage(assetId: string, authorName: string): DecisionPackage {
   const packages = getItem<DecisionPackage[]>(STORAGE_KEYS.PACKAGES, []);
   const asset = getAssetById(assetId) || getAssets()[0];
@@ -635,24 +636,176 @@ export function generateDecisionPackage(assetId: string, authorName: string): De
   return pkg;
 }
 
-// --- METRICS WITH PHASE 4 EXTENSIONS ---
+// --- PHASE 5: COMPLIANCE & REGULATORY INTELLIGENCE SERVICE ---
+
+export function getComplianceControls(): ComplianceControl[] {
+  return SEEDED_COMPLIANCE_CONTROLS;
+}
+
+export function getComplianceAssessments(): ComplianceAssessmentRecord[] {
+  return getItem<ComplianceAssessmentRecord[]>(STORAGE_KEYS.COMPLIANCE_ASSESSMENTS, INITIAL_COMPLIANCE_ASSESSMENTS);
+}
+
+export function saveComplianceAssessment(assessData: Partial<ComplianceAssessmentRecord>): ComplianceAssessmentRecord {
+  const assessments = getComplianceAssessments();
+  const now = new Date().toISOString().split('T')[0];
+
+  const control = getComplianceControls().find(c => c.id === assessData.controlId);
+  const asset = getAssetById(assessData.assetId || '');
+
+  if (assessData.id) {
+    const idx = assessments.findIndex(a => a.id === assessData.id);
+    if (idx !== -1) {
+      assessments[idx] = { ...assessments[idx], ...assessData, assessedDate: now };
+      setItem(STORAGE_KEYS.COMPLIANCE_ASSESSMENTS, assessments);
+      return assessments[idx];
+    }
+  }
+
+  const status: ComplianceEvaluationStatus = assessData.status || 'Compliant';
+  const score = status === 'Compliant' ? 100 : status === 'Partially Compliant' ? 50 : 0;
+
+  const newAssess: ComplianceAssessmentRecord = {
+    id: `cmp-${Date.now().toString().slice(-4)}`,
+    assetId: assessData.assetId || 'ast-101',
+    assetName: asset?.name || 'AI Asset',
+    controlId: assessData.controlId || 'RBI-001',
+    controlName: control?.controlName || 'Named Accountable Ownership',
+    status,
+    score,
+    evidenceRefs: assessData.evidenceRefs || [],
+    assessor: assessData.assessor || 'Robert Vance (Auditor)',
+    assessedDate: now,
+    notes: assessData.notes || '',
+  };
+
+  const updated = [newAssess, ...assessments];
+  setItem(STORAGE_KEYS.COMPLIANCE_ASSESSMENTS, updated);
+
+  addAuditLog(
+    'usr-6',
+    newAssess.assessor,
+    'AUDITOR',
+    'COMPLIANCE_ASSESSED',
+    'ComplianceAssessment',
+    newAssess.id,
+    newAssess.assetName,
+    `Evaluated control ${newAssess.controlId} for ${newAssess.assetName}: Status = ${newAssess.status} (Score: ${newAssess.score}%)`
+  );
+
+  return newAssess;
+}
+
+export function calculateAssetComplianceScore(assetId: string): { score: number; status: 'Compliant' | 'Partially Compliant' | 'Non-Compliant'; evaluatedCount: number } {
+  const assessments = getComplianceAssessments().filter(a => a.assetId === assetId);
+
+  if (assessments.length === 0) {
+    return { score: 85, status: 'Partially Compliant', evaluatedCount: 0 };
+  }
+
+  const totalScore = assessments.reduce((sum, a) => sum + a.score, 0);
+  const avgScore = Math.round(totalScore / assessments.length);
+
+  let status: 'Compliant' | 'Partially Compliant' | 'Non-Compliant' = 'Non-Compliant';
+  if (avgScore >= 90) status = 'Compliant';
+  else if (avgScore >= 70) status = 'Partially Compliant';
+
+  return {
+    score: avgScore,
+    status,
+    evaluatedCount: assessments.length,
+  };
+}
+
+export function getComplianceGaps(assetId?: string): ComplianceGap[] {
+  const assessments = assetId 
+    ? getComplianceAssessments().filter(a => a.assetId === assetId && (a.status === 'Non-Compliant' || a.status === 'Partially Compliant'))
+    : getComplianceAssessments().filter(a => a.status === 'Non-Compliant' || a.status === 'Partially Compliant');
+
+  return assessments.map(a => ({
+    id: `gap-${a.id}`,
+    assetId: a.assetId,
+    assetName: a.assetName,
+    controlId: a.controlId,
+    controlName: a.controlName,
+    severity: a.status === 'Non-Compliant' ? 'Critical' : 'High',
+    status: 'Open',
+    remediationNotes: a.notes || `Requires evidence remediation for control ${a.controlId}.`,
+  }));
+}
+
+export function generateCompliancePackage(assetId: string, authorName: string): CompliancePackage {
+  const packages = getItem<CompliancePackage[]>(STORAGE_KEYS.COMPLIANCE_PACKAGES, []);
+  const asset = getAssetById(assetId) || getAssets()[0];
+  const evalDetails = calculateAssetComplianceScore(asset.id);
+  const evidence = getEvidence().filter(e => e.assetId === asset.id);
+  const gaps = getComplianceGaps(asset.id);
+  const now = new Date().toISOString().split('T')[0];
+
+  const pkg: CompliancePackage = {
+    id: `c-pkg-${Date.now().toString().slice(-4)}`,
+    assetId: asset.id,
+    assetName: asset.name,
+    generatedAt: now,
+    generatedBy: authorName,
+    complianceScore: evalDetails.score,
+    status: evalDetails.status,
+    controlsEvaluatedCount: evalDetails.evaluatedCount || getComplianceControls().length,
+    evidenceCount: evidence.length,
+    openGapsCount: gaps.length,
+  };
+
+  const updated = [pkg, ...packages];
+  setItem(STORAGE_KEYS.COMPLIANCE_PACKAGES, updated);
+
+  addAuditLog(
+    'usr-6',
+    authorName,
+    'AUDITOR',
+    'COMPLIANCE_PACKAGE_GENERATED',
+    'CompliancePackage',
+    pkg.id,
+    pkg.assetName,
+    `Generated Audit-Ready RBI Compliance Package for ${pkg.assetName}. Score: ${pkg.complianceScore}%`
+  );
+
+  return pkg;
+}
+
+// --- METRICS WITH PHASE 5 EXTENSIONS ---
 export function getGovernanceMetrics(): GovernanceMetrics {
   const assets = getAssets();
   const validations = getValidations();
   const findings = getFindings();
   const evidence = getEvidence();
   const blockers = getGovernanceBlockers();
+  const assessments = getComplianceAssessments();
+  const gaps = getComplianceGaps();
 
   let readyCount = 0;
   let condReadyCount = 0;
   let notReadyCount = 0;
+
+  let compliantCount = 0;
+  let partCompliantCount = 0;
+  let nonCompliantCount = 0;
+  let totalCompScore = 0;
 
   assets.forEach(asset => {
     const score = calculateAssetGovernanceScore(asset.id);
     if (score.readinessTier === 'Ready') readyCount++;
     else if (score.readinessTier === 'Conditionally Ready') condReadyCount++;
     else notReadyCount++;
+
+    const compDetails = calculateAssetComplianceScore(asset.id);
+    totalCompScore += compDetails.score;
+    if (compDetails.status === 'Compliant') compliantCount++;
+    else if (compDetails.status === 'Partially Compliant') partCompliantCount++;
+    else nonCompliantCount++;
   });
+
+  const tenantCompScore = assets.length > 0 ? Math.round(totalCompScore / assets.length) : 0;
+  const rbiAlignment = Math.min(100, Math.round((assessments.filter(a => a.status === 'Compliant').length / Math.max(1, SEEDED_COMPLIANCE_CONTROLS.length * assets.length)) * 100) + 75);
 
   const metrics: GovernanceMetrics = {
     totalAssets: assets.length,
@@ -677,6 +830,12 @@ export function getGovernanceMetrics(): GovernanceMetrics {
     conditionallyReadyAssetsCount: condReadyCount,
     notReadyAssetsCount: notReadyCount,
     totalBlockersCount: blockers.length,
+    tenantComplianceScore: tenantCompScore,
+    rbiAlignmentPercentage: rbiAlignment,
+    compliantAssetsCount: compliantCount,
+    partiallyCompliantAssetsCount: partCompliantCount,
+    nonCompliantAssetsCount: nonCompliantCount,
+    openComplianceGapsCount: gaps.length,
   };
 
   let completeOwnershipCount = 0;

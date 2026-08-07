@@ -98,6 +98,7 @@ model AIAsset {
   validations      ValidationRecord[]
   evidence         EvidenceDocument[]
   findings         Finding[]
+  complianceAssessments ComplianceAssessmentRecord[]
   auditLogs        AuditLog[]
 
   @@map("ai_assets")
@@ -200,6 +201,21 @@ model Finding {
   description  String   @db.Text
 
   @@map("findings")
+}
+
+model ComplianceAssessmentRecord {
+  id           String   @id @default(uuid())
+  assetId      String
+  asset        AIAsset  @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  controlId    String
+  controlName  String
+  status       String
+  score        Int
+  assessor     String
+  assessedDate DateTime @default(now())
+  notes        String   @db.Text
+
+  @@map("compliance_assessments")
 }
 
 model AuditLog {
