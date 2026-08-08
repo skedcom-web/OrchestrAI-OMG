@@ -27,12 +27,12 @@ export const LoginPage: React.FC = () => {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 sm:p-8 bg-[var(--bg-app)] text-[var(--text-primary)] relative">
       {/* Floating Theme Switcher at Top Right */}
-      <div className="absolute top-6 right-8 z-30">
+      <div className="absolute top-3 right-3 sm:top-6 sm:right-8 z-30">
         <ThemeSwitcher />
       </div>
 
       {/* Main Container matching Reference Layout */}
-      <div className="w-full max-w-6xl rounded-3xl overflow-hidden shadow-2xl border border-[var(--border-color)] bg-[var(--bg-card)] grid grid-cols-1 lg:grid-cols-12 min-h-[640px]">
+      <div className="w-full max-w-6xl rounded-3xl overflow-hidden shadow-2xl border border-[var(--border-color)] bg-[var(--bg-card)] grid grid-cols-1 lg:grid-cols-12 min-h-[640px] mt-10 sm:mt-0">
         
         {/* LEFT COLUMN: Gradient Brand & Value Proposition Panel */}
         <div className="lg:col-span-6 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 p-8 sm:p-12 text-white flex flex-col justify-between relative overflow-hidden">

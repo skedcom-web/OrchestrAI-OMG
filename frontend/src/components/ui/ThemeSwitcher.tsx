@@ -19,14 +19,16 @@ export const ThemeSwitcher: React.FC = () => {
           <button
             key={opt.mode}
             onClick={() => setTheme(opt.mode)}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all duration-200 cursor-pointer ${
+            title={opt.label}
+            aria-label={opt.label}
+            className={`flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded-lg transition-all duration-200 cursor-pointer ${
               isActive
                 ? 'bg-[var(--accent-primary)] text-white shadow-sm font-semibold'
                 : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-card-hover)]'
             }`}
           >
             <span>{opt.icon}</span>
-            <span>{opt.label}</span>
+            <span className="hidden sm:inline">{opt.label}</span>
           </button>
         );
       })}

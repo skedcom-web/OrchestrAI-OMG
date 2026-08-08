@@ -51,6 +51,7 @@ export const Topbar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { currentUser, currentPersona, switchPersona, logout } = useAuth();
+  const { setMobileNavOpen } = useExperience();
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -78,9 +79,19 @@ export const Topbar: React.FC = () => {
 
   return (
     <>
-      <header className="h-16 px-6 sticky top-0 z-30 flex items-center justify-between gap-4 border-b border-[var(--border-color)] bg-[var(--bg-topbar)] backdrop-blur-xl">
+      <header className="h-16 px-3 sm:px-6 sticky top-0 z-30 flex items-center justify-between gap-2 sm:gap-4 border-b border-[var(--border-color)] bg-[var(--bg-topbar)] backdrop-blur-xl">
         {/* Breadcrumb trail */}
-        <div className="flex items-center gap-3 min-w-0">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          {/* Mobile navigation toggle */}
+          <button
+            onClick={() => setMobileNavOpen(true)}
+            data-noglass
+            className="lg:hidden shrink-0 w-9 h-9 grid place-items-center rounded-xl bg-[var(--bg-input)] border border-[var(--border-color)] text-[var(--text-secondary)] hover:border-[var(--accent-border)] transition-colors cursor-pointer"
+            aria-label="Open navigation menu"
+          >
+            <span aria-hidden>☰</span>
+          </button>
+
           <nav aria-label="Breadcrumb" className="flex items-center gap-2 min-w-0">
             <Link
               to="/"
@@ -89,31 +100,31 @@ export const Topbar: React.FC = () => {
               OMG
             </Link>
             {located?.domain && (
-              <>
+              <span className="hidden sm:flex items-center gap-2 min-w-0">
                 <span className="text-[var(--text-muted)] text-[10px]" aria-hidden>
                   /
                 </span>
                 <span className="text-[11px] font-bold uppercase tracking-[0.1em] text-[var(--text-secondary)] truncate">
                   {located.domain.label}
                 </span>
-              </>
+              </span>
             )}
             {located?.module && (
-              <>
+              <span className="flex items-center gap-2 min-w-0">
                 <span className="text-[var(--text-muted)] text-[10px]" aria-hidden>
                   /
                 </span>
-                <span className="text-[13px] font-bold text-[var(--text-primary)] truncate">
+                <span className="text-[13px] font-bold text-[var(--text-primary)] truncate max-w-[8rem] sm:max-w-none">
                   {located.module.label}
                 </span>
-              </>
+              </span>
             )}
           </nav>
         </div>
 
         {/* Right controls */}
-        <div className="flex items-center gap-2.5 shrink-0">
-          {/* Command palette trigger */}
+        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+          {/* Command palette trigger — full pill on desktop, icon-only on mobile */}
           <button
             onClick={() => setPaletteOpen(true)}
             data-noglass
@@ -125,6 +136,14 @@ export const Topbar: React.FC = () => {
             <kbd className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-[var(--bg-badge)] border border-[var(--border-subtle)]">
               ⌘K
             </kbd>
+          </button>
+          <button
+            onClick={() => setPaletteOpen(true)}
+            data-noglass
+            className="md:hidden w-9 h-9 grid place-items-center rounded-xl bg-[var(--bg-input)] border border-[var(--border-color)] text-[var(--text-secondary)] hover:border-[var(--accent-border)] transition-colors cursor-pointer"
+            aria-label="Search governance modules"
+          >
+            <span aria-hidden>⌕</span>
           </button>
 
           {/* Governance alerts */}
@@ -146,11 +165,13 @@ export const Topbar: React.FC = () => {
             )}
           </button>
 
-          <ModeToggle />
+          <div className="hidden md:block">
+            <ModeToggle />
+          </div>
           <ThemeSwitcher />
 
           {/* Identity */}
-          <div className="relative pl-2.5 ml-0.5 border-l border-[var(--border-color)]">
+          <div className="relative pl-1.5 sm:pl-2.5 ml-0 sm:ml-0.5 sm:border-l border-[var(--border-color)]">
             <button
               onClick={() => setMenuOpen(o => !o)}
               className="flex items-center gap-2.5 cursor-pointer group"
@@ -172,7 +193,7 @@ export const Topbar: React.FC = () => {
                   {currentPersona?.title || 'Super Admin'}
                 </span>
               </span>
-              <span className="text-[9px] text-[var(--text-muted)]" aria-hidden>
+              <span className="hidden sm:inline text-[9px] text-[var(--text-muted)]" aria-hidden>
                 ▼
               </span>
             </button>
@@ -186,7 +207,7 @@ export const Topbar: React.FC = () => {
                 />
                 <div
                   role="menu"
-                  className="absolute right-0 top-[calc(100%+0.75rem)] z-50 w-72 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-modal)] shadow-[var(--shadow-lg)] p-4 animate-rise-in"
+                  className="absolute right-0 top-[calc(100%+0.75rem)] z-50 w-72 max-w-[calc(100vw-1.5rem)] rounded-2xl border border-[var(--border-color)] bg-[var(--bg-modal)] shadow-[var(--shadow-lg)] p-4 animate-rise-in"
                 >
                   <p className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-[var(--text-muted)]">
                     Signed in as
@@ -194,7 +215,7 @@ export const Topbar: React.FC = () => {
                   <p className="text-sm font-bold text-[var(--text-primary)] mt-1">
                     {currentUser?.name}
                   </p>
-                  <p className="text-[11px] text-[var(--text-secondary)]">{currentUser?.email}</p>
+                  <p className="text-[11px] text-[var(--text-secondary)] break-all">{currentUser?.email}</p>
                   <p className="text-[11px] text-[var(--text-muted)] mt-0.5">
                     {currentUser?.department}
                   </p>
@@ -218,6 +239,16 @@ export const Topbar: React.FC = () => {
                   <p className="text-[10px] text-[var(--text-muted)] mt-2 leading-relaxed">
                     {currentPersona?.description}
                   </p>
+
+                  {/* Mode toggle relocated here on mobile, where the topbar hides it */}
+                  <div className="md:hidden mt-3.5 pt-3.5 border-t border-[var(--border-subtle)]">
+                    <label className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-[var(--text-muted)]">
+                      Experience Mode
+                    </label>
+                    <div className="mt-1.5">
+                      <ModeToggle />
+                    </div>
+                  </div>
 
                   <div className="my-3.5 border-t border-[var(--border-subtle)]" />
 

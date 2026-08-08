@@ -207,6 +207,23 @@
 }
 .sheen:hover::after { animation: omg-sweep 1.1s var(--ease-in-out-soft); }
 
+/* Mobile off-canvas navigation drawer.
+   Uses a plain `transform` toggle rather than Tailwind's translate-x utility
+   classes, whose custom-property cascade did not resolve reliably here. */
+.mobile-drawer {
+  transform: translateX(-100%);
+  transition: transform var(--dur-slow) var(--ease-out-quint);
+}
+.mobile-drawer[data-open='true'] {
+  transform: translateX(0);
+}
+@media (min-width: 1024px) {
+  .mobile-drawer {
+    transform: none;
+    transition: none;
+  }
+}
+
 /* ==========================================================================
    3. NAVIGATION PRIMITIVES
    ========================================================================== */

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { OrchestraiLogo } from '../common/OrchestraiLogo';
 import { useAuth } from '../../contexts/AuthContext';
@@ -53,8 +53,25 @@ const NavRow: React.FC<{ module: NavModule }> = ({ module }) => {
 
 export const Sidebar: React.FC = () => {
   const { hasPermission, currentPersona } = useAuth();
-  const { isExecutive, collapsedDomains, toggleDomain } = useExperience();
+  const { isExecutive, collapsedDomains, toggleDomain, mobileNavOpen, setMobileNavOpen } =
+    useExperience();
+  const location = useLocation();
   const [filter, setFilter] = useState('');
+
+  // Close the mobile drawer whenever the route changes or Escape is pressed.
+  useEffect(() => {
+    setMobileNavOpen(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only the pathname should retrigger this
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (!mobileNavOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMobileNavOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [mobileNavOpen, setMobileNavOpen]);
 
   const query = filter.trim().toLowerCase();
 
@@ -87,11 +104,33 @@ export const Sidebar: React.FC = () => {
   const totalAuthorized = domains.reduce((n, d) => n + d.modules.length, 0);
 
   return (
-    <aside className="w-[17.5rem] shrink-0 h-screen sticky top-0 flex flex-col border-r border-[var(--border-color)] bg-[var(--bg-sidebar)] z-20">
-      {/* Brand */}
-      <div className="px-5 pt-5 pb-4 border-b border-[var(--border-subtle)]">
-        <OrchestraiLogo size="md" showTagline={true} />
-      </div>
+    <>
+      {/* Mobile backdrop — dismisses the drawer, never shown at lg and above */}
+      {mobileNavOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/50 backdrop-blur-sm lg:hidden"
+          onClick={() => setMobileNavOpen(false)}
+          role="presentation"
+        />
+      )}
+
+      <aside
+        data-open={mobileNavOpen}
+        className={`mobile-drawer w-[17.5rem] shrink-0 h-screen fixed inset-y-0 left-0 top-0 flex flex-col border-r border-[var(--border-color)] bg-[var(--bg-sidebar)] z-40 lg:sticky lg:z-20 ${
+          mobileNavOpen ? 'shadow-[var(--shadow-lg)]' : ''
+        }`}
+      >
+        {/* Brand */}
+        <div className="px-5 pt-5 pb-4 border-b border-[var(--border-subtle)] flex items-start justify-between gap-2">
+          <OrchestraiLogo size="md" showTagline={true} />
+          <button
+            onClick={() => setMobileNavOpen(false)}
+            className="lg:hidden shrink-0 w-8 h-8 grid place-items-center rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-card-hover)] transition-colors cursor-pointer"
+            aria-label="Close navigation"
+          >
+            ✕
+          </button>
+        </div>
 
       {/* Experience context strip */}
       <div className="px-5 py-3 border-b border-[var(--border-subtle)] flex items-center justify-between gap-2">
@@ -269,6 +308,7 @@ export const Sidebar: React.FC = () => {
           </p>
         </div>
       </div>
-    </aside>
+      </aside>
+    </>
   );
 };

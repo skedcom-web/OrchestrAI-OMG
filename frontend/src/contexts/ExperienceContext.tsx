@@ -23,6 +23,9 @@ interface ExperienceContextType {
   toggleDomain: (domainId: string) => void;
   sidebarCollapsed: boolean;
   setSidebarCollapsed: (collapsed: boolean) => void;
+  /** Mobile off-canvas navigation drawer — ephemeral, not persisted. */
+  mobileNavOpen: boolean;
+  setMobileNavOpen: (open: boolean) => void;
 }
 
 const ExperienceContext = createContext<ExperienceContextType | undefined>(undefined);
@@ -49,6 +52,8 @@ export const ExperienceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [sidebarCollapsed, setSidebarCollapsedState] = useState<boolean>(() =>
     readStored<boolean>('omg_sidebar_collapsed', false)
   );
+
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   const setMode = useCallback((next: ExperienceMode) => {
     setModeState(next);
@@ -88,8 +93,19 @@ export const ExperienceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       toggleDomain,
       sidebarCollapsed,
       setSidebarCollapsed,
+      mobileNavOpen,
+      setMobileNavOpen,
     }),
-    [mode, setMode, toggleMode, collapsedDomains, toggleDomain, sidebarCollapsed, setSidebarCollapsed]
+    [
+      mode,
+      setMode,
+      toggleMode,
+      collapsedDomains,
+      toggleDomain,
+      sidebarCollapsed,
+      setSidebarCollapsed,
+      mobileNavOpen,
+    ]
   );
 
   return <ExperienceContext.Provider value={value}>{children}</ExperienceContext.Provider>;

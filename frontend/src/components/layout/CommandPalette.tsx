@@ -76,7 +76,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ open, onClose })
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center pt-[12vh] px-4 animate-fade-in"
+      className="fixed inset-0 z-50 flex items-start justify-center pt-[8vh] sm:pt-[12vh] px-3 sm:px-4 animate-fade-in"
       style={{ background: 'var(--bg-overlay)', backdropFilter: 'blur(6px)' }}
       onClick={onClose}
       role="presentation"
@@ -135,7 +135,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ open, onClose })
                   {entry.module.description}
                 </span>
               </span>
-              <span className="shrink-0 text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)]">
+              <span className="hidden sm:inline shrink-0 text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)]">
                 {entry.domainLabel}
               </span>
             </button>
@@ -143,9 +143,9 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ open, onClose })
         </div>
 
         <div className="px-4 py-2.5 border-t border-[var(--border-subtle)] flex items-center gap-4 text-[10px] text-[var(--text-muted)]">
-          <span>↑↓ navigate</span>
-          <span>↵ open</span>
-          <span className="ml-auto font-semibold">OrchestrAI OMG · Governance Operating System</span>
+          <span className="hidden sm:inline">↑↓ navigate</span>
+          <span className="hidden sm:inline">↵ open</span>
+          <span className="sm:ml-auto font-semibold truncate">OrchestrAI OMG · Governance Operating System</span>
         </div>
       </div>
     </div>

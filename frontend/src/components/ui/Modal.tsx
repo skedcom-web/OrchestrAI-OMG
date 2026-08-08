@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Button } from './Button';
 
 interface ModalProps {
@@ -42,34 +43,47 @@ export const Modal: React.FC<ModalProps> = ({
     '2xl': 'max-w-2xl',
   }[maxWidth];
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+  return createPortal(
+    // Rendered via a portal straight into <body>: any animated ancestor in the
+    // page tree (e.g. the page-transition transform on <main>) would otherwise
+    // establish a new containing block for this `fixed` overlay, quietly
+    // repositioning it relative to that ancestor instead of the viewport.
+    //
+    // Top-aligned, not centered: centering a scrollable overlay whose content
+    // is taller than the viewport leaves the browser's initial scroll position
+    // showing blank backdrop with the dialog's header cut off below the fold.
+    // Anchoring to the top with breathing-room padding avoids that entirely,
+    // and the dialog caps its own height and scrolls its body internally.
+    <div className="fixed inset-0 z-50 flex items-start justify-center px-3 sm:px-6 py-6 sm:py-10 overflow-y-auto">
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
         onClick={onClose}
       />
 
-      {/* Modal Dialog */}
-      <div className={`relative w-full ${widthClass} rounded-2xl bg-[var(--bg-modal)] border border-[var(--border-color)] shadow-2xl p-6 sm:p-8 z-10 transition-all transform scale-100`}>
+      {/* Modal Dialog — fixed header, independently scrolling body, capped total height */}
+      <div
+        className={`relative w-full ${widthClass} max-h-[calc(100vh-3rem)] sm:max-h-[calc(100vh-5rem)] flex flex-col rounded-2xl bg-[var(--bg-modal)] border border-[var(--border-color)] shadow-2xl z-10`}
+      >
         {/* Header */}
-        <div className="flex items-start justify-between pb-4 mb-4 border-b border-[var(--border-color)]">
-          <div>
-            <h3 className="text-xl font-bold text-[var(--text-primary)] tracking-tight">
+        <div className="shrink-0 flex items-start justify-between gap-3 px-4 sm:px-8 pt-4 sm:pt-8 pb-4 border-b border-[var(--border-color)]">
+          <div className="min-w-0">
+            <h3 className="text-lg sm:text-xl font-bold text-[var(--text-primary)] tracking-tight">
               {title}
             </h3>
             {subtitle && (
               <p className="text-xs text-[var(--text-secondary)] mt-1">{subtitle}</p>
             )}
           </div>
-          <Button variant="ghost" size="sm" onClick={onClose} className="!p-1.5 text-gray-400 hover:text-white">
+          <Button variant="ghost" size="sm" onClick={onClose} className="!p-1.5 shrink-0 text-gray-400 hover:text-white">
             ✕
           </Button>
         </div>
 
-        {/* Content */}
-        <div className="max-h-[75vh] overflow-y-auto pr-1">{children}</div>
+        {/* Content — scrolls independently; header above stays put */}
+        <div className="min-h-0 overflow-y-auto px-4 sm:px-8 py-4 sm:py-6">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
