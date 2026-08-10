@@ -3,30 +3,47 @@ import { PrismaService } from './prisma.service';
 import { Roles } from './auth/roles.decorator';
 import { RolesGuard } from './auth/roles.guard';
 
+/**
+ * OMG governance API.
+ *
+ * Every data-bearing endpoint declares the roles permitted to reach it. Only
+ * /api/health is intentionally public. See RolesGuard for the authorisation
+ * model and its documented limitation (role is claimed, not authenticated).
+ */
 @Controller('api')
 @UseGuards(RolesGuard)
 export class AppController {
   constructor(private readonly prisma: PrismaService) {}
 
+  /** Public liveness probe. Deliberately exposes no governance data. */
   @Get('health')
   getHealth() {
     return {
       status: 'OPERATIONAL',
       app: 'OrchestrAI Model Governance (OMG)',
-      version: 'Phase 7 (Continuous Monitoring & Governance Review Center)',
+      version: 'Phase 10 (Governance Change Management)',
       timestamp: new Date().toISOString(),
     };
   }
 
   // --- ASSETS ENDPOINTS ---
   @Get('assets')
+  @Roles(
+    'SUPER_ADMIN',
+    'GOVERNANCE_ADMIN',
+    'RISK_OFFICER',
+    'BUSINESS_OWNER',
+    'VALIDATOR',
+    'AUDITOR',
+    'VIEWER',
+  )
   async getAssets() {
     return this.prisma.aIAsset.findMany({
-      include: { 
-        owners: true, 
-        validations: true, 
-        evidence: true, 
-        findings: true, 
+      include: {
+        owners: true,
+        validations: true,
+        evidence: true,
+        findings: true,
         complianceAssessments: true,
         killSwitches: true,
         overrides: true,
@@ -34,7 +51,7 @@ export class AppController {
         retirements: true,
         scheduledReviews: true,
         correctiveActions: true,
-        alerts: true
+        alerts: true,
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -42,6 +59,7 @@ export class AppController {
 
   // --- PHASE 7: CONTINUOUS MONITORING ENDPOINTS ---
   @Get('monitoring/alerts')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER', 'AUDITOR')
   async getAlerts() {
     return this.prisma.governanceAlert.findMany({
       orderBy: { createdAt: 'desc' },
@@ -49,6 +67,13 @@ export class AppController {
   }
 
   @Get('monitoring/reviews')
+  @Roles(
+    'SUPER_ADMIN',
+    'GOVERNANCE_ADMIN',
+    'RISK_OFFICER',
+    'BUSINESS_OWNER',
+    'AUDITOR',
+  )
   async getScheduledReviews() {
     return this.prisma.scheduledReview.findMany({
       orderBy: { dueDate: 'asc' },
@@ -70,6 +95,14 @@ export class AppController {
   }
 
   @Get('monitoring/corrective-actions')
+  @Roles(
+    'SUPER_ADMIN',
+    'GOVERNANCE_ADMIN',
+    'RISK_OFFICER',
+    'BUSINESS_OWNER',
+    'VALIDATOR',
+    'AUDITOR',
+  )
   async getCorrectiveActions() {
     return this.prisma.correctiveAction.findMany({
       orderBy: { dueDate: 'asc' },
@@ -93,7 +126,9 @@ export class AppController {
   }
 
   // --- USERS ENDPOINTS ---
+  // The user directory is administrative data; restricted to administrators.
   @Get('users')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
   async getUsers() {
     return this.prisma.user.findMany();
   }
