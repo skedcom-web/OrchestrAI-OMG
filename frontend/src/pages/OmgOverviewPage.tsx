@@ -1,213 +1,394 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card } from '../components/ui/Card';
-import { Button } from '../components/ui/Button';
+import { SectionHeader } from '../components/ui/SectionHeader';
+import { GuidedTour } from '../components/landing/GuidedTour';
+import { JourneyExplorer } from '../components/landing/JourneyExplorer';
+import { WorkedExample } from '../components/landing/WorkedExample';
+import { GovernanceContinuity } from '../components/landing/GovernanceContinuity';
 import { getGovernanceMetrics } from '../services/storageService';
-import type { AssetType } from '../types';
+import {
+  BUSINESS_VALUE,
+  CAPABILITIES,
+  ENTERPRISE_PROBLEMS,
+  PERSONAS,
+} from '../config/landingContent';
 
 /**
- * Platform Overview — the explanatory surface for OMG.
+ * OMG Overview — the landing experience.
  *
- * Phase 8B moved the executive landing experience to the Enterprise Governance
- * Command Center; this page retains the "what / why / how" narrative used for
- * onboarding, executive briefings and vendor review.
+ * Journey-centric rather than module-centric: a first-time reader should be able
+ * to answer what problem OMG solves, how governance works, what happens after
+ * approval, why the modules exist and where to start — without training.
  */
 export const OmgOverviewPage: React.FC = () => {
   const navigate = useNavigate();
-  const metrics = getGovernanceMetrics();
-
-  const assetTypesList: { type: AssetType; description: string; icon: string }[] = [
-    { type: 'Application', description: 'AI-infused standalone enterprise applications', icon: '💻' },
-    { type: 'Agent', description: 'Autonomous goal-driven reasoning & task agents', icon: '🤖' },
-    { type: 'Model', description: 'Custom predictive ML & statistical classification models', icon: '📈' },
-    { type: 'LLM', description: 'Foundation models, fine-tuned LLMs & SLMs', icon: '🧠' },
-    { type: 'Copilot', description: 'Human-in-the-loop interactive assistant copilots', icon: '👥' },
-    { type: 'RAG System', description: 'Retrieval-augmented knowledge indexing systems', icon: '📚' },
-    { type: 'AI Workflow', description: 'Orchestrated multi-step AI decision pipelines', icon: '⚡' },
-    { type: 'Multi-Agent System', description: 'Swarm multi-agent collaborative networks', icon: '🌐' },
-    { type: 'Third-Party AI Service', description: 'External vendor SaaS & API AI integrations', icon: '🔌' },
-  ];
-
-  const problemCards = [
-    { title: 'Visibility Gap', text: 'Organizations lack a single source of truth for what AI assets exist across departments.', icon: '👁️' },
-    { title: 'Ownership Gap', text: 'AI systems operate without clear business, technical, risk, and compliance accountability.', icon: '👤' },
-    { title: 'Risk Gap', text: 'Unmonitored high-risk AI models deploy into production without formalized risk tiering.', icon: '⚠️' },
-    { title: 'Governance Gap', text: 'Approvals, validations, and human oversight checks become siloed or forgotten.', icon: '📑' },
-    { title: 'Audit Gap', text: 'Generating regulatory audit proof takes weeks of manual evidence gathering.', icon: '🔍' },
-  ];
-
-  const solutionPillars = [
-    { title: 'Inventory', text: 'Know every AI asset enterprise-wide.' },
-    { title: 'Ownership', text: 'Assign 5-role accountability.' },
-    { title: 'Risk', text: 'Classify risk & data sensitivity.' },
-    { title: 'Validation', text: 'Track test evidence & model performance.' },
-    { title: 'Monitoring', text: 'Maintain real-time observability.' },
-    { title: 'Audit', text: 'Generate instant compliance proof.' },
-    { title: 'Control', text: 'Enforce kill-switches & human oversight.' },
-  ];
+  const [tourOpen, setTourOpen] = useState(false);
+  const metrics = useMemo(() => getGovernanceMetrics(), []);
 
   return (
-    <div className="flex flex-col gap-12 pb-12">
-      {/* SECTION 1: HERO */}
+    <div className="flex flex-col gap-10 pb-4">
+      {/* ===================== HERO ===================== */}
       <section
-        className="relative overflow-hidden rounded-3xl border border-[var(--border-color)] p-8 sm:p-12"
+        className="relative overflow-hidden rounded-3xl border border-[var(--border-color)] sheen"
         style={{ background: 'var(--grad-hero)' }}
       >
-        <div className="absolute inset-0 enterprise-grid opacity-50 pointer-events-none" aria-hidden />
-        <div className="max-w-3xl flex flex-col gap-6 relative z-10">
+        <div className="absolute inset-0 enterprise-grid opacity-60 pointer-events-none" aria-hidden />
+        <div
+          className="absolute -right-24 -top-24 w-[26rem] h-[26rem] rounded-full pointer-events-none"
+          style={{ background: 'var(--grad-brand)', opacity: 0.12, filter: 'blur(60px)' }}
+          aria-hidden
+        />
+
+        <div className="relative p-6 sm:p-9 flex flex-col xl:flex-row xl:items-center gap-8">
+          <div className="flex-1 min-w-0 flex flex-col gap-4">
+            <span
+              data-noglass
+              className="inline-flex items-center gap-2 w-fit px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-[0.12em] bg-[var(--accent-light)] text-[var(--accent-primary)] border border-[var(--accent-border)]"
+            >
+              <span className="status-pulse" />
+              Enterprise AI Governance Operating System
+            </span>
+
+            <h1 className="text-[2.1rem] sm:text-[2.9rem] font-extrabold leading-[1.08] text-[var(--text-primary)]">
+              Govern AI with <span className="text-gradient-brand">Confidence</span>
+            </h1>
+
+            <p className="text-[15px] font-semibold text-[var(--text-secondary)]">
+              From AI idea to AI approval — and beyond.
+            </p>
+
+            <ul className="flex flex-col gap-1.5">
+              {[
+                'Know what AI exists.',
+                'Assess the risks.',
+                'Validate the evidence.',
+                'Make confident GO / Conditional GO / NO GO decisions.',
+                'Continuously govern AI throughout its lifecycle.',
+              ].map(line => (
+                <li key={line} className="flex items-start gap-2.5">
+                  <span
+                    className="mt-[7px] w-1.5 h-1.5 rounded-full shrink-0"
+                    style={{ background: 'var(--accent-primary)' }}
+                    aria-hidden
+                  />
+                  <span className="text-[13px] text-[var(--text-secondary)] leading-relaxed">
+                    {line}
+                  </span>
+                </li>
+              ))}
+            </ul>
+
+            <div className="flex flex-wrap items-center gap-2.5 pt-2">
+              <button
+                onClick={() => setTourOpen(true)}
+                className="px-5 py-2.5 rounded-xl text-[13px] font-bold text-white shadow-md hover:shadow-lg transition-all active:scale-[0.98] cursor-pointer"
+                style={{ background: 'var(--grad-brand)' }}
+              >
+                Start Guided Tour
+              </button>
+              <button
+                onClick={() => navigate('/command-center')}
+                data-noglass
+                className="px-5 py-2.5 rounded-xl text-[13px] font-bold bg-[var(--bg-card)] border border-[var(--border-color)] text-[var(--text-primary)] hover:border-[var(--accent-border)] transition-all cursor-pointer"
+              >
+                Explore Demo
+              </button>
+            </div>
+
+            <p className="text-[11px] text-[var(--text-muted)]">
+              Three minutes, eight stages — no training required.
+            </p>
+          </div>
+
+          {/* Live posture snapshot */}
           <div
             data-noglass
-            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--accent-light)] text-[var(--accent-primary)] text-[11px] font-extrabold uppercase tracking-[0.12em] border border-[var(--accent-border)] w-fit"
+            className="shrink-0 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)]/70 backdrop-blur-sm p-5 w-full xl:w-[19rem]"
           >
-            <span>🛡️ Platform Overview</span>
+            <p className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-[var(--text-muted)]">
+              This tenant, right now
+            </p>
+            <div className="grid grid-cols-2 gap-3 mt-3">
+              {[
+                ['Governed assets', metrics.totalAssets, 'var(--accent-primary)'],
+                ['Approved for production', metrics.decisionBreakdown.GO, 'var(--status-success)'],
+                ['High & critical risk', metrics.riskBreakdown.High + metrics.riskBreakdown.Critical, 'var(--status-danger)'],
+                ['Governance health', `${metrics.tenantGovernanceHealthScore}%`, 'var(--status-info)'],
+              ].map(([label, value, tone]) => (
+                <div
+                  key={String(label)}
+                  data-noglass
+                  className="rounded-xl border border-[var(--border-subtle)] px-3 py-2.5"
+                  style={{ background: 'var(--bg-sunken)' }}
+                >
+                  <p
+                    className="tnum text-[1.35rem] font-extrabold leading-none"
+                    style={{ color: String(tone) }}
+                  >
+                    {String(value)}
+                  </p>
+                  <p className="text-[10px] font-semibold text-[var(--text-muted)] mt-1.5 leading-tight">
+                    {String(label)}
+                  </p>
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={() => navigate('/command-center')}
+              className="mt-3 w-full text-[11px] font-bold text-[var(--accent-primary)] hover:underline cursor-pointer text-left"
+            >
+              Open Command Center →
+            </button>
           </div>
-
-          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-[var(--text-primary)] leading-tight">
-            The Enterprise AI Governance{' '}
-            <span className="text-gradient-brand">Operating System</span>
-          </h1>
-
-          <p className="text-lg text-[var(--text-secondary)] leading-relaxed">
-            OrchestrAI Model Governance governs every form of enterprise artificial intelligence —
-            applications, agents, models, copilots, RAG systems and third-party services — through
-            one accountable operating model: govern every AI, control every decision, prove every
-            outcome.
-          </p>
-
-          <div className="flex flex-wrap items-center gap-4 pt-2">
-            <Button size="lg" onClick={() => navigate('/command-center')}>
-              <span>Open Command Center</span>
-            </Button>
-            <Button size="lg" variant="secondary" onClick={() => navigate('/assets')}>
-              <span>Register AI Asset</span>
-            </Button>
-            <Button size="lg" variant="outline" onClick={() => navigate('/decision-workbench-v4')}>
-              <span>Decision Authority</span>
-            </Button>
-          </div>
-        </div>
-
-        {/* Decorative orbital */}
-        <div className="absolute right-6 top-1/2 -translate-y-1/2 hidden lg:block opacity-20 pointer-events-none">
-          <div
-            className="w-80 h-80 rounded-full border-4 border-[var(--accent-primary)]/40 animate-spin"
-            style={{ animationDuration: '40s' }}
-          />
         </div>
       </section>
 
-      {/* SECTION 6: EXECUTIVE SNAPSHOT */}
+      {/* ============== SECTION 1 — THE ENTERPRISE PROBLEM ============== */}
       <section className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold text-[var(--text-primary)]">Executive Snapshot</h2>
-          <span className="text-xs text-[var(--text-muted)] font-medium">Real-Time Metrics</span>
-        </div>
+        <SectionHeader
+          eyebrow="Section 1"
+          title="Why AI Governance Matters"
+          subtitle="What goes wrong without it — and the capability that closes each gap."
+          icon="⚠️"
+        />
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card glowOnHover className="!p-5">
-            <p className="text-xs font-semibold text-[var(--text-muted)] uppercase">Total Governed Assets</p>
-            <h3 className="text-3xl font-black mt-1 text-[var(--text-primary)]">{metrics.totalAssets}</h3>
-            <p className="text-xs text-emerald-400 mt-1 font-medium">100% Registry Coverage</p>
-          </Card>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-2.5">
+          {ENTERPRISE_PROBLEMS.map(item => (
+            <button
+              key={item.problem}
+              onClick={() => navigate(item.path)}
+              data-noglass
+              className="group text-left rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4 flex items-center gap-3 hover:border-[var(--accent-border)] hover:-translate-y-0.5 transition-all cursor-pointer"
+            >
+              <span className="flex items-start gap-2.5 min-w-0 flex-1">
+                <span
+                  className="shrink-0 text-[13px] font-bold mt-[1px]"
+                  style={{ color: 'var(--status-danger)' }}
+                  aria-hidden
+                >
+                  ✕
+                </span>
+                <span className="text-[12.5px] text-[var(--text-secondary)] leading-snug">
+                  {item.problem}
+                </span>
+              </span>
 
-          <Card glowOnHover className="!p-5">
-            <p className="text-xs font-semibold text-[var(--text-muted)] uppercase">High / Critical Risk</p>
-            <h3 className="text-3xl font-black mt-1 text-red-500">
-              {metrics.riskBreakdown['High'] + metrics.riskBreakdown['Critical']}
-            </h3>
-            <p className="text-xs text-red-400 mt-1 font-medium">{metrics.highRiskUnapprovedCount} Unapproved</p>
-          </Card>
+              <span className="shrink-0 text-[var(--text-muted)] text-[13px]" aria-hidden>
+                →
+              </span>
 
-          <Card glowOnHover className="!p-5">
-            <p className="text-xs font-semibold text-[var(--text-muted)] uppercase">Ownership Completion</p>
-            <h3 className="text-3xl font-black mt-1 text-cyan-400">{metrics.ownershipCompletionRate}%</h3>
-            <p className="text-xs text-[var(--text-secondary)] mt-1 font-medium">Full 5-Role Matrix</p>
-          </Card>
-
-          <Card glowOnHover className="!p-5">
-            <p className="text-xs font-semibold text-[var(--text-muted)] uppercase">Governed Decisions</p>
-            <h3 className="text-3xl font-black mt-1 text-purple-400">{metrics.decisionBreakdown['GO']}</h3>
-            <p className="text-xs text-[var(--text-secondary)] mt-1 font-medium">Production Approved</p>
-          </Card>
+              <span className="flex items-start gap-2.5 min-w-0 flex-1">
+                <span
+                  className="shrink-0 text-[13px] font-bold mt-[1px]"
+                  style={{ color: 'var(--status-success)' }}
+                  aria-hidden
+                >
+                  ✓
+                </span>
+                <span className="text-[12.5px] font-bold text-[var(--text-primary)] leading-snug group-hover:text-[var(--accent-primary)] transition-colors">
+                  {item.solution}
+                </span>
+              </span>
+            </button>
+          ))}
         </div>
       </section>
 
-      {/* SECTION 2: AI ASSET TYPES */}
-      <section className="flex flex-col gap-6">
-        <div>
-          <h2 className="text-2xl font-bold text-[var(--text-primary)]">What OMG Governs</h2>
-          <p className="text-sm text-[var(--text-secondary)] mt-1">
-            OMG governs every form of enterprise artificial intelligence across 9 supported asset classes.
+      {/* ============== SECTION 2 — HOW OMG WORKS ============== */}
+      <section className="flex flex-col gap-4">
+        <SectionHeader
+          eyebrow="Section 2"
+          title="How OMG Works"
+          subtitle="Nine stages from AI idea to continuous governance. Select any stage to see what it takes in, what it produces and who owns it."
+          icon="🛤️"
+          action={
+            <button
+              onClick={() => setTourOpen(true)}
+              className="text-[11px] font-bold text-[var(--accent-primary)] hover:underline cursor-pointer whitespace-nowrap"
+            >
+              Take the guided tour →
+            </button>
+          }
+        />
+        <JourneyExplorer />
+      </section>
+
+      {/* ============== SECTION 3 — GOVERNANCE IN ACTION ============== */}
+      <section className="flex flex-col gap-4">
+        <SectionHeader
+          eyebrow="Section 3"
+          title="See Governance in Action"
+          subtitle="One AI agent, followed all the way through — including the change that forces its approval to be re-earned."
+          icon="🔎"
+        />
+        <WorkedExample />
+      </section>
+
+      {/* ============== SECTION 4 — GOVERNANCE CONTINUITY ============== */}
+      <section className="flex flex-col gap-4">
+        <SectionHeader
+          eyebrow="Section 4 · What makes OMG different"
+          title="Approval Is Not The End"
+          subtitle="Most governance stops at the approval. OMG treats authority as something that has to hold up over time."
+          icon="🔁"
+        />
+        <GovernanceContinuity />
+      </section>
+
+      {/* ============== SECTION 5 — GUIDED TOUR ============== */}
+      <section
+        className="rounded-2xl border border-[var(--border-color)] p-5 sm:p-6 flex flex-col md:flex-row md:items-center gap-5"
+        style={{ background: 'var(--grad-hero)' }}
+      >
+        <div className="min-w-0 flex-1">
+          <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[var(--accent-primary)]">
+            Section 5
+          </p>
+          <h2 className="text-[20px] font-bold text-[var(--text-primary)] mt-1">
+            Take a 3-Minute Guided Tour
+          </h2>
+          <p className="text-[12.5px] text-[var(--text-secondary)] mt-1.5 leading-relaxed max-w-2xl">
+            Eight stops across the governance flow — registry, risk, validation, evidence, decision,
+            monitoring, reassessment and audit. Each stop explains what the module is, why it exists
+            and what to look at, and can take you straight there.
           </p>
         </div>
+        <button
+          onClick={() => setTourOpen(true)}
+          className="shrink-0 px-5 py-3 rounded-xl text-[13px] font-bold text-white shadow-md hover:shadow-lg transition-all active:scale-[0.98] cursor-pointer"
+          style={{ background: 'var(--grad-brand)' }}
+        >
+          Start Guided Tour
+        </button>
+      </section>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {assetTypesList.map(item => (
-            <Card key={item.type} glowOnHover className="flex flex-col gap-3">
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">{item.icon}</span>
-                <h3 className="text-base font-bold text-[var(--text-primary)]">{item.type}</h3>
+      {/* ============== SECTION 6 — WHO USES OMG ============== */}
+      <section className="flex flex-col gap-4">
+        <SectionHeader
+          eyebrow="Section 6"
+          title="Who Uses OMG"
+          subtitle="Four audiences, four different questions — and where each should start."
+          icon="👥"
+        />
+
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+          {PERSONAS.map(p => (
+            <div
+              key={p.role}
+              className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4 flex flex-col gap-3"
+            >
+              <span
+                data-noglass
+                className="w-11 h-11 grid place-items-center rounded-xl text-[20px] bg-[var(--accent-light)] border border-[var(--accent-border)]"
+                aria-hidden
+              >
+                {p.icon}
+              </span>
+              <div className="min-w-0">
+                <p className="text-[13.5px] font-bold text-[var(--text-primary)]">{p.role}</p>
+                <p className="text-[11.5px] text-[var(--text-secondary)] mt-1.5 leading-relaxed">
+                  {p.need}
+                </p>
               </div>
-              <p className="text-xs text-[var(--text-secondary)] leading-relaxed">{item.description}</p>
-            </Card>
-          ))}
-        </div>
-      </section>
-
-      {/* SECTION 3: WHY OMG EXISTS */}
-      <section className="flex flex-col gap-6">
-        <div>
-          <h2 className="text-2xl font-bold text-[var(--text-primary)]">Why OMG Exists</h2>
-          <p className="text-sm text-[var(--text-secondary)] mt-1">
-            Addressing the critical AI governance gaps faced by modern enterprises.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-          {problemCards.map(card => (
-            <Card key={card.title} className="flex flex-col gap-2">
-              <span className="text-2xl">{card.icon}</span>
-              <h4 className="text-sm font-bold text-[var(--text-primary)]">{card.title}</h4>
-              <p className="text-xs text-[var(--text-secondary)] leading-relaxed">{card.text}</p>
-            </Card>
-          ))}
-        </div>
-      </section>
-
-      {/* SECTION 4: HOW OMG HELPS */}
-      <section className="flex flex-col gap-6">
-        <div>
-          <h2 className="text-2xl font-bold text-[var(--text-primary)]">How OMG Helps</h2>
-          <p className="text-sm text-[var(--text-secondary)] mt-1">
-            End-to-end enterprise governance capabilities in one single pane of glass.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
-          {solutionPillars.map(p => (
-            <div key={p.title} className="p-4 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] text-center flex flex-col gap-1">
-              <h4 className="text-sm font-bold text-[var(--accent-primary)]">{p.title}</h4>
-              <p className="text-[11px] text-[var(--text-secondary)]">{p.text}</p>
+              <button
+                onClick={() => navigate(p.path)}
+                className="mt-auto self-start text-[11px] font-bold text-[var(--accent-primary)] hover:underline cursor-pointer"
+              >
+                Start at {p.startAt} →
+              </button>
             </div>
           ))}
         </div>
       </section>
 
-      {/* SECTION 5: QUICK ACTIONS */}
-      <section className="p-8 rounded-3xl bg-[var(--bg-card)] border border-[var(--border-color)] flex flex-col md:flex-row items-center justify-between gap-6">
-        <div>
-          <h3 className="text-xl font-bold text-[var(--text-primary)]">Ready to Govern Enterprise AI?</h3>
-          <p className="text-sm text-[var(--text-secondary)] mt-1">
-            Register your first asset, assign ownership, or evaluate decision readiness today.
-          </p>
-        </div>
+      {/* ============== SECTION 7 — PLATFORM CAPABILITIES ============== */}
+      <section className="flex flex-col gap-4">
+        <SectionHeader
+          eyebrow="Section 7"
+          title="Key Platform Capabilities"
+          subtitle="Ten capabilities, each a working module you can open right now."
+          icon="🧩"
+        />
 
-        <div className="flex flex-wrap items-center gap-3 shrink-0">
-          <Button onClick={() => navigate('/assets')}>Register AI Asset</Button>
-          <Button variant="secondary" onClick={() => navigate('/ownership')}>Manage Ownership</Button>
-          <Button variant="outline" onClick={() => navigate('/risk')}>Risk Wizard</Button>
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-2.5">
+          {CAPABILITIES.map(c => (
+            <button
+              key={c.label}
+              onClick={() => navigate(c.path)}
+              data-noglass
+              className="text-left rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-3.5 flex flex-col gap-2 hover:border-[var(--accent-border)] hover:-translate-y-0.5 transition-all cursor-pointer"
+            >
+              <span className="text-[19px]" aria-hidden>
+                {c.icon}
+              </span>
+              <span className="text-[12.5px] font-bold text-[var(--text-primary)] leading-tight">
+                {c.label}
+              </span>
+              <span className="text-[10.5px] text-[var(--text-muted)] leading-snug">{c.blurb}</span>
+            </button>
+          ))}
         </div>
       </section>
+
+      {/* ============== SECTION 8 — BUSINESS VALUE ============== */}
+      <section className="flex flex-col gap-4">
+        <SectionHeader
+          eyebrow="Section 8"
+          title="Business Value"
+          subtitle="What the organisation gets once governance runs as a system rather than a scramble."
+          icon="📈"
+        />
+
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-2.5">
+          {BUSINESS_VALUE.map(v => (
+            <div
+              key={v.title}
+              className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4 flex flex-col gap-2"
+            >
+              <span className="text-[18px]" aria-hidden>
+                {v.icon}
+              </span>
+              <p className="text-[13px] font-bold text-[var(--text-primary)]">{v.title}</p>
+              <p className="text-[11.5px] text-[var(--text-secondary)] leading-relaxed">
+                {v.detail}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ============== CLOSING — WHERE TO START ============== */}
+      <section
+        className="rounded-3xl border p-6 sm:p-8 flex flex-col lg:flex-row lg:items-center gap-6"
+        style={{ background: 'var(--grad-brand)', borderColor: 'transparent' }}
+      >
+        <div className="min-w-0 flex-1">
+          <h2 className="text-[22px] font-bold text-white">Where to start</h2>
+          <p className="text-[13px] text-white/85 mt-1.5 leading-relaxed max-w-2xl">
+            If you take one action: register an AI asset and assign its five owners. Everything else
+            in OMG — risk, validation, evidence, decision, monitoring and reassessment — keys off
+            that first record.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+          <button
+            onClick={() => navigate('/assets')}
+            data-noglass
+            className="px-4 py-2.5 rounded-xl text-[13px] font-bold bg-white text-[var(--accent-primary)] shadow-md hover:shadow-lg transition-all active:scale-[0.98] cursor-pointer"
+          >
+            Register an AI Asset
+          </button>
+          <button
+            onClick={() => setTourOpen(true)}
+            data-noglass
+            className="px-4 py-2.5 rounded-xl text-[13px] font-bold border border-white/40 text-white hover:bg-white/10 transition-all cursor-pointer"
+          >
+            Start Guided Tour
+          </button>
+        </div>
+      </section>
+
+      <GuidedTour open={tourOpen} onClose={() => setTourOpen(false)} />
     </div>
   );
 };

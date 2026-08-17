@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { OrchestraiLogo } from '../components/common/OrchestraiLogo';
 import { ThemeSwitcher } from '../components/ui/ThemeSwitcher';
+import { GuidedTour } from '../components/landing/GuidedTour';
 import { useAuth } from '../contexts/AuthContext';
 import { DEMO_PERSONAS } from '../services/mockData';
 import type { UserRole } from '../types';
@@ -11,6 +12,7 @@ export const LoginPage: React.FC = () => {
   const { login, switchPersona } = useAuth();
   const [email, setEmail] = useState('');
   const [showDemoPersonas, setShowDemoPersonas] = useState(true);
+  const [tourOpen, setTourOpen] = useState(false);
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,11 +56,42 @@ export const LoginPage: React.FC = () => {
           {/* Core Headline & Mission */}
           <div className="my-8 flex flex-col gap-4 relative z-10">
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight text-white">
-              Govern Enterprise AI Assets with Accountability
+              Govern AI with Confidence
             </h1>
-            <p className="text-sm text-blue-100/90 leading-relaxed max-w-lg font-normal">
-              Built on the state-of-the-art <strong className="text-white">OrchestrAI Framework</strong>. A centralized command center for inventory, ownership, risk, validation, auditability, and control of enterprise AI assets.
+            <p className="text-base text-white/95 font-semibold">
+              From AI idea to AI approval — and beyond.
             </p>
+            <ul className="flex flex-col gap-1.5 max-w-lg">
+              {[
+                'Know what AI exists.',
+                'Assess the risks.',
+                'Validate the evidence.',
+                'Make confident GO / Conditional GO / NO GO decisions.',
+                'Continuously govern AI throughout its lifecycle.',
+              ].map(line => (
+                <li key={line} className="flex items-start gap-2.5">
+                  <span className="mt-[7px] w-1.5 h-1.5 rounded-full bg-cyan-300 shrink-0" aria-hidden />
+                  <span className="text-sm text-blue-100/95 leading-relaxed">{line}</span>
+                </li>
+              ))}
+            </ul>
+
+            <div className="flex flex-wrap items-center gap-2.5 pt-1">
+              <button
+                type="button"
+                onClick={() => setTourOpen(true)}
+                className="px-4 py-2.5 rounded-xl bg-white text-blue-700 text-sm font-bold shadow-md hover:shadow-lg transition-all active:scale-[0.98] cursor-pointer"
+              >
+                Start Guided Tour
+              </button>
+              <button
+                type="button"
+                onClick={() => handlePersonaClick('SUPER_ADMIN')}
+                className="px-4 py-2.5 rounded-xl border border-white/40 text-white text-sm font-bold hover:bg-white/10 transition-all cursor-pointer"
+              >
+                Explore Demo
+              </button>
+            </div>
           </div>
 
           {/* Governance Stats Banner */}
@@ -192,6 +225,10 @@ export const LoginPage: React.FC = () => {
         </div>
 
       </div>
+
+      {/* Pre-authentication tour: explains the flow without deep-linking into
+          modules the visitor cannot reach until they sign in. */}
+      <GuidedTour open={tourOpen} onClose={() => setTourOpen(false)} allowNavigation={false} />
     </div>
   );
 };
