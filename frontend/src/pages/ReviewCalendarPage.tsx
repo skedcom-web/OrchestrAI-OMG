@@ -14,24 +14,34 @@ export const ReviewCalendarPage: React.FC = () => {
   const [owner, setOwner] = useState<string>('Elena Rostova (Risk Officer)');
   const [dueDate, setDueDate] = useState<string>('');
 
-  const handleSchedule = (e: React.FormEvent) => {
+  const handleSchedule = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedAssetId || !dueDate) return;
 
-    saveScheduledReview({
-      assetId: selectedAssetId,
-      reviewType,
-      owner,
-      dueDate,
-    });
+    const persisting = saveScheduledReview({ assetId: selectedAssetId, reviewType, owner, dueDate });
     setReviews(getScheduledReviews());
-    alert('📅 Governance Review scheduled successfully!');
     setDueDate('');
+
+    try {
+      await persisting;
+      setReviews(getScheduledReviews());
+      alert('📅 Governance Review scheduled successfully!');
+    } catch (err) {
+      alert(`Scheduled locally but could not be synced to Neon: ${(err as Error).message}.`);
+    }
   };
 
-  const handleStatusChange = (id: string, newStatus: ReviewStatus) => {
-    saveScheduledReview({ id, status: newStatus });
+  const handleStatusChange = async (id: string, newStatus: ReviewStatus) => {
+    const persisting = saveScheduledReview({ id, status: newStatus });
     setReviews(getScheduledReviews());
+
+    try {
+      await persisting;
+    } catch (err) {
+      console.error('Failed to sync review status to Neon:', err);
+    } finally {
+      setReviews(getScheduledReviews());
+    }
   };
 
   return (

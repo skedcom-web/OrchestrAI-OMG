@@ -64,6 +64,25 @@ import {
   computeAuditReadiness,
   computeGovernanceGaps,
 } from '../config/readinessFoundation';
+import { apiAssetRepository, apiEvidenceRepository, apiGovernanceRepository } from '../repositories/apiRepositories';
+
+/**
+ * Release 4.1 — "Demo Mode does NOT mean local storage." Neon is the only
+ * System of Record for Assets, Evidence and Continuity records; local
+ * storage is a paint-fast cache and offline fallback only, never primary.
+ * A mutation that fails to reach Neon is surfaced to the caller (the promise
+ * rejects) rather than silently accepted as "saved".
+ */
+function logPersistenceFailure(what: string, err: unknown) {
+  console.error(`OMG persistence: failed to sync ${what} to Neon.`, err);
+}
+
+/** For internal side-effect saves (e.g. recalculating a score) that update
+ * the in-memory cache synchronously and don't need the caller to await the
+ * network round trip — still real, just not blocking. */
+function fireAndForget(promise: Promise<unknown>, what: string) {
+  promise.catch(err => logPersistenceFailure(what, err));
+}
 
 const STORAGE_KEYS = {
   ASSETS: 'omg_assets_v7',
@@ -195,28 +214,37 @@ function normalizeAsset(asset: AIAsset): AIAsset {
   };
 }
 
+/** In-memory read cache, mirrored to localStorage for instant paint and
+ * offline fallback only. Overwritten with live Neon data by bootstrapPersistence(). */
+let assetsCache: AIAsset[] = getItem<AIAsset[]>(STORAGE_KEYS.ASSETS, INITIAL_ASSETS).map(normalizeAsset);
+
+function persistAssetsCache() {
+  setItem(STORAGE_KEYS.ASSETS, assetsCache);
+}
+
 export function getAssets(): AIAsset[] {
-  return getItem<AIAsset[]>(STORAGE_KEYS.ASSETS, INITIAL_ASSETS).map(normalizeAsset);
+  return assetsCache;
 }
 
 export function getAssetById(id: string): AIAsset | undefined {
-  return getAssets().find(a => a.id === id);
+  return assetsCache.find(a => a.id === id);
 }
 
-export function saveAsset(assetData: Partial<AIAsset>): AIAsset {
-  const assets = getAssets();
+/**
+ * Writes through to Neon and only resolves once the API has confirmed the
+ * write; the in-memory/localStorage cache is updated optimistically first so
+ * the UI reflects the change immediately either way.
+ */
+export async function saveAsset(assetData: Partial<AIAsset>): Promise<AIAsset> {
   const now = new Date().toISOString().split('T')[0];
 
   if (assetData.id) {
-    const index = assets.findIndex(a => a.id === assetData.id);
+    const index = assetsCache.findIndex(a => a.id === assetData.id);
     if (index !== -1) {
-      const updatedAsset: AIAsset = {
-        ...assets[index],
-        ...assetData,
-        updatedAt: now,
-      };
-      assets[index] = updatedAsset;
-      setItem(STORAGE_KEYS.ASSETS, assets);
+      const updatedAsset: AIAsset = { ...assetsCache[index], ...assetData, updatedAt: now };
+      assetsCache = [...assetsCache];
+      assetsCache[index] = updatedAsset;
+      persistAssetsCache();
 
       addAuditLog(
         'usr-1',
@@ -229,15 +257,23 @@ export function saveAsset(assetData: Partial<AIAsset>): AIAsset {
         `Updated asset details for ${updatedAsset.name} (Operational Status: ${updatedAsset.operationalStatus || 'Active'})`
       );
 
-      return updatedAsset;
+      const saved = await apiAssetRepository.updateAsset(updatedAsset.id, updatedAsset);
+      const reconciled = normalizeAsset(saved);
+      const i2 = assetsCache.findIndex(a => a.id === updatedAsset.id);
+      if (i2 !== -1) {
+        assetsCache = [...assetsCache];
+        assetsCache[i2] = reconciled;
+        persistAssetsCache();
+      }
+      return reconciled;
     }
   }
 
   const riskLevel = assetData.riskLevel || 'Medium';
   const baseline = getAuthorityMatrixEntry(riskLevel);
 
-  const newAsset: AIAsset = {
-    id: `ast-${Date.now().toString().slice(-4)}`,
+  const draftAsset: AIAsset = {
+    id: `local-${Date.now()}`,
     name: assetData.name || 'New AI Asset',
     type: assetData.type || 'Agent',
     description: assetData.description || '',
@@ -262,8 +298,8 @@ export function saveAsset(assetData: Partial<AIAsset>): AIAsset {
     tags: assetData.tags || [],
   };
 
-  const updatedAssets = [newAsset, ...assets];
-  setItem(STORAGE_KEYS.ASSETS, updatedAssets);
+  assetsCache = [draftAsset, ...assetsCache];
+  persistAssetsCache();
 
   addAuditLog(
     'usr-1',
@@ -271,40 +307,44 @@ export function saveAsset(assetData: Partial<AIAsset>): AIAsset {
     'SUPER_ADMIN',
     'ASSET_CREATED',
     'Asset',
-    newAsset.id,
-    newAsset.name,
-    `Registered new AI asset ${newAsset.name} [${newAsset.type}] in ${newAsset.department}`
+    draftAsset.id,
+    draftAsset.name,
+    `Registered new AI asset ${draftAsset.name} [${draftAsset.type}] in ${draftAsset.department}`
   );
 
-  return newAsset;
+  const { id: _draftId, ...payload } = draftAsset;
+  const created = normalizeAsset(await apiAssetRepository.createAsset(payload));
+  assetsCache = assetsCache.map(a => (a.id === draftAsset.id ? created : a));
+  persistAssetsCache();
+  return created;
 }
 
-export function deleteAsset(id: string): void {
-  const assets = getAssets();
-  const target = assets.find(a => a.id === id);
-  if (target) {
-    const updated = assets.filter(a => a.id !== id);
-    setItem(STORAGE_KEYS.ASSETS, updated);
+export async function deleteAsset(id: string): Promise<void> {
+  const target = assetsCache.find(a => a.id === id);
+  if (!target) return;
 
-    addAuditLog(
-      'usr-1',
-      'Sarah Jenkins',
-      'SUPER_ADMIN',
-      'ASSET_DELETED',
-      'Asset',
-      id,
-      target.name,
-      `Deleted asset ${target.name} from registry.`
-    );
-  }
+  assetsCache = assetsCache.filter(a => a.id !== id);
+  persistAssetsCache();
+
+  addAuditLog(
+    'usr-1',
+    'Sarah Jenkins',
+    'SUPER_ADMIN',
+    'ASSET_DELETED',
+    'Asset',
+    id,
+    target.name,
+    `Deleted asset ${target.name} from registry.`
+  );
+
+  await apiAssetRepository.deleteAsset(id);
 }
 
 export function updateAssetOperationalStatus(id: string, operationalStatus: OperationalStatus, user: string): void {
   const asset = getAssetById(id);
   if (!asset) return;
 
-  asset.operationalStatus = operationalStatus;
-  saveAsset(asset);
+  fireAndForget(saveAsset({ id, operationalStatus }), `operational status for ${asset.name}`);
 
   addAuditLog(
     'usr-1',
@@ -421,7 +461,7 @@ function recalculateAssetValidationScore(assetId: string) {
     const totalScore = validations.reduce((acc, v) => acc + v.score, 0);
     asset.validationScore = Math.round(totalScore / validations.length);
   }
-  saveAsset(asset);
+  fireAndForget(saveAsset(asset), `validation score for ${asset.name}`);
 }
 
 // --- EVIDENCE SERVICE ---
@@ -554,7 +594,7 @@ export function recordDecision(recordData: Partial<DecisionRecord>): DecisionRec
     if (asset) {
       asset.decisionOutcome = recordData.outcome;
       if (recordData.outcome === 'GO') asset.status = 'Production';
-      saveAsset(asset);
+      fireAndForget(saveAsset(asset), `decision outcome for ${asset.name}`);
     }
   }
 
@@ -925,7 +965,7 @@ export function requestKillSwitch(data: Partial<KillSwitchRecord>): KillSwitchRe
 
   if (asset) {
     asset.operationalStatus = 'Suspended';
-    saveAsset(asset);
+    fireAndForget(saveAsset(asset), `operational status for ${asset.name}`);
   }
 
   addAuditLog(
@@ -953,7 +993,7 @@ export function releaseKillSwitch(killSwitchId: string, releasedBy: string, note
     const asset = getAssetById(list[idx].assetId);
     if (asset) {
       asset.operationalStatus = 'Active';
-      saveAsset(asset);
+      fireAndForget(saveAsset(asset), `operational status for ${asset.name}`);
     }
 
     addAuditLog(
@@ -1083,7 +1123,7 @@ export function retireAsset(data: Partial<RetirementRecord>): RetirementRecord {
   if (asset) {
     asset.status = 'Retirement';
     asset.operationalStatus = 'Retired';
-    saveAsset(asset);
+    fireAndForget(saveAsset(asset), `retirement status for ${asset.name}`);
   }
 
   addAuditLog(
@@ -1321,26 +1361,39 @@ export function getGovernanceAlerts(): GovernanceAlert[] {
   return getItem<GovernanceAlert[]>(STORAGE_KEYS.ALERTS, INITIAL_GOVERNANCE_ALERTS);
 }
 
+let reviewsCache: ScheduledReview[] = getItem<ScheduledReview[]>(STORAGE_KEYS.SCHEDULED_REVIEWS, INITIAL_SCHEDULED_REVIEWS);
+let triggersCache: ReassessmentTrigger[] = getItem<ReassessmentTrigger[]>(STORAGE_KEYS.REASSESSMENT_TRIGGERS, INITIAL_REASSESSMENT_TRIGGERS);
+let reauthorizationsCache: GovernanceReauthorizationRecord[] = getItem<GovernanceReauthorizationRecord[]>(STORAGE_KEYS.REAUTHORIZATION_RECORDS, INITIAL_REAUTHORIZATION_RECORDS);
+
+function persistReviewsCache() { setItem(STORAGE_KEYS.SCHEDULED_REVIEWS, reviewsCache); }
+function persistTriggersCache() { setItem(STORAGE_KEYS.REASSESSMENT_TRIGGERS, triggersCache); }
+function persistReauthorizationsCache() { setItem(STORAGE_KEYS.REAUTHORIZATION_RECORDS, reauthorizationsCache); }
+
 export function getScheduledReviews(): ScheduledReview[] {
-  return getItem<ScheduledReview[]>(STORAGE_KEYS.SCHEDULED_REVIEWS, INITIAL_SCHEDULED_REVIEWS);
+  return reviewsCache;
 }
 
-export function saveScheduledReview(data: Partial<ScheduledReview>): ScheduledReview {
-  const list = getScheduledReviews();
+export async function saveScheduledReview(data: Partial<ScheduledReview>): Promise<ScheduledReview> {
   const asset = getAssetById(data.assetId || '');
   const now = new Date().toISOString().split('T')[0];
 
   if (data.id) {
-    const idx = list.findIndex(r => r.id === data.id);
+    const idx = reviewsCache.findIndex(r => r.id === data.id);
     if (idx !== -1) {
-      list[idx] = { ...list[idx], ...data };
-      setItem(STORAGE_KEYS.SCHEDULED_REVIEWS, list);
-      return list[idx];
+      const updated: ScheduledReview = { ...reviewsCache[idx], ...data };
+      reviewsCache = [...reviewsCache];
+      reviewsCache[idx] = updated;
+      persistReviewsCache();
+
+      const saved = await apiGovernanceRepository.updateGovernanceRecord('review', updated.id, updated) as ScheduledReview;
+      const i2 = reviewsCache.findIndex(r => r.id === updated.id);
+      if (i2 !== -1) { reviewsCache = [...reviewsCache]; reviewsCache[i2] = { ...saved, assetName: asset?.name || updated.assetName }; persistReviewsCache(); }
+      return reviewsCache[i2 !== -1 ? i2 : idx];
     }
   }
 
-  const newRev: ScheduledReview = {
-    id: `sch-${Date.now().toString().slice(-4)}`,
+  const draftRev: ScheduledReview = {
+    id: `local-${Date.now()}`,
     assetId: data.assetId || '',
     assetName: asset?.name || 'AI Asset',
     reviewType: data.reviewType || 'Quarterly Review',
@@ -1349,45 +1402,54 @@ export function saveScheduledReview(data: Partial<ScheduledReview>): ScheduledRe
     status: data.status || 'Scheduled',
   };
 
-  const updated = [newRev, ...list];
-  setItem(STORAGE_KEYS.SCHEDULED_REVIEWS, updated);
+  reviewsCache = [draftRev, ...reviewsCache];
+  persistReviewsCache();
 
   addAuditLog(
     'usr-2',
-    newRev.owner,
+    draftRev.owner,
     'GOVERNANCE_ADMIN',
     'REVIEW_SCHEDULED',
     'ScheduledReview',
-    newRev.id,
-    newRev.assetName,
-    `Scheduled ${newRev.reviewType} for ${newRev.assetName} due on ${newRev.dueDate}`
+    draftRev.id,
+    draftRev.assetName,
+    `Scheduled ${draftRev.reviewType} for ${draftRev.assetName} due on ${draftRev.dueDate}`
   );
 
-  return newRev;
+  const { id: _draftId, ...payload } = draftRev;
+  const created = { ...(await apiGovernanceRepository.createGovernanceRecord('review', payload) as ScheduledReview), assetName: draftRev.assetName };
+  reviewsCache = reviewsCache.map(r => (r.id === draftRev.id ? created : r));
+  persistReviewsCache();
+  return created;
 }
 
 // --- RELEASE 2 — GOVERNANCE CONTINUITY SERVICE ---
 
 export function getReassessmentTriggers(): ReassessmentTrigger[] {
-  return getItem<ReassessmentTrigger[]>(STORAGE_KEYS.REASSESSMENT_TRIGGERS, INITIAL_REASSESSMENT_TRIGGERS);
+  return triggersCache;
 }
 
-export function saveReassessmentTrigger(data: Partial<ReassessmentTrigger>): ReassessmentTrigger {
-  const list = getReassessmentTriggers();
+export async function saveReassessmentTrigger(data: Partial<ReassessmentTrigger>): Promise<ReassessmentTrigger> {
   const asset = getAssetById(data.assetId || '');
   const now = new Date().toISOString().split('T')[0];
 
   if (data.id) {
-    const idx = list.findIndex(t => t.id === data.id);
+    const idx = triggersCache.findIndex(t => t.id === data.id);
     if (idx !== -1) {
-      list[idx] = { ...list[idx], ...data };
-      setItem(STORAGE_KEYS.REASSESSMENT_TRIGGERS, list);
-      return list[idx];
+      const updated: ReassessmentTrigger = { ...triggersCache[idx], ...data };
+      triggersCache = [...triggersCache];
+      triggersCache[idx] = updated;
+      persistTriggersCache();
+
+      const saved = await apiGovernanceRepository.updateGovernanceRecord('trigger', updated.id, updated) as ReassessmentTrigger;
+      const i2 = triggersCache.findIndex(t => t.id === updated.id);
+      if (i2 !== -1) { triggersCache = [...triggersCache]; triggersCache[i2] = { ...saved, assetName: asset?.name || updated.assetName }; persistTriggersCache(); }
+      return triggersCache[i2 !== -1 ? i2 : idx];
     }
   }
 
-  const newTrigger: ReassessmentTrigger = {
-    id: `trg-${Date.now().toString().slice(-4)}`,
+  const draftTrigger: ReassessmentTrigger = {
+    id: `local-${Date.now()}`,
     assetId: data.assetId || '',
     assetName: asset?.name || 'AI Asset',
     triggerType: data.triggerType || 'Model Change',
@@ -1398,89 +1460,100 @@ export function saveReassessmentTrigger(data: Partial<ReassessmentTrigger>): Rea
     comments: data.comments || '',
   };
 
-  const updated = [newTrigger, ...list];
-  setItem(STORAGE_KEYS.REASSESSMENT_TRIGGERS, updated);
+  triggersCache = [draftTrigger, ...triggersCache];
+  persistTriggersCache();
 
   // A trigger is the event that moves an authorized asset back into reassessment.
   if (asset && (asset.governanceState === 'Authorized' || asset.governanceState === 'Monitoring')) {
-    saveAsset({ id: asset.id, governanceState: 'Reassessment Required' });
+    fireAndForget(saveAsset({ id: asset.id, governanceState: 'Reassessment Required' }), `governance state for ${asset.name}`);
   }
 
   addAuditLog(
     'usr-2',
-    newTrigger.owner,
+    draftTrigger.owner,
     'GOVERNANCE_ADMIN',
     'REASSESSMENT_TRIGGER_RAISED',
     'ReassessmentTrigger',
-    newTrigger.id,
-    newTrigger.assetName,
-    `Raised ${newTrigger.triggerType} trigger for ${newTrigger.assetName} (${newTrigger.severity})`
+    draftTrigger.id,
+    draftTrigger.assetName,
+    `Raised ${draftTrigger.triggerType} trigger for ${draftTrigger.assetName} (${draftTrigger.severity})`
   );
 
-  return newTrigger;
+  const { id: _draftId, ...payload } = draftTrigger;
+  const created = { ...(await apiGovernanceRepository.createGovernanceRecord('trigger', payload) as ReassessmentTrigger), assetName: draftTrigger.assetName };
+  triggersCache = triggersCache.map(t => (t.id === draftTrigger.id ? created : t));
+  persistTriggersCache();
+  return created;
 }
 
 export function getReauthorizationRecords(): GovernanceReauthorizationRecord[] {
-  return getItem<GovernanceReauthorizationRecord[]>(STORAGE_KEYS.REAUTHORIZATION_RECORDS, INITIAL_REAUTHORIZATION_RECORDS);
+  return reauthorizationsCache;
 }
 
-export function saveReauthorizationRecord(data: Omit<GovernanceReauthorizationRecord, 'id' | 'assetName'>): GovernanceReauthorizationRecord {
-  const list = getReauthorizationRecords();
+export async function saveReauthorizationRecord(data: Omit<GovernanceReauthorizationRecord, 'id' | 'assetName'>): Promise<GovernanceReauthorizationRecord> {
   const asset = getAssetById(data.assetId);
 
-  const newRecord: GovernanceReauthorizationRecord = {
+  const draftRecord: GovernanceReauthorizationRecord = {
     ...data,
-    id: `reauth-${Date.now().toString().slice(-4)}`,
+    id: `local-${Date.now()}`,
     assetName: asset?.name || 'AI Asset',
   };
 
-  const updated = [newRecord, ...list];
-  setItem(STORAGE_KEYS.REAUTHORIZATION_RECORDS, updated);
+  reauthorizationsCache = [draftRecord, ...reauthorizationsCache];
+  persistReauthorizationsCache();
 
   // Reauthorization is what moves the asset's governance state forward again.
   if (asset) {
-    saveAsset({ id: asset.id, governanceState: newRecord.newState });
+    fireAndForget(saveAsset({ id: asset.id, governanceState: draftRecord.newState }), `governance state for ${asset.name}`);
   }
 
   addAuditLog(
     'usr-2',
-    newRecord.reviewedBy,
+    draftRecord.reviewedBy,
     'GOVERNANCE_ADMIN',
     'GOVERNANCE_REAUTHORIZED',
     'GovernanceReauthorizationRecord',
-    newRecord.id,
-    newRecord.assetName,
-    `Reauthorization decision ${newRecord.decision} for ${newRecord.assetName}: ${newRecord.previousState} → ${newRecord.newState}`
+    draftRecord.id,
+    draftRecord.assetName,
+    `Reauthorization decision ${draftRecord.decision} for ${draftRecord.assetName}: ${draftRecord.previousState} → ${draftRecord.newState}`
   );
 
-  return newRecord;
+  const { id: _draftId, assetName: _draftName, ...payload } = draftRecord;
+  const created = { ...(await apiGovernanceRepository.createGovernanceRecord('reauthorization', payload) as GovernanceReauthorizationRecord), assetName: draftRecord.assetName };
+  reauthorizationsCache = reauthorizationsCache.map(r => (r.id === draftRecord.id ? created : r));
+  persistReauthorizationsCache();
+  return created;
 }
 
 // --- RELEASE 3 — EVIDENCE FOUNDATION SERVICE ---
 
+let evidenceCache: EvidenceRecord[] = getItem<EvidenceRecord[]>(STORAGE_KEYS.EVIDENCE_RECORDS, INITIAL_EVIDENCE_RECORDS);
+
+function persistEvidenceCache() { setItem(STORAGE_KEYS.EVIDENCE_RECORDS, evidenceCache); }
+
 export function getEvidenceRecords(): EvidenceRecord[] {
-  return getItem<EvidenceRecord[]>(STORAGE_KEYS.EVIDENCE_RECORDS, INITIAL_EVIDENCE_RECORDS);
+  return evidenceCache;
 }
 
 export function getEvidenceRecordById(id: string): EvidenceRecord | undefined {
-  return getEvidenceRecords().find(e => e.id === id);
+  return evidenceCache.find(e => e.id === id);
 }
 
 export function getEvidenceRecordsForAsset(assetId: string): EvidenceRecord[] {
-  return getEvidenceRecords().filter(e => e.assetId === assetId);
+  return evidenceCache.filter(e => e.assetId === assetId);
 }
 
-export function saveEvidenceRecord(data: Partial<EvidenceRecord>): EvidenceRecord {
-  const list = getEvidenceRecords();
+export async function saveEvidenceRecord(data: Partial<EvidenceRecord>): Promise<EvidenceRecord> {
   const asset = getAssetById(data.assetId || '');
   const now = new Date().toISOString().split('T')[0];
 
   if (data.id) {
-    const idx = list.findIndex(e => e.id === data.id);
+    const idx = evidenceCache.findIndex(e => e.id === data.id);
     if (idx !== -1) {
-      const updated: EvidenceRecord = { ...list[idx], ...data };
-      list[idx] = updated;
-      setItem(STORAGE_KEYS.EVIDENCE_RECORDS, list);
+      const updated: EvidenceRecord = { ...evidenceCache[idx], ...data };
+      evidenceCache = [...evidenceCache];
+      evidenceCache[idx] = updated;
+      persistEvidenceCache();
 
       addAuditLog(
         'usr-2',
@@ -1493,12 +1566,16 @@ export function saveEvidenceRecord(data: Partial<EvidenceRecord>): EvidenceRecor
         `Updated evidence record ${updated.name} (Status: ${updated.status})`
       );
 
-      return updated;
+      const saved = await apiEvidenceRepository.updateEvidence(updated.id, updated);
+      const reconciled = { ...saved, assetName: asset?.name || updated.assetName };
+      const i2 = evidenceCache.findIndex(e => e.id === updated.id);
+      if (i2 !== -1) { evidenceCache = [...evidenceCache]; evidenceCache[i2] = reconciled; persistEvidenceCache(); }
+      return reconciled;
     }
   }
 
-  const newRecord: EvidenceRecord = {
-    id: `evr-${Date.now().toString().slice(-4)}`,
+  const draftRecord: EvidenceRecord = {
+    id: `local-${Date.now()}`,
     name: data.name || 'New Evidence Record',
     evidenceType: data.evidenceType || 'Policy Document',
     status: data.status || 'Draft',
@@ -1511,39 +1588,46 @@ export function saveEvidenceRecord(data: Partial<EvidenceRecord>): EvidenceRecor
     traceability: data.traceability,
   };
 
-  const updated = [newRecord, ...list];
-  setItem(STORAGE_KEYS.EVIDENCE_RECORDS, updated);
+  evidenceCache = [draftRecord, ...evidenceCache];
+  persistEvidenceCache();
 
   addAuditLog(
     'usr-2',
-    newRecord.ownership.evidenceOwner,
+    draftRecord.ownership.evidenceOwner,
     'GOVERNANCE_ADMIN',
     'EVIDENCE_CREATED',
     'EvidenceRecord',
-    newRecord.id,
-    newRecord.name,
-    `Registered evidence record ${newRecord.name} [${newRecord.evidenceType}] for ${newRecord.assetName}`
+    draftRecord.id,
+    draftRecord.name,
+    `Registered evidence record ${draftRecord.name} [${draftRecord.evidenceType}] for ${draftRecord.assetName}`
   );
 
-  return newRecord;
+  const { id: _draftId, ...payload } = draftRecord;
+  const created = { ...(await apiEvidenceRepository.createEvidence(payload)), assetName: draftRecord.assetName };
+  evidenceCache = evidenceCache.map(e => (e.id === draftRecord.id ? created : e));
+  persistEvidenceCache();
+  return created;
 }
 
-export function deleteEvidenceRecord(id: string): void {
-  const list = getEvidenceRecords();
-  const target = list.find(e => e.id === id);
-  if (target) {
-    setItem(STORAGE_KEYS.EVIDENCE_RECORDS, list.filter(e => e.id !== id));
-    addAuditLog(
-      'usr-1',
-      'Sarah Jenkins',
-      'SUPER_ADMIN',
-      'EVIDENCE_DELETED',
-      'EvidenceRecord',
-      id,
-      target.name,
-      `Deleted evidence record ${target.name} from the registry.`
-    );
-  }
+export async function deleteEvidenceRecord(id: string): Promise<void> {
+  const target = evidenceCache.find(e => e.id === id);
+  if (!target) return;
+
+  evidenceCache = evidenceCache.filter(e => e.id !== id);
+  persistEvidenceCache();
+
+  addAuditLog(
+    'usr-1',
+    'Sarah Jenkins',
+    'SUPER_ADMIN',
+    'EVIDENCE_DELETED',
+    'EvidenceRecord',
+    id,
+    target.name,
+    `Deleted evidence record ${target.name} from the registry.`
+  );
+
+  await apiEvidenceRepository.deleteEvidence(id);
 }
 
 /**
@@ -1959,3 +2043,59 @@ export function getGovernanceMetrics(): GovernanceMetrics {
   metrics.authorityProfileCompletionRate = assets.length > 0 ? Math.round((completeAuthorityCount / assets.length) * 100) : 0;
   return metrics;
 }
+
+// --- RELEASE 4.1 — PERSISTENCE COMPLETION: BOOTSTRAP FROM NEON ---
+
+let bootstrapPromise: Promise<void> | null = null;
+
+/**
+ * Replaces the read caches above with live Neon data. Runs once at module
+ * load (see the call at the bottom of this file) so pages that read
+ * getAssets()/getEvidenceRecords()/etc. synchronously see real System-of-
+ * Record data as soon as it arrives, without every page having to become
+ * async. If Neon is unreachable, the caches keep whatever they were
+ * seeded with (localStorage, then INITIAL_ASSETS/etc.) — a fallback for
+ * "UI cache, temporary state, future offline support" only, per Release 4.1's
+ * clarification, never treated as the primary source once Neon answers.
+ */
+export function bootstrapPersistence(options?: { force?: boolean }): Promise<void> {
+  if (bootstrapPromise && !options?.force) return bootstrapPromise;
+
+  bootstrapPromise = (async () => {
+    try {
+      const [assets, evidence, governance] = await Promise.all([
+        apiAssetRepository.getAssets(),
+        apiEvidenceRepository.getEvidence(),
+        apiGovernanceRepository.getGovernanceData(),
+      ]);
+
+      const assetNameById = new Map(assets.map(a => [a.id, a.name]));
+
+      assetsCache = assets.map(normalizeAsset);
+      persistAssetsCache();
+
+      evidenceCache = evidence.map(e => ({ ...e, assetName: assetNameById.get(e.assetId) || e.assetName }));
+      persistEvidenceCache();
+
+      triggersCache = governance.triggers.map(t => ({ ...t, assetName: assetNameById.get(t.assetId) || t.assetName }));
+      persistTriggersCache();
+
+      reauthorizationsCache = governance.reauthorizations.map(r => ({ ...r, assetName: assetNameById.get(r.assetId) || r.assetName }));
+      persistReauthorizationsCache();
+
+      reviewsCache = governance.reviews.map(r => ({ ...r, assetName: assetNameById.get(r.assetId) || r.assetName }));
+      persistReviewsCache();
+
+      console.info(`OMG persistence: loaded ${assets.length} assets, ${evidence.length} evidence records from Neon.`);
+    } catch (err) {
+      console.warn('OMG persistence: could not reach the governance API at startup; continuing with cached/local data until the next retry.', err);
+      bootstrapPromise = null; // allow a later manual retry (e.g. from Tenant Settings)
+    }
+  })();
+
+  return bootstrapPromise;
+}
+
+// Fire immediately on module load — non-blocking, so the app never hangs
+// waiting on a cold-started backend, but real data lands as soon as it can.
+bootstrapPersistence();

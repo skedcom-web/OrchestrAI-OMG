@@ -6,9 +6,9 @@ import { useExperience } from '../contexts/ExperienceContext';
 import { useAuth } from '../contexts/AuthContext';
 import { getGovernanceMetrics } from '../services/storageService';
 import { NAV_DOMAINS, FUTURE_MODULES } from '../config/navigation';
-import { getDataMode, setDataMode, type DataMode } from '../repositories';
 import { API_BASE_URL } from '../repositories/apiClient';
 import { migrateLocalDataToNeon, type MigrationResult } from '../services/migrationService';
+import { bootstrapPersistence, getAssets, getEvidenceRecords } from '../services/storageService';
 import type { ThemeMode } from '../types';
 
 const SettingRow: React.FC<{
@@ -33,17 +33,13 @@ export const TenantSettingsPage: React.FC = () => {
   const { currentPersona } = useAuth();
   const metrics = getGovernanceMetrics();
 
-  // Release 4 — Persistence Foundation
-  const [dataMode, setDataModeState] = useState<DataMode>(() => getDataMode());
+  // Release 4.1 — Persistence Completion: Neon is the only System of Record.
   const [healthStatus, setHealthStatus] = useState<'idle' | 'checking' | 'online' | 'offline'>('idle');
+  const [reloading, setReloading] = useState(false);
+  const [reloadedAt, setReloadedAt] = useState<string | null>(null);
   const [migrating, setMigrating] = useState(false);
   const [migrationLog, setMigrationLog] = useState<string | null>(null);
   const [migrationResult, setMigrationResult] = useState<MigrationResult | null>(null);
-
-  const handleDataModeChange = (next: DataMode) => {
-    setDataMode(next);
-    setDataModeState(next);
-  };
 
   const checkBackendHealth = async () => {
     setHealthStatus('checking');
@@ -52,6 +48,16 @@ export const TenantSettingsPage: React.FC = () => {
       setHealthStatus(res.ok ? 'online' : 'offline');
     } catch {
       setHealthStatus('offline');
+    }
+  };
+
+  const reloadFromNeon = async () => {
+    setReloading(true);
+    try {
+      await bootstrapPersistence({ force: true });
+      setReloadedAt(new Date().toLocaleTimeString());
+    } finally {
+      setReloading(false);
     }
   };
 
@@ -126,11 +132,11 @@ export const TenantSettingsPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Release 4 — Persistence Foundation: System of Record */}
+      {/* Release 4.1 — Persistence Completion: System of Record */}
       <section className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-5 flex flex-col gap-4">
         <SectionHeader
           title="System of Record"
-          subtitle="Demo = Production Architecture. Only the storage provider changes."
+          subtitle="One persistence architecture. Neon is the only System of Record — local storage is a cache, never primary."
           icon="🗄️"
         />
 
@@ -143,35 +149,28 @@ export const TenantSettingsPage: React.FC = () => {
             <p className="text-[13px] font-bold text-[var(--text-primary)] mt-1">OMG Demo Organization</p>
           </div>
           <p className="text-[11px] text-[var(--text-muted)] max-w-sm">
-            Future customer tenants (a bank, an insurer, an enterprise customer) run on the same
-            repository pattern below — multi-tenant support is prepared, not yet active.
+            Demo Mode means seeded users, roles, assets and evidence living in this same Neon
+            database — not a different storage path. A future customer tenant (a bank, an insurer,
+            an enterprise customer) differs only in whose data it holds, via the same repository
+            pattern below; multi-tenant isolation is prepared, not yet active.
           </p>
         </div>
 
         <SettingRow
-          label="Data mode"
-          description="Demo Mode reads and writes this browser's local storage — nothing here can affect a real tenant. Production Mode routes Assets, Evidence and Continuity through the live API to Neon."
+          label="Persistence"
+          description="Frontend → API → NestJS → Prisma → Neon, for Assets, Evidence and Continuity records. This path is fixed — there is no local-storage-only mode."
         >
-          <div data-noglass className="flex items-center p-0.5 rounded-xl bg-[var(--bg-badge)] border border-[var(--border-color)]">
-            {(['demo', 'production'] as DataMode[]).map(value => (
-              <button
-                key={value}
-                onClick={() => handleDataModeChange(value)}
-                className={`px-3 py-1.5 rounded-lg text-[11.5px] font-bold capitalize transition-all cursor-pointer ${
-                  dataMode === value
-                    ? 'bg-[var(--accent-primary)] text-white shadow-sm'
-                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
-                }`}
-              >
-                {value}
-              </button>
-            ))}
-          </div>
+          <span
+            data-noglass
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-[11.5px] font-bold text-emerald-500"
+          >
+            Neon PostgreSQL
+          </span>
         </SettingRow>
 
         <SettingRow
           label="Backend API connection"
-          description="NestJS + Prisma + Neon, the same API the Data Migration Utility writes to."
+          description="NestJS + Prisma + Neon. The same API every asset, evidence and continuity read and write goes through."
         >
           <div className="flex items-center gap-2">
             {healthStatus !== 'idle' && (
@@ -191,14 +190,23 @@ export const TenantSettingsPage: React.FC = () => {
           </div>
         </SettingRow>
 
+        <SettingRow
+          label="Reload from Neon"
+          description={`Currently showing ${getAssets().length} assets and ${getEvidenceRecords().length} evidence records from this session's cache.${reloadedAt ? ` Last reloaded ${reloadedAt}.` : ''}`}
+        >
+          <Button size="sm" variant="secondary" onClick={reloadFromNeon} disabled={reloading}>
+            {reloading ? 'Reloading…' : 'Reload from Neon'}
+          </Button>
+        </SettingRow>
+
         <div className="pt-2 border-t border-[var(--border-subtle)] flex flex-col gap-3">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="min-w-0">
               <p className="text-[13px] font-bold text-[var(--text-primary)]">Data Migration Utility</p>
               <p className="text-[11.5px] text-[var(--text-secondary)] mt-0.5 leading-relaxed">
-                Local Storage → Neon. Copies every local asset, evidence record, reassessment
-                trigger, reauthorization record and scheduled review to the live database,
-                preserving demo data while moving toward production persistence.
+                For records that only ever made it as far as this browser's cache — e.g. a save
+                that couldn't reach Neon at the time. Copies anything still local-only up to the
+                live database; already-synced records are unaffected.
               </p>
             </div>
             <Button size="sm" onClick={runMigration} disabled={migrating}>

@@ -65,21 +65,35 @@ export const AssetRegistryPage: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingAsset?.name || !editingAsset?.type) return;
 
-    saveAsset(editingAsset as any);
-    refreshAssets();
+    const persisting = saveAsset(editingAsset as any); // synchronous cache update happens before this line returns
+    refreshAssets(); // reflects that optimistic update immediately
     setIsModalOpen(false);
     setEditingAsset(null);
+
+    try {
+      await persisting;
+      refreshAssets(); // pick up the Neon-assigned id / any server-side normalization
+    } catch (err) {
+      alert(`This asset saved to the local cache but could not be synced to Neon: ${(err as Error).message}. It will not be visible on other devices until sync succeeds.`);
+    }
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this AI asset from the registry?')) {
-      deleteAsset(id);
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this AI asset from the registry?')) return;
+
+    const deleting = deleteAsset(id); // synchronous cache removal happens before this line returns
+    refreshAssets();
+    if (selectedAsset?.id === id) setSelectedAsset(null);
+
+    try {
+      await deleting;
+    } catch (err) {
+      alert(`Removed from this device but could not be deleted on Neon: ${(err as Error).message}. It may reappear once sync succeeds.`);
       refreshAssets();
-      if (selectedAsset?.id === id) setSelectedAsset(null);
     }
   };
 

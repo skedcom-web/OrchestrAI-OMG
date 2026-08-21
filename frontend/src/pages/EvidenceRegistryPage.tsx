@@ -51,21 +51,35 @@ export const EvidenceRegistryPage: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingRecord?.name || !editingRecord?.assetId || !editingRecord?.ownership?.evidenceOwner) return;
 
-    saveEvidenceRecord(editingRecord as any);
+    const persisting = saveEvidenceRecord(editingRecord as any); // synchronous cache update happens before this line returns
     refresh();
     setIsModalOpen(false);
     setEditingRecord(null);
+
+    try {
+      await persisting;
+      refresh();
+    } catch (err) {
+      alert(`This evidence record saved to the local cache but could not be synced to Neon: ${(err as Error).message}. It will not be visible on other devices until sync succeeds.`);
+    }
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this evidence record?')) {
-      deleteEvidenceRecord(id);
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this evidence record?')) return;
+
+    const deleting = deleteEvidenceRecord(id); // synchronous cache removal happens before this line returns
+    refresh();
+    if (selectedRecord?.id === id) setSelectedRecord(null);
+
+    try {
+      await deleting;
+    } catch (err) {
+      alert(`Removed from this device but could not be deleted on Neon: ${(err as Error).message}. It may reappear once sync succeeds.`);
       refresh();
-      if (selectedRecord?.id === id) setSelectedRecord(null);
     }
   };
 
