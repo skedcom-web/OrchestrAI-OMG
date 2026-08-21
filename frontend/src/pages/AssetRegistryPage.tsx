@@ -5,14 +5,16 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Select } from '../components/ui/Select';
 import { Modal } from '../components/ui/Modal';
-import { RiskBadge } from '../components/ui/Badge';
+import { RiskBadge, OversightBadge, AutonomyBadge } from '../components/ui/Badge';
 import { StatusBadge } from '../components/ui/StatusBadge';
-import { getAssets, saveAsset, deleteAsset } from '../services/storageService';
-import type { AIAsset, AssetType, RiskLevel, GovernanceStatus } from '../types';
+import { getAssets, getUsers, saveAsset, deleteAsset } from '../services/storageService';
+import { OVERSIGHT_TYPES, AUTONOMY_LEVELS, getAuthorityMatrixEntry, defaultAuthorityProfile } from '../config/governanceAuthority';
+import type { AIAsset, AssetType, RiskLevel, GovernanceStatus, HumanOversightType, AutonomyLevel } from '../types';
 
 export const AssetRegistryPage: React.FC = () => {
   const navigate = useNavigate();
   const [assets, setAssets] = useState<AIAsset[]>(() => getAssets());
+  const [users] = useState(() => getUsers());
 
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('ALL');
@@ -41,6 +43,9 @@ export const AssetRegistryPage: React.FC = () => {
       dataSensitivity: 'Confidential',
       techStack: ['Python'],
       ownership: {},
+      authorityProfile: defaultAuthorityProfile(),
+      oversightType: getAuthorityMatrixEntry('Medium').oversightType,
+      autonomyLevel: 1,
       decisionOutcome: 'PENDING',
     });
     setIsModalOpen(true);
@@ -91,6 +96,14 @@ export const AssetRegistryPage: React.FC = () => {
     { value: 'Multi-Agent System', label: 'Multi-Agent System' },
     { value: 'Third-Party AI Service', label: 'Third-Party AI Service' },
   ];
+
+  const userOptions = [
+    { value: '', label: '-- Select Named Owner --' },
+    ...users.map(u => ({ value: u.name, label: `${u.name} (${u.role})` })),
+  ];
+
+  const oversightOptions = OVERSIGHT_TYPES.map(o => ({ value: o.type, label: o.type }));
+  const autonomyOptions = AUTONOMY_LEVELS.map(a => ({ value: String(a.level), label: a.label }));
 
   return (
     <div className="flex flex-col gap-6 pb-12">
@@ -256,6 +269,43 @@ export const AssetRegistryPage: React.FC = () => {
               </div>
             </div>
 
+            {/* Release 1 — Governance Summary Card */}
+            <div>
+              <h4 className="text-xs font-bold uppercase text-[var(--text-muted)] tracking-wider mb-2">Governance Summary</h4>
+              <div className="p-4 rounded-xl bg-[var(--bg-badge)] border border-[var(--border-color)] flex flex-col gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  <div className="p-2.5 rounded-lg bg-[var(--bg-card)] border border-[var(--border-color)] text-xs">
+                    <span className="text-[10px] text-[var(--text-muted)] block">Accountable Owner</span>
+                    <span className="font-bold text-[var(--text-primary)]">{selectedAsset.authorityProfile?.accountableOwner || 'Unassigned'}</span>
+                  </div>
+                  <div className="p-2.5 rounded-lg bg-[var(--bg-card)] border border-[var(--border-color)] text-xs">
+                    <span className="text-[10px] text-[var(--text-muted)] block">Governance Sponsor</span>
+                    <span className="font-bold text-[var(--text-primary)]">{selectedAsset.authorityProfile?.governanceSponsor || 'Unassigned'}</span>
+                  </div>
+                  <div className="p-2.5 rounded-lg bg-[var(--bg-card)] border border-[var(--border-color)] text-xs">
+                    <span className="text-[10px] text-[var(--text-muted)] block">Risk Owner</span>
+                    <span className="font-bold text-[var(--text-primary)]">{selectedAsset.authorityProfile?.riskOwner || 'Unassigned'}</span>
+                  </div>
+                  <div className="p-2.5 rounded-lg bg-[var(--bg-card)] border border-[var(--border-color)] text-xs">
+                    <span className="text-[10px] text-[var(--text-muted)] block">Technical Owner</span>
+                    <span className="font-bold text-[var(--text-primary)]">{selectedAsset.authorityProfile?.technicalOwner || 'Unassigned'}</span>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2 pt-1">
+                  {selectedAsset.oversightType && <OversightBadge type={selectedAsset.oversightType} size="sm" />}
+                  {selectedAsset.autonomyLevel !== undefined && <AutonomyBadge level={selectedAsset.autonomyLevel} size="sm" />}
+                </div>
+
+                <div className="pt-2 border-t border-[var(--border-color)]">
+                  <span className="text-[10px] text-[var(--text-muted)] block">Approval Authority (Authority Matrix, reference)</span>
+                  <span className="text-xs font-bold text-[var(--text-primary)]">
+                    {getAuthorityMatrixEntry(selectedAsset.riskLevel).approvalAuthority}
+                  </span>
+                </div>
+              </div>
+            </div>
+
             <div className="flex items-center justify-between pt-4 border-t border-[var(--border-color)]">
               <Button variant="danger" size="sm" onClick={() => handleDelete(selectedAsset.id)}>
                 Delete Asset
@@ -363,6 +413,113 @@ export const AssetRegistryPage: React.FC = () => {
                 onChange={e => setEditingAsset({ ...editingAsset, description: e.target.value })}
                 placeholder="Explain the purpose, input data, and target decision impact of this AI asset..."
               />
+            </div>
+
+            {/* Release 1 — Authority Section: Governance Authority Profile */}
+            <div className="pt-2 border-t border-[var(--border-color)]">
+              <h4 className="text-xs font-bold uppercase text-[var(--text-secondary)] tracking-wider mb-3">
+                Governance Authority Profile
+              </h4>
+              <div className="grid grid-cols-2 gap-4">
+                <Select
+                  label="Accountable Owner *"
+                  options={userOptions}
+                  value={editingAsset.authorityProfile?.accountableOwner || ''}
+                  onChange={e => setEditingAsset({
+                    ...editingAsset,
+                    authorityProfile: { ...(editingAsset.authorityProfile || defaultAuthorityProfile()), accountableOwner: e.target.value },
+                  })}
+                />
+                <Select
+                  label="Governance Sponsor *"
+                  options={userOptions}
+                  value={editingAsset.authorityProfile?.governanceSponsor || ''}
+                  onChange={e => setEditingAsset({
+                    ...editingAsset,
+                    authorityProfile: { ...(editingAsset.authorityProfile || defaultAuthorityProfile()), governanceSponsor: e.target.value },
+                  })}
+                />
+                <Select
+                  label="Risk Owner *"
+                  options={userOptions}
+                  value={editingAsset.authorityProfile?.riskOwner || ''}
+                  onChange={e => setEditingAsset({
+                    ...editingAsset,
+                    authorityProfile: { ...(editingAsset.authorityProfile || defaultAuthorityProfile()), riskOwner: e.target.value },
+                  })}
+                />
+                <Select
+                  label="Technical Owner *"
+                  options={userOptions}
+                  value={editingAsset.authorityProfile?.technicalOwner || ''}
+                  onChange={e => setEditingAsset({
+                    ...editingAsset,
+                    authorityProfile: { ...(editingAsset.authorityProfile || defaultAuthorityProfile()), technicalOwner: e.target.value },
+                  })}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4 mt-4">
+                <Select
+                  label="Compliance Owner (optional)"
+                  options={userOptions}
+                  value={editingAsset.authorityProfile?.complianceOwner || ''}
+                  onChange={e => setEditingAsset({
+                    ...editingAsset,
+                    authorityProfile: { ...(editingAsset.authorityProfile || defaultAuthorityProfile()), complianceOwner: e.target.value },
+                  })}
+                />
+                <Select
+                  label="Human Override Authority (optional)"
+                  options={userOptions}
+                  value={editingAsset.authorityProfile?.humanOverrideAuthority || ''}
+                  onChange={e => setEditingAsset({
+                    ...editingAsset,
+                    authorityProfile: { ...(editingAsset.authorityProfile || defaultAuthorityProfile()), humanOverrideAuthority: e.target.value },
+                  })}
+                />
+                <Select
+                  label="Kill Switch Authority (optional)"
+                  options={userOptions}
+                  value={editingAsset.authorityProfile?.killSwitchAuthority || ''}
+                  onChange={e => setEditingAsset({
+                    ...editingAsset,
+                    authorityProfile: { ...(editingAsset.authorityProfile || defaultAuthorityProfile()), killSwitchAuthority: e.target.value },
+                  })}
+                />
+                <Select
+                  label="Reassessment Authority (optional)"
+                  options={userOptions}
+                  value={editingAsset.authorityProfile?.reassessmentAuthority || ''}
+                  onChange={e => setEditingAsset({
+                    ...editingAsset,
+                    authorityProfile: { ...(editingAsset.authorityProfile || defaultAuthorityProfile()), reassessmentAuthority: e.target.value },
+                  })}
+                />
+              </div>
+            </div>
+
+            {/* Release 1 — Oversight & Autonomy Sections */}
+            <div className="pt-2 border-t border-[var(--border-color)]">
+              <h4 className="text-xs font-bold uppercase text-[var(--text-secondary)] tracking-wider mb-3">
+                Human Oversight &amp; Autonomy
+              </h4>
+              <div className="grid grid-cols-2 gap-4">
+                <Select
+                  label="Human Oversight Classification"
+                  options={oversightOptions}
+                  value={editingAsset.oversightType || 'Human-in-the-Loop'}
+                  onChange={e => setEditingAsset({ ...editingAsset, oversightType: e.target.value as HumanOversightType })}
+                />
+                <Select
+                  label="Autonomy Level"
+                  options={autonomyOptions}
+                  value={String(editingAsset.autonomyLevel ?? 1)}
+                  onChange={e => setEditingAsset({ ...editingAsset, autonomyLevel: Number(e.target.value) as AutonomyLevel })}
+                />
+              </div>
+              <p className="text-[11px] text-[var(--text-muted)] mt-2">
+                Authority Matrix reference for {editingAsset.riskLevel || 'Medium'} risk: {getAuthorityMatrixEntry(editingAsset.riskLevel || 'Medium').oversightType} · {getAuthorityMatrixEntry(editingAsset.riskLevel || 'Medium').approvalAuthority}
+              </p>
             </div>
 
             <div className="flex items-center justify-end gap-3 pt-4 border-t border-[var(--border-color)]">

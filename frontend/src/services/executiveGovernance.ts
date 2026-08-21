@@ -67,6 +67,36 @@ export function getAiEstateSummary(): AiEstateSummary {
   return summary;
 }
 
+/* ============ Release 1 — Accountability, Oversight & Autonomy ========== */
+
+/**
+ * Plain counts only — no scoring. Release 1 explicitly excludes Governance
+ * Intelligence Scores; this surfaces the new Governance Authority Profile,
+ * Human Oversight Classification and Autonomy Classification as themes an
+ * executive can read directly, not as a weighted index.
+ */
+export interface AuthorityOversightSummary {
+  authorityProfileCompleteAssets: number;
+  totalAssets: number;
+  oversightBreakdown: { type: string; count: number }[];
+  highAutonomyAssets: number; // Level 4-5
+}
+
+export function getAuthorityOversightSummary(): AuthorityOversightSummary {
+  const metrics = getGovernanceMetrics();
+  return {
+    authorityProfileCompleteAssets: Math.round(
+      (metrics.authorityProfileCompletionRate / 100) * metrics.totalAssets
+    ),
+    totalAssets: metrics.totalAssets,
+    oversightBreakdown: Object.entries(metrics.oversightBreakdown).map(([type, count]) => ({
+      type,
+      count,
+    })),
+    highAutonomyAssets: (metrics.autonomyBreakdown[4] || 0) + (metrics.autonomyBreakdown[5] || 0),
+  };
+}
+
 /* =================== WS1 — Governance Health Index ====================== */
 
 /**

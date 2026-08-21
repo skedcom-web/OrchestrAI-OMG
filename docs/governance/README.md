@@ -40,6 +40,9 @@ This repository directory contains the **Mandatory Governance Deliverables** spe
 11. 🔬 **[11_CEAL_Future_Evolution_Blueprint.md](file:///C:/Users/VT348/Documents/GitHub/OrchestrAI%20OMG/docs/governance/11_CEAL_Future_Evolution_Blueprint.md)**  
     *Capability & Evidence Assurance Layer (CEAL) — Peer Review Discussion Draft.*
 
+12. 🧑‍⚖️ **[12_Release1_Governance_Authority_Foundation.md](file:///C:/Users/VT348/Documents/GitHub/OrchestrAI%20OMG/docs/governance/12_Release1_Governance_Authority_Foundation.md)**  
+    *Governance Authority Profile, Human Oversight Classification, Autonomy Classification & Authority Matrix — Governance Overview & User Guide.*
+
 ---
 
 ## 🌐 Live Production Links

@@ -3,10 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { MetricCard } from '../components/ui/MetricCard';
-import { RiskBadge } from '../components/ui/Badge';
+import { RiskBadge, OversightBadge } from '../components/ui/Badge';
 import { StatusBadge } from '../components/ui/StatusBadge';
 import { getGovernanceMetrics, getAssets, getAuditLogs } from '../services/storageService';
-import type { AssetType, RiskLevel } from '../types';
+import { OVERSIGHT_TYPES, AUTONOMY_LEVELS } from '../config/governanceAuthority';
+import type { AssetType, RiskLevel, HumanOversightType } from '../types';
 
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
@@ -150,6 +151,63 @@ export const DashboardPage: React.FC = () => {
             <p className="text-xs text-[var(--text-primary)] mt-1">
               No admissible decision = No AI asset movement into production.
             </p>
+          </div>
+        </Card>
+      </div>
+
+      {/* Release 1 — Governance Authority Foundation: Oversight & Autonomy Exposure */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="flex flex-col gap-4">
+          <div>
+            <h3 className="text-lg font-bold text-[var(--text-primary)]">Assets by Oversight Model</h3>
+            <p className="text-xs text-[var(--text-secondary)]">Human Oversight Classification across the portfolio</p>
+          </div>
+          <div className="flex flex-col gap-3">
+            {OVERSIGHT_TYPES.map(o => {
+              const count = metrics.oversightBreakdown[o.type as HumanOversightType] || 0;
+              const pct = metrics.totalAssets > 0 ? Math.round((count / metrics.totalAssets) * 100) : 0;
+              return (
+                <div key={o.type} className="flex flex-col gap-1.5">
+                  <div className="flex items-center justify-between text-xs font-semibold">
+                    <OversightBadge type={o.type} size="sm" />
+                    <span className="text-[var(--text-primary)] font-bold">{count} ({pct}%)</span>
+                  </div>
+                  <div className="w-full bg-[var(--bg-badge)] h-2 rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-cyan-500 transition-all"
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+
+        <Card className="flex flex-col gap-4">
+          <div>
+            <h3 className="text-lg font-bold text-[var(--text-primary)]">Assets by Autonomy Level</h3>
+            <p className="text-xs text-[var(--text-secondary)]">Autonomy Classification, Level 0 (No AI) through Level 5 (High Autonomy)</p>
+          </div>
+          <div className="flex flex-col gap-2.5">
+            {AUTONOMY_LEVELS.map(a => {
+              const count = metrics.autonomyBreakdown[a.level] || 0;
+              const pct = metrics.totalAssets > 0 ? Math.round((count / metrics.totalAssets) * 100) : 0;
+              return (
+                <div key={a.level} className="flex flex-col gap-1">
+                  <div className="flex items-center justify-between text-[11px] font-semibold">
+                    <span className="text-[var(--text-secondary)]">{a.label}</span>
+                    <span className="text-[var(--text-primary)] font-bold">{count} ({pct}%)</span>
+                  </div>
+                  <div className="w-full bg-[var(--bg-badge)] h-1.5 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all ${a.level >= 4 ? 'bg-red-500' : a.level >= 2 ? 'bg-amber-500' : 'bg-emerald-500'}`}
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </Card>
       </div>

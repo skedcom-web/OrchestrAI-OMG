@@ -45,6 +45,19 @@ enum DecisionOutcome {
   PENDING
 }
 
+// ---------------------------------------------------------------------------
+// RELEASE 1 — Governance Authority Foundation
+// Accountability, human oversight and autonomy exposure, made explicit on
+// every AI asset. Reference data only — no scoring, no workflow automation.
+// ---------------------------------------------------------------------------
+
+enum HumanOversightType {
+  HUMAN_IN_COMMAND
+  HUMAN_IN_THE_LOOP
+  HUMAN_ON_THE_LOOP
+  AUTONOMOUS_WITH_CONTROLS
+}
+
 enum UserRole {
   SUPER_ADMIN
   GOVERNANCE_ADMIN
@@ -90,6 +103,21 @@ model AIAsset {
   validationScore  Int?
   decisionOutcome  DecisionOutcome   @default(PENDING)
   tags             String[]
+
+  // Release 1 — Governance Authority Profile (Capability 1)
+  /// Ultimately accountable individual — distinct from AssetOwner.businessOwner.
+  accountableOwner        String?
+  governanceSponsor       String?
+  humanOverrideAuthority  String?
+  killSwitchAuthority     String?
+  reassessmentAuthority   String?
+
+  // Release 1 — Human Oversight Classification (Capability 2)
+  oversightType    HumanOversightType?
+
+  // Release 1 — Autonomy Classification (Capability 3), Level 0-5
+  autonomyLevel    Int?
+
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
 

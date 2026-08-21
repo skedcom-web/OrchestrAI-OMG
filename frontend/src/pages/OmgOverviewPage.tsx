@@ -60,6 +60,9 @@ export const OmgOverviewPage: React.FC = () => {
             <ul className="flex flex-col gap-1.5">
               {[
                 'Know what AI exists.',
+                'Assign clear accountability.',
+                'Apply appropriate human oversight.',
+                'Understand autonomy exposure.',
                 'Assess the risks.',
                 'Validate the evidence.',
                 'Make confident GO / Conditional GO / NO GO decisions.',
@@ -96,7 +99,7 @@ export const OmgOverviewPage: React.FC = () => {
             </div>
 
             <p className="text-[11px] text-[var(--text-muted)]">
-              Three minutes, eight stages — no training required.
+              Three minutes, eleven steps — no training required.
             </p>
           </div>
 
@@ -248,9 +251,9 @@ export const OmgOverviewPage: React.FC = () => {
             Take a 3-Minute Guided Tour
           </h2>
           <p className="text-[12.5px] text-[var(--text-secondary)] mt-1.5 leading-relaxed max-w-2xl">
-            Eight stops across the governance flow — registry, risk, validation, evidence, decision,
-            monitoring, reassessment and audit. Each stop explains what the module is, why it exists
-            and what to look at, and can take you straight there.
+            Eleven stops across the governance flow — accountability, oversight and autonomy, then
+            risk, validation, evidence, decision, monitoring, reassessment and audit. Each stop
+            explains what the module is, why it exists and what to look at, and can take you straight there.
           </p>
         </div>
         <button

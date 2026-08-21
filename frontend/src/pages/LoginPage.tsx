@@ -64,6 +64,9 @@ export const LoginPage: React.FC = () => {
             <ul className="flex flex-col gap-1.5 max-w-lg">
               {[
                 'Know what AI exists.',
+                'Assign clear accountability.',
+                'Apply appropriate human oversight.',
+                'Understand autonomy exposure.',
                 'Assess the risks.',
                 'Validate the evidence.',
                 'Make confident GO / Conditional GO / NO GO decisions.',

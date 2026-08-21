@@ -86,6 +86,43 @@ export interface DecisionRecord {
 
 export type OperationalStatus = 'Planned' | 'Active' | 'Suspended' | 'Under Review' | 'Retired';
 
+/* ------------- RELEASE 1 — Governance Authority Foundation -------------- */
+/**
+ * Capability 1 — Governance Authority Profile.
+ * Accountable Owner, Governance Sponsor, Risk Owner and Technical Owner are
+ * mandatory on every asset; the remaining four roles are optional.
+ */
+export interface GovernanceAuthorityProfile {
+  accountableOwner: string;
+  governanceSponsor: string;
+  riskOwner: string;
+  technicalOwner: string;
+  complianceOwner?: string;
+  humanOverrideAuthority?: string;
+  killSwitchAuthority?: string;
+  reassessmentAuthority?: string;
+}
+
+/** Capability 2 — Human Oversight Classification. */
+export type HumanOversightType =
+  | 'Human-in-Command'
+  | 'Human-in-the-Loop'
+  | 'Human-on-the-Loop'
+  | 'Autonomous with Controls';
+
+/** Capability 3 — Autonomy Classification, Level 0 (No AI) through Level 5 (High Autonomy). */
+export type AutonomyLevel = 0 | 1 | 2 | 3 | 4 | 5;
+
+/**
+ * Capability 4 — Authority Matrix. Reference guidance only: baseline oversight
+ * and approval expectations by risk tier. No workflow automation in Release 1.
+ */
+export interface AuthorityMatrixEntry {
+  riskLevel: RiskLevel;
+  oversightType: HumanOversightType;
+  approvalAuthority: string;
+}
+
 export interface AIAsset {
   id: string;
   name: string;
@@ -97,6 +134,12 @@ export interface AIAsset {
   operationalStatus?: OperationalStatus;
   riskLevel: RiskLevel;
   ownership: OwnershipAssignment;
+  /** Release 1 — Governance Authority Profile. */
+  authorityProfile?: GovernanceAuthorityProfile;
+  /** Release 1 — how humans supervise this asset. */
+  oversightType?: HumanOversightType;
+  /** Release 1 — autonomy exposure, Level 0-5. */
+  autonomyLevel?: AutonomyLevel;
   techStack?: string[];
   dataSensitivity?: string;
   validationScore?: number; // 0 - 100
@@ -173,6 +216,10 @@ export interface GovernanceMetrics {
   activeGovernanceAlertsCount: number;
   upcomingReviewsCount: number;
   openCorrectiveActionsCount: number;
+  // Release 1 — Governance Authority Foundation
+  oversightBreakdown: Record<HumanOversightType, number>;
+  autonomyBreakdown: Record<AutonomyLevel, number>;
+  authorityProfileCompletionRate: number; // 0-100%
 }
 
 export interface PersonaDemoUser {

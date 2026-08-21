@@ -14,6 +14,7 @@ import {
   EXECUTIVE_VIEWS,
   getAiEstateSummary,
   getAssetTypeHeatmap,
+  getAuthorityOversightSummary,
   getExecutiveAlerts,
   getExecutiveInsights,
   getGovernanceHealthIndex,
@@ -61,6 +62,7 @@ export const ExecutiveGovernanceHubPage: React.FC = () => {
   const data = useMemo(
     () => ({
       estate: getAiEstateSummary(),
+      authority: getAuthorityOversightSummary(),
       health: getGovernanceHealthIndex(),
       metrics: getGovernanceMetrics(),
       scorecards: getGovernanceScorecards(),
@@ -283,6 +285,67 @@ export const ExecutiveGovernanceHubPage: React.FC = () => {
                 </span>
               </button>
             ))}
+          </div>
+        </section>
+      )}
+
+      {/* ===================== ACCOUNTABILITY, OVERSIGHT & AUTONOMY (Release 1) ===================== */}
+      {(shows('estate') || shows('summary') || shows('portfolio')) && (
+        <section className="flex flex-col gap-4">
+          <SectionHeader
+            eyebrow="Release 1"
+            title="Accountability, Oversight & Autonomy"
+            subtitle="Who owns this AI, how humans supervise it, and how much it acts on its own."
+            icon="🧑‍⚖️"
+            action={
+              <button
+                onClick={() => navigate('/assets')}
+                className="text-[11px] font-bold text-[var(--accent-primary)] hover:underline cursor-pointer"
+              >
+                Open registry →
+              </button>
+            }
+          />
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4 flex flex-col gap-1.5">
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.1em] text-[var(--text-muted)]">
+                Governance Authority Profile
+              </p>
+              <p className="tnum text-[1.9rem] font-extrabold text-[var(--text-primary)] leading-none">
+                {data.authority.authorityProfileCompleteAssets}
+                <span className="text-[13px] font-semibold text-[var(--text-muted)]"> / {data.authority.totalAssets}</span>
+              </p>
+              <p className="text-[11.5px] text-[var(--text-secondary)]">
+                Assets with an Accountable Owner, Governance Sponsor, Risk Owner and Technical Owner on record.
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4 flex flex-col gap-2">
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.1em] text-[var(--text-muted)]">
+                Human Oversight Model
+              </p>
+              <div className="flex flex-col gap-1">
+                {data.authority.oversightBreakdown.map(o => (
+                  <div key={o.type} className="flex items-center justify-between text-[11.5px]">
+                    <span className="text-[var(--text-secondary)]">{o.type}</span>
+                    <span className="tnum font-bold text-[var(--text-primary)]">{o.count}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4 flex flex-col gap-1.5">
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.1em] text-[var(--text-muted)]">
+                Autonomy Exposure
+              </p>
+              <p className="tnum text-[1.9rem] font-extrabold text-[var(--text-primary)] leading-none">
+                {data.authority.highAutonomyAssets}
+              </p>
+              <p className="text-[11.5px] text-[var(--text-secondary)]">
+                Assets classified Level 4 (Controlled Autonomy) or Level 5 (High Autonomy).
+              </p>
+            </div>
           </div>
         </section>
       )}

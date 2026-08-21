@@ -46,6 +46,7 @@ import {
   INITIAL_SCHEDULED_REVIEWS,
   INITIAL_CORRECTIVE_ACTIONS
 } from './mockData';
+import { getAuthorityMatrixEntry, defaultAuthorityProfile, authorityProfileCompleteness } from '../config/governanceAuthority';
 
 const STORAGE_KEYS = {
   ASSETS: 'omg_assets_v7',
@@ -126,8 +127,34 @@ export function getAuditLogs(): AuditLog[] {
 }
 
 // --- AI ASSETS SERVICE ---
+
+/**
+ * Release 1 — backfills authorityProfile / oversightType / autonomyLevel for
+ * assets persisted before this release, so existing local demo data never
+ * renders blank governance authority fields.
+ */
+function normalizeAsset(asset: AIAsset): AIAsset {
+  if (asset.authorityProfile && asset.oversightType && asset.autonomyLevel !== undefined) {
+    return asset;
+  }
+  const baseline = getAuthorityMatrixEntry(asset.riskLevel);
+  const o = asset.ownership || {};
+  return {
+    ...asset,
+    authorityProfile: asset.authorityProfile || {
+      accountableOwner: o.businessOwner || o.approver || 'Unassigned',
+      governanceSponsor: o.approver || o.businessOwner || 'Unassigned',
+      riskOwner: o.riskOwner || 'Unassigned',
+      technicalOwner: o.technicalOwner || 'Unassigned',
+      complianceOwner: o.complianceOwner,
+    },
+    oversightType: asset.oversightType || baseline.oversightType,
+    autonomyLevel: asset.autonomyLevel !== undefined ? asset.autonomyLevel : 2,
+  };
+}
+
 export function getAssets(): AIAsset[] {
-  return getItem<AIAsset[]>(STORAGE_KEYS.ASSETS, INITIAL_ASSETS);
+  return getItem<AIAsset[]>(STORAGE_KEYS.ASSETS, INITIAL_ASSETS).map(normalizeAsset);
 }
 
 export function getAssetById(id: string): AIAsset | undefined {
@@ -164,6 +191,9 @@ export function saveAsset(assetData: Partial<AIAsset>): AIAsset {
     }
   }
 
+  const riskLevel = assetData.riskLevel || 'Medium';
+  const baseline = getAuthorityMatrixEntry(riskLevel);
+
   const newAsset: AIAsset = {
     id: `ast-${Date.now().toString().slice(-4)}`,
     name: assetData.name || 'New AI Asset',
@@ -173,8 +203,11 @@ export function saveAsset(assetData: Partial<AIAsset>): AIAsset {
     version: assetData.version || '1.0.0',
     status: assetData.status || 'Draft',
     operationalStatus: assetData.operationalStatus || 'Active',
-    riskLevel: assetData.riskLevel || 'Medium',
+    riskLevel,
     ownership: assetData.ownership || {},
+    authorityProfile: assetData.authorityProfile || defaultAuthorityProfile(),
+    oversightType: assetData.oversightType || baseline.oversightType,
+    autonomyLevel: assetData.autonomyLevel !== undefined ? assetData.autonomyLevel : 1,
     techStack: assetData.techStack || [],
     dataSensitivity: assetData.dataSensitivity || 'Confidential',
     validationScore: 0,
@@ -1416,9 +1449,18 @@ export function getGovernanceMetrics(): GovernanceMetrics {
     activeGovernanceAlertsCount: alerts.length,
     upcomingReviewsCount: reviews.filter(r => r.status === 'Scheduled' || r.status === 'In Progress').length,
     openCorrectiveActionsCount: actions.filter(a => a.status !== 'Completed' && a.status !== 'Verified').length,
+    oversightBreakdown: {
+      'Human-in-Command': 0,
+      'Human-in-the-Loop': 0,
+      'Human-on-the-Loop': 0,
+      'Autonomous with Controls': 0,
+    },
+    autonomyBreakdown: { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+    authorityProfileCompletionRate: 0,
   };
 
   let completeOwnershipCount = 0;
+  let completeAuthorityCount = 0;
 
   assets.forEach(asset => {
     if (metrics.assetsByType[asset.type] !== undefined) metrics.assetsByType[asset.type]++;
@@ -1439,8 +1481,19 @@ export function getGovernanceMetrics(): GovernanceMetrics {
     if ((asset.riskLevel === 'High' || asset.riskLevel === 'Critical') && outcome !== 'GO') {
       metrics.highRiskUnapprovedCount++;
     }
+
+    if (asset.oversightType && metrics.oversightBreakdown[asset.oversightType] !== undefined) {
+      metrics.oversightBreakdown[asset.oversightType]++;
+    }
+    if (asset.autonomyLevel !== undefined && metrics.autonomyBreakdown[asset.autonomyLevel] !== undefined) {
+      metrics.autonomyBreakdown[asset.autonomyLevel]++;
+    }
+    if (authorityProfileCompleteness(asset.authorityProfile) === 4) {
+      completeAuthorityCount++;
+    }
   });
 
   metrics.ownershipCompletionRate = assets.length > 0 ? Math.round((completeOwnershipCount / assets.length) * 100) : 0;
+  metrics.authorityProfileCompletionRate = assets.length > 0 ? Math.round((completeAuthorityCount / assets.length) * 100) : 0;
   return metrics;
 }
