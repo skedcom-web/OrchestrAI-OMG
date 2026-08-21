@@ -69,8 +69,13 @@ export const LoginPage: React.FC = () => {
                 'Understand autonomy exposure.',
                 'Assess the risks.',
                 'Validate the evidence.',
-                'Make confident GO / Conditional GO / NO GO decisions.',
-                'Continuously govern AI throughout its lifecycle.',
+                'Capture supporting evidence.',
+                'Trace governance decisions.',
+                'Demonstrate audit readiness.',
+                'Authorize AI use.',
+                'Monitor governance continuously.',
+                'Reassess when meaningful changes occur.',
+                'Maintain governance confidence throughout the lifecycle.',
               ].map(line => (
                 <li key={line} className="flex items-start gap-2.5">
                   <span className="mt-[7px] w-1.5 h-1.5 rounded-full bg-cyan-300 shrink-0" aria-hidden />

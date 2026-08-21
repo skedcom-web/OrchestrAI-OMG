@@ -15,13 +15,16 @@ import {
   getAiEstateSummary,
   getAssetTypeHeatmap,
   getAuthorityOversightSummary,
+  getContinuityOverview,
+  getEvidenceOverview,
   getExecutiveAlerts,
   getExecutiveInsights,
   getGovernanceHealthIndex,
   getGovernanceScorecards,
   getGovernanceTrends,
 } from '../services/executiveGovernance';
-import type { ExecutiveAlertType, ExecutiveViewId, PolicyViolationSeverity } from '../types';
+import { GovernanceStateBadge } from '../components/ui/Badge';
+import type { ExecutiveAlertType, ExecutiveViewId, GovernanceState, PolicyViolationSeverity } from '../types';
 
 const SEVERITY_COLOR: Record<PolicyViolationSeverity, string> = {
   Critical: 'var(--status-danger)',
@@ -63,6 +66,8 @@ export const ExecutiveGovernanceHubPage: React.FC = () => {
     () => ({
       estate: getAiEstateSummary(),
       authority: getAuthorityOversightSummary(),
+      continuity: getContinuityOverview(),
+      evidence: getEvidenceOverview(),
       health: getGovernanceHealthIndex(),
       metrics: getGovernanceMetrics(),
       scorecards: getGovernanceScorecards(),
@@ -345,6 +350,117 @@ export const ExecutiveGovernanceHubPage: React.FC = () => {
               <p className="text-[11.5px] text-[var(--text-secondary)]">
                 Assets classified Level 4 (Controlled Autonomy) or Level 5 (High Autonomy).
               </p>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ===================== GOVERNANCE CONTINUITY OVERVIEW (Release 2) ===================== */}
+      {(shows('estate') || shows('summary') || shows('portfolio')) && (
+        <section className="flex flex-col gap-4">
+          <SectionHeader
+            eyebrow="Release 2"
+            title="Governance Continuity Overview"
+            subtitle="Whether approved AI assets remain validly authorized over time."
+            icon="🔁"
+            action={
+              <button
+                onClick={() => navigate('/governance-timeline')}
+                className="text-[11px] font-bold text-[var(--accent-primary)] hover:underline cursor-pointer"
+              >
+                Open governance timeline →
+              </button>
+            }
+          />
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <button
+              onClick={() => navigate('/review-calendar')}
+              data-noglass
+              className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4 flex flex-col gap-1.5 text-left glow-on-hover cursor-pointer"
+            >
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.1em] text-[var(--text-muted)]">
+                Assets Awaiting Review
+              </p>
+              <p className="tnum text-[1.9rem] font-extrabold text-[var(--text-primary)] leading-none">
+                {data.continuity.assetsAwaitingReview}
+              </p>
+              <p className="text-[11.5px] text-[var(--text-secondary)]">Scheduled governance reviews not yet completed.</p>
+            </button>
+
+            <button
+              onClick={() => navigate('/assets')}
+              data-noglass
+              className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4 flex flex-col gap-1.5 text-left glow-on-hover cursor-pointer"
+            >
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.1em] text-[var(--text-muted)]">
+                Assets Requiring Reauthorization
+              </p>
+              <p className="tnum text-[1.9rem] font-extrabold text-[var(--text-primary)] leading-none">
+                {data.continuity.assetsRequiringReauthorization}
+              </p>
+              <p className="text-[11.5px] text-[var(--text-secondary)]">In Reassessment Required governance state.</p>
+            </button>
+
+            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4 flex flex-col gap-2">
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.1em] text-[var(--text-muted)]">
+                Governance State Mix
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {data.continuity.governanceStateBreakdown
+                  .filter(s => s.count > 0)
+                  .map(s => (
+                    <div key={s.state} className="flex items-center gap-1">
+                      <GovernanceStateBadge state={s.state as GovernanceState} size="sm" />
+                      <span className="text-[11px] font-bold text-[var(--text-primary)]">{s.count}</span>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ===================== EVIDENCE OVERVIEW (Release 3) ===================== */}
+      {(shows('estate') || shows('summary') || shows('portfolio')) && (
+        <section className="flex flex-col gap-4">
+          <SectionHeader
+            eyebrow="Release 3"
+            title="Evidence Overview"
+            subtitle="Ownership summary and evidence health snapshot — plain counts, no scoring."
+            icon="🗃️"
+            action={
+              <button
+                onClick={() => navigate('/evidence-registry')}
+                className="text-[11px] font-bold text-[var(--accent-primary)] hover:underline cursor-pointer"
+              >
+                Open evidence registry →
+              </button>
+            }
+          />
+
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4 flex flex-col gap-1.5">
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.1em] text-[var(--text-muted)]">Total Evidence Records</p>
+              <p className="tnum text-[1.9rem] font-extrabold text-[var(--text-primary)] leading-none">{data.evidence.totalEvidenceRecords}</p>
+              <p className="text-[11.5px] text-[var(--text-secondary)]">{data.evidence.activeEvidenceRecords} currently Active</p>
+            </div>
+            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4 flex flex-col gap-1.5">
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.1em] text-[var(--text-muted)]">Ownership Complete</p>
+              <p className="tnum text-[1.9rem] font-extrabold text-[var(--text-primary)] leading-none">{data.evidence.ownershipComplete}</p>
+              <p className="text-[11.5px] text-[var(--text-secondary)]">Evidence Owner + Approval Authority on record</p>
+            </div>
+            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4 flex flex-col gap-1.5">
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.1em] text-[var(--text-muted)]">Expiring / Expired</p>
+              <p className="tnum text-[1.9rem] font-extrabold text-[var(--text-primary)] leading-none">
+                {data.evidence.expiringEvidenceCount + data.evidence.expiredEvidenceCount}
+              </p>
+              <p className="text-[11.5px] text-[var(--text-secondary)]">{data.evidence.expiringEvidenceCount} expiring soon · {data.evidence.expiredEvidenceCount} expired</p>
+            </div>
+            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4 flex flex-col gap-1.5">
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.1em] text-[var(--text-muted)]">Assets Without Evidence</p>
+              <p className="tnum text-[1.9rem] font-extrabold text-[var(--text-primary)] leading-none">{data.evidence.assetsWithNoEvidence}</p>
+              <p className="text-[11.5px] text-[var(--text-secondary)]">No evidence record linked yet</p>
             </div>
           </div>
         </section>

@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { MetricCard } from '../components/ui/MetricCard';
-import { RiskBadge, OversightBadge } from '../components/ui/Badge';
+import { RiskBadge, OversightBadge, GovernanceStateBadge, ClassificationBadge, EvidenceStatusBadge } from '../components/ui/Badge';
 import { StatusBadge } from '../components/ui/StatusBadge';
-import { getGovernanceMetrics, getAssets, getAuditLogs } from '../services/storageService';
+import { getGovernanceMetrics, getAssets, getAuditLogs, getEvidenceRecords } from '../services/storageService';
 import { OVERSIGHT_TYPES, AUTONOMY_LEVELS } from '../config/governanceAuthority';
+import { GOVERNANCE_STATES, GOVERNANCE_CLASSIFICATIONS } from '../config/governanceContinuity';
+import { EVIDENCE_TYPES, EVIDENCE_STATUSES, getExpiryIndicator } from '../config/evidenceFoundation';
 import type { AssetType, RiskLevel, HumanOversightType } from '../types';
 
 export const DashboardPage: React.FC = () => {
@@ -14,6 +16,14 @@ export const DashboardPage: React.FC = () => {
   const [metrics] = useState(() => getGovernanceMetrics());
   const [assets] = useState(() => getAssets());
   const [auditLogs] = useState(() => getAuditLogs().slice(0, 5));
+  const [evidenceRecords] = useState(() => getEvidenceRecords());
+
+  const expiringOrExpiredEvidence = evidenceRecords
+    .filter(e => {
+      const indicator = getExpiryIndicator(e.expiryDate);
+      return indicator === 'Expiring Soon' || indicator === 'Expired';
+    })
+    .slice(0, 5);
 
   const assetTypeKeys = Object.keys(metrics.assetsByType) as AssetType[];
 
@@ -208,6 +218,118 @@ export const DashboardPage: React.FC = () => {
                 </div>
               );
             })}
+          </div>
+        </Card>
+      </div>
+
+      {/* Release 2 — Governance Continuity Foundation: State, Classification & Continuity Load */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card className="lg:col-span-2 flex flex-col gap-4">
+          <div>
+            <h3 className="text-lg font-bold text-[var(--text-primary)]">Assets by Governance State</h3>
+            <p className="text-xs text-[var(--text-secondary)]">Whether each asset's authorization remains valid — Release 2 continuity model</p>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {GOVERNANCE_STATES.map(s => {
+              const count = metrics.governanceStateBreakdown[s.state] || 0;
+              return (
+                <div key={s.state} className="p-3 rounded-xl bg-[var(--bg-badge)] border border-[var(--border-color)] flex flex-col gap-1.5">
+                  <GovernanceStateBadge state={s.state} size="sm" />
+                  <span className="text-lg font-black text-[var(--text-primary)]">{count}</span>
+                </div>
+              );
+            })}
+          </div>
+          <div className="pt-3 border-t border-[var(--border-color)]">
+            <h4 className="text-xs font-bold uppercase text-[var(--text-muted)] tracking-wider mb-2">Assets by Governance Classification</h4>
+            <div className="flex flex-wrap gap-2">
+              {GOVERNANCE_CLASSIFICATIONS.map(c => (
+                <div key={c.value} className="flex items-center gap-1.5">
+                  <ClassificationBadge classification={c.value} size="sm" />
+                  <span className="text-xs font-bold text-[var(--text-primary)]">{metrics.governanceClassificationBreakdown[c.value] || 0}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </Card>
+
+        <Card className="flex flex-col gap-4">
+          <div>
+            <h3 className="text-lg font-bold text-[var(--text-primary)]">Governance Continuity Load</h3>
+            <p className="text-xs text-[var(--text-secondary)]">Open work keeping authorizations current</p>
+          </div>
+          <button
+            onClick={() => navigate('/assets')}
+            className="p-4 rounded-xl bg-[var(--bg-badge)] border border-[var(--border-color)] text-left hover:border-[var(--accent-border)] transition-all cursor-pointer"
+          >
+            <span className="text-xs font-semibold text-[var(--text-muted)]">Reassessments Due</span>
+            <p className="text-2xl font-black text-[var(--text-primary)] mt-0.5">{metrics.reassessmentsDueCount}</p>
+            <span className="text-[10px] text-[var(--text-muted)]">Open or under-review triggers</span>
+          </button>
+          <button
+            onClick={() => navigate('/review-calendar')}
+            className="p-4 rounded-xl bg-[var(--bg-badge)] border border-[var(--border-color)] text-left hover:border-[var(--accent-border)] transition-all cursor-pointer"
+          >
+            <span className="text-xs font-semibold text-[var(--text-muted)]">Reviews Due</span>
+            <p className="text-2xl font-black text-[var(--text-primary)] mt-0.5">{metrics.reviewsDueCount}</p>
+            <span className="text-[10px] text-[var(--text-muted)]">Not yet completed</span>
+          </button>
+        </Card>
+      </div>
+
+      {/* Release 3 — Evidence Foundation: Type, Status & Expiry */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card className="lg:col-span-2 flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-bold text-[var(--text-primary)]">Evidence by Type & Status</h3>
+              <p className="text-xs text-[var(--text-secondary)]">Universal governance evidence registry, {evidenceRecords.length} records</p>
+            </div>
+            <Button size="sm" variant="ghost" onClick={() => navigate('/evidence-registry')}>
+              Open Registry →
+            </Button>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+            {EVIDENCE_TYPES.map(t => {
+              const count = metrics.evidenceRecordsByType[t.type] || 0;
+              return (
+                <div key={t.type} className="p-2.5 rounded-xl bg-[var(--bg-badge)] border border-[var(--border-color)] flex flex-col gap-1">
+                  <span className="text-[10px] font-bold text-[var(--text-secondary)] truncate">{t.icon} {t.type}</span>
+                  <span className="text-base font-black text-[var(--accent-primary)]">{count}</span>
+                </div>
+              );
+            })}
+          </div>
+          <div className="flex flex-wrap gap-2 pt-3 border-t border-[var(--border-color)]">
+            {EVIDENCE_STATUSES.map(s => (
+              <div key={s.status} className="flex items-center gap-1.5">
+                <EvidenceStatusBadge status={s.status} size="sm" />
+                <span className="text-xs font-bold text-[var(--text-primary)]">{metrics.evidenceRecordsByStatus[s.status] || 0}</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        <Card className="flex flex-col gap-4">
+          <div>
+            <h3 className="text-lg font-bold text-[var(--text-primary)]">Expiring Evidence</h3>
+            <p className="text-xs text-[var(--text-secondary)]">{metrics.expiringEvidenceCount} expiring soon • {metrics.expiredEvidenceCount} expired</p>
+          </div>
+          <div className="flex flex-col gap-2">
+            {expiringOrExpiredEvidence.length === 0 ? (
+              <span className="text-xs text-[var(--text-muted)] italic">No evidence expiring soon.</span>
+            ) : (
+              expiringOrExpiredEvidence.map(e => (
+                <button
+                  key={e.id}
+                  onClick={() => navigate('/evidence-registry')}
+                  className="text-left p-2.5 rounded-xl bg-[var(--bg-badge)] border border-[var(--border-color)] hover:border-[var(--accent-border)] transition-all cursor-pointer"
+                >
+                  <span className="text-xs font-bold text-[var(--text-primary)] block truncate">{e.name}</span>
+                  <span className="text-[10px] text-[var(--text-muted)]">{e.assetName} • Expires {e.expiryDate}</span>
+                </button>
+              ))
+            )}
           </div>
         </Card>
       </div>

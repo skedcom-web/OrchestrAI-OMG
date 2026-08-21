@@ -277,6 +277,14 @@ export const NAV_DOMAINS: NavDomain[] = [
         keywords: ['document', 'odf', 'deliverable', 'proof'],
       },
       {
+        path: '/evidence-registry',
+        label: 'Evidence Registry',
+        icon: '🗃️',
+        description: 'Universal governance evidence object — ownership, traceability, lifecycle and expiry.',
+        keywords: ['evidence', 'registry', 'traceability', 'lifecycle', 'expiry'],
+        badge: 'Release 3',
+      },
+      {
         path: '/findings',
         label: 'Findings Tracker',
         icon: '⚠️',

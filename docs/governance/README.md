@@ -43,6 +43,12 @@ This repository directory contains the **Mandatory Governance Deliverables** spe
 12. 🧑‍⚖️ **[12_Release1_Governance_Authority_Foundation.md](file:///C:/Users/VT348/Documents/GitHub/OrchestrAI%20OMG/docs/governance/12_Release1_Governance_Authority_Foundation.md)**  
     *Governance Authority Profile, Human Oversight Classification, Autonomy Classification & Authority Matrix — Governance Overview & User Guide.*
 
+13. 🔁 **[13_Release2_Governance_Continuity_Foundation.md](file:///C:/Users/VT348/Documents/GitHub/OrchestrAI%20OMG/docs/governance/13_Release2_Governance_Continuity_Foundation.md)**  
+    *Governance State Model, Reassessment Trigger Framework, Review Schedule & Reauthorization Records — Governance Continuity Overview & User Guide.*
+
+14. 🗃️ **[14_Release3_Evidence_Foundation.md](file:///C:/Users/VT348/Documents/GitHub/OrchestrAI%20OMG/docs/governance/14_Release3_Evidence_Foundation.md)**  
+    *Evidence Registry, Ownership, Traceability, Lifecycle & Expiry Tracking — Release 3 Guide & Evidence Governance Guide.*
+
 ---
 
 ## 🌐 Live Production Links

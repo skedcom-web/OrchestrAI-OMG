@@ -114,6 +114,19 @@ export type HumanOversightType =
 export type AutonomyLevel = 0 | 1 | 2 | 3 | 4 | 5;
 
 /**
+ * Release 1 recommendation, carried forward into Release 2 — Governance
+ * Classification. Business context only; reused by Governance Continuity
+ * and by future Compliance Packs / RBI / ISO layers. No workflow logic.
+ */
+export type GovernanceClassification =
+  | 'Internal Productivity'
+  | 'Customer Facing'
+  | 'Decision Support'
+  | 'Operational Automation'
+  | 'Agentic Workflow'
+  | 'Regulated AI';
+
+/**
  * Capability 4 — Authority Matrix. Reference guidance only: baseline oversight
  * and approval expectations by risk tier. No workflow automation in Release 1.
  */
@@ -121,6 +134,134 @@ export interface AuthorityMatrixEntry {
   riskLevel: RiskLevel;
   oversightType: HumanOversightType;
   approvalAuthority: string;
+}
+
+/* --------------- RELEASE 2 — Governance Continuity Foundation ----------- */
+
+/**
+ * Capability 1 — Governance State Model. Tracks whether an asset's
+ * authorization remains valid, distinct from `GovernanceStatus` (which
+ * tracks pipeline stage — Draft through Production).
+ */
+export type GovernanceState =
+  | 'Draft'
+  | 'Submitted'
+  | 'Authorized'
+  | 'Monitoring'
+  | 'Reassessment Required'
+  | 'Conditional GO'
+  | 'No GO'
+  | 'Retired';
+
+/** Capability 3 — Reassessment Trigger Framework baseline trigger types. */
+export type ReassessmentTriggerType =
+  | 'Model Change'
+  | 'Prompt Change'
+  | 'Agent Behavior Change'
+  | 'New Integration'
+  | 'New Tool'
+  | 'Data Source Change'
+  | 'Permission Change'
+  | 'Access Scope Change'
+  | 'Control Failure'
+  | 'Risk Threshold Breach'
+  | 'Performance Drift'
+  | 'Regulatory Change'
+  | 'Policy Change';
+
+export type ReassessmentTriggerStatus = 'Open' | 'Under Review' | 'Resolved' | 'Dismissed';
+
+export interface ReassessmentTrigger {
+  id: string;
+  assetId: string;
+  assetName: string;
+  triggerType: ReassessmentTriggerType;
+  dateDetected: string;
+  severity: FindingSeverity;
+  owner: string;
+  status: ReassessmentTriggerStatus;
+  comments: string;
+}
+
+/** Capability 5 — Governance Reauthorization Record. */
+export interface GovernanceReauthorizationRecord {
+  id: string;
+  assetId: string;
+  assetName: string;
+  reviewedBy: string;
+  reviewDate: string;
+  decision: DecisionOutcome;
+  reason: string;
+  supportingNotes: string;
+  previousState: GovernanceState;
+  newState: GovernanceState;
+}
+
+/* ----------------- RELEASE 3 — Evidence Foundation ----------------------- */
+
+/** Capability 2 — Evidence Types (baseline). */
+export type EvidenceRecordType =
+  | 'Policy Document'
+  | 'Risk Assessment'
+  | 'Validation Report'
+  | 'Approval Record'
+  | 'Governance Review'
+  | 'Audit Finding'
+  | 'Incident Report'
+  | 'Control Assessment'
+  | 'Training Record'
+  | 'Third-Party Assessment';
+
+/** Capability 5 — Evidence Lifecycle. */
+export type EvidenceRecordStatus = 'Draft' | 'Active' | 'Expired' | 'Archived' | 'Superseded';
+
+/** Capability 6 — Evidence Expiry Tracking indicator. */
+export type EvidenceExpiryIndicator = 'Valid' | 'Expiring Soon' | 'Expired' | 'No Expiry Set';
+
+/** Capability 3 — Evidence Ownership. */
+export interface EvidenceOwnership {
+  evidenceOwner: string;
+  businessOwner?: string;
+  reviewer?: string;
+  approvalAuthority?: string;
+}
+
+/**
+ * Capability 4 — Evidence Traceability. Loose references (id + label) rather
+ * than strict foreign keys, since not every linked record type is guaranteed
+ * to exist for a given evidence record.
+ */
+export interface EvidenceTraceability {
+  riskAssessmentRef?: string;
+  governanceReviewRef?: string;
+  decisionRecordRef?: string;
+  reauthorizationRecordRef?: string;
+  timelineEventRef?: string;
+}
+
+/** Capability 1 — Evidence Registry. The universal governance evidence object. */
+export interface EvidenceRecord {
+  id: string;
+  name: string;
+  evidenceType: EvidenceRecordType;
+  status: EvidenceRecordStatus;
+  createdDate: string;
+  expiryDate?: string;
+  description: string;
+  assetId: string;
+  assetName: string;
+  ownership: EvidenceOwnership;
+  traceability?: EvidenceTraceability;
+}
+
+/** Capability 7 — Evidence Timeline event. */
+export interface EvidenceTimelineEvent {
+  id: string;
+  evidenceId: string;
+  timestamp: string;
+  event: 'Created' | 'Updated' | 'Reviewed' | 'Approved' | 'Expired' | 'Archived';
+  actor: string;
+  details: string;
 }
 
 export interface AIAsset {
@@ -140,6 +281,12 @@ export interface AIAsset {
   oversightType?: HumanOversightType;
   /** Release 1 — autonomy exposure, Level 0-5. */
   autonomyLevel?: AutonomyLevel;
+  /** Release 1 (carried forward into Release 2) — business context. */
+  governanceClassification?: GovernanceClassification;
+  /** Release 2 — whether this asset's authorization remains valid. */
+  governanceState?: GovernanceState;
+  /** Release 2 — next scheduled governance review date. */
+  nextReviewDate?: string;
   techStack?: string[];
   dataSensitivity?: string;
   validationScore?: number; // 0 - 100
@@ -169,7 +316,7 @@ export interface AuditLog {
   userName: string;
   userRole: string;
   action: string;
-  entityType: 'Asset' | 'User' | 'Ownership' | 'Risk' | 'Decision' | 'Validation' | 'Evidence' | 'Finding' | 'DecisionPackage' | 'ComplianceAssessment' | 'CompliancePackage' | 'KillSwitch' | 'Override' | 'Incident' | 'Retirement' | 'ScheduledReview' | 'CorrectiveAction' | 'GovernanceReviewPackage' | 'Policy' | 'PolicyMapping' | 'PolicyViolation' | 'ExecutiveReport' | 'ChangeRequest' | 'StateTransition';
+  entityType: 'Asset' | 'User' | 'Ownership' | 'Risk' | 'Decision' | 'Validation' | 'Evidence' | 'Finding' | 'DecisionPackage' | 'ComplianceAssessment' | 'CompliancePackage' | 'KillSwitch' | 'Override' | 'Incident' | 'Retirement' | 'ScheduledReview' | 'CorrectiveAction' | 'GovernanceReviewPackage' | 'Policy' | 'PolicyMapping' | 'PolicyViolation' | 'ExecutiveReport' | 'ChangeRequest' | 'StateTransition' | 'ReassessmentTrigger' | 'GovernanceReauthorizationRecord' | 'EvidenceRecord';
   entityId: string;
   entityName: string;
   details: string;
@@ -220,6 +367,16 @@ export interface GovernanceMetrics {
   oversightBreakdown: Record<HumanOversightType, number>;
   autonomyBreakdown: Record<AutonomyLevel, number>;
   authorityProfileCompletionRate: number; // 0-100%
+  // Release 2 — Governance Continuity Foundation
+  governanceStateBreakdown: Record<GovernanceState, number>;
+  governanceClassificationBreakdown: Record<GovernanceClassification, number>;
+  reassessmentsDueCount: number;
+  reviewsDueCount: number;
+  // Release 3 — Evidence Foundation
+  evidenceRecordsByType: Record<EvidenceRecordType, number>;
+  evidenceRecordsByStatus: Record<EvidenceRecordStatus, number>;
+  expiringEvidenceCount: number;
+  expiredEvidenceCount: number;
 }
 
 export interface PersonaDemoUser {
@@ -512,7 +669,9 @@ export interface GovernanceTimelineEvent {
   stage: string;
   actor: string;
   details: string;
-  type: 'registration' | 'risk' | 'validation' | 'decision' | 'compliance' | 'override' | 'killswitch' | 'retirement';
+  type: 'registration' | 'risk' | 'validation' | 'decision' | 'compliance' | 'override' | 'killswitch' | 'retirement'
+    // Release 2 — Governance Continuity
+    | 'authorized' | 'trigger' | 'review' | 'reauthorization';
 }
 
 // ------------------- PHASE 7 TYPES -------------------
@@ -540,7 +699,7 @@ export interface GovernanceAlert {
   resolutionPath: string;
 }
 
-export type ReviewType = 'Monthly Review' | 'Quarterly Review' | 'Annual Review' | 'Incident Review' | 'Executive Review';
+export type ReviewType = 'Monthly Review' | 'Quarterly Review' | 'Semiannual Review' | 'Annual Review' | 'Ad Hoc Review' | 'Incident Review' | 'Executive Review';
 export type ReviewStatus = 'Scheduled' | 'In Progress' | 'Completed' | 'Overdue';
 
 export interface ScheduledReview {

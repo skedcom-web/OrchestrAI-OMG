@@ -17,6 +17,7 @@ import { AuditLogsPage } from './pages/AuditLogsPage';
 // Phase 3 Pages
 import { ValidationCenterPage } from './pages/ValidationCenterPage';
 import { EvidenceCenterPage } from './pages/EvidenceCenterPage';
+import { EvidenceRegistryPage } from './pages/EvidenceRegistryPage';
 import { ReviewWorkbenchPage } from './pages/ReviewWorkbenchPage';
 import { FindingsPage } from './pages/FindingsPage';
 import { ValidationDashboardPage } from './pages/ValidationDashboardPage';
@@ -111,6 +112,7 @@ const GOVERNED_ROUTES: { path: string; element: React.ReactNode }[] = [
   { path: '/risk', element: <RiskCenterPage /> },
   { path: '/validation', element: <ValidationCenterPage /> },
   { path: '/evidence', element: <EvidenceCenterPage /> },
+  { path: '/evidence-registry', element: <EvidenceRegistryPage /> },
   { path: '/findings', element: <FindingsPage /> },
   { path: '/governance-blockers', element: <GovernanceBlockersPage /> },
   { path: '/validation-dashboard', element: <ValidationDashboardPage /> },

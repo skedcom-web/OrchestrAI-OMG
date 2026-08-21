@@ -15,6 +15,7 @@ import {
   getAuditLogs,
   getCorrectiveActions,
   getEvidence,
+  getEvidenceRecords,
   getFindings,
   getGovernanceMetrics,
   getScheduledReviews,
@@ -94,6 +95,59 @@ export function getAuthorityOversightSummary(): AuthorityOversightSummary {
       count,
     })),
     highAutonomyAssets: (metrics.autonomyBreakdown[4] || 0) + (metrics.autonomyBreakdown[5] || 0),
+  };
+}
+
+/* ============= Release 2 — Governance Continuity Overview ================ */
+
+/** Plain counts only — mirrors the Release 1 panel's no-scoring approach. */
+export interface ContinuityOverview {
+  assetsAwaitingReview: number;
+  assetsRequiringReauthorization: number;
+  governanceStateBreakdown: { state: string; count: number }[];
+}
+
+export function getContinuityOverview(): ContinuityOverview {
+  const metrics = getGovernanceMetrics();
+  return {
+    assetsAwaitingReview: metrics.reviewsDueCount,
+    assetsRequiringReauthorization: metrics.governanceStateBreakdown['Reassessment Required'] || 0,
+    governanceStateBreakdown: Object.entries(metrics.governanceStateBreakdown).map(([state, count]) => ({
+      state,
+      count,
+    })),
+  };
+}
+
+/* ================== Release 3 — Evidence Overview ======================== */
+
+/** Plain counts only — no scoring, matching Release 3's "no scoring" rule. */
+export interface EvidenceOverview {
+  totalEvidenceRecords: number;
+  activeEvidenceRecords: number;
+  expiringEvidenceCount: number;
+  expiredEvidenceCount: number;
+  assetsWithNoEvidence: number;
+  ownershipComplete: number; // records with evidenceOwner + approvalAuthority set
+}
+
+export function getEvidenceOverview(): EvidenceOverview {
+  const assets = getAssets();
+  const records = getEvidenceRecords();
+  const metrics = getGovernanceMetrics();
+
+  const linkedAssetIds = new Set(records.map(r => r.assetId));
+  const ownershipComplete = records.filter(
+    r => r.ownership.evidenceOwner && r.ownership.approvalAuthority
+  ).length;
+
+  return {
+    totalEvidenceRecords: records.length,
+    activeEvidenceRecords: metrics.evidenceRecordsByStatus['Active'] || 0,
+    expiringEvidenceCount: metrics.expiringEvidenceCount,
+    expiredEvidenceCount: metrics.expiredEvidenceCount,
+    assetsWithNoEvidence: assets.filter(a => !linkedAssetIds.has(a.id)).length,
+    ownershipComplete,
   };
 }
 

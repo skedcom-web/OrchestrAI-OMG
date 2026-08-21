@@ -77,7 +77,7 @@ export const GuidedTour: React.FC<GuidedTourProps> = ({
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[var(--accent-primary)]">
-                Guided tour · about 3 minutes
+                Guided tour · {TOUR_STEPS.length} stops
               </p>
               <h3 className="text-lg sm:text-xl font-bold text-[var(--text-primary)] mt-1">
                 Step {step.n} of {TOUR_STEPS.length} — {step.title}

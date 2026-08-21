@@ -58,6 +58,87 @@ enum HumanOversightType {
   AUTONOMOUS_WITH_CONTROLS
 }
 
+// ---------------------------------------------------------------------------
+// RELEASE 2 — Governance Continuity Foundation
+// Whether an approved AI asset remains validly authorized over time.
+// Visibility and lightweight workflow only — no scoring, no automation.
+// ---------------------------------------------------------------------------
+
+/// Release 1 recommendation, carried forward — business context, reused by
+/// Governance Continuity and future Compliance Packs / RBI / ISO layers.
+enum GovernanceClassification {
+  INTERNAL_PRODUCTIVITY
+  CUSTOMER_FACING
+  DECISION_SUPPORT
+  OPERATIONAL_AUTOMATION
+  AGENTIC_WORKFLOW
+  REGULATED_AI
+}
+
+/// Named AssetGovernanceState (not GovernanceState) to avoid colliding with
+/// the Phase 10 change-management GovernanceState enum below, which tracks a
+/// different concern (pipeline/state-machine position, not authorization validity).
+enum AssetGovernanceState {
+  DRAFT
+  SUBMITTED
+  AUTHORIZED
+  MONITORING
+  REASSESSMENT_REQUIRED
+  CONDITIONAL_GO
+  NO_GO
+  RETIRED
+}
+
+enum ReassessmentTriggerType {
+  MODEL_CHANGE
+  PROMPT_CHANGE
+  AGENT_BEHAVIOR_CHANGE
+  NEW_INTEGRATION
+  NEW_TOOL
+  DATA_SOURCE_CHANGE
+  PERMISSION_CHANGE
+  ACCESS_SCOPE_CHANGE
+  CONTROL_FAILURE
+  RISK_THRESHOLD_BREACH
+  PERFORMANCE_DRIFT
+  REGULATORY_CHANGE
+  POLICY_CHANGE
+}
+
+enum ReassessmentTriggerStatus {
+  OPEN
+  UNDER_REVIEW
+  RESOLVED
+  DISMISSED
+}
+
+// ---------------------------------------------------------------------------
+// RELEASE 3 — Evidence Foundation
+// Evidence as a first-class, universal governance object: registry,
+// ownership, traceability, lifecycle and expiry. No scoring, no automation.
+// ---------------------------------------------------------------------------
+
+enum EvidenceRecordType {
+  POLICY_DOCUMENT
+  RISK_ASSESSMENT
+  VALIDATION_REPORT
+  APPROVAL_RECORD
+  GOVERNANCE_REVIEW
+  AUDIT_FINDING
+  INCIDENT_REPORT
+  CONTROL_ASSESSMENT
+  TRAINING_RECORD
+  THIRD_PARTY_ASSESSMENT
+}
+
+enum EvidenceRecordStatus {
+  DRAFT
+  ACTIVE
+  EXPIRED
+  ARCHIVED
+  SUPERSEDED
+}
+
 enum UserRole {
   SUPER_ADMIN
   GOVERNANCE_ADMIN
@@ -118,6 +199,13 @@ model AIAsset {
   // Release 1 — Autonomy Classification (Capability 3), Level 0-5
   autonomyLevel    Int?
 
+  // Release 1 recommendation / Release 2 — Governance Classification
+  governanceClassification GovernanceClassification?
+
+  // Release 2 — Governance State Model (Capability 1)
+  governanceState  AssetGovernanceState? @default(DRAFT)
+  nextReviewDate   DateTime?
+
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
 
@@ -125,6 +213,9 @@ model AIAsset {
   decisions        DecisionRecord[]
   riskAssessments  RiskAssessment[]
   validations      ValidationRecord[]
+  reassessmentTriggers    ReassessmentTrigger[]
+  reauthorizations        GovernanceReauthorizationRecord[]
+  evidenceRecords         EvidenceRecord[]
   evidence         EvidenceDocument[]
   findings         Finding[]
   complianceAssessments ComplianceAssessmentRecord[]
@@ -617,6 +708,85 @@ model GovernanceTriggerRule {
   updatedAt   DateTime @updatedAt
 
   @@map("governance_trigger_rules")
+}
+
+// ---------------------------------------------------------------------------
+// RELEASE 2 — Governance Continuity Foundation, continued
+// ---------------------------------------------------------------------------
+
+/// Capability 3 — Reassessment Trigger Framework. A manually logged event
+/// register, not a rule engine (see PolicyViolation / GovernanceTriggerRule
+/// for the Phase 10 automated equivalent, which Release 2 does not replace).
+model ReassessmentTrigger {
+  id            String                     @id @default(uuid())
+  assetId       String
+  asset         AIAsset                    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  triggerType   ReassessmentTriggerType
+  dateDetected  DateTime                   @default(now())
+  severity      RiskLevel
+  owner         String
+  status        ReassessmentTriggerStatus  @default(OPEN)
+  comments      String                     @db.Text
+  createdAt     DateTime                   @default(now())
+
+  @@map("reassessment_triggers")
+}
+
+/// Capability 5 — Governance Reauthorization Record. Traces every decision
+/// that moves an asset's Governance State forward again after reassessment.
+model GovernanceReauthorizationRecord {
+  id                String                @id @default(uuid())
+  assetId           String
+  asset             AIAsset               @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  reviewedBy        String
+  reviewDate        DateTime              @default(now())
+  decision          DecisionOutcome
+  reason            String                @db.Text
+  supportingNotes   String?               @db.Text
+  previousState     AssetGovernanceState
+  newState          AssetGovernanceState
+  createdAt         DateTime              @default(now())
+
+  @@map("governance_reauthorization_records")
+}
+
+// ---------------------------------------------------------------------------
+// RELEASE 3 — Evidence Foundation, continued
+// ---------------------------------------------------------------------------
+
+/// Capability 1 — Evidence Registry. The universal governance evidence
+/// object, distinct from the earlier ODF-deliverable EvidenceDocument model.
+model EvidenceRecord {
+  id           String                @id @default(uuid())
+  name         String
+  evidenceType EvidenceRecordType
+  status       EvidenceRecordStatus  @default(DRAFT)
+  createdDate  DateTime              @default(now())
+  expiryDate   DateTime?
+  description  String                @db.Text
+
+  assetId      String
+  asset        AIAsset               @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  // Capability 3 — Evidence Ownership
+  evidenceOwner     String
+  businessOwner     String?
+  reviewer          String?
+  approvalAuthority String?
+
+  /// Capability 4 — Evidence Traceability. Loose references (free-text ids
+  /// or labels) rather than strict foreign keys, since not every linked
+  /// record type is guaranteed to exist for a given evidence record.
+  riskAssessmentRef        String?
+  governanceReviewRef      String?
+  decisionRecordRef        String?
+  reauthorizationRecordRef String?
+  timelineEventRef         String?
+
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+
+  @@map("evidence_records")
 }
 
 model AuditLog {

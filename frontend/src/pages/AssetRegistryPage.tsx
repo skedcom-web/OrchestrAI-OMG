@@ -1,20 +1,23 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Select } from '../components/ui/Select';
 import { Modal } from '../components/ui/Modal';
-import { RiskBadge, OversightBadge, AutonomyBadge } from '../components/ui/Badge';
+import { RiskBadge, OversightBadge, AutonomyBadge, GovernanceStateBadge, ClassificationBadge, EvidenceStatusBadge, EvidenceExpiryBadge } from '../components/ui/Badge';
 import { StatusBadge } from '../components/ui/StatusBadge';
-import { getAssets, getUsers, saveAsset, deleteAsset } from '../services/storageService';
+import { getAssets, getUsers, saveAsset, deleteAsset, getReassessmentTriggers, getScheduledReviews, getEvidenceRecordsForAsset } from '../services/storageService';
 import { OVERSIGHT_TYPES, AUTONOMY_LEVELS, getAuthorityMatrixEntry, defaultAuthorityProfile } from '../config/governanceAuthority';
-import type { AIAsset, AssetType, RiskLevel, GovernanceStatus, HumanOversightType, AutonomyLevel } from '../types';
+import { GOVERNANCE_STATES, GOVERNANCE_CLASSIFICATIONS, defaultGovernanceState } from '../config/governanceContinuity';
+import { getExpiryIndicator } from '../config/evidenceFoundation';
+import type { AIAsset, AssetType, RiskLevel, GovernanceStatus, HumanOversightType, AutonomyLevel, GovernanceState, GovernanceClassification } from '../types';
 
 export const AssetRegistryPage: React.FC = () => {
   const navigate = useNavigate();
   const [assets, setAssets] = useState<AIAsset[]>(() => getAssets());
   const [users] = useState(() => getUsers());
+  const [searchParams] = useSearchParams();
 
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('ALL');
@@ -24,8 +27,11 @@ export const AssetRegistryPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingAsset, setEditingAsset] = useState<Partial<AIAsset> | null>(null);
 
-  // View Detail Drawer
-  const [selectedAsset, setSelectedAsset] = useState<AIAsset | null>(null);
+  // View Detail Drawer — preselects the asset named by ?assetId= (e.g. deep-linked from Evidence Registry).
+  const [selectedAsset, setSelectedAsset] = useState<AIAsset | null>(() => {
+    const preselectedId = searchParams.get('assetId');
+    return preselectedId ? assets.find(a => a.id === preselectedId) || null : null;
+  });
 
   const refreshAssets = () => {
     setAssets(getAssets());
@@ -46,6 +52,9 @@ export const AssetRegistryPage: React.FC = () => {
       authorityProfile: defaultAuthorityProfile(),
       oversightType: getAuthorityMatrixEntry('Medium').oversightType,
       autonomyLevel: 1,
+      governanceClassification: 'Internal Productivity',
+      governanceState: defaultGovernanceState(),
+      nextReviewDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       decisionOutcome: 'PENDING',
     });
     setIsModalOpen(true);
@@ -104,6 +113,8 @@ export const AssetRegistryPage: React.FC = () => {
 
   const oversightOptions = OVERSIGHT_TYPES.map(o => ({ value: o.type, label: o.type }));
   const autonomyOptions = AUTONOMY_LEVELS.map(a => ({ value: String(a.level), label: a.label }));
+  const governanceStateOptions = GOVERNANCE_STATES.map(s => ({ value: s.state, label: `${s.icon} ${s.state}` }));
+  const classificationOptions = GOVERNANCE_CLASSIFICATIONS.map(c => ({ value: c.value, label: `${c.icon} ${c.value}` }));
 
   return (
     <div className="flex flex-col gap-6 pb-12">
@@ -163,13 +174,14 @@ export const AssetRegistryPage: React.FC = () => {
                 <th className="p-4">Risk Level</th>
                 <th className="p-4">Status</th>
                 <th className="p-4">Decision</th>
+                <th className="p-4">Governance State</th>
                 <th className="p-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border-color)]">
               {filteredAssets.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="p-8 text-center text-[var(--text-muted)]">
+                  <td colSpan={8} className="p-8 text-center text-[var(--text-muted)]">
                     No AI Assets found matching filter criteria.
                   </td>
                 </tr>
@@ -196,6 +208,14 @@ export const AssetRegistryPage: React.FC = () => {
                     <td className="p-4"><StatusBadge status={asset.status} /></td>
                     <td className="p-4">
                       <StatusBadge status={asset.decisionOutcome || 'PENDING'} />
+                    </td>
+                    <td className="p-4">
+                      <div className="flex flex-col gap-1">
+                        {asset.governanceState && <GovernanceStateBadge state={asset.governanceState} size="sm" />}
+                        {asset.nextReviewDate && (
+                          <span className="text-[10px] text-[var(--text-muted)]">Next review: {asset.nextReviewDate}</span>
+                        )}
+                      </div>
                     </td>
                     <td className="p-4 text-right" onClick={e => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-2">
@@ -303,6 +323,105 @@ export const AssetRegistryPage: React.FC = () => {
                     {getAuthorityMatrixEntry(selectedAsset.riskLevel).approvalAuthority}
                   </span>
                 </div>
+              </div>
+            </div>
+
+            {/* Release 2 — Governance Continuity */}
+            <div>
+              <h4 className="text-xs font-bold uppercase text-[var(--text-muted)] tracking-wider mb-2">Governance Continuity</h4>
+              <div className="p-4 rounded-xl bg-[var(--bg-badge)] border border-[var(--border-color)] flex flex-col gap-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  {selectedAsset.governanceState && <GovernanceStateBadge state={selectedAsset.governanceState} size="sm" />}
+                  {selectedAsset.governanceClassification && <ClassificationBadge classification={selectedAsset.governanceClassification} size="sm" />}
+                  {selectedAsset.nextReviewDate && (
+                    <span className="text-[11px] text-[var(--text-secondary)]">Next review: <strong className="text-[var(--text-primary)]">{selectedAsset.nextReviewDate}</strong></span>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-[var(--border-color)]">
+                  <div>
+                    <span className="text-[10px] font-bold uppercase text-[var(--text-muted)] tracking-wider block mb-1.5">
+                      Reassessment History
+                    </span>
+                    <div className="flex flex-col gap-1.5">
+                      {getReassessmentTriggers().filter(t => t.assetId === selectedAsset.id).length === 0 ? (
+                        <span className="text-[11px] text-[var(--text-muted)] italic">No reassessment triggers raised.</span>
+                      ) : (
+                        getReassessmentTriggers().filter(t => t.assetId === selectedAsset.id).slice(0, 3).map(t => (
+                          <div key={t.id} className="text-[11px] p-2 rounded-lg bg-[var(--bg-card)] border border-[var(--border-color)]">
+                            <div className="flex items-center justify-between">
+                              <span className="font-bold text-[var(--text-primary)]">{t.triggerType}</span>
+                              <span className="text-[10px] text-[var(--text-muted)]">{t.dateDetected}</span>
+                            </div>
+                            <span className="text-[10px] text-[var(--text-muted)]">{t.severity} · {t.status}</span>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <span className="text-[10px] font-bold uppercase text-[var(--text-muted)] tracking-wider block mb-1.5">
+                      Upcoming Reviews
+                    </span>
+                    <div className="flex flex-col gap-1.5">
+                      {getScheduledReviews().filter(r => r.assetId === selectedAsset.id).length === 0 ? (
+                        <span className="text-[11px] text-[var(--text-muted)] italic">No reviews scheduled.</span>
+                      ) : (
+                        getScheduledReviews().filter(r => r.assetId === selectedAsset.id).slice(0, 3).map(r => (
+                          <div key={r.id} className="text-[11px] p-2 rounded-lg bg-[var(--bg-card)] border border-[var(--border-color)]">
+                            <div className="flex items-center justify-between">
+                              <span className="font-bold text-[var(--text-primary)]">{r.reviewType}</span>
+                              <span className="text-[10px] text-[var(--text-muted)]">{r.dueDate}</span>
+                            </div>
+                            <span className="text-[10px] text-[var(--text-muted)]">Owner: {r.owner} · {r.status}</span>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="self-start !px-0"
+                  onClick={() => navigate(`/governance-timeline?assetId=${selectedAsset.id}`)}
+                >
+                  Open full Governance Timeline →
+                </Button>
+              </div>
+            </div>
+
+            {/* Release 3 — Linked Evidence */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-xs font-bold uppercase text-[var(--text-muted)] tracking-wider">Linked Evidence</h4>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[var(--accent-light)] text-[var(--accent-primary)] border border-[var(--accent-border)]">
+                  {getEvidenceRecordsForAsset(selectedAsset.id).length} Evidence Records
+                </span>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                {getEvidenceRecordsForAsset(selectedAsset.id).length === 0 ? (
+                  <span className="text-[11px] text-[var(--text-muted)] italic">No evidence linked to this asset yet.</span>
+                ) : (
+                  getEvidenceRecordsForAsset(selectedAsset.id).map(ev => (
+                    <button
+                      key={ev.id}
+                      onClick={() => navigate('/evidence-registry')}
+                      className="text-left p-2.5 rounded-lg bg-[var(--bg-badge)] border border-[var(--border-color)] hover:border-[var(--accent-border)] transition-all cursor-pointer"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs font-bold text-[var(--text-primary)] truncate">{ev.name}</span>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <EvidenceStatusBadge status={ev.status} size="sm" />
+                          <EvidenceExpiryBadge indicator={getExpiryIndicator(ev.expiryDate)} size="sm" />
+                        </div>
+                      </div>
+                      <span className="text-[10px] text-[var(--text-muted)]">{ev.evidenceType} • Owner: {ev.ownership.evidenceOwner}</span>
+                    </button>
+                  ))
+                )}
               </div>
             </div>
 
@@ -520,6 +639,35 @@ export const AssetRegistryPage: React.FC = () => {
               <p className="text-[11px] text-[var(--text-muted)] mt-2">
                 Authority Matrix reference for {editingAsset.riskLevel || 'Medium'} risk: {getAuthorityMatrixEntry(editingAsset.riskLevel || 'Medium').oversightType} · {getAuthorityMatrixEntry(editingAsset.riskLevel || 'Medium').approvalAuthority}
               </p>
+            </div>
+
+            {/* Release 2 — Governance Continuity */}
+            <div className="pt-2 border-t border-[var(--border-color)]">
+              <h4 className="text-xs font-bold uppercase text-[var(--text-secondary)] tracking-wider mb-3">
+                Governance Continuity
+              </h4>
+              <div className="grid grid-cols-2 gap-4">
+                <Select
+                  label="Governance Classification"
+                  options={classificationOptions}
+                  value={editingAsset.governanceClassification || 'Internal Productivity'}
+                  onChange={e => setEditingAsset({ ...editingAsset, governanceClassification: e.target.value as GovernanceClassification })}
+                />
+                <Select
+                  label="Governance State"
+                  options={governanceStateOptions}
+                  value={editingAsset.governanceState || 'Draft'}
+                  onChange={e => setEditingAsset({ ...editingAsset, governanceState: e.target.value as GovernanceState })}
+                />
+              </div>
+              <div className="mt-4">
+                <Input
+                  label="Next Review Date"
+                  type="date"
+                  value={editingAsset.nextReviewDate || ''}
+                  onChange={e => setEditingAsset({ ...editingAsset, nextReviewDate: e.target.value })}
+                />
+              </div>
             </div>
 
             <div className="flex items-center justify-end gap-3 pt-4 border-t border-[var(--border-color)]">

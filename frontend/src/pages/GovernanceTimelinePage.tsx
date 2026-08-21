@@ -1,11 +1,16 @@
 import React, { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
 import { Select } from '../components/ui/Select';
 import { getAssets, getGovernanceTimeline } from '../services/storageService';
 
 export const GovernanceTimelinePage: React.FC = () => {
   const [assets] = useState(() => getAssets());
-  const [selectedAssetId, setSelectedAssetId] = useState<string>(assets[0]?.id || '');
+  const [searchParams] = useSearchParams();
+  const preselectedAssetId = searchParams.get('assetId');
+  const [selectedAssetId, setSelectedAssetId] = useState<string>(
+    (preselectedAssetId && assets.some(a => a.id === preselectedAssetId)) ? preselectedAssetId : (assets[0]?.id || '')
+  );
 
   const selectedAsset = assets.find(a => a.id === selectedAssetId) || assets[0];
   const timelineEvents = getGovernanceTimeline(selectedAssetId);

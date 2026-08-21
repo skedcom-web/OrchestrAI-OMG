@@ -27,14 +27,19 @@ import type {
   ScheduledReview,
   CorrectiveAction,
   GovernanceReviewPackage,
-  GovernanceHealthStatus
+  GovernanceHealthStatus,
+  ReassessmentTrigger,
+  GovernanceReauthorizationRecord,
+  GovernanceState,
+  EvidenceRecord,
+  EvidenceTimelineEvent
 } from '../types';
-import { 
-  INITIAL_ASSETS, 
-  INITIAL_USERS, 
-  INITIAL_AUDIT_LOGS, 
-  INITIAL_VALIDATIONS, 
-  INITIAL_EVIDENCE, 
+import {
+  INITIAL_ASSETS,
+  INITIAL_USERS,
+  INITIAL_AUDIT_LOGS,
+  INITIAL_VALIDATIONS,
+  INITIAL_EVIDENCE,
   INITIAL_FINDINGS,
   SEEDED_COMPLIANCE_CONTROLS,
   INITIAL_COMPLIANCE_ASSESSMENTS,
@@ -44,9 +49,14 @@ import {
   INITIAL_RETIREMENT_RECORDS,
   INITIAL_GOVERNANCE_ALERTS,
   INITIAL_SCHEDULED_REVIEWS,
-  INITIAL_CORRECTIVE_ACTIONS
+  INITIAL_CORRECTIVE_ACTIONS,
+  INITIAL_REASSESSMENT_TRIGGERS,
+  INITIAL_REAUTHORIZATION_RECORDS,
+  INITIAL_EVIDENCE_RECORDS
 } from './mockData';
 import { getAuthorityMatrixEntry, defaultAuthorityProfile, authorityProfileCompleteness } from '../config/governanceAuthority';
+import { defaultGovernanceState } from '../config/governanceContinuity';
+import { getExpiryIndicator } from '../config/evidenceFoundation';
 
 const STORAGE_KEYS = {
   ASSETS: 'omg_assets_v7',
@@ -68,6 +78,9 @@ const STORAGE_KEYS = {
   SCHEDULED_REVIEWS: 'omg_scheduled_reviews_v7',
   CORRECTIVE_ACTIONS: 'omg_corrective_actions_v7',
   HEALTH_PACKAGES: 'omg_health_packages_v7',
+  REASSESSMENT_TRIGGERS: 'omg_reassessment_triggers_v7',
+  REAUTHORIZATION_RECORDS: 'omg_reauthorization_records_v7',
+  EVIDENCE_RECORDS: 'omg_evidence_records_v7',
 };
 
 function getItem<T>(key: string, defaultData: T): T {
@@ -133,12 +146,31 @@ export function getAuditLogs(): AuditLog[] {
  * assets persisted before this release, so existing local demo data never
  * renders blank governance authority fields.
  */
-function normalizeAsset(asset: AIAsset): AIAsset {
-  if (asset.authorityProfile && asset.oversightType && asset.autonomyLevel !== undefined) {
-    return asset;
+/**
+ * Release 2 — infers a governance state for assets that predate this release,
+ * from their existing decision outcome and pipeline status. No automation:
+ * this only backfills a sensible starting point, once, for display.
+ */
+function inferGovernanceState(asset: AIAsset): GovernanceState {
+  if (asset.status === 'Retirement') return 'Retired';
+  if (asset.decisionOutcome === 'NO GO') return 'No GO';
+  if (asset.decisionOutcome === 'CONDITIONAL GO') return 'Conditional GO';
+  if (asset.decisionOutcome === 'GO') {
+    return asset.status === 'Production' ? 'Monitoring' : 'Authorized';
   }
+  if (asset.status === 'Draft') return 'Draft';
+  return 'Submitted';
+}
+
+function normalizeAsset(asset: AIAsset): AIAsset {
+  const needsRelease1 = !asset.authorityProfile || !asset.oversightType || asset.autonomyLevel === undefined;
+  const needsRelease2 = !asset.governanceClassification || !asset.governanceState || !asset.nextReviewDate;
+
+  if (!needsRelease1 && !needsRelease2) return asset;
+
   const baseline = getAuthorityMatrixEntry(asset.riskLevel);
   const o = asset.ownership || {};
+
   return {
     ...asset,
     authorityProfile: asset.authorityProfile || {
@@ -150,6 +182,9 @@ function normalizeAsset(asset: AIAsset): AIAsset {
     },
     oversightType: asset.oversightType || baseline.oversightType,
     autonomyLevel: asset.autonomyLevel !== undefined ? asset.autonomyLevel : 2,
+    governanceClassification: asset.governanceClassification || 'Internal Productivity',
+    governanceState: asset.governanceState || inferGovernanceState(asset),
+    nextReviewDate: asset.nextReviewDate || new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
   };
 }
 
@@ -208,6 +243,9 @@ export function saveAsset(assetData: Partial<AIAsset>): AIAsset {
     authorityProfile: assetData.authorityProfile || defaultAuthorityProfile(),
     oversightType: assetData.oversightType || baseline.oversightType,
     autonomyLevel: assetData.autonomyLevel !== undefined ? assetData.autonomyLevel : 1,
+    governanceClassification: assetData.governanceClassification || 'Internal Productivity',
+    governanceState: assetData.governanceState || defaultGovernanceState(),
+    nextReviewDate: assetData.nextReviewDate || new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     techStack: assetData.techStack || [],
     dataSensitivity: assetData.dataSensitivity || 'Confidential',
     validationScore: 0,
@@ -1147,6 +1185,68 @@ export function getGovernanceTimeline(assetId: string): GovernanceTimelineEvent[
     });
   });
 
+  // Release 2 — Governance Continuity events.
+  if (asset.governanceState && asset.governanceState !== 'Draft' && asset.governanceState !== 'Submitted') {
+    timeline.push({
+      id: `tl-auth-${asset.id}`,
+      assetId: asset.id,
+      timestamp: asset.updatedAt,
+      stage: '8. Governance Authorization',
+      actor: asset.authorityProfile?.accountableOwner || 'David Chen',
+      details: `Authorized to operate. Current governance state: ${asset.governanceState}`,
+      type: 'authorized',
+    });
+  }
+
+  getReassessmentTriggers().filter(t => t.assetId === assetId).forEach(t => {
+    timeline.push({
+      id: `tl-trg-${t.id}`,
+      assetId: asset.id,
+      timestamp: t.dateDetected,
+      stage: `9. Reassessment Trigger (${t.triggerType})`,
+      actor: t.owner,
+      details: `${t.severity} severity — ${t.comments}`,
+      type: 'trigger',
+    });
+  });
+
+  getScheduledReviews().filter(r => r.assetId === assetId).forEach(r => {
+    if (r.status === 'In Progress' || r.status === 'Completed') {
+      timeline.push({
+        id: `tl-revi-${r.id}`,
+        assetId: asset.id,
+        timestamp: r.dueDate,
+        stage: `10. ${r.reviewType} Initiated`,
+        actor: r.owner,
+        details: `Governance review ${r.status === 'Completed' ? 'initiated and completed' : 'in progress'}.`,
+        type: 'review',
+      });
+    }
+    if (r.status === 'Completed') {
+      timeline.push({
+        id: `tl-revc-${r.id}`,
+        assetId: asset.id,
+        timestamp: r.dueDate,
+        stage: `10. ${r.reviewType} Completed`,
+        actor: r.owner,
+        details: r.outcome || 'Review completed.',
+        type: 'review',
+      });
+    }
+  });
+
+  getReauthorizationRecords().filter(r => r.assetId === assetId).forEach(r => {
+    timeline.push({
+      id: `tl-reauth-${r.id}`,
+      assetId: asset.id,
+      timestamp: r.reviewDate,
+      stage: `11. Reauthorization Decision: ${r.decision}`,
+      actor: r.reviewedBy,
+      details: `${r.previousState} → ${r.newState}. ${r.reason}`,
+      type: 'reauthorization',
+    });
+  });
+
   return timeline.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 }
 
@@ -1259,6 +1359,252 @@ export function saveScheduledReview(data: Partial<ScheduledReview>): ScheduledRe
   return newRev;
 }
 
+// --- RELEASE 2 — GOVERNANCE CONTINUITY SERVICE ---
+
+export function getReassessmentTriggers(): ReassessmentTrigger[] {
+  return getItem<ReassessmentTrigger[]>(STORAGE_KEYS.REASSESSMENT_TRIGGERS, INITIAL_REASSESSMENT_TRIGGERS);
+}
+
+export function saveReassessmentTrigger(data: Partial<ReassessmentTrigger>): ReassessmentTrigger {
+  const list = getReassessmentTriggers();
+  const asset = getAssetById(data.assetId || '');
+  const now = new Date().toISOString().split('T')[0];
+
+  if (data.id) {
+    const idx = list.findIndex(t => t.id === data.id);
+    if (idx !== -1) {
+      list[idx] = { ...list[idx], ...data };
+      setItem(STORAGE_KEYS.REASSESSMENT_TRIGGERS, list);
+      return list[idx];
+    }
+  }
+
+  const newTrigger: ReassessmentTrigger = {
+    id: `trg-${Date.now().toString().slice(-4)}`,
+    assetId: data.assetId || '',
+    assetName: asset?.name || 'AI Asset',
+    triggerType: data.triggerType || 'Model Change',
+    dateDetected: data.dateDetected || now,
+    severity: data.severity || 'Medium',
+    owner: data.owner || 'David Chen (Governance Admin)',
+    status: data.status || 'Open',
+    comments: data.comments || '',
+  };
+
+  const updated = [newTrigger, ...list];
+  setItem(STORAGE_KEYS.REASSESSMENT_TRIGGERS, updated);
+
+  // A trigger is the event that moves an authorized asset back into reassessment.
+  if (asset && (asset.governanceState === 'Authorized' || asset.governanceState === 'Monitoring')) {
+    saveAsset({ id: asset.id, governanceState: 'Reassessment Required' });
+  }
+
+  addAuditLog(
+    'usr-2',
+    newTrigger.owner,
+    'GOVERNANCE_ADMIN',
+    'REASSESSMENT_TRIGGER_RAISED',
+    'ReassessmentTrigger',
+    newTrigger.id,
+    newTrigger.assetName,
+    `Raised ${newTrigger.triggerType} trigger for ${newTrigger.assetName} (${newTrigger.severity})`
+  );
+
+  return newTrigger;
+}
+
+export function getReauthorizationRecords(): GovernanceReauthorizationRecord[] {
+  return getItem<GovernanceReauthorizationRecord[]>(STORAGE_KEYS.REAUTHORIZATION_RECORDS, INITIAL_REAUTHORIZATION_RECORDS);
+}
+
+export function saveReauthorizationRecord(data: Omit<GovernanceReauthorizationRecord, 'id' | 'assetName'>): GovernanceReauthorizationRecord {
+  const list = getReauthorizationRecords();
+  const asset = getAssetById(data.assetId);
+
+  const newRecord: GovernanceReauthorizationRecord = {
+    ...data,
+    id: `reauth-${Date.now().toString().slice(-4)}`,
+    assetName: asset?.name || 'AI Asset',
+  };
+
+  const updated = [newRecord, ...list];
+  setItem(STORAGE_KEYS.REAUTHORIZATION_RECORDS, updated);
+
+  // Reauthorization is what moves the asset's governance state forward again.
+  if (asset) {
+    saveAsset({ id: asset.id, governanceState: newRecord.newState });
+  }
+
+  addAuditLog(
+    'usr-2',
+    newRecord.reviewedBy,
+    'GOVERNANCE_ADMIN',
+    'GOVERNANCE_REAUTHORIZED',
+    'GovernanceReauthorizationRecord',
+    newRecord.id,
+    newRecord.assetName,
+    `Reauthorization decision ${newRecord.decision} for ${newRecord.assetName}: ${newRecord.previousState} → ${newRecord.newState}`
+  );
+
+  return newRecord;
+}
+
+// --- RELEASE 3 — EVIDENCE FOUNDATION SERVICE ---
+
+export function getEvidenceRecords(): EvidenceRecord[] {
+  return getItem<EvidenceRecord[]>(STORAGE_KEYS.EVIDENCE_RECORDS, INITIAL_EVIDENCE_RECORDS);
+}
+
+export function getEvidenceRecordById(id: string): EvidenceRecord | undefined {
+  return getEvidenceRecords().find(e => e.id === id);
+}
+
+export function getEvidenceRecordsForAsset(assetId: string): EvidenceRecord[] {
+  return getEvidenceRecords().filter(e => e.assetId === assetId);
+}
+
+export function saveEvidenceRecord(data: Partial<EvidenceRecord>): EvidenceRecord {
+  const list = getEvidenceRecords();
+  const asset = getAssetById(data.assetId || '');
+  const now = new Date().toISOString().split('T')[0];
+
+  if (data.id) {
+    const idx = list.findIndex(e => e.id === data.id);
+    if (idx !== -1) {
+      const updated: EvidenceRecord = { ...list[idx], ...data };
+      list[idx] = updated;
+      setItem(STORAGE_KEYS.EVIDENCE_RECORDS, list);
+
+      addAuditLog(
+        'usr-2',
+        updated.ownership.evidenceOwner,
+        'GOVERNANCE_ADMIN',
+        'EVIDENCE_UPDATED',
+        'EvidenceRecord',
+        updated.id,
+        updated.name,
+        `Updated evidence record ${updated.name} (Status: ${updated.status})`
+      );
+
+      return updated;
+    }
+  }
+
+  const newRecord: EvidenceRecord = {
+    id: `evr-${Date.now().toString().slice(-4)}`,
+    name: data.name || 'New Evidence Record',
+    evidenceType: data.evidenceType || 'Policy Document',
+    status: data.status || 'Draft',
+    createdDate: data.createdDate || now,
+    expiryDate: data.expiryDate,
+    description: data.description || '',
+    assetId: data.assetId || '',
+    assetName: asset?.name || 'AI Asset',
+    ownership: data.ownership || { evidenceOwner: 'Unassigned' },
+    traceability: data.traceability,
+  };
+
+  const updated = [newRecord, ...list];
+  setItem(STORAGE_KEYS.EVIDENCE_RECORDS, updated);
+
+  addAuditLog(
+    'usr-2',
+    newRecord.ownership.evidenceOwner,
+    'GOVERNANCE_ADMIN',
+    'EVIDENCE_CREATED',
+    'EvidenceRecord',
+    newRecord.id,
+    newRecord.name,
+    `Registered evidence record ${newRecord.name} [${newRecord.evidenceType}] for ${newRecord.assetName}`
+  );
+
+  return newRecord;
+}
+
+export function deleteEvidenceRecord(id: string): void {
+  const list = getEvidenceRecords();
+  const target = list.find(e => e.id === id);
+  if (target) {
+    setItem(STORAGE_KEYS.EVIDENCE_RECORDS, list.filter(e => e.id !== id));
+    addAuditLog(
+      'usr-1',
+      'Sarah Jenkins',
+      'SUPER_ADMIN',
+      'EVIDENCE_DELETED',
+      'EvidenceRecord',
+      id,
+      target.name,
+      `Deleted evidence record ${target.name} from the registry.`
+    );
+  }
+}
+
+/**
+ * Capability 7 — Evidence Timeline. Derived from the record's own fields
+ * rather than a separate log, matching Release 2's "visibility only" approach.
+ */
+export function getEvidenceTimeline(evidenceId: string): EvidenceTimelineEvent[] {
+  const record = getEvidenceRecordById(evidenceId);
+  if (!record) return [];
+
+  const timeline: EvidenceTimelineEvent[] = [
+    {
+      id: `evtl-created-${record.id}`,
+      evidenceId: record.id,
+      timestamp: record.createdDate,
+      event: 'Created',
+      actor: record.ownership.evidenceOwner,
+      details: `Evidence record created: ${record.evidenceType} for ${record.assetName}.`,
+    },
+  ];
+
+  if (record.ownership.reviewer) {
+    timeline.push({
+      id: `evtl-reviewed-${record.id}`,
+      evidenceId: record.id,
+      timestamp: record.createdDate,
+      event: 'Reviewed',
+      actor: record.ownership.reviewer,
+      details: `Reviewed by ${record.ownership.reviewer}.`,
+    });
+  }
+
+  if (record.status === 'Active' && record.ownership.approvalAuthority) {
+    timeline.push({
+      id: `evtl-approved-${record.id}`,
+      evidenceId: record.id,
+      timestamp: record.createdDate,
+      event: 'Approved',
+      actor: record.ownership.approvalAuthority,
+      details: `Approved by ${record.ownership.approvalAuthority}.`,
+    });
+  }
+
+  if (getExpiryIndicator(record.expiryDate) === 'Expired') {
+    timeline.push({
+      id: `evtl-expired-${record.id}`,
+      evidenceId: record.id,
+      timestamp: record.expiryDate || record.createdDate,
+      event: 'Expired',
+      actor: 'System',
+      details: `Evidence passed its expiry date (${record.expiryDate}).`,
+    });
+  }
+
+  if (record.status === 'Archived' || record.status === 'Superseded') {
+    timeline.push({
+      id: `evtl-archived-${record.id}`,
+      evidenceId: record.id,
+      timestamp: record.expiryDate || record.createdDate,
+      event: 'Archived',
+      actor: record.ownership.evidenceOwner,
+      details: record.status === 'Superseded' ? 'Superseded by a newer evidence record.' : 'Archived for record retention.',
+    });
+  }
+
+  return timeline.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+}
+
 export function getCorrectiveActions(): CorrectiveAction[] {
   return getItem<CorrectiveAction[]>(STORAGE_KEYS.CORRECTIVE_ACTIONS, INITIAL_CORRECTIVE_ACTIONS);
 }
@@ -1359,6 +1705,8 @@ export function getGovernanceMetrics(): GovernanceMetrics {
   const alerts = getGovernanceAlerts();
   const reviews = getScheduledReviews();
   const actions = getCorrectiveActions();
+  const triggers = getReassessmentTriggers();
+  const evidenceRecords = getEvidenceRecords();
 
   let readyCount = 0;
   let condReadyCount = 0;
@@ -1457,7 +1805,47 @@ export function getGovernanceMetrics(): GovernanceMetrics {
     },
     autonomyBreakdown: { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
     authorityProfileCompletionRate: 0,
+    governanceStateBreakdown: {
+      'Draft': 0,
+      'Submitted': 0,
+      'Authorized': 0,
+      'Monitoring': 0,
+      'Reassessment Required': 0,
+      'Conditional GO': 0,
+      'No GO': 0,
+      'Retired': 0,
+    },
+    governanceClassificationBreakdown: {
+      'Internal Productivity': 0,
+      'Customer Facing': 0,
+      'Decision Support': 0,
+      'Operational Automation': 0,
+      'Agentic Workflow': 0,
+      'Regulated AI': 0,
+    },
+    reassessmentsDueCount: triggers.filter(t => t.status === 'Open' || t.status === 'Under Review').length,
+    reviewsDueCount: reviews.filter(r => r.status !== 'Completed').length,
+    evidenceRecordsByType: {
+      'Policy Document': 0,
+      'Risk Assessment': 0,
+      'Validation Report': 0,
+      'Approval Record': 0,
+      'Governance Review': 0,
+      'Audit Finding': 0,
+      'Incident Report': 0,
+      'Control Assessment': 0,
+      'Training Record': 0,
+      'Third-Party Assessment': 0,
+    },
+    evidenceRecordsByStatus: { 'Draft': 0, 'Active': 0, 'Expired': 0, 'Archived': 0, 'Superseded': 0 },
+    expiringEvidenceCount: evidenceRecords.filter(e => getExpiryIndicator(e.expiryDate) === 'Expiring Soon').length,
+    expiredEvidenceCount: evidenceRecords.filter(e => getExpiryIndicator(e.expiryDate) === 'Expired').length,
   };
+
+  evidenceRecords.forEach(e => {
+    if (metrics.evidenceRecordsByType[e.evidenceType] !== undefined) metrics.evidenceRecordsByType[e.evidenceType]++;
+    if (metrics.evidenceRecordsByStatus[e.status] !== undefined) metrics.evidenceRecordsByStatus[e.status]++;
+  });
 
   let completeOwnershipCount = 0;
   let completeAuthorityCount = 0;
@@ -1490,6 +1878,12 @@ export function getGovernanceMetrics(): GovernanceMetrics {
     }
     if (authorityProfileCompleteness(asset.authorityProfile) === 4) {
       completeAuthorityCount++;
+    }
+    if (asset.governanceState && metrics.governanceStateBreakdown[asset.governanceState] !== undefined) {
+      metrics.governanceStateBreakdown[asset.governanceState]++;
+    }
+    if (asset.governanceClassification && metrics.governanceClassificationBreakdown[asset.governanceClassification] !== undefined) {
+      metrics.governanceClassificationBreakdown[asset.governanceClassification]++;
     }
   });
 

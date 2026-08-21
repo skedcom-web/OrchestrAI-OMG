@@ -1,4 +1,5 @@
-import type { AutonomyLevel, HumanOversightType, RiskLevel } from '../../types';
+import type { AutonomyLevel, EvidenceExpiryIndicator, EvidenceRecordStatus, GovernanceClassification, GovernanceState, HumanOversightType, RiskLevel } from '../../types';
+import { EXPIRY_INDICATOR_TONE } from '../../config/evidenceFoundation';
 
 interface BadgeProps {
   level: RiskLevel;
@@ -63,6 +64,87 @@ export const AutonomyBadge: React.FC<AutonomyBadgeProps> = ({ level, size = 'md'
   return (
     <span className={`inline-flex items-center gap-1 font-semibold rounded-full border ${padding} ${styles}`}>
       Autonomy L{level}
+    </span>
+  );
+};
+
+/** Release 2 — Capability 1, Governance State Model. */
+interface GovernanceStateBadgeProps {
+  state: GovernanceState;
+  size?: 'sm' | 'md';
+}
+
+export const GovernanceStateBadge: React.FC<GovernanceStateBadgeProps> = ({ state, size = 'md' }) => {
+  const styles: Record<GovernanceState, string> = {
+    'Draft': 'bg-slate-500/10 text-slate-400 border-slate-500/30',
+    'Submitted': 'bg-blue-500/10 text-blue-400 border-blue-500/30',
+    'Authorized': 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30',
+    'Monitoring': 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30',
+    'Reassessment Required': 'bg-amber-500/15 text-amber-500 border-amber-500/40 font-bold',
+    'Conditional GO': 'bg-yellow-500/10 text-yellow-500 border-yellow-500/30',
+    'No GO': 'bg-red-500/15 text-red-500 border-red-500/40 font-bold',
+    'Retired': 'bg-gray-500/10 text-gray-400 border-gray-500/30',
+  };
+  const padding = size === 'sm' ? 'px-2 py-0.5 text-[10px]' : 'px-2.5 py-1 text-xs';
+
+  return (
+    <span className={`inline-flex items-center gap-1 font-semibold rounded-full border ${padding} ${styles[state]}`}>
+      {state}
+    </span>
+  );
+};
+
+/** Release 1 recommendation (carried into Release 2) — Governance Classification. */
+interface ClassificationBadgeProps {
+  classification: GovernanceClassification;
+  size?: 'sm' | 'md';
+}
+
+export const ClassificationBadge: React.FC<ClassificationBadgeProps> = ({ classification, size = 'md' }) => {
+  const padding = size === 'sm' ? 'px-2 py-0.5 text-[10px]' : 'px-2.5 py-1 text-xs';
+
+  return (
+    <span className={`inline-flex items-center gap-1 font-semibold rounded-full border bg-violet-500/10 text-violet-400 border-violet-500/30 ${padding}`}>
+      {classification}
+    </span>
+  );
+};
+
+/** Release 3 — Capability 5, Evidence Lifecycle. */
+interface EvidenceStatusBadgeProps {
+  status: EvidenceRecordStatus;
+  size?: 'sm' | 'md';
+}
+
+export const EvidenceStatusBadge: React.FC<EvidenceStatusBadgeProps> = ({ status, size = 'md' }) => {
+  const styles: Record<EvidenceRecordStatus, string> = {
+    'Draft': 'bg-slate-500/10 text-slate-400 border-slate-500/30',
+    'Active': 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30',
+    'Expired': 'bg-red-500/15 text-red-500 border-red-500/40 font-bold',
+    'Archived': 'bg-gray-500/10 text-gray-400 border-gray-500/30',
+    'Superseded': 'bg-amber-500/15 text-amber-500 border-amber-500/40',
+  };
+  const padding = size === 'sm' ? 'px-2 py-0.5 text-[10px]' : 'px-2.5 py-1 text-xs';
+
+  return (
+    <span className={`inline-flex items-center gap-1 font-semibold rounded-full border ${padding} ${styles[status]}`}>
+      {status}
+    </span>
+  );
+};
+
+/** Release 3 — Capability 6, Evidence Expiry Tracking. */
+interface EvidenceExpiryBadgeProps {
+  indicator: EvidenceExpiryIndicator;
+  size?: 'sm' | 'md';
+}
+
+export const EvidenceExpiryBadge: React.FC<EvidenceExpiryBadgeProps> = ({ indicator, size = 'md' }) => {
+  const padding = size === 'sm' ? 'px-2 py-0.5 text-[10px]' : 'px-2.5 py-1 text-xs';
+
+  return (
+    <span className={`inline-flex items-center gap-1 font-semibold rounded-full border ${padding} ${EXPIRY_INDICATOR_TONE[indicator]}`}>
+      {indicator}
     </span>
   );
 };
