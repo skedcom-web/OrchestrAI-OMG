@@ -9,6 +9,7 @@
 
 import type {
   AssetType,
+  CompliancePackStatus,
   DecisionOutcome,
   EvidenceRecordStatus,
   EvidenceRecordType,
@@ -17,8 +18,11 @@ import type {
   GovernanceState,
   GovernanceStatus,
   HumanOversightType,
+  PackControlStatus,
   ReassessmentTriggerStatus,
   ReassessmentTriggerType,
+  RequirementPriority,
+  RequirementStatus,
   RiskLevel,
 } from '../types';
 
@@ -115,6 +119,22 @@ const TRIGGER_STATUS: Record<ReassessmentTriggerStatus, string> = {
 
 const SEVERITY: Record<FindingSeverity, string> = { 'Low': 'LOW', 'Medium': 'MEDIUM', 'High': 'HIGH', 'Critical': 'CRITICAL' };
 
+const COMPLIANCE_PACK_STATUS: Record<CompliancePackStatus, string> = {
+  'Active': 'ACTIVE', 'Draft': 'DRAFT', 'Retired': 'RETIRED',
+};
+
+const REQUIREMENT_PRIORITY: Record<RequirementPriority, string> = {
+  'Low': 'LOW', 'Medium': 'MEDIUM', 'High': 'HIGH', 'Critical': 'CRITICAL',
+};
+
+const REQUIREMENT_STATUS: Record<RequirementStatus, string> = {
+  'Draft': 'DRAFT', 'Active': 'ACTIVE', 'Retired': 'RETIRED',
+};
+
+const PACK_CONTROL_STATUS: Record<PackControlStatus, string> = {
+  'Draft': 'DRAFT', 'Active': 'ACTIVE', 'Retired': 'RETIRED',
+};
+
 export const enumMaps = {
   assetType: { toBackend: toBackend(ASSET_TYPE), toFrontend: toFrontend(ASSET_TYPE) },
   riskLevel: { toBackend: toBackend(RISK_LEVEL), toFrontend: toFrontend(RISK_LEVEL) },
@@ -128,4 +148,8 @@ export const enumMaps = {
   triggerType: { toBackend: toBackend(TRIGGER_TYPE), toFrontend: toFrontend(TRIGGER_TYPE) },
   triggerStatus: { toBackend: toBackend(TRIGGER_STATUS), toFrontend: toFrontend(TRIGGER_STATUS) },
   severity: { toBackend: toBackend(SEVERITY), toFrontend: toFrontend(SEVERITY) },
+  compliancePackStatus: { toBackend: toBackend(COMPLIANCE_PACK_STATUS), toFrontend: toFrontend(COMPLIANCE_PACK_STATUS) },
+  requirementPriority: { toBackend: toBackend(REQUIREMENT_PRIORITY), toFrontend: toFrontend(REQUIREMENT_PRIORITY) },
+  requirementStatus: { toBackend: toBackend(REQUIREMENT_STATUS), toFrontend: toFrontend(REQUIREMENT_STATUS) },
+  packControlStatus: { toBackend: toBackend(PACK_CONTROL_STATUS), toFrontend: toFrontend(PACK_CONTROL_STATUS) },
 };

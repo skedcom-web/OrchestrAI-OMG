@@ -17,7 +17,11 @@ import type {
   CorrectiveAction,
   ReassessmentTrigger,
   GovernanceReauthorizationRecord,
-  EvidenceRecord
+  EvidenceRecord,
+  CompliancePack,
+  ComplianceRequirement,
+  PackControl,
+  EvidenceMapping
 } from '../types';
 
 export const SEEDED_COMPLIANCE_CONTROLS: ComplianceControl[] = [
@@ -116,7 +120,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       '/', '/dashboard', '/assets', '/ownership', '/risk', 
       '/validation', '/evidence', '/evidence-registry', '/review-workbench', '/findings', '/validation-dashboard', 
       '/decision-intelligence', '/governance-blockers', '/decision-workbench-v4', '/decision-dashboard',
-      '/compliance-center', '/regulatory-library', '/compliance-assessment', '/compliance-findings', '/compliance-dashboard',
+      '/compliance-center', '/compliance-packs', '/regulatory-library', '/compliance-assessment', '/compliance-findings', '/compliance-dashboard',
       '/operations-center', '/kill-switch', '/override-center', '/incidents', '/operations-dashboard', '/retirement', '/governance-timeline',
       '/governance-monitoring', '/governance-alerts', '/review-calendar', '/corrective-actions', '/governance-trends',
       '/users', '/audit-logs',
@@ -141,7 +145,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       '/', '/dashboard', '/assets', '/ownership', '/risk', 
       '/validation', '/evidence', '/evidence-registry', '/review-workbench', '/findings', '/validation-dashboard', 
       '/decision-intelligence', '/governance-blockers', '/decision-workbench-v4', '/decision-dashboard',
-      '/compliance-center', '/regulatory-library', '/compliance-assessment', '/compliance-findings', '/compliance-dashboard',
+      '/compliance-center', '/compliance-packs', '/regulatory-library', '/compliance-assessment', '/compliance-findings', '/compliance-dashboard',
       '/operations-center', '/kill-switch', '/override-center', '/incidents', '/operations-dashboard', '/retirement', '/governance-timeline',
       '/governance-monitoring', '/governance-alerts', '/review-calendar', '/corrective-actions', '/governance-trends',
       '/audit-logs',
@@ -165,7 +169,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
     allowedNav: [
       '/', '/dashboard', '/assets', '/risk', '/evidence', '/evidence-registry', '/review-workbench', '/findings', 
       '/decision-intelligence', '/governance-blockers', '/decision-dashboard',
-      '/compliance-center', '/regulatory-library', '/compliance-findings', '/compliance-dashboard',
+      '/compliance-center', '/compliance-packs', '/regulatory-library', '/compliance-findings', '/compliance-dashboard',
       '/operations-center', '/kill-switch', '/override-center', '/incidents', '/operations-dashboard', '/governance-timeline',
       '/governance-monitoring', '/governance-alerts', '/review-calendar', '/corrective-actions', '/governance-trends', '/audit-logs',
       // Phase 8 — Governance Operating System
@@ -187,7 +191,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
     icon: '💼',
     allowedNav: [
       '/', '/dashboard', '/assets', '/ownership', '/evidence', '/evidence-registry', '/decision-intelligence', 
-      '/compliance-center', '/operations-center', '/kill-switch', '/incidents', '/governance-timeline',
+      '/compliance-center', '/compliance-packs', '/operations-center', '/kill-switch', '/incidents', '/governance-timeline',
       '/governance-monitoring', '/review-calendar', '/corrective-actions',
       // Phase 8 — Governance Operating System
       '/asset-lifecycle', '/command-center',
@@ -227,7 +231,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
     icon: '📜',
     allowedNav: [
       '/', '/dashboard', '/assets', '/evidence', '/evidence-registry', '/findings', '/decision-dashboard',
-      '/compliance-center', '/regulatory-library', '/compliance-findings', '/compliance-dashboard',
+      '/compliance-center', '/compliance-packs', '/regulatory-library', '/compliance-findings', '/compliance-dashboard',
       '/operations-center', '/kill-switch', '/override-center', '/incidents', '/operations-dashboard', '/retirement', '/governance-timeline',
       '/governance-monitoring', '/governance-alerts', '/review-calendar', '/corrective-actions', '/governance-trends', '/audit-logs',
       // Phase 8 — Governance Operating System
@@ -921,5 +925,173 @@ export const INITIAL_EVIDENCE_RECORDS: EvidenceRecord[] = [
     ownership: {
       evidenceOwner: 'Dr. Aris Thorne',
     },
+  },
+];
+
+// ------------------- RELEASE 5 — COMPLIANCE PACK FRAMEWORK -------------------
+// Framework demonstration only — no RBI, ISO 42001 or EU AI Act control
+// content. Sample requirements and controls illustrate the architecture.
+
+export const INITIAL_COMPLIANCE_PACKS: CompliancePack[] = [
+  {
+    id: 'pack-rbi-demo',
+    name: 'RBI Demo Pack',
+    version: '1.0',
+    status: 'Active',
+    owner: 'David Chen',
+    description: 'Sample pack illustrating how a banking regulator framework plugs into the Compliance Pack Framework. Structure only — not real RBI content.',
+    industry: 'Banking & Financial Services',
+    effectiveDate: '2026-01-01',
+  },
+  {
+    id: 'pack-iso-demo',
+    name: 'ISO Demo Pack',
+    version: '1.0',
+    status: 'Active',
+    owner: 'Elena Rostova',
+    description: 'Sample pack illustrating a cross-industry management-system standard. Structure only — not real ISO 42001 content.',
+    industry: 'Cross-Industry',
+    effectiveDate: '2026-02-01',
+  },
+  {
+    id: 'pack-euai-demo',
+    name: 'EU AI Demo Pack',
+    version: '0.1',
+    status: 'Draft',
+    owner: 'Robert Vance',
+    description: 'Sample pack illustrating a risk-tiered regional regulation. Structure only — not real EU AI Act content.',
+    industry: 'Cross-Industry · EU Operations',
+    effectiveDate: '2026-06-01',
+  },
+];
+
+export const INITIAL_COMPLIANCE_REQUIREMENTS: ComplianceRequirement[] = [
+  {
+    id: 'RBI-REQ-001',
+    name: 'Named Accountable Ownership',
+    description: 'Every in-scope AI system must have named, accountable ownership on record.',
+    packId: 'pack-rbi-demo',
+    packName: 'RBI Demo Pack',
+    category: 'Governance',
+    priority: 'Critical',
+    status: 'Active',
+  },
+  {
+    id: 'RBI-REQ-002',
+    name: 'Independent Control Assessment',
+    description: 'In-scope AI systems must undergo independent control assessment.',
+    packId: 'pack-rbi-demo',
+    packName: 'RBI Demo Pack',
+    category: 'Validation',
+    priority: 'High',
+    status: 'Active',
+  },
+  {
+    id: 'ISO-REQ-101',
+    name: 'AI Management System Documentation',
+    description: 'A documented AI management system policy must be maintained.',
+    packId: 'pack-iso-demo',
+    packName: 'ISO Demo Pack',
+    category: 'Documentation',
+    priority: 'High',
+    status: 'Active',
+  },
+  {
+    id: 'ISO-REQ-102',
+    name: 'Risk Assessment Process',
+    description: 'A repeatable risk assessment process must be documented and evidenced.',
+    packId: 'pack-iso-demo',
+    packName: 'ISO Demo Pack',
+    category: 'Risk',
+    priority: 'High',
+    status: 'Active',
+  },
+  {
+    id: 'EUAI-REQ-210',
+    name: 'High-Risk System Human Oversight',
+    description: 'High-risk AI systems must have documented human oversight arrangements.',
+    packId: 'pack-euai-demo',
+    packName: 'EU AI Demo Pack',
+    category: 'Oversight',
+    priority: 'Critical',
+    status: 'Draft',
+  },
+];
+
+export const INITIAL_PACK_CONTROLS: PackControl[] = [
+  {
+    id: 'ctl-rbi-001a',
+    name: 'Ownership Matrix Control',
+    description: 'Verifies every in-scope asset has a complete Governance Authority Profile.',
+    requirementId: 'RBI-REQ-001',
+    requirementName: 'Named Accountable Ownership',
+    owner: 'David Chen',
+    status: 'Active',
+  },
+  {
+    id: 'ctl-rbi-002a',
+    name: 'Independent Assessment Control',
+    description: 'Verifies an independent control assessment has been performed and filed.',
+    requirementId: 'RBI-REQ-002',
+    requirementName: 'Independent Control Assessment',
+    owner: 'Dr. Aris Thorne',
+    status: 'Active',
+  },
+  {
+    id: 'ctl-iso-101a',
+    name: 'AIMS Policy Control',
+    description: 'Verifies a current AI management system policy document is on file.',
+    requirementId: 'ISO-REQ-101',
+    requirementName: 'AI Management System Documentation',
+    owner: 'Elena Rostova',
+    status: 'Active',
+  },
+  {
+    id: 'ctl-iso-102a',
+    name: 'Risk Process Control',
+    description: 'Verifies a documented, evidenced risk assessment process exists.',
+    requirementId: 'ISO-REQ-102',
+    requirementName: 'Risk Assessment Process',
+    owner: 'Elena Rostova',
+    status: 'Active',
+  },
+  {
+    id: 'ctl-euai-210a',
+    name: 'Human Oversight Control',
+    description: 'Verifies documented human oversight arrangements for high-risk systems.',
+    requirementId: 'EUAI-REQ-210',
+    requirementName: 'High-Risk System Human Oversight',
+    owner: '',
+    status: 'Draft',
+  },
+];
+
+/**
+ * Evidence collected once (Release 3's Evidence Registry) and reused across
+ * packs — the whole point of Capability 4. RBI Demo Pack ends up fully
+ * Covered, ISO Demo Pack Partially Covered, EU AI Demo Pack Not Covered, so
+ * the Compliance Coverage capability demonstrates all three live outcomes.
+ */
+export const INITIAL_EVIDENCE_MAPPINGS: EvidenceMapping[] = [
+  {
+    id: 'map-001',
+    controlId: 'ctl-rbi-001a',
+    controlName: 'Ownership Matrix Control',
+    evidenceId: 'evr-101',
+    evidenceName: 'Fraud Sentinel Agent — Independent Validation Report',
+  },
+  {
+    id: 'map-002',
+    controlId: 'ctl-rbi-002a',
+    controlName: 'Independent Assessment Control',
+    evidenceId: 'evr-109',
+    evidenceName: 'Mortgage Workflow — OCR Control Assessment',
+  },
+  {
+    id: 'map-003',
+    controlId: 'ctl-iso-101a',
+    controlName: 'AIMS Policy Control',
+    evidenceId: 'evr-106',
+    evidenceName: 'Concierge Copilot — Data Handling Policy',
   },
 ];

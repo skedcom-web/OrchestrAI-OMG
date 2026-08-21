@@ -11,8 +11,27 @@ import { apiRequest } from './apiClient';
 import { fromBackendAsset, toBackendAsset } from './assetMapper';
 import { fromBackendEvidence, toBackendEvidence } from './evidenceMapper';
 import { enumMaps } from './enumMaps';
-import type { AssetRepository, EvidenceRepository, GovernanceData, GovernanceRecordKind, GovernanceRepository } from './types';
-import type { AIAsset, GovernanceReauthorizationRecord, ReassessmentTrigger, ScheduledReview } from '../types';
+import type {
+  AssetRepository,
+  CompliancePackRepository,
+  ControlRepository,
+  EvidenceMappingRepository,
+  EvidenceRepository,
+  GovernanceData,
+  GovernanceRecordKind,
+  GovernanceRepository,
+  RequirementRepository,
+} from './types';
+import type {
+  AIAsset,
+  CompliancePack,
+  ComplianceRequirement,
+  EvidenceMapping,
+  GovernanceReauthorizationRecord,
+  PackControl,
+  ReassessmentTrigger,
+  ScheduledReview,
+} from '../types';
 
 export const apiAssetRepository: AssetRepository = {
   async getAssets() {
@@ -170,6 +189,158 @@ export const apiGovernanceRepository: GovernanceRepository = {
       return reviewFromBackend(row, (data as Partial<ScheduledReview>).assetName);
     }
     throw new Error('Reauthorization records cannot be updated once created.');
+  },
+};
+
+// --- RELEASE 5.1 — COMPLIANCE PERSISTENCE ALIGNMENT ---
+
+function packToBackend(data: Partial<CompliancePack>) {
+  const body: Record<string, unknown> = { ...data };
+  if (data.status) body.status = enumMaps.compliancePackStatus.toBackend(data.status);
+  if (data.effectiveDate) body.effectiveDate = new Date(data.effectiveDate).toISOString();
+  return body;
+}
+
+function packFromBackend(row: any): CompliancePack {
+  return {
+    id: row.id,
+    name: row.name,
+    version: row.version,
+    status: enumMaps.compliancePackStatus.toFrontend(row.status),
+    owner: row.owner,
+    description: row.description,
+    industry: row.industry,
+    effectiveDate: String(row.effectiveDate).split('T')[0],
+  };
+}
+
+function requirementToBackend(data: Partial<ComplianceRequirement>) {
+  const body: Record<string, unknown> = { ...data };
+  delete body.packName;
+  if (data.priority) body.priority = enumMaps.requirementPriority.toBackend(data.priority);
+  if (data.status) body.status = enumMaps.requirementStatus.toBackend(data.status);
+  return body;
+}
+
+function requirementFromBackend(row: any, packName = ''): ComplianceRequirement {
+  return {
+    id: row.id,
+    name: row.name,
+    description: row.description,
+    packId: row.packId,
+    packName,
+    category: row.category,
+    priority: enumMaps.requirementPriority.toFrontend(row.priority),
+    status: enumMaps.requirementStatus.toFrontend(row.status),
+  };
+}
+
+function controlToBackend(data: Partial<PackControl>) {
+  const body: Record<string, unknown> = { ...data };
+  delete body.requirementName;
+  if (data.status) body.status = enumMaps.packControlStatus.toBackend(data.status);
+  return body;
+}
+
+function controlFromBackend(row: any, requirementName = ''): PackControl {
+  return {
+    id: row.id,
+    name: row.name,
+    description: row.description,
+    requirementId: row.requirementId,
+    requirementName,
+    owner: row.owner || '',
+    status: enumMaps.packControlStatus.toFrontend(row.status),
+  };
+}
+
+function mappingToBackend(data: Partial<EvidenceMapping>) {
+  const body: Record<string, unknown> = {};
+  if (data.id) body.id = data.id;
+  if (data.controlId) body.controlId = data.controlId;
+  if (data.evidenceId) body.evidenceRecordId = data.evidenceId;
+  return body;
+}
+
+function mappingFromBackend(row: any, controlName = '', evidenceName = ''): EvidenceMapping {
+  return {
+    id: row.id,
+    controlId: row.controlId,
+    controlName,
+    evidenceId: row.evidenceRecordId,
+    evidenceName,
+  };
+}
+
+export const apiCompliancePackRepository: CompliancePackRepository = {
+  async getCompliancePacks() {
+    const rows = await apiRequest<any[]>('/compliance-packs');
+    return rows.map(packFromBackend);
+  },
+  async createCompliancePack(data) {
+    const row = await apiRequest<any>('/compliance-packs', { method: 'POST', body: JSON.stringify(packToBackend(data)) });
+    return packFromBackend(row);
+  },
+  async updateCompliancePack(id, data) {
+    const row = await apiRequest<any>(`/compliance-packs/${id}`, { method: 'PATCH', body: JSON.stringify(packToBackend(data)) });
+    return packFromBackend(row);
+  },
+  async deleteCompliancePack(id) {
+    await apiRequest<void>(`/compliance-packs/${id}`, { method: 'DELETE' });
+  },
+};
+
+export const apiRequirementRepository: RequirementRepository = {
+  async getRequirements() {
+    const rows = await apiRequest<any[]>('/compliance-requirements');
+    return rows.map(r => requirementFromBackend(r));
+  },
+  async createRequirement(data) {
+    const row = await apiRequest<any>('/compliance-requirements', { method: 'POST', body: JSON.stringify(requirementToBackend(data)) });
+    return requirementFromBackend(row, data.packName);
+  },
+  async updateRequirement(id, data) {
+    const row = await apiRequest<any>(`/compliance-requirements/${id}`, { method: 'PATCH', body: JSON.stringify(requirementToBackend(data)) });
+    return requirementFromBackend(row, data.packName);
+  },
+  async deleteRequirement(id) {
+    await apiRequest<void>(`/compliance-requirements/${id}`, { method: 'DELETE' });
+  },
+};
+
+export const apiControlRepository: ControlRepository = {
+  async getControls() {
+    const rows = await apiRequest<any[]>('/pack-controls');
+    return rows.map(r => controlFromBackend(r));
+  },
+  async createControl(data) {
+    const row = await apiRequest<any>('/pack-controls', { method: 'POST', body: JSON.stringify(controlToBackend(data)) });
+    return controlFromBackend(row, data.requirementName);
+  },
+  async updateControl(id, data) {
+    const row = await apiRequest<any>(`/pack-controls/${id}`, { method: 'PATCH', body: JSON.stringify(controlToBackend(data)) });
+    return controlFromBackend(row, data.requirementName);
+  },
+  async deleteControl(id) {
+    await apiRequest<void>(`/pack-controls/${id}`, { method: 'DELETE' });
+  },
+};
+
+export const apiEvidenceMappingRepository: EvidenceMappingRepository = {
+  async getMappings() {
+    const rows = await apiRequest<any[]>('/evidence-mappings');
+    return rows.map(r => mappingFromBackend(r));
+  },
+  async createMapping(data) {
+    const row = await apiRequest<any>('/evidence-mappings', { method: 'POST', body: JSON.stringify(mappingToBackend(data)) });
+    return mappingFromBackend(row, data.controlName, data.evidenceName);
+  },
+  async updateMapping(id, data) {
+    const row = await apiRequest<any>(`/evidence-mappings/${id}`, { method: 'PATCH', body: JSON.stringify(mappingToBackend(data)) });
+    return mappingFromBackend(row, data.controlName, data.evidenceName);
+  },
+  async deleteMapping(id) {
+    await apiRequest<void>(`/evidence-mappings/${id}`, { method: 'DELETE' });
   },
 };
 

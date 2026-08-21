@@ -66,6 +66,9 @@ export const OmgOverviewPage: React.FC = () => {
                 'Measure governance readiness.',
                 'Identify governance gaps.',
                 'Prepare for audits.',
+                'Assess compliance obligations.',
+                'Understand compliance coverage.',
+                'Identify compliance gaps.',
               ].map(line => (
                 <li key={line} className="flex items-start gap-2.5">
                   <span
@@ -98,7 +101,7 @@ export const OmgOverviewPage: React.FC = () => {
             </div>
 
             <p className="text-[11px] text-[var(--text-muted)]">
-              Twenty-five steps — no training required.
+              Thirty-one steps — no training required.
             </p>
           </div>
 
@@ -250,10 +253,11 @@ export const OmgOverviewPage: React.FC = () => {
             Take the Guided Tour
           </h2>
           <p className="text-[12.5px] text-[var(--text-secondary)] mt-1.5 leading-relaxed max-w-2xl">
-            Twenty-five stops across the governance flow — accountability, oversight and autonomy,
+            Thirty-one stops across the governance flow — accountability, oversight and autonomy,
             then risk, validation, evidence, decision, governance state, review schedule,
             reassessment triggers, timeline and reauthorization history, then readiness, gap
-            detection, audit readiness, change and audit. Each stop explains what the module is,
+            detection and audit readiness, then compliance packs, requirements, controls,
+            coverage and gaps, then change and audit. Each stop explains what the module is,
             why it exists and what to look at, and can take you straight there.
           </p>
         </div>

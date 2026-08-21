@@ -313,6 +313,91 @@ export interface GovernanceGap {
   detail: string;
 }
 
+/* -------------- RELEASE 5 — Universal Compliance Pack Framework --------- */
+/**
+ * The reusable architecture every future regulation (RBI, ISO 42001, EU AI
+ * Act, ...) plugs into as configuration — packs, requirements, controls and
+ * evidence mappings — not platform redesign. No regulation content, no
+ * scoring: Capability 5 is explicit that coverage is Covered / Partially
+ * Covered / Not Covered / Not Applicable only.
+ */
+
+export type CompliancePackStatus = 'Active' | 'Draft' | 'Retired';
+
+/** Capability 1 — Compliance Pack Registry. */
+export interface CompliancePack {
+  id: string;
+  name: string;
+  version: string;
+  status: CompliancePackStatus;
+  owner: string;
+  description: string;
+  industry: string;
+  effectiveDate: string;
+}
+
+export type RequirementPriority = 'Low' | 'Medium' | 'High' | 'Critical';
+export type RequirementStatus = 'Draft' | 'Active' | 'Retired';
+
+/** Capability 2 — Requirement Registry. */
+export interface ComplianceRequirement {
+  id: string;
+  name: string;
+  description: string;
+  packId: string;
+  packName: string;
+  category: string;
+  priority: RequirementPriority;
+  status: RequirementStatus;
+}
+
+export type PackControlStatus = 'Draft' | 'Active' | 'Retired';
+
+/** Capability 3 — Control Registry. */
+export interface PackControl {
+  id: string;
+  name: string;
+  description: string;
+  requirementId: string;
+  requirementName: string;
+  owner: string;
+  status: PackControlStatus;
+}
+
+/**
+ * Capability 4 — Evidence Mapping Framework. Requirement → Control →
+ * Evidence, so one evidence record can be collected once and reused across
+ * every pack that needs it.
+ */
+export interface EvidenceMapping {
+  id: string;
+  controlId: string;
+  controlName: string;
+  evidenceId: string;
+  evidenceName: string;
+}
+
+/** Capability 5 — Compliance Coverage. No percentages, no scores. */
+export type ComplianceCoverageStatus = 'Covered' | 'Partially Covered' | 'Not Covered' | 'Not Applicable';
+
+export interface ComplianceCoverageResult {
+  status: ComplianceCoverageStatus;
+  controlsTotal: number;
+  controlsCovered: number;
+}
+
+/** Capability 6 — Compliance Gap Register. */
+export type PackGapType = 'Missing Evidence' | 'Missing Control' | 'Missing Owner' | 'Expired Evidence' | 'Missing Review';
+
+export interface PackGap {
+  packId: string;
+  packName: string;
+  requirementId?: string;
+  controlId?: string;
+  gapType: PackGapType;
+  detail: string;
+}
+
 export interface AIAsset {
   id: string;
   name: string;
@@ -432,6 +517,10 @@ export interface GovernanceMetrics {
   reviewReadinessBreakdown: Record<ReadinessStatus, number>;
   auditReadinessBreakdown: Record<ReadinessStatus, number>;
   totalGovernanceGapsCount: number;
+  // Release 5 — Universal Compliance Pack Framework
+  activeCompliancePacksCount: number;
+  packCoverageBreakdown: Record<ComplianceCoverageStatus, number>;
+  totalPackGapsCount: number;
 }
 
 export interface PersonaDemoUser {

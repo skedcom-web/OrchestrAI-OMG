@@ -3,15 +3,16 @@ import { useNavigate } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { MetricCard } from '../components/ui/MetricCard';
-import { RiskBadge, OversightBadge, GovernanceStateBadge, ClassificationBadge, EvidenceStatusBadge, ReadinessBadge } from '../components/ui/Badge';
+import { RiskBadge, OversightBadge, GovernanceStateBadge, ClassificationBadge, EvidenceStatusBadge, ReadinessBadge, ComplianceCoverageBadge } from '../components/ui/Badge';
 import { StatusBadge } from '../components/ui/StatusBadge';
-import { getGovernanceMetrics, getAssets, getAuditLogs, getEvidenceRecords, getAllGovernanceGaps } from '../services/storageService';
+import { getGovernanceMetrics, getAssets, getAuditLogs, getEvidenceRecords, getAllGovernanceGaps, getAllPackGaps } from '../services/storageService';
 import { OVERSIGHT_TYPES, AUTONOMY_LEVELS } from '../config/governanceAuthority';
 import { GOVERNANCE_STATES, GOVERNANCE_CLASSIFICATIONS } from '../config/governanceContinuity';
 import { EVIDENCE_TYPES, EVIDENCE_STATUSES, getExpiryIndicator } from '../config/evidenceFoundation';
-import type { AssetType, RiskLevel, HumanOversightType, ReadinessStatus } from '../types';
+import type { AssetType, RiskLevel, HumanOversightType, ReadinessStatus, ComplianceCoverageStatus } from '../types';
 
 const READINESS_ORDER: ReadinessStatus[] = ['Ready', 'Partially Ready', 'Not Ready'];
+const COVERAGE_ORDER: ComplianceCoverageStatus[] = ['Covered', 'Partially Covered', 'Not Covered', 'Not Applicable'];
 
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
@@ -20,6 +21,7 @@ export const DashboardPage: React.FC = () => {
   const [auditLogs] = useState(() => getAuditLogs().slice(0, 5));
   const [evidenceRecords] = useState(() => getEvidenceRecords());
   const [gaps] = useState(() => getAllGovernanceGaps());
+  const [packGaps] = useState(() => getAllPackGaps());
 
   const expiringOrExpiredEvidence = evidenceRecords
     .filter(e => {
@@ -383,6 +385,52 @@ export const DashboardPage: React.FC = () => {
                 >
                   <span className="text-xs font-bold text-amber-500 block">{gap.gapType}</span>
                   <span className="text-[10px] text-[var(--text-muted)]">{gap.assetName} — {gap.detail}</span>
+                </button>
+              ))
+            )}
+          </div>
+        </Card>
+      </div>
+
+      {/* Release 5 — Universal Compliance Pack Framework: Coverage & Gaps */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card className="lg:col-span-2 flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-bold text-[var(--text-primary)]">Compliance Coverage Overview</h3>
+              <p className="text-xs text-[var(--text-secondary)]">{metrics.activeCompliancePacksCount} active compliance packs • Covered / Partially Covered / Not Covered / Not Applicable — no scores</p>
+            </div>
+            <Button size="sm" variant="ghost" onClick={() => navigate('/compliance-packs')}>
+              Open Compliance Packs →
+            </Button>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {COVERAGE_ORDER.map(status => (
+              <div key={status} className="p-3 rounded-xl bg-[var(--bg-badge)] border border-[var(--border-color)] flex flex-col gap-2">
+                <ComplianceCoverageBadge status={status} size="sm" />
+                <span className="text-lg font-black text-[var(--text-primary)]">{metrics.packCoverageBreakdown[status]}</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        <Card className="flex flex-col gap-4">
+          <div>
+            <h3 className="text-lg font-bold text-[var(--text-primary)]">Compliance Gap Summary</h3>
+            <p className="text-xs text-[var(--text-secondary)]">{metrics.totalPackGapsCount} gaps across registered packs</p>
+          </div>
+          <div className="flex flex-col gap-2 max-h-56 overflow-y-auto">
+            {packGaps.length === 0 ? (
+              <span className="text-xs text-[var(--text-muted)] italic">No compliance gaps detected.</span>
+            ) : (
+              packGaps.slice(0, 6).map((gap, i) => (
+                <button
+                  key={i}
+                  onClick={() => navigate('/compliance-packs')}
+                  className="text-left p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 hover:border-amber-500/50 transition-all cursor-pointer"
+                >
+                  <span className="text-xs font-bold text-amber-500 block">{gap.gapType}</span>
+                  <span className="text-[10px] text-[var(--text-muted)]">{gap.packName} — {gap.detail}</span>
                 </button>
               ))
             )}

@@ -30,6 +30,7 @@ import { DecisionDashboardPage } from './pages/DecisionDashboardPage';
 
 // Phase 5 Pages
 import { ComplianceCenterPage } from './pages/ComplianceCenterPage';
+import { CompliancePackWorkspacePage } from './pages/CompliancePackWorkspacePage';
 import { RegulatoryLibraryPage } from './pages/RegulatoryLibraryPage';
 import { ComplianceAssessmentPage } from './pages/ComplianceAssessmentPage';
 import { ComplianceFindingsPage } from './pages/ComplianceFindingsPage';
@@ -117,6 +118,7 @@ const GOVERNED_ROUTES: { path: string; element: React.ReactNode }[] = [
   { path: '/governance-blockers', element: <GovernanceBlockersPage /> },
   { path: '/validation-dashboard', element: <ValidationDashboardPage /> },
   { path: '/compliance-center', element: <ComplianceCenterPage /> },
+  { path: '/compliance-packs', element: <CompliancePackWorkspacePage /> },
   { path: '/regulatory-library', element: <RegulatoryLibraryPage /> },
   { path: '/compliance-assessment', element: <ComplianceAssessmentPage /> },
   { path: '/compliance-findings', element: <ComplianceFindingsPage /> },

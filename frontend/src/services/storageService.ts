@@ -32,7 +32,11 @@ import type {
   GovernanceReauthorizationRecord,
   GovernanceState,
   EvidenceRecord,
-  EvidenceTimelineEvent
+  EvidenceTimelineEvent,
+  CompliancePack,
+  ComplianceRequirement,
+  PackControl,
+  EvidenceMapping
 } from '../types';
 import {
   INITIAL_ASSETS,
@@ -52,7 +56,11 @@ import {
   INITIAL_CORRECTIVE_ACTIONS,
   INITIAL_REASSESSMENT_TRIGGERS,
   INITIAL_REAUTHORIZATION_RECORDS,
-  INITIAL_EVIDENCE_RECORDS
+  INITIAL_EVIDENCE_RECORDS,
+  INITIAL_COMPLIANCE_PACKS,
+  INITIAL_COMPLIANCE_REQUIREMENTS,
+  INITIAL_PACK_CONTROLS,
+  INITIAL_EVIDENCE_MAPPINGS
 } from './mockData';
 import { getAuthorityMatrixEntry, defaultAuthorityProfile, authorityProfileCompleteness } from '../config/governanceAuthority';
 import { defaultGovernanceState } from '../config/governanceContinuity';
@@ -64,7 +72,14 @@ import {
   computeAuditReadiness,
   computeGovernanceGaps,
 } from '../config/readinessFoundation';
+import { computePackCoverage, computeRequirementCoverage, computePackGaps } from '../config/compliancePackFramework';
 import { apiAssetRepository, apiEvidenceRepository, apiGovernanceRepository } from '../repositories/apiRepositories';
+import {
+  apiCompliancePackRepository,
+  apiControlRepository,
+  apiEvidenceMappingRepository,
+  apiRequirementRepository,
+} from '../repositories/apiRepositories';
 
 /**
  * Release 4.1 — "Demo Mode does NOT mean local storage." Neon is the only
@@ -107,6 +122,10 @@ const STORAGE_KEYS = {
   REASSESSMENT_TRIGGERS: 'omg_reassessment_triggers_v7',
   REAUTHORIZATION_RECORDS: 'omg_reauthorization_records_v7',
   EVIDENCE_RECORDS: 'omg_evidence_records_v7',
+  COMPLIANCE_PACKS: 'omg_compliance_packs_v7',
+  COMPLIANCE_REQUIREMENTS: 'omg_compliance_requirements_v7',
+  PACK_CONTROLS: 'omg_pack_controls_v7',
+  EVIDENCE_MAPPINGS: 'omg_evidence_mappings_v7',
 };
 
 function getItem<T>(key: string, defaultData: T): T {
@@ -1696,6 +1715,281 @@ export function getEvidenceTimeline(evidenceId: string): EvidenceTimelineEvent[]
   return timeline.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 }
 
+// --- RELEASE 5.1 — COMPLIANCE PACK FRAMEWORK: API-FIRST, NEON-BACKED ---
+// Release 5 shipped this domain on local storage deliberately ("framework
+// before regulation"). Release 5.1 aligns it with the Release 4.1 platform
+// rule — Neon is the only System of Record for any governance object — using
+// the same cache-then-network pattern as Assets/Evidence/Continuity: reads
+// stay synchronous off an in-memory cache; writes are async and Neon-first.
+
+let compliancePacksCache: CompliancePack[] = getItem<CompliancePack[]>(STORAGE_KEYS.COMPLIANCE_PACKS, INITIAL_COMPLIANCE_PACKS);
+let requirementsCache: ComplianceRequirement[] = getItem<ComplianceRequirement[]>(STORAGE_KEYS.COMPLIANCE_REQUIREMENTS, INITIAL_COMPLIANCE_REQUIREMENTS);
+let packControlsCache: PackControl[] = getItem<PackControl[]>(STORAGE_KEYS.PACK_CONTROLS, INITIAL_PACK_CONTROLS);
+let evidenceMappingsCache: EvidenceMapping[] = getItem<EvidenceMapping[]>(STORAGE_KEYS.EVIDENCE_MAPPINGS, INITIAL_EVIDENCE_MAPPINGS);
+
+function persistCompliancePacksCache() { setItem(STORAGE_KEYS.COMPLIANCE_PACKS, compliancePacksCache); }
+function persistRequirementsCache() { setItem(STORAGE_KEYS.COMPLIANCE_REQUIREMENTS, requirementsCache); }
+function persistPackControlsCache() { setItem(STORAGE_KEYS.PACK_CONTROLS, packControlsCache); }
+function persistEvidenceMappingsCache() { setItem(STORAGE_KEYS.EVIDENCE_MAPPINGS, evidenceMappingsCache); }
+
+export function getCompliancePacks(): CompliancePack[] {
+  return compliancePacksCache;
+}
+
+export async function saveCompliancePack(data: Partial<CompliancePack>): Promise<CompliancePack> {
+  if (data.id) {
+    const idx = compliancePacksCache.findIndex(p => p.id === data.id);
+    if (idx !== -1) {
+      const updated: CompliancePack = { ...compliancePacksCache[idx], ...data };
+      compliancePacksCache = [...compliancePacksCache];
+      compliancePacksCache[idx] = updated;
+      persistCompliancePacksCache();
+
+      addAuditLog('usr-2', updated.owner, 'GOVERNANCE_ADMIN', 'COMPLIANCE_PACK_UPDATED', 'Policy', updated.id, updated.name, `Updated compliance pack ${updated.name}`);
+
+      const saved = await apiCompliancePackRepository.updateCompliancePack(updated.id, updated);
+      const i2 = compliancePacksCache.findIndex(p => p.id === updated.id);
+      if (i2 !== -1) { compliancePacksCache = [...compliancePacksCache]; compliancePacksCache[i2] = saved; persistCompliancePacksCache(); }
+      return saved;
+    }
+  }
+
+  const draftPack: CompliancePack = {
+    id: data.id || `pack-${Date.now().toString().slice(-6)}`,
+    name: data.name || 'New Compliance Pack',
+    version: data.version || '1.0',
+    status: data.status || 'Draft',
+    owner: data.owner || 'David Chen',
+    description: data.description || '',
+    industry: data.industry || 'Cross-Industry',
+    effectiveDate: data.effectiveDate || new Date().toISOString().split('T')[0],
+  };
+
+  compliancePacksCache = [draftPack, ...compliancePacksCache];
+  persistCompliancePacksCache();
+  addAuditLog('usr-2', draftPack.owner, 'GOVERNANCE_ADMIN', 'COMPLIANCE_PACK_CREATED', 'Policy', draftPack.id, draftPack.name, `Registered compliance pack ${draftPack.name}`);
+
+  const created = await apiCompliancePackRepository.createCompliancePack(draftPack);
+  compliancePacksCache = compliancePacksCache.map(p => (p.id === draftPack.id ? created : p));
+  persistCompliancePacksCache();
+  return created;
+}
+
+export async function deleteCompliancePack(id: string): Promise<void> {
+  const target = compliancePacksCache.find(p => p.id === id);
+  if (!target) return;
+
+  // Mirror the backend's cascading relations (Pack -> Requirement -> Control -> EvidenceMapping) locally too.
+  const orphanedReqIds = requirementsCache.filter(r => r.packId === id).map(r => r.id);
+  const orphanedControlIds = packControlsCache.filter(c => orphanedReqIds.includes(c.requirementId)).map(c => c.id);
+
+  compliancePacksCache = compliancePacksCache.filter(p => p.id !== id);
+  persistCompliancePacksCache();
+  requirementsCache = requirementsCache.filter(r => r.packId !== id);
+  persistRequirementsCache();
+  packControlsCache = packControlsCache.filter(c => !orphanedReqIds.includes(c.requirementId));
+  persistPackControlsCache();
+  evidenceMappingsCache = evidenceMappingsCache.filter(m => !orphanedControlIds.includes(m.controlId));
+  persistEvidenceMappingsCache();
+
+  addAuditLog('usr-1', 'Sarah Jenkins', 'SUPER_ADMIN', 'COMPLIANCE_PACK_DELETED', 'Policy', id, target.name, `Deleted compliance pack ${target.name}`);
+
+  await apiCompliancePackRepository.deleteCompliancePack(id);
+}
+
+export function getComplianceRequirements(): ComplianceRequirement[] {
+  return requirementsCache;
+}
+
+export async function saveComplianceRequirement(data: Partial<ComplianceRequirement>): Promise<ComplianceRequirement> {
+  const pack = compliancePacksCache.find(p => p.id === data.packId);
+
+  if (data.id) {
+    const idx = requirementsCache.findIndex(r => r.id === data.id);
+    if (idx !== -1) {
+      const updated: ComplianceRequirement = { ...requirementsCache[idx], ...data, packName: pack?.name || requirementsCache[idx].packName };
+      requirementsCache = [...requirementsCache];
+      requirementsCache[idx] = updated;
+      persistRequirementsCache();
+
+      const saved = await apiRequirementRepository.updateRequirement(updated.id, updated);
+      const reconciled = { ...saved, packName: updated.packName };
+      const i2 = requirementsCache.findIndex(r => r.id === updated.id);
+      if (i2 !== -1) { requirementsCache = [...requirementsCache]; requirementsCache[i2] = reconciled; persistRequirementsCache(); }
+      return reconciled;
+    }
+  }
+
+  const draftReq: ComplianceRequirement = {
+    id: data.id || `REQ-${Date.now().toString().slice(-6)}`,
+    name: data.name || 'New Requirement',
+    description: data.description || '',
+    packId: data.packId || '',
+    packName: pack?.name || 'Unassigned Pack',
+    category: data.category || 'General',
+    priority: data.priority || 'Medium',
+    status: data.status || 'Draft',
+  };
+
+  requirementsCache = [draftReq, ...requirementsCache];
+  persistRequirementsCache();
+
+  const created = { ...(await apiRequirementRepository.createRequirement(draftReq)), packName: draftReq.packName };
+  requirementsCache = requirementsCache.map(r => (r.id === draftReq.id ? created : r));
+  persistRequirementsCache();
+  return created;
+}
+
+export async function deleteComplianceRequirement(id: string): Promise<void> {
+  const target = requirementsCache.find(r => r.id === id);
+  if (!target) return;
+
+  const orphanedControlIds = packControlsCache.filter(c => c.requirementId === id).map(c => c.id);
+
+  requirementsCache = requirementsCache.filter(r => r.id !== id);
+  persistRequirementsCache();
+  packControlsCache = packControlsCache.filter(c => c.requirementId !== id);
+  persistPackControlsCache();
+  evidenceMappingsCache = evidenceMappingsCache.filter(m => !orphanedControlIds.includes(m.controlId));
+  persistEvidenceMappingsCache();
+
+  await apiRequirementRepository.deleteRequirement(id);
+}
+
+export function getPackControls(): PackControl[] {
+  return packControlsCache;
+}
+
+export async function savePackControl(data: Partial<PackControl>): Promise<PackControl> {
+  const requirement = requirementsCache.find(r => r.id === data.requirementId);
+
+  if (data.id) {
+    const idx = packControlsCache.findIndex(c => c.id === data.id);
+    if (idx !== -1) {
+      const updated: PackControl = { ...packControlsCache[idx], ...data, requirementName: requirement?.name || packControlsCache[idx].requirementName };
+      packControlsCache = [...packControlsCache];
+      packControlsCache[idx] = updated;
+      persistPackControlsCache();
+
+      const saved = await apiControlRepository.updateControl(updated.id, updated);
+      const reconciled = { ...saved, requirementName: updated.requirementName };
+      const i2 = packControlsCache.findIndex(c => c.id === updated.id);
+      if (i2 !== -1) { packControlsCache = [...packControlsCache]; packControlsCache[i2] = reconciled; persistPackControlsCache(); }
+      return reconciled;
+    }
+  }
+
+  const draftControl: PackControl = {
+    id: data.id || `ctl-${Date.now().toString().slice(-6)}`,
+    name: data.name || 'New Control',
+    description: data.description || '',
+    requirementId: data.requirementId || '',
+    requirementName: requirement?.name || 'Unassigned Requirement',
+    owner: data.owner || '',
+    status: data.status || 'Draft',
+  };
+
+  packControlsCache = [draftControl, ...packControlsCache];
+  persistPackControlsCache();
+
+  const created = { ...(await apiControlRepository.createControl(draftControl)), requirementName: draftControl.requirementName };
+  packControlsCache = packControlsCache.map(c => (c.id === draftControl.id ? created : c));
+  persistPackControlsCache();
+  return created;
+}
+
+export async function deletePackControl(id: string): Promise<void> {
+  const target = packControlsCache.find(c => c.id === id);
+  if (!target) return;
+
+  packControlsCache = packControlsCache.filter(c => c.id !== id);
+  persistPackControlsCache();
+  evidenceMappingsCache = evidenceMappingsCache.filter(m => m.controlId !== id);
+  persistEvidenceMappingsCache();
+
+  await apiControlRepository.deleteControl(id);
+}
+
+export function getEvidenceMappings(): EvidenceMapping[] {
+  return evidenceMappingsCache;
+}
+
+export async function saveEvidenceMapping(data: Partial<EvidenceMapping>): Promise<EvidenceMapping> {
+  const control = packControlsCache.find(c => c.id === data.controlId);
+  const evidence = getEvidenceRecordById(data.evidenceId || '');
+
+  if (data.id) {
+    const idx = evidenceMappingsCache.findIndex(m => m.id === data.id);
+    if (idx !== -1) {
+      const updated: EvidenceMapping = {
+        ...evidenceMappingsCache[idx],
+        ...data,
+        controlName: control?.name || evidenceMappingsCache[idx].controlName,
+        evidenceName: evidence?.name || evidenceMappingsCache[idx].evidenceName,
+      };
+      evidenceMappingsCache = [...evidenceMappingsCache];
+      evidenceMappingsCache[idx] = updated;
+      persistEvidenceMappingsCache();
+
+      const saved = await apiEvidenceMappingRepository.updateMapping(updated.id, updated);
+      const reconciled = { ...saved, controlName: updated.controlName, evidenceName: updated.evidenceName };
+      const i2 = evidenceMappingsCache.findIndex(m => m.id === updated.id);
+      if (i2 !== -1) { evidenceMappingsCache = [...evidenceMappingsCache]; evidenceMappingsCache[i2] = reconciled; persistEvidenceMappingsCache(); }
+      return reconciled;
+    }
+  }
+
+  const draftMapping: EvidenceMapping = {
+    id: `local-map-${Date.now()}`,
+    controlId: data.controlId || '',
+    controlName: control?.name || 'Unassigned Control',
+    evidenceId: data.evidenceId || '',
+    evidenceName: evidence?.name || 'Unassigned Evidence',
+  };
+
+  evidenceMappingsCache = [draftMapping, ...evidenceMappingsCache];
+  persistEvidenceMappingsCache();
+  addAuditLog('usr-2', 'David Chen', 'GOVERNANCE_ADMIN', 'EVIDENCE_MAPPING_CREATED', 'EvidenceRecord', draftMapping.id, draftMapping.evidenceName, `Mapped ${draftMapping.evidenceName} to control ${draftMapping.controlName}`);
+
+  const { id: _draftId, ...payload } = draftMapping;
+  const created = { ...(await apiEvidenceMappingRepository.createMapping(payload)), controlName: draftMapping.controlName, evidenceName: draftMapping.evidenceName };
+  evidenceMappingsCache = evidenceMappingsCache.map(m => (m.id === draftMapping.id ? created : m));
+  persistEvidenceMappingsCache();
+  return created;
+}
+
+export async function deleteEvidenceMapping(id: string): Promise<void> {
+  const target = evidenceMappingsCache.find(m => m.id === id);
+  if (!target) return;
+
+  evidenceMappingsCache = evidenceMappingsCache.filter(m => m.id !== id);
+  persistEvidenceMappingsCache();
+
+  await apiEvidenceMappingRepository.deleteMapping(id);
+}
+
+export function getPackCoverage(packId: string) {
+  const pack = getCompliancePacks().find(p => p.id === packId);
+  if (!pack) return null;
+  return computePackCoverage(pack, getComplianceRequirements(), getPackControls(), getEvidenceMappings(), getEvidenceRecords());
+}
+
+export function getRequirementCoverage(requirementId: string) {
+  const requirement = getComplianceRequirements().find(r => r.id === requirementId);
+  if (!requirement) return null;
+  return computeRequirementCoverage(requirement, getPackControls(), getEvidenceMappings(), getEvidenceRecords());
+}
+
+export function getPackGapsForPack(packId: string) {
+  const pack = getCompliancePacks().find(p => p.id === packId);
+  if (!pack) return [];
+  return computePackGaps(pack, getComplianceRequirements(), getPackControls(), getEvidenceMappings(), getEvidenceRecords(), getScheduledReviews());
+}
+
+export function getAllPackGaps() {
+  return getCompliancePacks().flatMap(p => getPackGapsForPack(p.id));
+}
+
 export function getCorrectiveActions(): CorrectiveAction[] {
   return getItem<CorrectiveAction[]>(STORAGE_KEYS.CORRECTIVE_ACTIONS, INITIAL_CORRECTIVE_ACTIONS);
 }
@@ -1977,7 +2271,15 @@ export function getGovernanceMetrics(): GovernanceMetrics {
     reviewReadinessBreakdown: { 'Ready': 0, 'Partially Ready': 0, 'Not Ready': 0 },
     auditReadinessBreakdown: { 'Ready': 0, 'Partially Ready': 0, 'Not Ready': 0 },
     totalGovernanceGapsCount: 0,
+    activeCompliancePacksCount: getCompliancePacks().filter(p => p.status === 'Active').length,
+    packCoverageBreakdown: { 'Covered': 0, 'Partially Covered': 0, 'Not Covered': 0, 'Not Applicable': 0 },
+    totalPackGapsCount: getAllPackGaps().length,
   };
+
+  getCompliancePacks().forEach(pack => {
+    const coverage = getPackCoverage(pack.id);
+    if (coverage) metrics.packCoverageBreakdown[coverage.status]++;
+  });
 
   let totalGaps = 0;
   assets.forEach(asset => {
@@ -2063,10 +2365,14 @@ export function bootstrapPersistence(options?: { force?: boolean }): Promise<voi
 
   bootstrapPromise = (async () => {
     try {
-      const [assets, evidence, governance] = await Promise.all([
+      const [assets, evidence, governance, compliancePacks, requirements, packControls, evidenceMappings] = await Promise.all([
         apiAssetRepository.getAssets(),
         apiEvidenceRepository.getEvidence(),
         apiGovernanceRepository.getGovernanceData(),
+        apiCompliancePackRepository.getCompliancePacks(),
+        apiRequirementRepository.getRequirements(),
+        apiControlRepository.getControls(),
+        apiEvidenceMappingRepository.getMappings(),
       ]);
 
       const assetNameById = new Map(assets.map(a => [a.id, a.name]));
@@ -2086,7 +2392,25 @@ export function bootstrapPersistence(options?: { force?: boolean }): Promise<voi
       reviewsCache = governance.reviews.map(r => ({ ...r, assetName: assetNameById.get(r.assetId) || r.assetName }));
       persistReviewsCache();
 
-      console.info(`OMG persistence: loaded ${assets.length} assets, ${evidence.length} evidence records from Neon.`);
+      const packNameById = new Map(compliancePacks.map(p => [p.id, p.name]));
+      requirementsCache = requirements.map(r => ({ ...r, packName: packNameById.get(r.packId) || r.packName }));
+      const requirementNameById = new Map(requirementsCache.map(r => [r.id, r.name]));
+      const evidenceNameById = new Map(evidence.map(e => [e.id, e.name]));
+
+      compliancePacksCache = compliancePacks;
+      persistCompliancePacksCache();
+      persistRequirementsCache();
+      packControlsCache = packControls.map(c => ({ ...c, requirementName: requirementNameById.get(c.requirementId) || c.requirementName }));
+      persistPackControlsCache();
+      const controlNameById = new Map(packControlsCache.map(c => [c.id, c.name]));
+      evidenceMappingsCache = evidenceMappings.map(m => ({
+        ...m,
+        controlName: controlNameById.get(m.controlId) || m.controlName,
+        evidenceName: evidenceNameById.get(m.evidenceId) || m.evidenceName,
+      }));
+      persistEvidenceMappingsCache();
+
+      console.info(`OMG persistence: loaded ${assets.length} assets, ${evidence.length} evidence records, ${compliancePacks.length} compliance packs from Neon.`);
     } catch (err) {
       console.warn('OMG persistence: could not reach the governance API at startup; continuing with cached/local data until the next retry.', err);
       bootstrapPromise = null; // allow a later manual retry (e.g. from Tenant Settings)

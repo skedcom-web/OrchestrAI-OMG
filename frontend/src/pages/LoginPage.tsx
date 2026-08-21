@@ -70,6 +70,9 @@ export const LoginPage: React.FC = () => {
                 'Measure governance readiness.',
                 'Identify governance gaps.',
                 'Prepare for audits.',
+                'Assess compliance obligations.',
+                'Understand compliance coverage.',
+                'Identify compliance gaps.',
               ].map(line => (
                 <li key={line} className="flex items-start gap-2.5">
                   <span className="mt-[7px] w-1.5 h-1.5 rounded-full bg-cyan-300 shrink-0" aria-hidden />

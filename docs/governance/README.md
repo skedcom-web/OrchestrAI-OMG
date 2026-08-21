@@ -55,6 +55,12 @@ This repository directory contains the **Mandatory Governance Deliverables** spe
 16. 🔗 **[16_Release4_1_Persistence_Completion.md](file:///C:/Users/VT348/Documents/GitHub/OrchestrAI%20OMG/docs/governance/16_Release4_1_Persistence_Completion.md)**  
     *Neon seeded for real, API-first storageService cache, corrected Tenant Settings — Persistence Completion & Production Data Foundation.*
 
+17. 🧩 **[17_Release5_Compliance_Pack_Framework.md](file:///C:/Users/VT348/Documents/GitHub/OrchestrAI%20OMG/docs/governance/17_Release5_Compliance_Pack_Framework.md)**  
+    *Pack → Requirement → Control → Evidence, coverage without scores, the Compliance Pack Framework — Release 5 Guide & Compliance Framework Guide.*
+
+18. 🔗 **[18_Release5_1_Compliance_Persistence_Alignment.md](file:///C:/Users/VT348/Documents/GitHub/OrchestrAI%20OMG/docs/governance/18_Release5_1_Compliance_Persistence_Alignment.md)**  
+    *Compliance Pack Framework moved off local storage onto Neon — full Repository Pattern, cache-then-network persistence, seeded demo packs — Compliance Persistence Alignment Patch.*
+
 ---
 
 ## 🌐 Live Production Links

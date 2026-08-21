@@ -8,7 +8,17 @@
  */
 
 import * as storage from '../services/storageService';
-import type { AssetRepository, EvidenceRepository, GovernanceData, GovernanceRecordKind, GovernanceRepository } from './types';
+import type {
+  AssetRepository,
+  CompliancePackRepository,
+  ControlRepository,
+  EvidenceMappingRepository,
+  EvidenceRepository,
+  GovernanceData,
+  GovernanceRecordKind,
+  GovernanceRepository,
+  RequirementRepository,
+} from './types';
 import type {
   AIAsset,
   EvidenceRecord,
@@ -69,6 +79,66 @@ export const localGovernanceRepository: GovernanceRepository = {
     if (kind === 'review') return storage.saveScheduledReview({ ...(data as Partial<ScheduledReview>), id });
     // Reauthorization records are immutable once decided — there is no update path.
     throw new Error('Reauthorization records cannot be updated once created.');
+  },
+};
+
+export const localCompliancePackRepository: CompliancePackRepository = {
+  async getCompliancePacks() {
+    return storage.getCompliancePacks();
+  },
+  async createCompliancePack(data) {
+    return storage.saveCompliancePack(data);
+  },
+  async updateCompliancePack(id, data) {
+    return storage.saveCompliancePack({ ...data, id });
+  },
+  async deleteCompliancePack(id) {
+    await storage.deleteCompliancePack(id);
+  },
+};
+
+export const localRequirementRepository: RequirementRepository = {
+  async getRequirements() {
+    return storage.getComplianceRequirements();
+  },
+  async createRequirement(data) {
+    return storage.saveComplianceRequirement(data);
+  },
+  async updateRequirement(id, data) {
+    return storage.saveComplianceRequirement({ ...data, id });
+  },
+  async deleteRequirement(id) {
+    await storage.deleteComplianceRequirement(id);
+  },
+};
+
+export const localControlRepository: ControlRepository = {
+  async getControls() {
+    return storage.getPackControls();
+  },
+  async createControl(data) {
+    return storage.savePackControl(data);
+  },
+  async updateControl(id, data) {
+    return storage.savePackControl({ ...data, id });
+  },
+  async deleteControl(id) {
+    await storage.deletePackControl(id);
+  },
+};
+
+export const localEvidenceMappingRepository: EvidenceMappingRepository = {
+  async getMappings() {
+    return storage.getEvidenceMappings();
+  },
+  async createMapping(data) {
+    return storage.saveEvidenceMapping(data);
+  },
+  async updateMapping(id, data) {
+    return storage.saveEvidenceMapping({ ...data, id });
+  },
+  async deleteMapping(id) {
+    await storage.deleteEvidenceMapping(id);
   },
 };
 

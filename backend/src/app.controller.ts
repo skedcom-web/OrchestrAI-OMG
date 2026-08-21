@@ -173,6 +173,142 @@ export class AppController {
     return this.prisma.governanceReauthorizationRecord.create({ data: body });
   }
 
+  // --- RELEASE 5: COMPLIANCE PACK FRAMEWORK ENDPOINTS ---
+  @Get('compliance-packs')
+  @Roles(
+    'SUPER_ADMIN',
+    'GOVERNANCE_ADMIN',
+    'RISK_OFFICER',
+    'BUSINESS_OWNER',
+    'VALIDATOR',
+    'AUDITOR',
+    'VIEWER',
+  )
+  async getCompliancePacks() {
+    return this.prisma.compliancePack.findMany({
+      include: { requirements: { include: { controls: true } } },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  @Post('compliance-packs')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async createCompliancePack(@Body() body: any) {
+    return this.prisma.compliancePack.create({ data: body });
+  }
+
+  @Patch('compliance-packs/:id')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async updateCompliancePack(@Param('id') id: string, @Body() body: any) {
+    return this.prisma.compliancePack.update({ where: { id }, data: body });
+  }
+
+  @Delete('compliance-packs/:id')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async deleteCompliancePack(@Param('id') id: string) {
+    await this.prisma.compliancePack.delete({ where: { id } });
+    return { deleted: true, id };
+  }
+
+  @Get('compliance-requirements')
+  @Roles(
+    'SUPER_ADMIN',
+    'GOVERNANCE_ADMIN',
+    'RISK_OFFICER',
+    'BUSINESS_OWNER',
+    'VALIDATOR',
+    'AUDITOR',
+    'VIEWER',
+  )
+  async getComplianceRequirements() {
+    return this.prisma.complianceRequirement.findMany({ orderBy: { createdAt: 'desc' } });
+  }
+
+  @Post('compliance-requirements')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async createComplianceRequirement(@Body() body: any) {
+    return this.prisma.complianceRequirement.create({ data: body });
+  }
+
+  @Patch('compliance-requirements/:id')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async updateComplianceRequirement(@Param('id') id: string, @Body() body: any) {
+    return this.prisma.complianceRequirement.update({ where: { id }, data: body });
+  }
+
+  @Delete('compliance-requirements/:id')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async deleteComplianceRequirement(@Param('id') id: string) {
+    await this.prisma.complianceRequirement.delete({ where: { id } });
+    return { deleted: true, id };
+  }
+
+  @Get('pack-controls')
+  @Roles(
+    'SUPER_ADMIN',
+    'GOVERNANCE_ADMIN',
+    'RISK_OFFICER',
+    'BUSINESS_OWNER',
+    'VALIDATOR',
+    'AUDITOR',
+    'VIEWER',
+  )
+  async getPackControls() {
+    return this.prisma.packControl.findMany({ orderBy: { createdAt: 'desc' } });
+  }
+
+  @Post('pack-controls')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async createPackControl(@Body() body: any) {
+    return this.prisma.packControl.create({ data: body });
+  }
+
+  @Patch('pack-controls/:id')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async updatePackControl(@Param('id') id: string, @Body() body: any) {
+    return this.prisma.packControl.update({ where: { id }, data: body });
+  }
+
+  @Delete('pack-controls/:id')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async deletePackControl(@Param('id') id: string) {
+    await this.prisma.packControl.delete({ where: { id } });
+    return { deleted: true, id };
+  }
+
+  @Get('evidence-mappings')
+  @Roles(
+    'SUPER_ADMIN',
+    'GOVERNANCE_ADMIN',
+    'RISK_OFFICER',
+    'BUSINESS_OWNER',
+    'VALIDATOR',
+    'AUDITOR',
+    'VIEWER',
+  )
+  async getEvidenceMappings() {
+    return this.prisma.evidenceMapping.findMany({ orderBy: { createdAt: 'desc' } });
+  }
+
+  @Post('evidence-mappings')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER')
+  async createEvidenceMapping(@Body() body: any) {
+    return this.prisma.evidenceMapping.create({ data: body });
+  }
+
+  @Patch('evidence-mappings/:id')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER')
+  async updateEvidenceMapping(@Param('id') id: string, @Body() body: any) {
+    return this.prisma.evidenceMapping.update({ where: { id }, data: body });
+  }
+
+  @Delete('evidence-mappings/:id')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async deleteEvidenceMapping(@Param('id') id: string) {
+    await this.prisma.evidenceMapping.delete({ where: { id } });
+    return { deleted: true, id };
+  }
+
   // --- PHASE 7: CONTINUOUS MONITORING ENDPOINTS ---
   @Get('monitoring/alerts')
   @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER', 'AUDITOR')

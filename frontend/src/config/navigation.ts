@@ -320,6 +320,14 @@ export const NAV_DOMAINS: NavDomain[] = [
         keywords: ['rbi', 'policy', 'library', 'standards'],
       },
       {
+        path: '/compliance-packs',
+        label: 'Compliance Pack Framework',
+        icon: '🧩',
+        description: 'The reusable architecture every future regulation plugs into — packs, requirements, controls and evidence mappings.',
+        keywords: ['compliance pack', 'requirement', 'control', 'coverage', 'framework', 'rbi', 'iso', 'eu ai act'],
+        badge: 'Release 5',
+      },
+      {
         path: '/compliance-assessment',
         label: 'Compliance Assessment',
         icon: '📋',

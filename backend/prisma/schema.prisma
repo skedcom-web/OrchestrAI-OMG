@@ -796,7 +796,112 @@ model EvidenceRecord {
   createdAt    DateTime              @default(now())
   updatedAt    DateTime              @updatedAt
 
+  evidenceMappings EvidenceMapping[]
+
   @@map("evidence_records")
+}
+
+// ---------------------------------------------------------------------------
+// RELEASE 5 — Universal Compliance Pack Framework
+// The reusable architecture every future regulation (RBI, ISO 42001, EU AI
+// Act, ...) plugs into as configuration. No regulation content here — that's
+// Release 6+. No scoring: coverage is Covered/Partially Covered/Not
+// Covered/Not Applicable only, computed by the frontend from these records.
+// ---------------------------------------------------------------------------
+
+enum CompliancePackStatus {
+  ACTIVE
+  DRAFT
+  RETIRED
+}
+
+enum RequirementPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum RequirementStatus {
+  DRAFT
+  ACTIVE
+  RETIRED
+}
+
+enum PackControlStatus {
+  DRAFT
+  ACTIVE
+  RETIRED
+}
+
+/// Capability 1 — Compliance Pack Registry.
+model CompliancePack {
+  id            String                @id
+  name          String
+  version       String                @default("1.0")
+  status        CompliancePackStatus  @default(DRAFT)
+  owner         String
+  description   String                @db.Text
+  industry      String
+  effectiveDate DateTime
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+
+  requirements  ComplianceRequirement[]
+
+  @@map("compliance_packs")
+}
+
+/// Capability 2 — Requirement Registry. Client-supplied human-readable ids
+/// (RBI-REQ-001 style) rather than generated UUIDs, since the id itself is
+/// meaningful regulatory-reference content.
+model ComplianceRequirement {
+  id          String              @id
+  name        String
+  description String              @db.Text
+  packId      String
+  pack        CompliancePack      @relation(fields: [packId], references: [id], onDelete: Cascade)
+  category    String
+  priority    RequirementPriority @default(MEDIUM)
+  status      RequirementStatus   @default(DRAFT)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  controls    PackControl[]
+
+  @@map("compliance_requirements")
+}
+
+/// Capability 3 — Control Registry.
+model PackControl {
+  id            String            @id
+  name          String
+  description   String            @db.Text
+  requirementId String
+  requirement   ComplianceRequirement @relation(fields: [requirementId], references: [id], onDelete: Cascade)
+  owner         String?
+  status        PackControlStatus @default(DRAFT)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  mappings      EvidenceMapping[]
+
+  @@map("pack_controls")
+}
+
+/// Capability 4 — Evidence Mapping Framework. Requirement → Control →
+/// Evidence, reusing the Release 3 EvidenceRecord so evidence is collected
+/// once and applied across every pack that needs it.
+model EvidenceMapping {
+  id              String         @id @default(uuid())
+  controlId       String
+  control         PackControl    @relation(fields: [controlId], references: [id], onDelete: Cascade)
+  evidenceRecordId String
+  evidenceRecord  EvidenceRecord @relation(fields: [evidenceRecordId], references: [id], onDelete: Cascade)
+  createdAt       DateTime       @default(now())
+
+  @@unique([controlId, evidenceRecordId])
+  @@map("evidence_mappings")
 }
 
 model AuditLog {

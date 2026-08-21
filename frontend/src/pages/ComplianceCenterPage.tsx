@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { getAssets, calculateAssetComplianceScore, getComplianceGaps } from '../services/storageService';
+import { getAssets, calculateAssetComplianceScore, getComplianceGaps, getCompliancePacks, getAllPackGaps } from '../services/storageService';
 import { CompliancePackageModal } from '../components/common/CompliancePackageModal';
 
 export const ComplianceCenterPage: React.FC = () => {
+  const navigate = useNavigate();
   const [assets] = useState(() => getAssets());
+  const [packs] = useState(() => getCompliancePacks());
+  const [packGaps] = useState(() => getAllPackGaps());
   const [selectedAssetId, setSelectedAssetId] = useState<string | null>(null);
   const [isPackageOpen, setIsPackageOpen] = useState(false);
 
@@ -25,6 +29,22 @@ export const ComplianceCenterPage: React.FC = () => {
           </p>
         </div>
       </div>
+
+      {/* Release 5 — Universal Compliance Pack Framework */}
+      <Card className="!p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-[var(--accent-border)]">
+        <div className="flex items-center gap-3">
+          <span className="text-3xl">🧩</span>
+          <div>
+            <h4 className="text-base font-extrabold text-[var(--text-primary)]">Compliance Pack Framework</h4>
+            <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+              {packs.length} packs registered • {packGaps.length} open compliance gaps. Requirements, controls and evidence mappings the RBI, ISO 42001 and EU AI Act packs will plug into.
+            </p>
+          </div>
+        </div>
+        <Button size="sm" onClick={() => navigate('/compliance-packs')}>
+          Open Compliance Packs →
+        </Button>
+      </Card>
 
       {/* RBI Alignment Banner */}
       <Card className="!p-5 bg-gradient-to-r from-emerald-600/10 via-teal-600/10 to-blue-600/10 border-[var(--accent-border)]">

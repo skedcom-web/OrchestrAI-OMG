@@ -15,6 +15,7 @@ import {
   getAiEstateSummary,
   getAssetTypeHeatmap,
   getAuthorityOversightSummary,
+  getCompliancePackOverview,
   getContinuityOverview,
   getEvidenceOverview,
   getExecutiveAlerts,
@@ -24,8 +25,8 @@ import {
   getGovernanceTrends,
   getReadinessOverview,
 } from '../services/executiveGovernance';
-import { GovernanceStateBadge, ReadinessBadge } from '../components/ui/Badge';
-import type { ExecutiveAlertType, ExecutiveViewId, GovernanceState, PolicyViolationSeverity, ReadinessStatus } from '../types';
+import { GovernanceStateBadge, ReadinessBadge, CompliancePackStatusBadge, ComplianceCoverageBadge } from '../components/ui/Badge';
+import type { ExecutiveAlertType, ExecutiveViewId, GovernanceState, PolicyViolationSeverity, ReadinessStatus, CompliancePackStatus, ComplianceCoverageStatus } from '../types';
 
 const SEVERITY_COLOR: Record<PolicyViolationSeverity, string> = {
   Critical: 'var(--status-danger)',
@@ -70,6 +71,7 @@ export const ExecutiveGovernanceHubPage: React.FC = () => {
       continuity: getContinuityOverview(),
       evidence: getEvidenceOverview(),
       readiness: getReadinessOverview(),
+      compliancePacks: getCompliancePackOverview(),
       health: getGovernanceHealthIndex(),
       metrics: getGovernanceMetrics(),
       scorecards: getGovernanceScorecards(),
@@ -508,6 +510,59 @@ export const ExecutiveGovernanceHubPage: React.FC = () => {
           <p className="text-[11.5px] text-[var(--text-secondary)]">
             {data.readiness.totalGaps} governance gaps detected across the portfolio.
           </p>
+        </section>
+      )}
+
+      {/* ===================== COMPLIANCE READINESS OVERVIEW (Release 5) ===================== */}
+      {(shows('estate') || shows('summary') || shows('portfolio') || shows('policy-compliance')) && (
+        <section className="flex flex-col gap-4">
+          <SectionHeader
+            eyebrow="Release 5"
+            title="Compliance Readiness Overview"
+            subtitle="The universal Compliance Pack Framework — Covered / Partially Covered / Not Covered / Not Applicable, no scores."
+            icon="🧩"
+            action={
+              <button
+                onClick={() => navigate('/compliance-packs')}
+                className="text-[11px] font-bold text-[var(--accent-primary)] hover:underline cursor-pointer"
+              >
+                Open compliance packs →
+              </button>
+            }
+          />
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4 flex flex-col gap-2">
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.1em] text-[var(--text-muted)]">Active Compliance Packs</p>
+              <p className="tnum text-[1.9rem] font-extrabold text-[var(--text-primary)] leading-none">{data.compliancePacks.activePacksCount}</p>
+              <div className="flex flex-col gap-1.5 mt-1">
+                {data.compliancePacks.packs.map(p => (
+                  <div key={p.id} className="flex items-center justify-between gap-2">
+                    <span className="text-[11px] font-semibold text-[var(--text-secondary)] truncate">{p.name}</span>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <CompliancePackStatusBadge status={p.status as CompliancePackStatus} size="sm" />
+                      <ComplianceCoverageBadge status={p.coverageStatus as ComplianceCoverageStatus} size="sm" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="lg:col-span-2 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4 flex flex-col gap-2">
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.1em] text-[var(--text-muted)]">Top Compliance Gaps</p>
+              <div className="flex flex-col gap-1.5">
+                {data.compliancePacks.topGaps.length === 0 ? (
+                  <span className="text-[11.5px] text-[var(--text-muted)] italic">No compliance gaps detected.</span>
+                ) : (
+                  data.compliancePacks.topGaps.map((gap, i) => (
+                    <div key={i} className="text-[11px] p-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-500">
+                      <span className="font-bold">{gap.gapType}</span> ({gap.packName}) — {gap.detail}
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
         </section>
       )}
 

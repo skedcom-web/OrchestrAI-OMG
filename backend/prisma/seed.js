@@ -195,10 +195,92 @@ const reviewsByAssetKey = {
   'ast-103': [{ reviewType: 'Monthly Review', owner: 'David Chen', dueDate: '2026-08-15', status: 'In Progress' }],
 };
 
+// Release 5.1 — Compliance Persistence Alignment. The three demo packs from
+// frontend/src/services/mockData.ts, now seeded into Neon so "the demo runs
+// entirely from Neon" per Capability 7. Evidence mappings reference evidence
+// records looked up by name (not a remembered id), since compliance seeding
+// can run in a later pass than asset/evidence seeding once Neon already has
+// rows — see the idByKey vs. by-name distinction in main() below.
+async function seedCompliance() {
+  const existingPackCount = await prisma.compliancePack.count();
+  if (existingPackCount > 0) {
+    console.log(`Skipping compliance seed — CompliancePack already has ${existingPackCount} row(s).`);
+    return;
+  }
+
+  console.log('Seeding compliance packs, requirements, controls and evidence mappings...');
+
+  const packs = [
+    {
+      id: 'pack-rbi-demo', name: 'RBI Demo Pack', version: '1.0', status: 'ACTIVE', owner: 'David Chen',
+      description: 'Sample pack illustrating how a banking regulator framework plugs into the Compliance Pack Framework. Structure only — not real RBI content.',
+      industry: 'Banking & Financial Services', effectiveDate: '2026-01-01',
+    },
+    {
+      id: 'pack-iso-demo', name: 'ISO Demo Pack', version: '1.0', status: 'ACTIVE', owner: 'Elena Rostova',
+      description: 'Sample pack illustrating a cross-industry management-system standard. Structure only — not real ISO 42001 content.',
+      industry: 'Cross-Industry', effectiveDate: '2026-02-01',
+    },
+    {
+      id: 'pack-euai-demo', name: 'EU AI Demo Pack', version: '0.1', status: 'DRAFT', owner: 'Robert Vance',
+      description: 'Sample pack illustrating a risk-tiered regional regulation. Structure only — not real EU AI Act content.',
+      industry: 'Cross-Industry · EU Operations', effectiveDate: '2026-06-01',
+    },
+  ];
+  for (const p of packs) {
+    const { effectiveDate, ...rest } = p;
+    await prisma.compliancePack.create({ data: { ...rest, effectiveDate: new Date(effectiveDate) } });
+  }
+
+  const requirements = [
+    { id: 'RBI-REQ-001', name: 'Named Accountable Ownership', description: 'Every in-scope AI system must have named, accountable ownership on record.', packId: 'pack-rbi-demo', category: 'Governance', priority: 'CRITICAL', status: 'ACTIVE' },
+    { id: 'RBI-REQ-002', name: 'Independent Control Assessment', description: 'In-scope AI systems must undergo independent control assessment.', packId: 'pack-rbi-demo', category: 'Validation', priority: 'HIGH', status: 'ACTIVE' },
+    { id: 'ISO-REQ-101', name: 'AI Management System Documentation', description: 'A documented AI management system policy must be maintained.', packId: 'pack-iso-demo', category: 'Documentation', priority: 'HIGH', status: 'ACTIVE' },
+    { id: 'ISO-REQ-102', name: 'Risk Assessment Process', description: 'A repeatable risk assessment process must be documented and evidenced.', packId: 'pack-iso-demo', category: 'Risk', priority: 'HIGH', status: 'ACTIVE' },
+    { id: 'EUAI-REQ-210', name: 'High-Risk System Human Oversight', description: 'High-risk AI systems must have documented human oversight arrangements.', packId: 'pack-euai-demo', category: 'Oversight', priority: 'CRITICAL', status: 'DRAFT' },
+  ];
+  for (const r of requirements) {
+    await prisma.complianceRequirement.create({ data: r });
+  }
+
+  const controls = [
+    { id: 'ctl-rbi-001a', name: 'Ownership Matrix Control', description: 'Verifies every in-scope asset has a complete Governance Authority Profile.', requirementId: 'RBI-REQ-001', owner: 'David Chen', status: 'ACTIVE' },
+    { id: 'ctl-rbi-002a', name: 'Independent Assessment Control', description: 'Verifies an independent control assessment has been performed and filed.', requirementId: 'RBI-REQ-002', owner: 'Dr. Aris Thorne', status: 'ACTIVE' },
+    { id: 'ctl-iso-101a', name: 'AIMS Policy Control', description: 'Verifies a current AI management system policy document is on file.', requirementId: 'ISO-REQ-101', owner: 'Elena Rostova', status: 'ACTIVE' },
+    { id: 'ctl-iso-102a', name: 'Risk Process Control', description: 'Verifies a documented, evidenced risk assessment process exists.', requirementId: 'ISO-REQ-102', owner: 'Elena Rostova', status: 'ACTIVE' },
+    { id: 'ctl-euai-210a', name: 'Human Oversight Control', description: 'Verifies documented human oversight arrangements for high-risk systems.', requirementId: 'EUAI-REQ-210', owner: null, status: 'DRAFT' },
+  ];
+  for (const c of controls) {
+    await prisma.packControl.create({ data: c });
+  }
+
+  // Evidence collected once (Release 3) and reused across packs — RBI ends up
+  // fully Covered, ISO Partially Covered, EU AI Not Covered, demonstrating
+  // all three live coverage outcomes.
+  const mappingSpecs = [
+    { controlId: 'ctl-rbi-001a', evidenceName: 'Fraud Sentinel Agent — Independent Validation Report' },
+    { controlId: 'ctl-rbi-002a', evidenceName: 'Mortgage Workflow — OCR Control Assessment' },
+    { controlId: 'ctl-iso-101a', evidenceName: 'Concierge Copilot — Data Handling Policy' },
+  ];
+  let mappingCount = 0;
+  for (const m of mappingSpecs) {
+    const evidence = await prisma.evidenceRecord.findFirst({ where: { name: m.evidenceName } });
+    if (!evidence) {
+      console.warn(`  Evidence record not found for mapping: "${m.evidenceName}" — skipping.`);
+      continue;
+    }
+    await prisma.evidenceMapping.create({ data: { controlId: m.controlId, evidenceRecordId: evidence.id } });
+    mappingCount++;
+  }
+
+  console.log(`  Compliance packs: ${packs.length}, requirements: ${requirements.length}, controls: ${controls.length}, evidence mappings: ${mappingCount}`);
+}
+
 async function main() {
   const existingAssetCount = await prisma.aIAsset.count();
   if (existingAssetCount > 0) {
-    console.log(`Skipping seed — AIAsset already has ${existingAssetCount} row(s). Delete them first if you want to reseed.`);
+    console.log(`AIAsset already has ${existingAssetCount} row(s) — skipping asset/evidence/continuity seed.`);
+    await seedCompliance();
     return;
   }
 
@@ -272,6 +354,8 @@ async function main() {
     }
   }
   console.log(`  Scheduled reviews: ${reviewCount}`);
+
+  await seedCompliance();
 
   console.log('Seed complete.');
 }

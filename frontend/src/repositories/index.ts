@@ -8,9 +8,33 @@
  * switches to Production Mode.
  */
 
-import { localAssetRepository, localEvidenceRepository, localGovernanceRepository } from './localRepositories';
-import { apiAssetRepository, apiEvidenceRepository, apiGovernanceRepository } from './apiRepositories';
-import type { AssetRepository, EvidenceRepository, GovernanceRepository } from './types';
+import {
+  localAssetRepository,
+  localCompliancePackRepository,
+  localControlRepository,
+  localEvidenceMappingRepository,
+  localEvidenceRepository,
+  localGovernanceRepository,
+  localRequirementRepository,
+} from './localRepositories';
+import {
+  apiAssetRepository,
+  apiCompliancePackRepository,
+  apiControlRepository,
+  apiEvidenceMappingRepository,
+  apiEvidenceRepository,
+  apiGovernanceRepository,
+  apiRequirementRepository,
+} from './apiRepositories';
+import type {
+  AssetRepository,
+  CompliancePackRepository,
+  ControlRepository,
+  EvidenceMappingRepository,
+  EvidenceRepository,
+  GovernanceRepository,
+  RequirementRepository,
+} from './types';
 
 export type DataMode = 'demo' | 'production';
 
@@ -35,5 +59,34 @@ export function getEvidenceRepository(): EvidenceRepository {
 export function getGovernanceRepository(): GovernanceRepository {
   return getDataMode() === 'production' ? apiGovernanceRepository : localGovernanceRepository;
 }
+
+/**
+ * Release 5.1 — Compliance Persistence Alignment. Api is the default for
+ * this domain per the blueprint's mandatory platform rule; Local remains a
+ * fallback utility only, mirroring the pattern above rather than branching
+ * on data mode like Assets/Evidence/Continuity do.
+ */
+export function getCompliancePackRepository(): CompliancePackRepository {
+  return apiCompliancePackRepository;
+}
+
+export function getRequirementRepository(): RequirementRepository {
+  return apiRequirementRepository;
+}
+
+export function getControlRepository(): ControlRepository {
+  return apiControlRepository;
+}
+
+export function getEvidenceMappingRepository(): EvidenceMappingRepository {
+  return apiEvidenceMappingRepository;
+}
+
+export {
+  localCompliancePackRepository,
+  localControlRepository,
+  localEvidenceMappingRepository,
+  localRequirementRepository,
+};
 
 export * from './types';

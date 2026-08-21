@@ -13,11 +13,14 @@ import {
   calculateAssetGovernanceScore,
   getAssets,
   getAuditLogs,
+  getAllPackGaps,
+  getCompliancePacks,
   getCorrectiveActions,
   getEvidence,
   getEvidenceRecords,
   getFindings,
   getGovernanceMetrics,
+  getPackCoverage,
   getScheduledReviews,
   getValidations,
 } from './storageService';
@@ -171,6 +174,31 @@ export function getReadinessOverview(): ReadinessOverview {
     evidence: toRows(metrics.evidenceReadinessBreakdown),
     audit: toRows(metrics.auditReadinessBreakdown),
     totalGaps: metrics.totalGovernanceGapsCount,
+  };
+}
+
+/* =========== Release 5 — Compliance Pack Framework Overview =========== */
+
+/** Plain counts and pack list only — no scores, per Capability 5. */
+export interface CompliancePackOverview {
+  activePacksCount: number;
+  packs: { id: string; name: string; status: string; coverageStatus: string }[];
+  topGaps: { packName: string; gapType: string; detail: string }[];
+}
+
+export function getCompliancePackOverview(): CompliancePackOverview {
+  const packs = getCompliancePacks();
+  const gaps = getAllPackGaps();
+
+  return {
+    activePacksCount: packs.filter(p => p.status === 'Active').length,
+    packs: packs.map(p => ({
+      id: p.id,
+      name: p.name,
+      status: p.status,
+      coverageStatus: getPackCoverage(p.id)?.status || 'Not Applicable',
+    })),
+    topGaps: gaps.slice(0, 5).map(g => ({ packName: g.packName, gapType: g.gapType, detail: g.detail })),
   };
 }
 

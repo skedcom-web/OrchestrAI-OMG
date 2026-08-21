@@ -1,4 +1,4 @@
-import type { AutonomyLevel, EvidenceExpiryIndicator, EvidenceRecordStatus, GovernanceClassification, GovernanceState, HumanOversightType, ReadinessStatus, RiskLevel } from '../../types';
+import type { AutonomyLevel, ComplianceCoverageStatus, CompliancePackStatus, EvidenceExpiryIndicator, EvidenceRecordStatus, GovernanceClassification, GovernanceState, HumanOversightType, ReadinessStatus, RiskLevel } from '../../types';
 import { EXPIRY_INDICATOR_TONE } from '../../config/evidenceFoundation';
 
 interface BadgeProps {
@@ -160,6 +160,49 @@ export const ReadinessBadge: React.FC<ReadinessBadgeProps> = ({ status, size = '
     'Ready': 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30',
     'Partially Ready': 'bg-amber-500/15 text-amber-500 border-amber-500/40 font-bold',
     'Not Ready': 'bg-red-500/15 text-red-500 border-red-500/40 font-bold',
+  };
+  const padding = size === 'sm' ? 'px-2 py-0.5 text-[10px]' : 'px-2.5 py-1 text-xs';
+
+  return (
+    <span className={`inline-flex items-center gap-1 font-semibold rounded-full border ${padding} ${styles[status]}`}>
+      {status}
+    </span>
+  );
+};
+
+/** Release 5 — Capability 1, Compliance Pack Registry lifecycle. */
+interface CompliancePackStatusBadgeProps {
+  status: CompliancePackStatus;
+  size?: 'sm' | 'md';
+}
+
+export const CompliancePackStatusBadge: React.FC<CompliancePackStatusBadgeProps> = ({ status, size = 'md' }) => {
+  const styles: Record<CompliancePackStatus, string> = {
+    'Active': 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30',
+    'Draft': 'bg-slate-500/10 text-slate-400 border-slate-500/30',
+    'Retired': 'bg-gray-500/10 text-gray-400 border-gray-500/30',
+  };
+  const padding = size === 'sm' ? 'px-2 py-0.5 text-[10px]' : 'px-2.5 py-1 text-xs';
+
+  return (
+    <span className={`inline-flex items-center gap-1 font-semibold rounded-full border ${padding} ${styles[status]}`}>
+      {status}
+    </span>
+  );
+};
+
+/** Release 5 — Capability 5, Compliance Coverage. No percentages, no scores. */
+interface ComplianceCoverageBadgeProps {
+  status: ComplianceCoverageStatus;
+  size?: 'sm' | 'md';
+}
+
+export const ComplianceCoverageBadge: React.FC<ComplianceCoverageBadgeProps> = ({ status, size = 'md' }) => {
+  const styles: Record<ComplianceCoverageStatus, string> = {
+    'Covered': 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30',
+    'Partially Covered': 'bg-amber-500/15 text-amber-500 border-amber-500/40 font-bold',
+    'Not Covered': 'bg-red-500/15 text-red-500 border-red-500/40 font-bold',
+    'Not Applicable': 'bg-slate-500/10 text-slate-400 border-slate-500/30',
   };
   const padding = size === 'sm' ? 'px-2 py-0.5 text-[10px]' : 'px-2.5 py-1 text-xs';
 
