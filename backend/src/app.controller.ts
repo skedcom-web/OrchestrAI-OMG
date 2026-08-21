@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards, NotFoundException } from '@nestjs/common';
 import { PrismaService } from './prisma.service';
 import { Roles } from './auth/roles.decorator';
 import { RolesGuard } from './auth/roles.guard';
@@ -57,6 +57,122 @@ export class AppController {
     });
   }
 
+  @Get('assets/:id')
+  @Roles(
+    'SUPER_ADMIN',
+    'GOVERNANCE_ADMIN',
+    'RISK_OFFICER',
+    'BUSINESS_OWNER',
+    'VALIDATOR',
+    'AUDITOR',
+    'VIEWER',
+  )
+  async getAsset(@Param('id') id: string) {
+    const asset = await this.prisma.aIAsset.findUnique({ where: { id } });
+    if (!asset) throw new NotFoundException(`Asset ${id} not found`);
+    return asset;
+  }
+
+  @Post('assets')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async createAsset(@Body() body: any) {
+    return this.prisma.aIAsset.create({ data: body });
+  }
+
+  @Patch('assets/:id')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async updateAsset(@Param('id') id: string, @Body() body: any) {
+    return this.prisma.aIAsset.update({ where: { id }, data: body });
+  }
+
+  @Delete('assets/:id')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async deleteAsset(@Param('id') id: string) {
+    await this.prisma.aIAsset.delete({ where: { id } });
+    return { deleted: true, id };
+  }
+
+  // --- RELEASE 4: EVIDENCE REPOSITORY ENDPOINTS ---
+  @Get('evidence-records')
+  @Roles(
+    'SUPER_ADMIN',
+    'GOVERNANCE_ADMIN',
+    'RISK_OFFICER',
+    'BUSINESS_OWNER',
+    'VALIDATOR',
+    'AUDITOR',
+    'VIEWER',
+  )
+  async getEvidenceRecords() {
+    return this.prisma.evidenceRecord.findMany({ orderBy: { createdDate: 'desc' } });
+  }
+
+  @Get('evidence-records/:id')
+  @Roles(
+    'SUPER_ADMIN',
+    'GOVERNANCE_ADMIN',
+    'RISK_OFFICER',
+    'BUSINESS_OWNER',
+    'VALIDATOR',
+    'AUDITOR',
+    'VIEWER',
+  )
+  async getEvidenceRecord(@Param('id') id: string) {
+    const record = await this.prisma.evidenceRecord.findUnique({ where: { id } });
+    if (!record) throw new NotFoundException(`Evidence record ${id} not found`);
+    return record;
+  }
+
+  @Post('evidence-records')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER')
+  async createEvidenceRecord(@Body() body: any) {
+    return this.prisma.evidenceRecord.create({ data: body });
+  }
+
+  @Patch('evidence-records/:id')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER')
+  async updateEvidenceRecord(@Param('id') id: string, @Body() body: any) {
+    return this.prisma.evidenceRecord.update({ where: { id }, data: body });
+  }
+
+  @Delete('evidence-records/:id')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async deleteEvidenceRecord(@Param('id') id: string) {
+    await this.prisma.evidenceRecord.delete({ where: { id } });
+    return { deleted: true, id };
+  }
+
+  // --- RELEASE 4: GOVERNANCE (CONTINUITY) REPOSITORY ENDPOINTS ---
+  @Get('reassessment-triggers')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER', 'AUDITOR')
+  async getReassessmentTriggers() {
+    return this.prisma.reassessmentTrigger.findMany({ orderBy: { dateDetected: 'desc' } });
+  }
+
+  @Post('reassessment-triggers')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER')
+  async createReassessmentTrigger(@Body() body: any) {
+    return this.prisma.reassessmentTrigger.create({ data: body });
+  }
+
+  @Patch('reassessment-triggers/:id')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER')
+  async updateReassessmentTrigger(@Param('id') id: string, @Body() body: any) {
+    return this.prisma.reassessmentTrigger.update({ where: { id }, data: body });
+  }
+
+  @Get('reauthorization-records')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER', 'AUDITOR')
+  async getReauthorizationRecords() {
+    return this.prisma.governanceReauthorizationRecord.findMany({ orderBy: { reviewDate: 'desc' } });
+  }
+
+  @Post('reauthorization-records')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async createReauthorizationRecord(@Body() body: any) {
+    return this.prisma.governanceReauthorizationRecord.create({ data: body });
+  }
+
   // --- PHASE 7: CONTINUOUS MONITORING ENDPOINTS ---
   @Get('monitoring/alerts')
   @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER', 'AUDITOR')
@@ -92,6 +208,12 @@ export class AppController {
         status: body.status || 'Scheduled',
       },
     });
+  }
+
+  @Patch('monitoring/reviews/:id')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER')
+  async updateScheduledReview(@Param('id') id: string, @Body() body: any) {
+    return this.prisma.scheduledReview.update({ where: { id }, data: body });
   }
 
   @Get('monitoring/corrective-actions')

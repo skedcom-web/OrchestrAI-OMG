@@ -49,6 +49,9 @@ This repository directory contains the **Mandatory Governance Deliverables** spe
 14. 🗃️ **[14_Release3_Evidence_Foundation.md](file:///C:/Users/VT348/Documents/GitHub/OrchestrAI%20OMG/docs/governance/14_Release3_Evidence_Foundation.md)**  
     *Evidence Registry, Ownership, Traceability, Lifecycle & Expiry Tracking — Release 3 Guide & Evidence Governance Guide.*
 
+15. ✅ **[15_Release4_Readiness_Persistence_Foundation.md](file:///C:/Users/VT348/Documents/GitHub/OrchestrAI%20OMG/docs/governance/15_Release4_Readiness_Persistence_Foundation.md)**  
+    *Readiness Foundation, Repository Pattern, CRUD API & the Data Migration Utility — Release 4 Guide, Production Readiness Guide & Persistence Architecture Guide.*
+
 ---
 
 ## 🌐 Live Production Links

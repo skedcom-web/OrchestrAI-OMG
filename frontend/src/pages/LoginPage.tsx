@@ -64,18 +64,12 @@ export const LoginPage: React.FC = () => {
             <ul className="flex flex-col gap-1.5 max-w-lg">
               {[
                 'Know what AI exists.',
-                'Assign clear accountability.',
-                'Apply appropriate human oversight.',
-                'Understand autonomy exposure.',
-                'Assess the risks.',
-                'Validate the evidence.',
+                'Assign accountability.',
+                'Maintain governance continuity.',
                 'Capture supporting evidence.',
-                'Trace governance decisions.',
-                'Demonstrate audit readiness.',
-                'Authorize AI use.',
-                'Monitor governance continuously.',
-                'Reassess when meaningful changes occur.',
-                'Maintain governance confidence throughout the lifecycle.',
+                'Measure governance readiness.',
+                'Identify governance gaps.',
+                'Prepare for audits.',
               ].map(line => (
                 <li key={line} className="flex items-start gap-2.5">
                   <span className="mt-[7px] w-1.5 h-1.5 rounded-full bg-cyan-300 shrink-0" aria-hidden />

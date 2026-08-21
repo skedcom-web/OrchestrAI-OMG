@@ -5,8 +5,8 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Select } from '../components/ui/Select';
 import { Modal } from '../components/ui/Modal';
-import { EvidenceStatusBadge, EvidenceExpiryBadge } from '../components/ui/Badge';
-import { getAssets, getEvidenceRecords, getEvidenceTimeline, saveEvidenceRecord, deleteEvidenceRecord } from '../services/storageService';
+import { EvidenceStatusBadge, EvidenceExpiryBadge, ReadinessBadge } from '../components/ui/Badge';
+import { getAssets, getEvidenceRecords, getEvidenceTimeline, saveEvidenceRecord, deleteEvidenceRecord, getEvidenceReadiness } from '../services/storageService';
 import { EVIDENCE_TYPES, EVIDENCE_STATUSES, getExpiryIndicator, daysRemaining } from '../config/evidenceFoundation';
 import type { EvidenceRecord, EvidenceRecordType, EvidenceRecordStatus } from '../types';
 
@@ -275,6 +275,51 @@ export const EvidenceRegistryPage: React.FC = () => {
                     <span className="text-[10px] text-[var(--text-muted)]">Actor: {event.actor}</span>
                   </div>
                 ))}
+              </div>
+            </div>
+
+            {/* Release 4 — Readiness Contribution & Linked Governance Objects */}
+            <div>
+              <h4 className="text-xs font-bold uppercase text-[var(--text-muted)] tracking-wider mb-2">Readiness Contribution</h4>
+              <div className="p-3 rounded-xl bg-[var(--bg-badge)] border border-[var(--border-color)] flex flex-col gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  {selectedRecord.status === 'Active' && getExpiryIndicator(selectedRecord.expiryDate) !== 'Expired' && selectedRecord.ownership.evidenceOwner ? (
+                    <span className="text-[11px] font-semibold text-emerald-500">✓ This record counts toward Evidence Readiness and Audit Readiness for {selectedRecord.assetName}.</span>
+                  ) : (
+                    <span className="text-[11px] font-semibold text-amber-500">⚠ This record does not currently count toward readiness (not Active, expired, or missing an owner).</span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 pt-2 border-t border-[var(--border-color)]">
+                  <span className="text-[10px] text-[var(--text-muted)]">Asset Evidence Readiness:</span>
+                  {(() => {
+                    const r = getEvidenceReadiness(selectedRecord.assetId);
+                    return r ? <ReadinessBadge status={r.status} size="sm" /> : null;
+                  })()}
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h4 className="text-xs font-bold uppercase text-[var(--text-muted)] tracking-wider mb-2">Linked Governance Objects</h4>
+              <div className="flex flex-wrap gap-1.5">
+                <span className="text-[11px] px-2.5 py-1 rounded-full bg-[var(--bg-badge)] border border-[var(--border-color)] text-[var(--text-primary)] font-semibold">
+                  🗂️ AI Asset — {selectedRecord.assetName}
+                </span>
+                {selectedRecord.traceability?.riskAssessmentRef && (
+                  <span className="text-[11px] px-2.5 py-1 rounded-full bg-[var(--bg-badge)] border border-[var(--border-color)] text-[var(--text-primary)] font-semibold">⚡ Risk Assessment</span>
+                )}
+                {selectedRecord.traceability?.governanceReviewRef && (
+                  <span className="text-[11px] px-2.5 py-1 rounded-full bg-[var(--bg-badge)] border border-[var(--border-color)] text-[var(--text-primary)] font-semibold">🧭 Governance Review</span>
+                )}
+                {selectedRecord.traceability?.decisionRecordRef && (
+                  <span className="text-[11px] px-2.5 py-1 rounded-full bg-[var(--bg-badge)] border border-[var(--border-color)] text-[var(--text-primary)] font-semibold">🖋️ Decision Record</span>
+                )}
+                {selectedRecord.traceability?.reauthorizationRecordRef && (
+                  <span className="text-[11px] px-2.5 py-1 rounded-full bg-[var(--bg-badge)] border border-[var(--border-color)] text-[var(--text-primary)] font-semibold">🔁 Reauthorization Record</span>
+                )}
+                {selectedRecord.traceability?.timelineEventRef && (
+                  <span className="text-[11px] px-2.5 py-1 rounded-full bg-[var(--bg-badge)] border border-[var(--border-color)] text-[var(--text-primary)] font-semibold">⏱️ Governance Timeline Event</span>
+                )}
               </div>
             </div>
 

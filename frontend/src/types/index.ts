@@ -264,6 +264,55 @@ export interface EvidenceTimelineEvent {
   details: string;
 }
 
+/* ------------------ RELEASE 4 — Readiness Foundation --------------------- */
+
+export type ReadinessStatus = 'Ready' | 'Partially Ready' | 'Not Ready';
+
+export interface GovernanceReadinessResult {
+  status: ReadinessStatus;
+  ownershipAssigned: boolean;
+  oversightAssigned: boolean;
+  autonomyAssigned: boolean;
+  governanceStateValid: boolean;
+}
+
+export interface EvidenceReadinessResult {
+  status: ReadinessStatus;
+  evidenceExists: boolean;
+  evidenceOwnershipExists: boolean;
+  evidenceNotExpired: boolean;
+}
+
+export interface ReviewReadinessResult {
+  status: ReadinessStatus;
+  reviewsScheduled: boolean;
+  reviewsCompleted: boolean;
+  reassessmentsUpToDate: boolean;
+}
+
+export interface AuditReadinessResult {
+  status: ReadinessStatus;
+  governanceRecordsAvailable: boolean;
+  evidenceAvailable: boolean;
+  traceabilityAvailable: boolean;
+}
+
+export type GovernanceGapType =
+  | 'Missing Owner'
+  | 'Missing Oversight'
+  | 'Missing Autonomy'
+  | 'Missing Evidence'
+  | 'Expired Evidence'
+  | 'Missing Review'
+  | 'Missing Reauthorization';
+
+export interface GovernanceGap {
+  assetId: string;
+  assetName: string;
+  gapType: GovernanceGapType;
+  detail: string;
+}
+
 export interface AIAsset {
   id: string;
   name: string;
@@ -377,6 +426,12 @@ export interface GovernanceMetrics {
   evidenceRecordsByStatus: Record<EvidenceRecordStatus, number>;
   expiringEvidenceCount: number;
   expiredEvidenceCount: number;
+  // Release 4 — Readiness Foundation
+  governanceReadinessBreakdown: Record<ReadinessStatus, number>;
+  evidenceReadinessBreakdown: Record<ReadinessStatus, number>;
+  reviewReadinessBreakdown: Record<ReadinessStatus, number>;
+  auditReadinessBreakdown: Record<ReadinessStatus, number>;
+  totalGovernanceGapsCount: number;
 }
 
 export interface PersonaDemoUser {

@@ -151,6 +151,29 @@ export function getEvidenceOverview(): EvidenceOverview {
   };
 }
 
+/* ================ Release 4 — Readiness Foundation Overview ============== */
+
+/** Ready / Partially Ready / Not Ready counts only — no scores. */
+export interface ReadinessOverview {
+  governance: { status: string; count: number }[];
+  evidence: { status: string; count: number }[];
+  audit: { status: string; count: number }[];
+  totalGaps: number;
+}
+
+export function getReadinessOverview(): ReadinessOverview {
+  const metrics = getGovernanceMetrics();
+  const toRows = (breakdown: Record<string, number>) =>
+    Object.entries(breakdown).map(([status, count]) => ({ status, count }));
+
+  return {
+    governance: toRows(metrics.governanceReadinessBreakdown),
+    evidence: toRows(metrics.evidenceReadinessBreakdown),
+    audit: toRows(metrics.auditReadinessBreakdown),
+    totalGaps: metrics.totalGovernanceGapsCount,
+  };
+}
+
 /* =================== WS1 — Governance Health Index ====================== */
 
 /**

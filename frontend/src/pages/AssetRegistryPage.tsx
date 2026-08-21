@@ -5,9 +5,9 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Select } from '../components/ui/Select';
 import { Modal } from '../components/ui/Modal';
-import { RiskBadge, OversightBadge, AutonomyBadge, GovernanceStateBadge, ClassificationBadge, EvidenceStatusBadge, EvidenceExpiryBadge } from '../components/ui/Badge';
+import { RiskBadge, OversightBadge, AutonomyBadge, GovernanceStateBadge, ClassificationBadge, EvidenceStatusBadge, EvidenceExpiryBadge, ReadinessBadge } from '../components/ui/Badge';
 import { StatusBadge } from '../components/ui/StatusBadge';
-import { getAssets, getUsers, saveAsset, deleteAsset, getReassessmentTriggers, getScheduledReviews, getEvidenceRecordsForAsset } from '../services/storageService';
+import { getAssets, getUsers, saveAsset, deleteAsset, getReassessmentTriggers, getScheduledReviews, getEvidenceRecordsForAsset, getGovernanceReadiness, getEvidenceReadiness, getReviewReadiness, getAuditReadiness, getGovernanceGapsForAsset } from '../services/storageService';
 import { OVERSIGHT_TYPES, AUTONOMY_LEVELS, getAuthorityMatrixEntry, defaultAuthorityProfile } from '../config/governanceAuthority';
 import { GOVERNANCE_STATES, GOVERNANCE_CLASSIFICATIONS, defaultGovernanceState } from '../config/governanceContinuity';
 import { getExpiryIndicator } from '../config/evidenceFoundation';
@@ -420,6 +420,42 @@ export const AssetRegistryPage: React.FC = () => {
                       </div>
                       <span className="text-[10px] text-[var(--text-muted)]">{ev.evidenceType} • Owner: {ev.ownership.evidenceOwner}</span>
                     </button>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* Release 4 — Readiness Section & Gap Summary */}
+            <div>
+              <h4 className="text-xs font-bold uppercase text-[var(--text-muted)] tracking-wider mb-2">Readiness</h4>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
+                <div className="p-2.5 rounded-lg bg-[var(--bg-badge)] border border-[var(--border-color)] flex flex-col gap-1">
+                  <span className="text-[10px] text-[var(--text-muted)]">Governance</span>
+                  <ReadinessBadge status={getGovernanceReadiness(selectedAsset.id)!.status} size="sm" />
+                </div>
+                <div className="p-2.5 rounded-lg bg-[var(--bg-badge)] border border-[var(--border-color)] flex flex-col gap-1">
+                  <span className="text-[10px] text-[var(--text-muted)]">Evidence</span>
+                  <ReadinessBadge status={getEvidenceReadiness(selectedAsset.id)!.status} size="sm" />
+                </div>
+                <div className="p-2.5 rounded-lg bg-[var(--bg-badge)] border border-[var(--border-color)] flex flex-col gap-1">
+                  <span className="text-[10px] text-[var(--text-muted)]">Review</span>
+                  <ReadinessBadge status={getReviewReadiness(selectedAsset.id)!.status} size="sm" />
+                </div>
+                <div className="p-2.5 rounded-lg bg-[var(--bg-badge)] border border-[var(--border-color)] flex flex-col gap-1">
+                  <span className="text-[10px] text-[var(--text-muted)]">Audit</span>
+                  <ReadinessBadge status={getAuditReadiness(selectedAsset.id)!.status} size="sm" />
+                </div>
+              </div>
+
+              <span className="text-[10px] font-bold uppercase text-[var(--text-muted)] tracking-wider block mb-1.5">Gap Summary</span>
+              <div className="flex flex-col gap-1.5">
+                {getGovernanceGapsForAsset(selectedAsset.id).length === 0 ? (
+                  <span className="text-[11px] text-emerald-500 font-semibold">✓ No governance gaps detected.</span>
+                ) : (
+                  getGovernanceGapsForAsset(selectedAsset.id).map((gap, i) => (
+                    <div key={i} className="text-[11px] p-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-500">
+                      <span className="font-bold">{gap.gapType}:</span> {gap.detail}
+                    </div>
                   ))
                 )}
               </div>

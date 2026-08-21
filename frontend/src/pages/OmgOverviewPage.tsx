@@ -60,18 +60,12 @@ export const OmgOverviewPage: React.FC = () => {
             <ul className="flex flex-col gap-1.5">
               {[
                 'Know what AI exists.',
-                'Assign clear accountability.',
-                'Apply appropriate human oversight.',
-                'Understand autonomy exposure.',
-                'Assess the risks.',
-                'Validate the evidence.',
+                'Assign accountability.',
+                'Maintain governance continuity.',
                 'Capture supporting evidence.',
-                'Trace governance decisions.',
-                'Demonstrate audit readiness.',
-                'Authorize AI use.',
-                'Monitor governance continuously.',
-                'Reassess when meaningful changes occur.',
-                'Maintain governance confidence throughout the lifecycle.',
+                'Measure governance readiness.',
+                'Identify governance gaps.',
+                'Prepare for audits.',
               ].map(line => (
                 <li key={line} className="flex items-start gap-2.5">
                   <span
@@ -104,7 +98,7 @@ export const OmgOverviewPage: React.FC = () => {
             </div>
 
             <p className="text-[11px] text-[var(--text-muted)]">
-              Twenty-one steps — no training required.
+              Twenty-five steps — no training required.
             </p>
           </div>
 
@@ -256,10 +250,11 @@ export const OmgOverviewPage: React.FC = () => {
             Take the Guided Tour
           </h2>
           <p className="text-[12.5px] text-[var(--text-secondary)] mt-1.5 leading-relaxed max-w-2xl">
-            Twenty-one stops across the governance flow — accountability, oversight and autonomy,
+            Twenty-five stops across the governance flow — accountability, oversight and autonomy,
             then risk, validation, evidence, decision, governance state, review schedule,
-            reassessment triggers, timeline and reauthorization history, then change and audit.
-            Each stop explains what the module is, why it exists and what to look at, and can take you straight there.
+            reassessment triggers, timeline and reauthorization history, then readiness, gap
+            detection, audit readiness, change and audit. Each stop explains what the module is,
+            why it exists and what to look at, and can take you straight there.
           </p>
         </div>
         <button

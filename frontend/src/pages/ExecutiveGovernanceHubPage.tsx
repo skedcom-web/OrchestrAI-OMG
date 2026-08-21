@@ -22,9 +22,10 @@ import {
   getGovernanceHealthIndex,
   getGovernanceScorecards,
   getGovernanceTrends,
+  getReadinessOverview,
 } from '../services/executiveGovernance';
-import { GovernanceStateBadge } from '../components/ui/Badge';
-import type { ExecutiveAlertType, ExecutiveViewId, GovernanceState, PolicyViolationSeverity } from '../types';
+import { GovernanceStateBadge, ReadinessBadge } from '../components/ui/Badge';
+import type { ExecutiveAlertType, ExecutiveViewId, GovernanceState, PolicyViolationSeverity, ReadinessStatus } from '../types';
 
 const SEVERITY_COLOR: Record<PolicyViolationSeverity, string> = {
   Critical: 'var(--status-danger)',
@@ -68,6 +69,7 @@ export const ExecutiveGovernanceHubPage: React.FC = () => {
       authority: getAuthorityOversightSummary(),
       continuity: getContinuityOverview(),
       evidence: getEvidenceOverview(),
+      readiness: getReadinessOverview(),
       health: getGovernanceHealthIndex(),
       metrics: getGovernanceMetrics(),
       scorecards: getGovernanceScorecards(),
@@ -463,6 +465,49 @@ export const ExecutiveGovernanceHubPage: React.FC = () => {
               <p className="text-[11.5px] text-[var(--text-secondary)]">No evidence record linked yet</p>
             </div>
           </div>
+        </section>
+      )}
+
+      {/* ===================== READINESS OVERVIEW (Release 4) ===================== */}
+      {(shows('estate') || shows('summary') || shows('portfolio')) && (
+        <section className="flex flex-col gap-4">
+          <SectionHeader
+            eyebrow="Release 4"
+            title="Readiness Overview"
+            subtitle="Is governance complete and ready? Ready / Partially Ready / Not Ready — no scores."
+            icon="✅"
+            action={
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="text-[11px] font-bold text-[var(--accent-primary)] hover:underline cursor-pointer"
+              >
+                Open readiness summary →
+              </button>
+            }
+          />
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {([
+              { label: 'Governance Readiness', rows: data.readiness.governance },
+              { label: 'Evidence Readiness', rows: data.readiness.evidence },
+              { label: 'Audit Readiness', rows: data.readiness.audit },
+            ] as const).map(dim => (
+              <div key={dim.label} className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4 flex flex-col gap-2">
+                <p className="text-[10px] font-extrabold uppercase tracking-[0.1em] text-[var(--text-muted)]">{dim.label}</p>
+                <div className="flex flex-col gap-1.5">
+                  {dim.rows.map(row => (
+                    <div key={row.status} className="flex items-center justify-between">
+                      <ReadinessBadge status={row.status as ReadinessStatus} size="sm" />
+                      <span className="text-[12px] font-bold text-[var(--text-primary)]">{row.count}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="text-[11.5px] text-[var(--text-secondary)]">
+            {data.readiness.totalGaps} governance gaps detected across the portfolio.
+          </p>
         </section>
       )}
 

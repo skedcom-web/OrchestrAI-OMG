@@ -3,13 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { MetricCard } from '../components/ui/MetricCard';
-import { RiskBadge, OversightBadge, GovernanceStateBadge, ClassificationBadge, EvidenceStatusBadge } from '../components/ui/Badge';
+import { RiskBadge, OversightBadge, GovernanceStateBadge, ClassificationBadge, EvidenceStatusBadge, ReadinessBadge } from '../components/ui/Badge';
 import { StatusBadge } from '../components/ui/StatusBadge';
-import { getGovernanceMetrics, getAssets, getAuditLogs, getEvidenceRecords } from '../services/storageService';
+import { getGovernanceMetrics, getAssets, getAuditLogs, getEvidenceRecords, getAllGovernanceGaps } from '../services/storageService';
 import { OVERSIGHT_TYPES, AUTONOMY_LEVELS } from '../config/governanceAuthority';
 import { GOVERNANCE_STATES, GOVERNANCE_CLASSIFICATIONS } from '../config/governanceContinuity';
 import { EVIDENCE_TYPES, EVIDENCE_STATUSES, getExpiryIndicator } from '../config/evidenceFoundation';
-import type { AssetType, RiskLevel, HumanOversightType } from '../types';
+import type { AssetType, RiskLevel, HumanOversightType, ReadinessStatus } from '../types';
+
+const READINESS_ORDER: ReadinessStatus[] = ['Ready', 'Partially Ready', 'Not Ready'];
 
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
@@ -17,6 +19,7 @@ export const DashboardPage: React.FC = () => {
   const [assets] = useState(() => getAssets());
   const [auditLogs] = useState(() => getAuditLogs().slice(0, 5));
   const [evidenceRecords] = useState(() => getEvidenceRecords());
+  const [gaps] = useState(() => getAllGovernanceGaps());
 
   const expiringOrExpiredEvidence = evidenceRecords
     .filter(e => {
@@ -327,6 +330,59 @@ export const DashboardPage: React.FC = () => {
                 >
                   <span className="text-xs font-bold text-[var(--text-primary)] block truncate">{e.name}</span>
                   <span className="text-[10px] text-[var(--text-muted)]">{e.assetName} • Expires {e.expiryDate}</span>
+                </button>
+              ))
+            )}
+          </div>
+        </Card>
+      </div>
+
+      {/* Release 4 — Readiness Foundation: Readiness Summary & Gaps */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card className="lg:col-span-2 flex flex-col gap-4">
+          <div>
+            <h3 className="text-lg font-bold text-[var(--text-primary)]">Readiness Summary</h3>
+            <p className="text-xs text-[var(--text-secondary)]">Is governance complete and ready? Ready / Partially Ready / Not Ready only — no scores.</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {([
+              { label: 'Governance Readiness', breakdown: metrics.governanceReadinessBreakdown },
+              { label: 'Evidence Readiness', breakdown: metrics.evidenceReadinessBreakdown },
+              { label: 'Review Readiness', breakdown: metrics.reviewReadinessBreakdown },
+              { label: 'Audit Readiness', breakdown: metrics.auditReadinessBreakdown },
+            ] as const).map(dim => (
+              <div key={dim.label} className="p-3 rounded-xl bg-[var(--bg-badge)] border border-[var(--border-color)] flex flex-col gap-2">
+                <span className="text-xs font-bold text-[var(--text-primary)]">{dim.label}</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {READINESS_ORDER.map(status => (
+                    <div key={status} className="flex items-center gap-1">
+                      <ReadinessBadge status={status} size="sm" />
+                      <span className="text-[11px] font-bold text-[var(--text-primary)]">{dim.breakdown[status]}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        <Card className="flex flex-col gap-4">
+          <div>
+            <h3 className="text-lg font-bold text-[var(--text-primary)]">Readiness Gaps</h3>
+            <p className="text-xs text-[var(--text-secondary)]">{metrics.totalGovernanceGapsCount} gaps across the portfolio</p>
+          </div>
+          <div className="flex flex-col gap-2 max-h-72 overflow-y-auto">
+            {gaps.length === 0 ? (
+              <span className="text-xs text-[var(--text-muted)] italic">No governance gaps detected.</span>
+            ) : (
+              gaps.slice(0, 8).map((gap, i) => (
+                <button
+                  key={i}
+                  onClick={() => navigate('/assets')}
+                  className="text-left p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 hover:border-amber-500/50 transition-all cursor-pointer"
+                >
+                  <span className="text-xs font-bold text-amber-500 block">{gap.gapType}</span>
+                  <span className="text-[10px] text-[var(--text-muted)]">{gap.assetName} — {gap.detail}</span>
                 </button>
               ))
             )}

@@ -192,6 +192,16 @@ model AIAsset {
   humanOverrideAuthority  String?
   killSwitchAuthority     String?
   reassessmentAuthority   String?
+  /// Release 4 — completes the Authority Profile as flat, API-writable scalars
+  /// (distinct from the legacy User-relation-based AssetOwner.riskOwner etc.).
+  authorityRiskOwner       String?
+  authorityTechnicalOwner  String?
+  authorityComplianceOwner String?
+
+  /// Release 4 — the free-text five-role Ownership Matrix (OwnershipAssignment),
+  /// stored as JSON rather than forced through the User-relation AssetOwner
+  /// model, since demo/API ownership today is names, not resolved User rows.
+  ownershipJson Json?
 
   // Release 1 — Human Oversight Classification (Capability 2)
   oversightType    HumanOversightType?

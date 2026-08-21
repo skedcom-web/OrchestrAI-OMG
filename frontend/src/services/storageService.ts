@@ -57,6 +57,13 @@ import {
 import { getAuthorityMatrixEntry, defaultAuthorityProfile, authorityProfileCompleteness } from '../config/governanceAuthority';
 import { defaultGovernanceState } from '../config/governanceContinuity';
 import { getExpiryIndicator } from '../config/evidenceFoundation';
+import {
+  computeGovernanceReadiness,
+  computeEvidenceReadiness,
+  computeReviewReadiness,
+  computeAuditReadiness,
+  computeGovernanceGaps,
+} from '../config/readinessFoundation';
 
 const STORAGE_KEYS = {
   ASSETS: 'omg_assets_v7',
@@ -1690,6 +1697,47 @@ export function generateGovernanceReviewPackage(assetId: string, authorName: str
 }
 
 // --- METRICS WITH PHASE 7 EXTENSIONS ---
+// --- RELEASE 4 — READINESS FOUNDATION SERVICE ---
+
+export function getGovernanceReadiness(assetId: string) {
+  const asset = getAssetById(assetId);
+  if (!asset) return null;
+  return computeGovernanceReadiness(asset);
+}
+
+export function getEvidenceReadiness(assetId: string) {
+  const asset = getAssetById(assetId);
+  if (!asset) return null;
+  return computeEvidenceReadiness(asset, getEvidenceRecordsForAsset(assetId));
+}
+
+export function getReviewReadiness(assetId: string) {
+  const asset = getAssetById(assetId);
+  if (!asset) return null;
+  const reviews = getScheduledReviews().filter(r => r.assetId === assetId);
+  const triggers = getReassessmentTriggers().filter(t => t.assetId === assetId);
+  return computeReviewReadiness(asset, reviews, triggers);
+}
+
+export function getAuditReadiness(assetId: string) {
+  const asset = getAssetById(assetId);
+  if (!asset) return null;
+  return computeAuditReadiness(asset, getEvidenceRecordsForAsset(assetId));
+}
+
+export function getGovernanceGapsForAsset(assetId: string) {
+  const asset = getAssetById(assetId);
+  if (!asset) return [];
+  const evidence = getEvidenceRecordsForAsset(assetId);
+  const reviews = getScheduledReviews().filter(r => r.assetId === assetId);
+  const reauthorizations = getReauthorizationRecords().filter(r => r.assetId === assetId);
+  return computeGovernanceGaps(asset, evidence, reviews, reauthorizations);
+}
+
+export function getAllGovernanceGaps() {
+  return getAssets().flatMap(a => getGovernanceGapsForAsset(a.id));
+}
+
 export function getGovernanceMetrics(): GovernanceMetrics {
   const assets = getAssets();
   const validations = getValidations();
@@ -1840,7 +1888,27 @@ export function getGovernanceMetrics(): GovernanceMetrics {
     evidenceRecordsByStatus: { 'Draft': 0, 'Active': 0, 'Expired': 0, 'Archived': 0, 'Superseded': 0 },
     expiringEvidenceCount: evidenceRecords.filter(e => getExpiryIndicator(e.expiryDate) === 'Expiring Soon').length,
     expiredEvidenceCount: evidenceRecords.filter(e => getExpiryIndicator(e.expiryDate) === 'Expired').length,
+    governanceReadinessBreakdown: { 'Ready': 0, 'Partially Ready': 0, 'Not Ready': 0 },
+    evidenceReadinessBreakdown: { 'Ready': 0, 'Partially Ready': 0, 'Not Ready': 0 },
+    reviewReadinessBreakdown: { 'Ready': 0, 'Partially Ready': 0, 'Not Ready': 0 },
+    auditReadinessBreakdown: { 'Ready': 0, 'Partially Ready': 0, 'Not Ready': 0 },
+    totalGovernanceGapsCount: 0,
   };
+
+  let totalGaps = 0;
+  assets.forEach(asset => {
+    const assetEvidence = evidenceRecords.filter(e => e.assetId === asset.id);
+    const assetReviews = reviews.filter(r => r.assetId === asset.id);
+    const assetTriggers = triggers.filter(t => t.assetId === asset.id);
+    const assetReauthorizations = getReauthorizationRecords().filter(r => r.assetId === asset.id);
+
+    metrics.governanceReadinessBreakdown[computeGovernanceReadiness(asset).status]++;
+    metrics.evidenceReadinessBreakdown[computeEvidenceReadiness(asset, assetEvidence).status]++;
+    metrics.reviewReadinessBreakdown[computeReviewReadiness(asset, assetReviews, assetTriggers).status]++;
+    metrics.auditReadinessBreakdown[computeAuditReadiness(asset, assetEvidence).status]++;
+    totalGaps += computeGovernanceGaps(asset, assetEvidence, assetReviews, assetReauthorizations).length;
+  });
+  metrics.totalGovernanceGapsCount = totalGaps;
 
   evidenceRecords.forEach(e => {
     if (metrics.evidenceRecordsByType[e.evidenceType] !== undefined) metrics.evidenceRecordsByType[e.evidenceType]++;

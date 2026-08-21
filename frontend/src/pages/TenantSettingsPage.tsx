@@ -1,10 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { SectionHeader } from '../components/ui/SectionHeader';
+import { Button } from '../components/ui/Button';
 import { useTheme } from '../contexts/ThemeContext';
 import { useExperience } from '../contexts/ExperienceContext';
 import { useAuth } from '../contexts/AuthContext';
 import { getGovernanceMetrics } from '../services/storageService';
 import { NAV_DOMAINS, FUTURE_MODULES } from '../config/navigation';
+import { getDataMode, setDataMode, type DataMode } from '../repositories';
+import { API_BASE_URL } from '../repositories/apiClient';
+import { migrateLocalDataToNeon, type MigrationResult } from '../services/migrationService';
 import type { ThemeMode } from '../types';
 
 const SettingRow: React.FC<{
@@ -28,6 +32,43 @@ export const TenantSettingsPage: React.FC = () => {
   const { mode, setMode } = useExperience();
   const { currentPersona } = useAuth();
   const metrics = getGovernanceMetrics();
+
+  // Release 4 — Persistence Foundation
+  const [dataMode, setDataModeState] = useState<DataMode>(() => getDataMode());
+  const [healthStatus, setHealthStatus] = useState<'idle' | 'checking' | 'online' | 'offline'>('idle');
+  const [migrating, setMigrating] = useState(false);
+  const [migrationLog, setMigrationLog] = useState<string | null>(null);
+  const [migrationResult, setMigrationResult] = useState<MigrationResult | null>(null);
+
+  const handleDataModeChange = (next: DataMode) => {
+    setDataMode(next);
+    setDataModeState(next);
+  };
+
+  const checkBackendHealth = async () => {
+    setHealthStatus('checking');
+    try {
+      const res = await fetch(`${API_BASE_URL}/health`);
+      setHealthStatus(res.ok ? 'online' : 'offline');
+    } catch {
+      setHealthStatus('offline');
+    }
+  };
+
+  const runMigration = async () => {
+    if (!confirm('Copy all local demo data (assets, evidence, continuity records) to the live Neon database? This creates new records — it does not delete anything locally.')) return;
+    setMigrating(true);
+    setMigrationResult(null);
+    setMigrationLog('Starting migration...');
+    try {
+      const result = await migrateLocalDataToNeon(msg => setMigrationLog(msg));
+      setMigrationResult(result);
+    } catch (err) {
+      setMigrationLog(`Migration failed: ${(err as Error).message}`);
+    } finally {
+      setMigrating(false);
+    }
+  };
 
   const themes: { value: ThemeMode; label: string; icon: string }[] = [
     { value: 'light', label: 'Light', icon: '☀️' },
@@ -82,6 +123,118 @@ export const TenantSettingsPage: React.FC = () => {
               <p className="text-[13px] font-bold text-[var(--text-primary)] mt-1">{fact.value}</p>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* Release 4 — Persistence Foundation: System of Record */}
+      <section className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-5 flex flex-col gap-4">
+        <SectionHeader
+          title="System of Record"
+          subtitle="Demo = Production Architecture. Only the storage provider changes."
+          icon="🗄️"
+        />
+
+        <div
+          data-noglass
+          className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-sunken)] px-3.5 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2"
+        >
+          <div>
+            <p className="text-[9.5px] font-extrabold uppercase tracking-[0.11em] text-[var(--text-muted)]">Demo Tenant</p>
+            <p className="text-[13px] font-bold text-[var(--text-primary)] mt-1">OMG Demo Organization</p>
+          </div>
+          <p className="text-[11px] text-[var(--text-muted)] max-w-sm">
+            Future customer tenants (a bank, an insurer, an enterprise customer) run on the same
+            repository pattern below — multi-tenant support is prepared, not yet active.
+          </p>
+        </div>
+
+        <SettingRow
+          label="Data mode"
+          description="Demo Mode reads and writes this browser's local storage — nothing here can affect a real tenant. Production Mode routes Assets, Evidence and Continuity through the live API to Neon."
+        >
+          <div data-noglass className="flex items-center p-0.5 rounded-xl bg-[var(--bg-badge)] border border-[var(--border-color)]">
+            {(['demo', 'production'] as DataMode[]).map(value => (
+              <button
+                key={value}
+                onClick={() => handleDataModeChange(value)}
+                className={`px-3 py-1.5 rounded-lg text-[11.5px] font-bold capitalize transition-all cursor-pointer ${
+                  dataMode === value
+                    ? 'bg-[var(--accent-primary)] text-white shadow-sm'
+                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                }`}
+              >
+                {value}
+              </button>
+            ))}
+          </div>
+        </SettingRow>
+
+        <SettingRow
+          label="Backend API connection"
+          description="NestJS + Prisma + Neon, the same API the Data Migration Utility writes to."
+        >
+          <div className="flex items-center gap-2">
+            {healthStatus !== 'idle' && (
+              <span
+                className={`text-[10px] font-extrabold uppercase px-2 py-1 rounded-lg ${
+                  healthStatus === 'online' ? 'bg-emerald-500/15 text-emerald-500' :
+                  healthStatus === 'offline' ? 'bg-red-500/15 text-red-500' :
+                  'bg-[var(--bg-badge)] text-[var(--text-muted)]'
+                }`}
+              >
+                {healthStatus === 'checking' ? 'Checking…' : healthStatus}
+              </span>
+            )}
+            <Button size="sm" variant="secondary" onClick={checkBackendHealth}>
+              Check connection
+            </Button>
+          </div>
+        </SettingRow>
+
+        <div className="pt-2 border-t border-[var(--border-subtle)] flex flex-col gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-[13px] font-bold text-[var(--text-primary)]">Data Migration Utility</p>
+              <p className="text-[11.5px] text-[var(--text-secondary)] mt-0.5 leading-relaxed">
+                Local Storage → Neon. Copies every local asset, evidence record, reassessment
+                trigger, reauthorization record and scheduled review to the live database,
+                preserving demo data while moving toward production persistence.
+              </p>
+            </div>
+            <Button size="sm" onClick={runMigration} disabled={migrating}>
+              {migrating ? 'Migrating…' : 'Migrate Local Data to Neon'}
+            </Button>
+          </div>
+
+          {migrationLog && (
+            <p className="text-[11px] text-[var(--text-muted)] font-mono">{migrationLog}</p>
+          )}
+
+          {migrationResult && (
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+              {[
+                { label: 'Assets', value: migrationResult.assetsCreated },
+                { label: 'Evidence', value: migrationResult.evidenceCreated },
+                { label: 'Triggers', value: migrationResult.triggersCreated },
+                { label: 'Reauthorizations', value: migrationResult.reauthorizationsCreated },
+                { label: 'Reviews', value: migrationResult.reviewsCreated },
+              ].map(row => (
+                <div key={row.label} data-noglass className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-sunken)] px-3 py-2">
+                  <p className="text-[9px] font-extrabold uppercase text-[var(--text-muted)]">{row.label}</p>
+                  <p className="text-[15px] font-black text-[var(--text-primary)]">{row.value}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {migrationResult && migrationResult.errors.length > 0 && (
+            <div className="flex flex-col gap-1">
+              <p className="text-[11px] font-bold text-red-500">{migrationResult.errors.length} error(s):</p>
+              {migrationResult.errors.slice(0, 5).map((err, i) => (
+                <p key={i} className="text-[10.5px] text-red-500 font-mono">{err}</p>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
