@@ -20,6 +20,11 @@ import type {
   GovernanceData,
   GovernanceRecordKind,
   GovernanceRepository,
+  ObligationControlRepository,
+  ObligationEvidenceMappingRepository,
+  ObligationRepository,
+  RegulatoryRequirementRepository,
+  RegulatorySourceRepository,
   RequirementRepository,
 } from './types';
 import type {
@@ -28,8 +33,13 @@ import type {
   ComplianceRequirement,
   EvidenceMapping,
   GovernanceReauthorizationRecord,
+  Obligation,
+  ObligationControl,
+  ObligationEvidenceMapping,
   PackControl,
   ReassessmentTrigger,
+  RegulatoryRequirement,
+  RegulatorySource,
   ScheduledReview,
 } from '../types';
 
@@ -341,6 +351,198 @@ export const apiEvidenceMappingRepository: EvidenceMappingRepository = {
   },
   async deleteMapping(id) {
     await apiRequest<void>(`/evidence-mappings/${id}`, { method: 'DELETE' });
+  },
+};
+
+// --- RELEASE 6 — UNIVERSAL REGULATORY KNOWLEDGE & OBLIGATION ENGINE ---
+
+function sourceToBackend(data: Partial<RegulatorySource>) {
+  const body: Record<string, unknown> = { ...data };
+  if (data.sourceType) body.sourceType = enumMaps.regulatorySourceType.toBackend(data.sourceType);
+  if (data.status) body.status = enumMaps.regulatorySourceStatus.toBackend(data.status);
+  if (data.effectiveDate) body.effectiveDate = new Date(data.effectiveDate).toISOString();
+  if (data.reviewDate) body.reviewDate = new Date(data.reviewDate).toISOString();
+  return body;
+}
+
+function sourceFromBackend(row: any): RegulatorySource {
+  return {
+    id: row.id,
+    name: row.name,
+    sourceType: enumMaps.regulatorySourceType.toFrontend(row.sourceType),
+    jurisdiction: row.jurisdiction,
+    industry: row.industry,
+    version: row.version,
+    effectiveDate: String(row.effectiveDate).split('T')[0],
+    reviewDate: row.reviewDate ? String(row.reviewDate).split('T')[0] : undefined,
+    status: enumMaps.regulatorySourceStatus.toFrontend(row.status),
+  };
+}
+
+function regRequirementToBackend(data: Partial<RegulatoryRequirement>) {
+  const body: Record<string, unknown> = { ...data };
+  delete body.sourceName;
+  if (data.criticality) body.criticality = enumMaps.requirementCriticality.toBackend(data.criticality);
+  if (data.status) body.status = enumMaps.regulatoryRequirementStatus.toBackend(data.status);
+  return body;
+}
+
+function regRequirementFromBackend(row: any, sourceName = ''): RegulatoryRequirement {
+  return {
+    id: row.id,
+    name: row.name,
+    description: row.description,
+    category: row.category,
+    criticality: enumMaps.requirementCriticality.toFrontend(row.criticality),
+    status: enumMaps.regulatoryRequirementStatus.toFrontend(row.status),
+    sourceId: row.sourceId,
+    sourceName,
+  };
+}
+
+function obligationToBackend(data: Partial<Obligation>) {
+  const body: Record<string, unknown> = { ...data };
+  delete body.requirementName;
+  if (data.status) body.status = enumMaps.obligationStatus.toBackend(data.status);
+  return body;
+}
+
+function obligationFromBackend(row: any, requirementName = ''): Obligation {
+  return {
+    id: row.id,
+    name: row.name,
+    description: row.description,
+    owner: row.owner || '',
+    status: enumMaps.obligationStatus.toFrontend(row.status),
+    requirementId: row.requirementId,
+    requirementName,
+  };
+}
+
+function obligationControlToBackend(data: Partial<ObligationControl>) {
+  const body: Record<string, unknown> = { ...data };
+  delete body.obligationName;
+  if (data.status) body.status = enumMaps.obligationControlStatus.toBackend(data.status);
+  return body;
+}
+
+function obligationControlFromBackend(row: any, obligationName = ''): ObligationControl {
+  return {
+    id: row.id,
+    name: row.name,
+    description: row.description,
+    owner: row.owner || '',
+    status: enumMaps.obligationControlStatus.toFrontend(row.status),
+    obligationId: row.obligationId,
+    obligationName,
+  };
+}
+
+function obligationMappingToBackend(data: Partial<ObligationEvidenceMapping>) {
+  const body: Record<string, unknown> = {};
+  if (data.id) body.id = data.id;
+  if (data.controlId) body.controlId = data.controlId;
+  if (data.evidenceId) body.evidenceRecordId = data.evidenceId;
+  return body;
+}
+
+function obligationMappingFromBackend(row: any, controlName = '', evidenceName = ''): ObligationEvidenceMapping {
+  return {
+    id: row.id,
+    controlId: row.controlId,
+    controlName,
+    evidenceId: row.evidenceRecordId,
+    evidenceName,
+  };
+}
+
+export const apiRegulatorySourceRepository: RegulatorySourceRepository = {
+  async getSources() {
+    const rows = await apiRequest<any[]>('/regulatory-sources');
+    return rows.map(sourceFromBackend);
+  },
+  async createSource(data) {
+    const row = await apiRequest<any>('/regulatory-sources', { method: 'POST', body: JSON.stringify(sourceToBackend(data)) });
+    return sourceFromBackend(row);
+  },
+  async updateSource(id, data) {
+    const row = await apiRequest<any>(`/regulatory-sources/${id}`, { method: 'PATCH', body: JSON.stringify(sourceToBackend(data)) });
+    return sourceFromBackend(row);
+  },
+  async deleteSource(id) {
+    await apiRequest<void>(`/regulatory-sources/${id}`, { method: 'DELETE' });
+  },
+};
+
+export const apiRegulatoryRequirementRepository: RegulatoryRequirementRepository = {
+  async getRequirements() {
+    const rows = await apiRequest<any[]>('/regulatory-requirements');
+    return rows.map(r => regRequirementFromBackend(r));
+  },
+  async createRequirement(data) {
+    const row = await apiRequest<any>('/regulatory-requirements', { method: 'POST', body: JSON.stringify(regRequirementToBackend(data)) });
+    return regRequirementFromBackend(row, data.sourceName);
+  },
+  async updateRequirement(id, data) {
+    const row = await apiRequest<any>(`/regulatory-requirements/${id}`, { method: 'PATCH', body: JSON.stringify(regRequirementToBackend(data)) });
+    return regRequirementFromBackend(row, data.sourceName);
+  },
+  async deleteRequirement(id) {
+    await apiRequest<void>(`/regulatory-requirements/${id}`, { method: 'DELETE' });
+  },
+};
+
+export const apiObligationRepository: ObligationRepository = {
+  async getObligations() {
+    const rows = await apiRequest<any[]>('/obligations');
+    return rows.map(r => obligationFromBackend(r));
+  },
+  async createObligation(data) {
+    const row = await apiRequest<any>('/obligations', { method: 'POST', body: JSON.stringify(obligationToBackend(data)) });
+    return obligationFromBackend(row, data.requirementName);
+  },
+  async updateObligation(id, data) {
+    const row = await apiRequest<any>(`/obligations/${id}`, { method: 'PATCH', body: JSON.stringify(obligationToBackend(data)) });
+    return obligationFromBackend(row, data.requirementName);
+  },
+  async deleteObligation(id) {
+    await apiRequest<void>(`/obligations/${id}`, { method: 'DELETE' });
+  },
+};
+
+export const apiObligationControlRepository: ObligationControlRepository = {
+  async getControls() {
+    const rows = await apiRequest<any[]>('/obligation-controls');
+    return rows.map(r => obligationControlFromBackend(r));
+  },
+  async createControl(data) {
+    const row = await apiRequest<any>('/obligation-controls', { method: 'POST', body: JSON.stringify(obligationControlToBackend(data)) });
+    return obligationControlFromBackend(row, data.obligationName);
+  },
+  async updateControl(id, data) {
+    const row = await apiRequest<any>(`/obligation-controls/${id}`, { method: 'PATCH', body: JSON.stringify(obligationControlToBackend(data)) });
+    return obligationControlFromBackend(row, data.obligationName);
+  },
+  async deleteControl(id) {
+    await apiRequest<void>(`/obligation-controls/${id}`, { method: 'DELETE' });
+  },
+};
+
+export const apiObligationEvidenceMappingRepository: ObligationEvidenceMappingRepository = {
+  async getMappings() {
+    const rows = await apiRequest<any[]>('/obligation-evidence-mappings');
+    return rows.map(r => obligationMappingFromBackend(r));
+  },
+  async createMapping(data) {
+    const row = await apiRequest<any>('/obligation-evidence-mappings', { method: 'POST', body: JSON.stringify(obligationMappingToBackend(data)) });
+    return obligationMappingFromBackend(row, data.controlName, data.evidenceName);
+  },
+  async updateMapping(id, data) {
+    const row = await apiRequest<any>(`/obligation-evidence-mappings/${id}`, { method: 'PATCH', body: JSON.stringify(obligationMappingToBackend(data)) });
+    return obligationMappingFromBackend(row, data.controlName, data.evidenceName);
+  },
+  async deleteMapping(id) {
+    await apiRequest<void>(`/obligation-evidence-mappings/${id}`, { method: 'DELETE' });
   },
 };
 

@@ -5,7 +5,7 @@ import { Button } from '../components/ui/Button';
 import { MetricCard } from '../components/ui/MetricCard';
 import { RiskBadge, OversightBadge, GovernanceStateBadge, ClassificationBadge, EvidenceStatusBadge, ReadinessBadge, ComplianceCoverageBadge } from '../components/ui/Badge';
 import { StatusBadge } from '../components/ui/StatusBadge';
-import { getGovernanceMetrics, getAssets, getAuditLogs, getEvidenceRecords, getAllGovernanceGaps, getAllPackGaps } from '../services/storageService';
+import { getGovernanceMetrics, getAssets, getAuditLogs, getEvidenceRecords, getAllGovernanceGaps, getAllPackGaps, getAllSourceGaps } from '../services/storageService';
 import { OVERSIGHT_TYPES, AUTONOMY_LEVELS } from '../config/governanceAuthority';
 import { GOVERNANCE_STATES, GOVERNANCE_CLASSIFICATIONS } from '../config/governanceContinuity';
 import { EVIDENCE_TYPES, EVIDENCE_STATUSES, getExpiryIndicator } from '../config/evidenceFoundation';
@@ -22,6 +22,7 @@ export const DashboardPage: React.FC = () => {
   const [evidenceRecords] = useState(() => getEvidenceRecords());
   const [gaps] = useState(() => getAllGovernanceGaps());
   const [packGaps] = useState(() => getAllPackGaps());
+  const [sourceGaps] = useState(() => getAllSourceGaps());
 
   const expiringOrExpiredEvidence = evidenceRecords
     .filter(e => {
@@ -435,6 +436,74 @@ export const DashboardPage: React.FC = () => {
               ))
             )}
           </div>
+        </Card>
+      </div>
+
+      {/* Release 6 — Universal Regulatory Knowledge & Obligation Engine */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card className="lg:col-span-2 flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-bold text-[var(--text-primary)]">Regulatory Coverage Overview</h3>
+              <p className="text-xs text-[var(--text-secondary)]">{metrics.activeRegulatorySourcesCount} active regulatory sources • Covered / Partially Covered / Not Covered / Not Applicable — no scores</p>
+            </div>
+            <Button size="sm" variant="ghost" onClick={() => navigate('/mapping-workspace')}>
+              Open Mapping Workspace →
+            </Button>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {COVERAGE_ORDER.map(status => (
+              <div key={status} className="p-3 rounded-xl bg-[var(--bg-badge)] border border-[var(--border-color)] flex flex-col gap-2">
+                <ComplianceCoverageBadge status={status} size="sm" />
+                <span className="text-lg font-black text-[var(--text-primary)]">{metrics.sourceCoverageBreakdown[status]}</span>
+              </div>
+            ))}
+          </div>
+          {Object.keys(metrics.requirementsByCategory).length > 0 && (
+            <div className="pt-2 border-t border-[var(--border-color)]">
+              <span className="text-xs font-bold uppercase text-[var(--text-muted)] block mb-2">Requirements by Category</span>
+              <div className="flex flex-wrap gap-2">
+                {Object.entries(metrics.requirementsByCategory).map(([category, count]) => (
+                  <span key={category} className="text-xs px-2.5 py-1 rounded-full bg-[var(--bg-badge)] border border-[var(--border-color)] text-[var(--text-secondary)]">
+                    {category}: <span className="font-bold text-[var(--text-primary)]">{count}</span>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </Card>
+
+        <Card className="flex flex-col gap-4">
+          <div>
+            <h3 className="text-lg font-bold text-[var(--text-primary)]">Open Gaps Summary</h3>
+            <p className="text-xs text-[var(--text-secondary)]">{metrics.totalRegulatoryGapsCount} gaps across registered sources</p>
+          </div>
+          <div className="flex flex-col gap-2 max-h-40 overflow-y-auto">
+            {sourceGaps.length === 0 ? (
+              <span className="text-xs text-[var(--text-muted)] italic">No regulatory gaps detected.</span>
+            ) : (
+              sourceGaps.slice(0, 4).map((gap, i) => (
+                <button
+                  key={i}
+                  onClick={() => navigate('/mapping-workspace')}
+                  className="text-left p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 hover:border-amber-500/50 transition-all cursor-pointer"
+                >
+                  <span className="text-xs font-bold text-amber-500 block">{gap.gapType}</span>
+                  <span className="text-[10px] text-[var(--text-muted)]">{gap.sourceName} — {gap.detail}</span>
+                </button>
+              ))
+            )}
+          </div>
+          {metrics.topMissingControls.length > 0 && (
+            <div className="pt-2 border-t border-[var(--border-color)]">
+              <span className="text-xs font-bold uppercase text-[var(--text-muted)] block mb-2">Top Missing Controls</span>
+              <div className="flex flex-col gap-1">
+                {metrics.topMissingControls.map((mc, i) => (
+                  <span key={i} className="text-[10px] text-[var(--text-muted)] truncate">{mc.name}{mc.requirementName ? ` — ${mc.requirementName}` : ''}</span>
+                ))}
+              </div>
+            </div>
+          )}
         </Card>
       </div>
 

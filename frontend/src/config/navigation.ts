@@ -348,6 +348,28 @@ export const NAV_DOMAINS: NavDomain[] = [
         description: 'Tenant-wide regulatory alignment scoring and coverage.',
         keywords: ['rbi score', 'analytics', 'alignment'],
       },
+      {
+        path: '/mapping-workspace',
+        label: 'Mapping Workspace',
+        icon: '🗺️',
+        description: 'The reusable foundation every future regulation plugs into — sources, requirements, obligations, controls and evidence mappings.',
+        keywords: ['regulatory source', 'obligation', 'mapping workspace', 'foundation', 'knowledge engine'],
+        badge: 'Release 6',
+      },
+      {
+        path: '/requirement-registry',
+        label: 'Requirement Registry',
+        icon: '📋',
+        description: 'Every requirement registered across every regulatory source.',
+        keywords: ['requirement registry', 'catalogue', 'regulatory'],
+      },
+      {
+        path: '/obligation-library',
+        label: 'Obligation Library',
+        icon: '🎯',
+        description: 'Every requirement translated into actionable obligations, browsable across sources.',
+        keywords: ['obligation library', 'named owner', 'approval authority', 'escalation'],
+      },
     ],
   },
   {

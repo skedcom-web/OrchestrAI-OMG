@@ -21,7 +21,12 @@ import type {
   CompliancePack,
   ComplianceRequirement,
   PackControl,
-  EvidenceMapping
+  EvidenceMapping,
+  RegulatorySource,
+  RegulatoryRequirement,
+  Obligation,
+  ObligationControl,
+  ObligationEvidenceMapping
 } from '../types';
 
 export const SEEDED_COMPLIANCE_CONTROLS: ComplianceControl[] = [
@@ -1093,5 +1098,228 @@ export const INITIAL_EVIDENCE_MAPPINGS: EvidenceMapping[] = [
     controlName: 'AIMS Policy Control',
     evidenceId: 'evr-106',
     evidenceName: 'Concierge Copilot — Data Handling Policy',
+  },
+];
+
+/**
+ * Release 6 — Universal Regulatory Knowledge & Obligation Engine (Foundation
+ * Edition). Source -> Requirement -> Obligation -> Control -> Evidence, one
+ * layer deeper than Release 5's Pack -> Requirement -> Control -> Evidence.
+ * Deliberately generic sample structure — no RBI, ISO 42001, EU AI Act or
+ * NIST content, per the blueprint's explicit "foundation, not regulation"
+ * scoping. Evidence mappings reuse the same Release 3 evidence records
+ * Release 5's demo packs reference, illustrating "collect once, reuse
+ * everywhere" across every layer of the platform, not just one framework.
+ */
+export const INITIAL_REGULATORY_SOURCES: RegulatorySource[] = [
+  {
+    id: 'src-demo-001',
+    name: 'Sample Regulatory Source',
+    sourceType: 'Framework',
+    jurisdiction: 'Cross-Jurisdiction',
+    industry: 'Cross-Industry',
+    version: '1.0',
+    status: 'Active',
+    effectiveDate: '2026-01-01',
+    reviewDate: '2026-12-01',
+  },
+];
+
+export const INITIAL_REGULATORY_REQUIREMENTS: RegulatoryRequirement[] = [
+  {
+    id: 'REQ-OVERSIGHT-001',
+    name: 'Human Oversight Required',
+    description: 'In-scope AI systems must have documented, effective human oversight arrangements.',
+    category: 'Oversight',
+    criticality: 'Critical',
+    status: 'Active',
+    sourceId: 'src-demo-001',
+    sourceName: 'Sample Regulatory Source',
+  },
+  {
+    id: 'REQ-VALIDATION-001',
+    name: 'Independent Validation Required',
+    description: 'In-scope AI systems must undergo independent validation before production use.',
+    category: 'Validation',
+    criticality: 'High',
+    status: 'Active',
+    sourceId: 'src-demo-001',
+    sourceName: 'Sample Regulatory Source',
+  },
+  {
+    id: 'REQ-AUDIT-001',
+    name: 'Audit Trail Required',
+    description: 'In-scope AI systems must maintain a retrievable audit trail of governance decisions.',
+    category: 'Audit',
+    criticality: 'High',
+    status: 'Active',
+    sourceId: 'src-demo-001',
+    sourceName: 'Sample Regulatory Source',
+  },
+  {
+    id: 'REQ-REVIEW-001',
+    name: 'Periodic Review Required',
+    description: 'In-scope AI systems must undergo periodic governance review on a defined cadence.',
+    category: 'Review',
+    criticality: 'Medium',
+    status: 'Draft',
+    sourceId: 'src-demo-001',
+    sourceName: 'Sample Regulatory Source',
+  },
+];
+
+/**
+ * Capability 3 — Obligation Engine. "Human Oversight Required" translated
+ * into its four actionable obligations, exactly as illustrated in the
+ * blueprint.
+ */
+export const INITIAL_OBLIGATIONS: Obligation[] = [
+  {
+    id: 'obl-named-owner',
+    name: 'Named Owner',
+    description: 'A named individual is accountable for human oversight of the system.',
+    owner: 'David Chen',
+    status: 'Active',
+    requirementId: 'REQ-OVERSIGHT-001',
+    requirementName: 'Human Oversight Required',
+  },
+  {
+    id: 'obl-approval-authority',
+    name: 'Approval Authority',
+    description: 'A named authority must approve the system before it operates autonomously.',
+    owner: 'David Chen',
+    status: 'Active',
+    requirementId: 'REQ-OVERSIGHT-001',
+    requirementName: 'Human Oversight Required',
+  },
+  {
+    id: 'obl-escalation-path',
+    name: 'Escalation Path',
+    description: 'A defined path exists for escalating oversight concerns.',
+    owner: 'Elena Rostova',
+    status: 'Active',
+    requirementId: 'REQ-OVERSIGHT-001',
+    requirementName: 'Human Oversight Required',
+  },
+  {
+    id: 'obl-override-capability',
+    name: 'Override Capability',
+    description: 'A human can override or halt the system’s autonomous action.',
+    owner: '',
+    status: 'Draft',
+    requirementId: 'REQ-OVERSIGHT-001',
+    requirementName: 'Human Oversight Required',
+  },
+  {
+    id: 'obl-validation-signoff',
+    name: 'Validation Sign-Off',
+    description: 'An independent validator signs off before production use.',
+    owner: 'Dr. Aris Thorne',
+    status: 'Active',
+    requirementId: 'REQ-VALIDATION-001',
+    requirementName: 'Independent Validation Required',
+  },
+  {
+    id: 'obl-audit-log-retention',
+    name: 'Audit Log Retention',
+    description: 'Governance decisions are logged and retained for the audit trail.',
+    owner: 'Robert Vance',
+    status: 'Active',
+    requirementId: 'REQ-AUDIT-001',
+    requirementName: 'Audit Trail Required',
+  },
+];
+
+/**
+ * Capability 4 — Control Mapping Engine. Maps each obligation to the OMG
+ * control that satisfies it, per the blueprint's "Human Oversight ->
+ * Governance Authority Profile -> Human Oversight Classification -> Autonomy
+ * Level -> Approval Authority" example.
+ */
+export const INITIAL_OBLIGATION_CONTROLS: ObligationControl[] = [
+  {
+    id: 'octl-authority-profile',
+    name: 'Governance Authority Profile Control',
+    description: 'Verifies the asset’s Governance Authority Profile names an accountable owner.',
+    owner: 'David Chen',
+    status: 'Active',
+    obligationId: 'obl-named-owner',
+    obligationName: 'Named Owner',
+  },
+  {
+    id: 'octl-approval-authority',
+    name: 'Approval Authority Control',
+    description: 'Verifies a named approval authority signed off before autonomous operation.',
+    owner: 'David Chen',
+    status: 'Active',
+    obligationId: 'obl-approval-authority',
+    obligationName: 'Approval Authority',
+  },
+  {
+    id: 'octl-escalation-path',
+    name: 'Escalation Path Control',
+    description: 'Verifies a documented escalation path exists for oversight concerns.',
+    owner: 'Elena Rostova',
+    status: 'Active',
+    obligationId: 'obl-escalation-path',
+    obligationName: 'Escalation Path',
+  },
+  {
+    id: 'octl-override-capability',
+    name: 'Override Capability Control',
+    description: 'Verifies a human override or kill switch capability exists.',
+    owner: '',
+    status: 'Draft',
+    obligationId: 'obl-override-capability',
+    obligationName: 'Override Capability',
+  },
+  {
+    id: 'octl-validation-signoff',
+    name: 'Validation Sign-Off Control',
+    description: 'Verifies independent validation was completed and recorded.',
+    owner: 'Dr. Aris Thorne',
+    status: 'Active',
+    obligationId: 'obl-validation-signoff',
+    obligationName: 'Validation Sign-Off',
+  },
+  {
+    id: 'octl-audit-log-retention',
+    name: 'Audit Log Retention Control',
+    description: 'Verifies governance decisions are logged and retained.',
+    owner: 'Robert Vance',
+    status: 'Active',
+    obligationId: 'obl-audit-log-retention',
+    obligationName: 'Audit Log Retention',
+  },
+];
+
+/**
+ * Capability 5 — Evidence Mapping Engine. Reuses Release 3 evidence already
+ * on file — three of six controls end up Covered, two Not Covered (one
+ * missing evidence, one missing both owner and evidence) and one Draft
+ * requirement is Not Applicable, so the Coverage Engine demonstrates every
+ * live outcome from a single source.
+ */
+export const INITIAL_OBLIGATION_EVIDENCE_MAPPINGS: ObligationEvidenceMapping[] = [
+  {
+    id: 'omap-001',
+    controlId: 'octl-authority-profile',
+    controlName: 'Governance Authority Profile Control',
+    evidenceId: 'evr-101',
+    evidenceName: 'Fraud Sentinel Agent — Independent Validation Report',
+  },
+  {
+    id: 'omap-002',
+    controlId: 'octl-approval-authority',
+    controlName: 'Approval Authority Control',
+    evidenceId: 'evr-104',
+    evidenceName: 'Credit Scoring Engine — Conditional GO Approval Record',
+  },
+  {
+    id: 'omap-003',
+    controlId: 'octl-validation-signoff',
+    controlName: 'Validation Sign-Off Control',
+    evidenceId: 'evr-103',
+    evidenceName: 'Credit Scoring Engine — Risk Assessment',
   },
 ];

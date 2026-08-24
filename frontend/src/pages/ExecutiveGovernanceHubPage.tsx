@@ -24,6 +24,7 @@ import {
   getGovernanceScorecards,
   getGovernanceTrends,
   getReadinessOverview,
+  getRegulatoryReadinessOverview,
 } from '../services/executiveGovernance';
 import { GovernanceStateBadge, ReadinessBadge, CompliancePackStatusBadge, ComplianceCoverageBadge } from '../components/ui/Badge';
 import type { ExecutiveAlertType, ExecutiveViewId, GovernanceState, PolicyViolationSeverity, ReadinessStatus, CompliancePackStatus, ComplianceCoverageStatus } from '../types';
@@ -72,6 +73,7 @@ export const ExecutiveGovernanceHubPage: React.FC = () => {
       evidence: getEvidenceOverview(),
       readiness: getReadinessOverview(),
       compliancePacks: getCompliancePackOverview(),
+      regulatoryReadiness: getRegulatoryReadinessOverview(),
       health: getGovernanceHealthIndex(),
       metrics: getGovernanceMetrics(),
       scorecards: getGovernanceScorecards(),
@@ -563,6 +565,63 @@ export const ExecutiveGovernanceHubPage: React.FC = () => {
               </div>
             </div>
           </div>
+        </section>
+      )}
+
+      {/* ===================== REGULATORY READINESS (Release 6) ===================== */}
+      {(shows('estate') || shows('summary') || shows('portfolio') || shows('policy-compliance')) && (
+        <section className="flex flex-col gap-4">
+          <SectionHeader
+            eyebrow="Release 6"
+            title="Regulatory Knowledge Engine Readiness"
+            subtitle="The Universal Regulatory Knowledge & Obligation Engine — Source → Requirement → Obligation → Control → Evidence, no scores."
+            icon="🗺️"
+            action={
+              <button
+                onClick={() => navigate('/mapping-workspace')}
+                className="text-[11px] font-bold text-[var(--accent-primary)] hover:underline cursor-pointer"
+              >
+                Open mapping workspace →
+              </button>
+            }
+          />
+
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4 flex flex-col gap-1">
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.1em] text-[var(--text-muted)]">Active Sources</p>
+              <p className="tnum text-[1.9rem] font-extrabold text-[var(--text-primary)] leading-none">{data.regulatoryReadiness.activeSourcesCount}</p>
+            </div>
+            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4 flex flex-col gap-1">
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.1em] text-[var(--text-muted)]">Covered Requirements</p>
+              <p className="tnum text-[1.9rem] font-extrabold text-emerald-500 leading-none">{data.regulatoryReadiness.coveredRequirementsCount}</p>
+            </div>
+            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4 flex flex-col gap-1">
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.1em] text-[var(--text-muted)]">Open Gaps</p>
+              <p className="tnum text-[1.9rem] font-extrabold text-amber-500 leading-none">{data.regulatoryReadiness.openGapsCount}</p>
+            </div>
+            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4 flex flex-col gap-2">
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.1em] text-[var(--text-muted)]">Coverage Status</p>
+              <div className="flex flex-col gap-1.5">
+                {data.regulatoryReadiness.sources.map(s => (
+                  <div key={s.id} className="flex items-center justify-between gap-2">
+                    <span className="text-[11px] font-semibold text-[var(--text-secondary)] truncate">{s.name}</span>
+                    <ComplianceCoverageBadge status={s.coverageStatus as ComplianceCoverageStatus} size="sm" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {data.regulatoryReadiness.topGaps.length > 0 && (
+            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4 flex flex-col gap-1.5">
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.1em] text-[var(--text-muted)]">Top Regulatory Gaps</p>
+              {data.regulatoryReadiness.topGaps.map((gap, i) => (
+                <div key={i} className="text-[11px] p-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-500">
+                  <span className="font-bold">{gap.gapType}</span> ({gap.sourceName}) — {gap.detail}
+                </div>
+              ))}
+            </div>
+          )}
         </section>
       )}
 

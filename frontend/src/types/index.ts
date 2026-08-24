@@ -398,6 +398,102 @@ export interface PackGap {
   detail: string;
 }
 
+/**
+ * Release 6 — Universal Regulatory Knowledge & Obligation Engine (Foundation
+ * Edition). Generalizes Release 5's Pack -> Requirement -> Control ->
+ * Evidence chain one layer deeper: Source -> Requirement -> Obligation ->
+ * Control -> Evidence. No RBI/ISO/EU AI Act/NIST content — foundation only,
+ * so a future regulation onboards as data, not a platform redesign. No
+ * scoring: coverage is Covered / Partially Covered / Not Covered / Not
+ * Applicable only, same as every prior release.
+ */
+
+export type RegulatorySourceType = 'Regulation' | 'Standard' | 'Framework' | 'Internal Policy' | 'Guidance';
+export type RegulatorySourceStatus = 'Draft' | 'Active' | 'Superseded' | 'Retired';
+
+/** Capability 1 — Regulatory Source Registry. */
+export interface RegulatorySource {
+  id: string;
+  name: string;
+  sourceType: RegulatorySourceType;
+  jurisdiction: string;
+  industry: string;
+  version: string;
+  effectiveDate: string;
+  reviewDate?: string;
+  status: RegulatorySourceStatus;
+}
+
+export type RequirementCriticality = 'Low' | 'Medium' | 'High' | 'Critical';
+export type RegulatoryRequirementStatus = 'Draft' | 'Active' | 'Retired';
+
+/** Capability 2 — Requirement Registry. */
+export interface RegulatoryRequirement {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  criticality: RequirementCriticality;
+  status: RegulatoryRequirementStatus;
+  sourceId: string;
+  sourceName: string;
+}
+
+export type ObligationStatus = 'Draft' | 'Active' | 'Retired';
+
+/** Capability 3 — Obligation Engine: translates a requirement into actionable obligations. */
+export interface Obligation {
+  id: string;
+  name: string;
+  description: string;
+  owner: string;
+  status: ObligationStatus;
+  requirementId: string;
+  requirementName: string;
+}
+
+export type ObligationControlStatus = 'Draft' | 'Active' | 'Retired';
+
+/** Capability 4 — Control Mapping Engine: maps an obligation to the OMG control that satisfies it. */
+export interface ObligationControl {
+  id: string;
+  name: string;
+  description: string;
+  owner: string;
+  status: ObligationControlStatus;
+  obligationId: string;
+  obligationName: string;
+}
+
+/** Capability 5 — Evidence Mapping Engine: Control -> Evidence, reusing Release 3's Evidence Registry. */
+export interface ObligationEvidenceMapping {
+  id: string;
+  controlId: string;
+  controlName: string;
+  evidenceId: string;
+  evidenceName: string;
+}
+
+/** Capability 6 — Coverage Engine. No percentages, no maturity scores. */
+export interface RegulatoryCoverageResult {
+  status: ComplianceCoverageStatus;
+  controlsTotal: number;
+  controlsCovered: number;
+}
+
+/** Capability 7 — Gap Engine. */
+export type RegulatoryGapType = 'Missing Control' | 'Missing Evidence' | 'Missing Review' | 'Missing Approval' | 'Missing Ownership';
+
+export interface RegulatoryGap {
+  sourceId: string;
+  sourceName: string;
+  requirementId?: string;
+  obligationId?: string;
+  controlId?: string;
+  gapType: RegulatoryGapType;
+  detail: string;
+}
+
 export interface AIAsset {
   id: string;
   name: string;
@@ -521,6 +617,12 @@ export interface GovernanceMetrics {
   activeCompliancePacksCount: number;
   packCoverageBreakdown: Record<ComplianceCoverageStatus, number>;
   totalPackGapsCount: number;
+  // Release 6 — Universal Regulatory Knowledge & Obligation Engine
+  activeRegulatorySourcesCount: number;
+  requirementsByCategory: Record<string, number>;
+  sourceCoverageBreakdown: Record<ComplianceCoverageStatus, number>;
+  totalRegulatoryGapsCount: number;
+  topMissingControls: { name: string; requirementName: string }[];
 }
 
 export interface PersonaDemoUser {

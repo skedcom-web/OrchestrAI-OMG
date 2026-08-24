@@ -15,6 +15,11 @@ import {
   localEvidenceMappingRepository,
   localEvidenceRepository,
   localGovernanceRepository,
+  localObligationControlRepository,
+  localObligationEvidenceMappingRepository,
+  localObligationRepository,
+  localRegulatoryRequirementRepository,
+  localRegulatorySourceRepository,
   localRequirementRepository,
 } from './localRepositories';
 import {
@@ -24,6 +29,11 @@ import {
   apiEvidenceMappingRepository,
   apiEvidenceRepository,
   apiGovernanceRepository,
+  apiObligationControlRepository,
+  apiObligationEvidenceMappingRepository,
+  apiObligationRepository,
+  apiRegulatoryRequirementRepository,
+  apiRegulatorySourceRepository,
   apiRequirementRepository,
 } from './apiRepositories';
 import type {
@@ -33,6 +43,11 @@ import type {
   EvidenceMappingRepository,
   EvidenceRepository,
   GovernanceRepository,
+  ObligationControlRepository,
+  ObligationEvidenceMappingRepository,
+  ObligationRepository,
+  RegulatoryRequirementRepository,
+  RegulatorySourceRepository,
   RequirementRepository,
 } from './types';
 
@@ -87,6 +102,38 @@ export {
   localControlRepository,
   localEvidenceMappingRepository,
   localRequirementRepository,
+};
+
+/**
+ * Release 6 — Universal Regulatory Knowledge & Obligation Engine. Api-first
+ * from day one, same reasoning as Release 5.1's compliance factories above.
+ */
+export function getRegulatorySourceRepository(): RegulatorySourceRepository {
+  return apiRegulatorySourceRepository;
+}
+
+export function getRegulatoryRequirementRepository(): RegulatoryRequirementRepository {
+  return apiRegulatoryRequirementRepository;
+}
+
+export function getObligationRepository(): ObligationRepository {
+  return apiObligationRepository;
+}
+
+export function getObligationControlRepository(): ObligationControlRepository {
+  return apiObligationControlRepository;
+}
+
+export function getObligationEvidenceMappingRepository(): ObligationEvidenceMappingRepository {
+  return apiObligationEvidenceMappingRepository;
+}
+
+export {
+  localRegulatorySourceRepository,
+  localRegulatoryRequirementRepository,
+  localObligationRepository,
+  localObligationControlRepository,
+  localObligationEvidenceMappingRepository,
 };
 
 export * from './types';

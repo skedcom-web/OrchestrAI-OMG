@@ -36,7 +36,12 @@ import type {
   CompliancePack,
   ComplianceRequirement,
   PackControl,
-  EvidenceMapping
+  EvidenceMapping,
+  RegulatorySource,
+  RegulatoryRequirement,
+  Obligation,
+  ObligationControl,
+  ObligationEvidenceMapping
 } from '../types';
 import {
   INITIAL_ASSETS,
@@ -60,7 +65,12 @@ import {
   INITIAL_COMPLIANCE_PACKS,
   INITIAL_COMPLIANCE_REQUIREMENTS,
   INITIAL_PACK_CONTROLS,
-  INITIAL_EVIDENCE_MAPPINGS
+  INITIAL_EVIDENCE_MAPPINGS,
+  INITIAL_REGULATORY_SOURCES,
+  INITIAL_REGULATORY_REQUIREMENTS,
+  INITIAL_OBLIGATIONS,
+  INITIAL_OBLIGATION_CONTROLS,
+  INITIAL_OBLIGATION_EVIDENCE_MAPPINGS
 } from './mockData';
 import { getAuthorityMatrixEntry, defaultAuthorityProfile, authorityProfileCompleteness } from '../config/governanceAuthority';
 import { defaultGovernanceState } from '../config/governanceContinuity';
@@ -73,12 +83,23 @@ import {
   computeGovernanceGaps,
 } from '../config/readinessFoundation';
 import { computePackCoverage, computeRequirementCoverage, computePackGaps } from '../config/compliancePackFramework';
+import {
+  computeSourceCoverage,
+  computeRequirementCoverage as computeRegulatoryRequirementCoverage,
+  computeObligationCoverage,
+  computeSourceGaps,
+} from '../config/regulatoryKnowledgeEngine';
 import { apiAssetRepository, apiEvidenceRepository, apiGovernanceRepository } from '../repositories/apiRepositories';
 import {
   apiCompliancePackRepository,
   apiControlRepository,
   apiEvidenceMappingRepository,
   apiRequirementRepository,
+  apiRegulatorySourceRepository,
+  apiRegulatoryRequirementRepository,
+  apiObligationRepository,
+  apiObligationControlRepository,
+  apiObligationEvidenceMappingRepository,
 } from '../repositories/apiRepositories';
 
 /**
@@ -126,6 +147,11 @@ const STORAGE_KEYS = {
   COMPLIANCE_REQUIREMENTS: 'omg_compliance_requirements_v7',
   PACK_CONTROLS: 'omg_pack_controls_v7',
   EVIDENCE_MAPPINGS: 'omg_evidence_mappings_v7',
+  REGULATORY_SOURCES: 'omg_regulatory_sources_v7',
+  REGULATORY_REQUIREMENTS: 'omg_regulatory_requirements_v7',
+  OBLIGATIONS: 'omg_obligations_v7',
+  OBLIGATION_CONTROLS: 'omg_obligation_controls_v7',
+  OBLIGATION_EVIDENCE_MAPPINGS: 'omg_obligation_evidence_mappings_v7',
 };
 
 function getItem<T>(key: string, defaultData: T): T {
@@ -1990,6 +2016,353 @@ export function getAllPackGaps() {
   return getCompliancePacks().flatMap(p => getPackGapsForPack(p.id));
 }
 
+// --- RELEASE 6 — UNIVERSAL REGULATORY KNOWLEDGE & OBLIGATION ENGINE ---
+// Source -> Requirement -> Obligation -> Control -> Evidence. Api-first and
+// Neon-backed from day one (the cache-then-network pattern applied
+// immediately, unlike Release 5 which deferred it to 5.1) — reads stay
+// synchronous off an in-memory cache, writes are async and Neon-first.
+
+let regulatorySourcesCache: RegulatorySource[] = getItem<RegulatorySource[]>(STORAGE_KEYS.REGULATORY_SOURCES, INITIAL_REGULATORY_SOURCES);
+let regulatoryRequirementsCache: RegulatoryRequirement[] = getItem<RegulatoryRequirement[]>(STORAGE_KEYS.REGULATORY_REQUIREMENTS, INITIAL_REGULATORY_REQUIREMENTS);
+let obligationsCache: Obligation[] = getItem<Obligation[]>(STORAGE_KEYS.OBLIGATIONS, INITIAL_OBLIGATIONS);
+let obligationControlsCache: ObligationControl[] = getItem<ObligationControl[]>(STORAGE_KEYS.OBLIGATION_CONTROLS, INITIAL_OBLIGATION_CONTROLS);
+let obligationEvidenceMappingsCache: ObligationEvidenceMapping[] = getItem<ObligationEvidenceMapping[]>(STORAGE_KEYS.OBLIGATION_EVIDENCE_MAPPINGS, INITIAL_OBLIGATION_EVIDENCE_MAPPINGS);
+
+function persistRegulatorySourcesCache() { setItem(STORAGE_KEYS.REGULATORY_SOURCES, regulatorySourcesCache); }
+function persistRegulatoryRequirementsCache() { setItem(STORAGE_KEYS.REGULATORY_REQUIREMENTS, regulatoryRequirementsCache); }
+function persistObligationsCache() { setItem(STORAGE_KEYS.OBLIGATIONS, obligationsCache); }
+function persistObligationControlsCache() { setItem(STORAGE_KEYS.OBLIGATION_CONTROLS, obligationControlsCache); }
+function persistObligationEvidenceMappingsCache() { setItem(STORAGE_KEYS.OBLIGATION_EVIDENCE_MAPPINGS, obligationEvidenceMappingsCache); }
+
+export function getRegulatorySources(): RegulatorySource[] {
+  return regulatorySourcesCache;
+}
+
+export async function saveRegulatorySource(data: Partial<RegulatorySource>): Promise<RegulatorySource> {
+  if (data.id) {
+    const idx = regulatorySourcesCache.findIndex(s => s.id === data.id);
+    if (idx !== -1) {
+      const updated: RegulatorySource = { ...regulatorySourcesCache[idx], ...data };
+      regulatorySourcesCache = [...regulatorySourcesCache];
+      regulatorySourcesCache[idx] = updated;
+      persistRegulatorySourcesCache();
+
+      addAuditLog('usr-2', 'David Chen', 'GOVERNANCE_ADMIN', 'REGULATORY_SOURCE_UPDATED', 'Policy', updated.id, updated.name, `Updated regulatory source ${updated.name}`);
+
+      const saved = await apiRegulatorySourceRepository.updateSource(updated.id, updated);
+      const i2 = regulatorySourcesCache.findIndex(s => s.id === updated.id);
+      if (i2 !== -1) { regulatorySourcesCache = [...regulatorySourcesCache]; regulatorySourcesCache[i2] = saved; persistRegulatorySourcesCache(); }
+      return saved;
+    }
+  }
+
+  const draftSource: RegulatorySource = {
+    id: data.id || `src-${Date.now().toString().slice(-6)}`,
+    name: data.name || 'New Regulatory Source',
+    sourceType: data.sourceType || 'Regulation',
+    jurisdiction: data.jurisdiction || 'Cross-Jurisdiction',
+    industry: data.industry || 'Cross-Industry',
+    version: data.version || '1.0',
+    status: data.status || 'Draft',
+    effectiveDate: data.effectiveDate || new Date().toISOString().split('T')[0],
+    reviewDate: data.reviewDate,
+  };
+
+  regulatorySourcesCache = [draftSource, ...regulatorySourcesCache];
+  persistRegulatorySourcesCache();
+  addAuditLog('usr-2', 'David Chen', 'GOVERNANCE_ADMIN', 'REGULATORY_SOURCE_CREATED', 'Policy', draftSource.id, draftSource.name, `Registered regulatory source ${draftSource.name}`);
+
+  const created = await apiRegulatorySourceRepository.createSource(draftSource);
+  regulatorySourcesCache = regulatorySourcesCache.map(s => (s.id === draftSource.id ? created : s));
+  persistRegulatorySourcesCache();
+  return created;
+}
+
+export async function deleteRegulatorySource(id: string): Promise<void> {
+  const target = regulatorySourcesCache.find(s => s.id === id);
+  if (!target) return;
+
+  // Mirror the backend's cascading relations locally too (Source -> Requirement -> Obligation -> Control -> Mapping).
+  const orphanedReqIds = regulatoryRequirementsCache.filter(r => r.sourceId === id).map(r => r.id);
+  const orphanedObligationIds = obligationsCache.filter(o => orphanedReqIds.includes(o.requirementId)).map(o => o.id);
+  const orphanedControlIds = obligationControlsCache.filter(c => orphanedObligationIds.includes(c.obligationId)).map(c => c.id);
+
+  regulatorySourcesCache = regulatorySourcesCache.filter(s => s.id !== id);
+  persistRegulatorySourcesCache();
+  regulatoryRequirementsCache = regulatoryRequirementsCache.filter(r => r.sourceId !== id);
+  persistRegulatoryRequirementsCache();
+  obligationsCache = obligationsCache.filter(o => !orphanedReqIds.includes(o.requirementId));
+  persistObligationsCache();
+  obligationControlsCache = obligationControlsCache.filter(c => !orphanedObligationIds.includes(c.obligationId));
+  persistObligationControlsCache();
+  obligationEvidenceMappingsCache = obligationEvidenceMappingsCache.filter(m => !orphanedControlIds.includes(m.controlId));
+  persistObligationEvidenceMappingsCache();
+
+  addAuditLog('usr-1', 'Sarah Jenkins', 'SUPER_ADMIN', 'REGULATORY_SOURCE_DELETED', 'Policy', id, target.name, `Deleted regulatory source ${target.name}`);
+
+  await apiRegulatorySourceRepository.deleteSource(id);
+}
+
+export function getRegulatoryRequirements(): RegulatoryRequirement[] {
+  return regulatoryRequirementsCache;
+}
+
+export async function saveRegulatoryRequirement(data: Partial<RegulatoryRequirement>): Promise<RegulatoryRequirement> {
+  const source = regulatorySourcesCache.find(s => s.id === data.sourceId);
+
+  if (data.id) {
+    const idx = regulatoryRequirementsCache.findIndex(r => r.id === data.id);
+    if (idx !== -1) {
+      const updated: RegulatoryRequirement = { ...regulatoryRequirementsCache[idx], ...data, sourceName: source?.name || regulatoryRequirementsCache[idx].sourceName };
+      regulatoryRequirementsCache = [...regulatoryRequirementsCache];
+      regulatoryRequirementsCache[idx] = updated;
+      persistRegulatoryRequirementsCache();
+
+      const saved = await apiRegulatoryRequirementRepository.updateRequirement(updated.id, updated);
+      const reconciled = { ...saved, sourceName: updated.sourceName };
+      const i2 = regulatoryRequirementsCache.findIndex(r => r.id === updated.id);
+      if (i2 !== -1) { regulatoryRequirementsCache = [...regulatoryRequirementsCache]; regulatoryRequirementsCache[i2] = reconciled; persistRegulatoryRequirementsCache(); }
+      return reconciled;
+    }
+  }
+
+  const draftReq: RegulatoryRequirement = {
+    id: data.id || `REQ-${Date.now().toString().slice(-6)}`,
+    name: data.name || 'New Requirement',
+    description: data.description || '',
+    category: data.category || 'General',
+    criticality: data.criticality || 'Medium',
+    status: data.status || 'Draft',
+    sourceId: data.sourceId || '',
+    sourceName: source?.name || 'Unassigned Source',
+  };
+
+  regulatoryRequirementsCache = [draftReq, ...regulatoryRequirementsCache];
+  persistRegulatoryRequirementsCache();
+
+  const created = { ...(await apiRegulatoryRequirementRepository.createRequirement(draftReq)), sourceName: draftReq.sourceName };
+  regulatoryRequirementsCache = regulatoryRequirementsCache.map(r => (r.id === draftReq.id ? created : r));
+  persistRegulatoryRequirementsCache();
+  return created;
+}
+
+export async function deleteRegulatoryRequirement(id: string): Promise<void> {
+  const target = regulatoryRequirementsCache.find(r => r.id === id);
+  if (!target) return;
+
+  const orphanedObligationIds = obligationsCache.filter(o => o.requirementId === id).map(o => o.id);
+  const orphanedControlIds = obligationControlsCache.filter(c => orphanedObligationIds.includes(c.obligationId)).map(c => c.id);
+
+  regulatoryRequirementsCache = regulatoryRequirementsCache.filter(r => r.id !== id);
+  persistRegulatoryRequirementsCache();
+  obligationsCache = obligationsCache.filter(o => o.requirementId !== id);
+  persistObligationsCache();
+  obligationControlsCache = obligationControlsCache.filter(c => !orphanedObligationIds.includes(c.obligationId));
+  persistObligationControlsCache();
+  obligationEvidenceMappingsCache = obligationEvidenceMappingsCache.filter(m => !orphanedControlIds.includes(m.controlId));
+  persistObligationEvidenceMappingsCache();
+
+  await apiRegulatoryRequirementRepository.deleteRequirement(id);
+}
+
+export function getObligations(): Obligation[] {
+  return obligationsCache;
+}
+
+export async function saveObligation(data: Partial<Obligation>): Promise<Obligation> {
+  const requirement = regulatoryRequirementsCache.find(r => r.id === data.requirementId);
+
+  if (data.id) {
+    const idx = obligationsCache.findIndex(o => o.id === data.id);
+    if (idx !== -1) {
+      const updated: Obligation = { ...obligationsCache[idx], ...data, requirementName: requirement?.name || obligationsCache[idx].requirementName };
+      obligationsCache = [...obligationsCache];
+      obligationsCache[idx] = updated;
+      persistObligationsCache();
+
+      const saved = await apiObligationRepository.updateObligation(updated.id, updated);
+      const reconciled = { ...saved, requirementName: updated.requirementName };
+      const i2 = obligationsCache.findIndex(o => o.id === updated.id);
+      if (i2 !== -1) { obligationsCache = [...obligationsCache]; obligationsCache[i2] = reconciled; persistObligationsCache(); }
+      return reconciled;
+    }
+  }
+
+  const draftObligation: Obligation = {
+    id: data.id || `obl-${Date.now().toString().slice(-6)}`,
+    name: data.name || 'New Obligation',
+    description: data.description || '',
+    owner: data.owner || '',
+    status: data.status || 'Draft',
+    requirementId: data.requirementId || '',
+    requirementName: requirement?.name || 'Unassigned Requirement',
+  };
+
+  obligationsCache = [draftObligation, ...obligationsCache];
+  persistObligationsCache();
+
+  const created = { ...(await apiObligationRepository.createObligation(draftObligation)), requirementName: draftObligation.requirementName };
+  obligationsCache = obligationsCache.map(o => (o.id === draftObligation.id ? created : o));
+  persistObligationsCache();
+  return created;
+}
+
+export async function deleteObligation(id: string): Promise<void> {
+  const target = obligationsCache.find(o => o.id === id);
+  if (!target) return;
+
+  const orphanedControlIds = obligationControlsCache.filter(c => c.obligationId === id).map(c => c.id);
+
+  obligationsCache = obligationsCache.filter(o => o.id !== id);
+  persistObligationsCache();
+  obligationControlsCache = obligationControlsCache.filter(c => c.obligationId !== id);
+  persistObligationControlsCache();
+  obligationEvidenceMappingsCache = obligationEvidenceMappingsCache.filter(m => !orphanedControlIds.includes(m.controlId));
+  persistObligationEvidenceMappingsCache();
+
+  await apiObligationRepository.deleteObligation(id);
+}
+
+export function getObligationControls(): ObligationControl[] {
+  return obligationControlsCache;
+}
+
+export async function saveObligationControl(data: Partial<ObligationControl>): Promise<ObligationControl> {
+  const obligation = obligationsCache.find(o => o.id === data.obligationId);
+
+  if (data.id) {
+    const idx = obligationControlsCache.findIndex(c => c.id === data.id);
+    if (idx !== -1) {
+      const updated: ObligationControl = { ...obligationControlsCache[idx], ...data, obligationName: obligation?.name || obligationControlsCache[idx].obligationName };
+      obligationControlsCache = [...obligationControlsCache];
+      obligationControlsCache[idx] = updated;
+      persistObligationControlsCache();
+
+      const saved = await apiObligationControlRepository.updateControl(updated.id, updated);
+      const reconciled = { ...saved, obligationName: updated.obligationName };
+      const i2 = obligationControlsCache.findIndex(c => c.id === updated.id);
+      if (i2 !== -1) { obligationControlsCache = [...obligationControlsCache]; obligationControlsCache[i2] = reconciled; persistObligationControlsCache(); }
+      return reconciled;
+    }
+  }
+
+  const draftControl: ObligationControl = {
+    id: data.id || `octl-${Date.now().toString().slice(-6)}`,
+    name: data.name || 'New Control',
+    description: data.description || '',
+    owner: data.owner || '',
+    status: data.status || 'Draft',
+    obligationId: data.obligationId || '',
+    obligationName: obligation?.name || 'Unassigned Obligation',
+  };
+
+  obligationControlsCache = [draftControl, ...obligationControlsCache];
+  persistObligationControlsCache();
+
+  const created = { ...(await apiObligationControlRepository.createControl(draftControl)), obligationName: draftControl.obligationName };
+  obligationControlsCache = obligationControlsCache.map(c => (c.id === draftControl.id ? created : c));
+  persistObligationControlsCache();
+  return created;
+}
+
+export async function deleteObligationControl(id: string): Promise<void> {
+  const target = obligationControlsCache.find(c => c.id === id);
+  if (!target) return;
+
+  obligationControlsCache = obligationControlsCache.filter(c => c.id !== id);
+  persistObligationControlsCache();
+  obligationEvidenceMappingsCache = obligationEvidenceMappingsCache.filter(m => m.controlId !== id);
+  persistObligationEvidenceMappingsCache();
+
+  await apiObligationControlRepository.deleteControl(id);
+}
+
+export function getObligationEvidenceMappings(): ObligationEvidenceMapping[] {
+  return obligationEvidenceMappingsCache;
+}
+
+export async function saveObligationEvidenceMapping(data: Partial<ObligationEvidenceMapping>): Promise<ObligationEvidenceMapping> {
+  const control = obligationControlsCache.find(c => c.id === data.controlId);
+  const evidence = getEvidenceRecordById(data.evidenceId || '');
+
+  if (data.id) {
+    const idx = obligationEvidenceMappingsCache.findIndex(m => m.id === data.id);
+    if (idx !== -1) {
+      const updated: ObligationEvidenceMapping = {
+        ...obligationEvidenceMappingsCache[idx],
+        ...data,
+        controlName: control?.name || obligationEvidenceMappingsCache[idx].controlName,
+        evidenceName: evidence?.name || obligationEvidenceMappingsCache[idx].evidenceName,
+      };
+      obligationEvidenceMappingsCache = [...obligationEvidenceMappingsCache];
+      obligationEvidenceMappingsCache[idx] = updated;
+      persistObligationEvidenceMappingsCache();
+
+      const saved = await apiObligationEvidenceMappingRepository.updateMapping(updated.id, updated);
+      const reconciled = { ...saved, controlName: updated.controlName, evidenceName: updated.evidenceName };
+      const i2 = obligationEvidenceMappingsCache.findIndex(m => m.id === updated.id);
+      if (i2 !== -1) { obligationEvidenceMappingsCache = [...obligationEvidenceMappingsCache]; obligationEvidenceMappingsCache[i2] = reconciled; persistObligationEvidenceMappingsCache(); }
+      return reconciled;
+    }
+  }
+
+  const draftMapping: ObligationEvidenceMapping = {
+    id: `local-omap-${Date.now()}`,
+    controlId: data.controlId || '',
+    controlName: control?.name || 'Unassigned Control',
+    evidenceId: data.evidenceId || '',
+    evidenceName: evidence?.name || 'Unassigned Evidence',
+  };
+
+  obligationEvidenceMappingsCache = [draftMapping, ...obligationEvidenceMappingsCache];
+  persistObligationEvidenceMappingsCache();
+  addAuditLog('usr-2', 'David Chen', 'GOVERNANCE_ADMIN', 'OBLIGATION_EVIDENCE_MAPPING_CREATED', 'EvidenceRecord', draftMapping.id, draftMapping.evidenceName, `Mapped ${draftMapping.evidenceName} to control ${draftMapping.controlName}`);
+
+  const { id: _draftId, ...payload } = draftMapping;
+  const created = { ...(await apiObligationEvidenceMappingRepository.createMapping(payload)), controlName: draftMapping.controlName, evidenceName: draftMapping.evidenceName };
+  obligationEvidenceMappingsCache = obligationEvidenceMappingsCache.map(m => (m.id === draftMapping.id ? created : m));
+  persistObligationEvidenceMappingsCache();
+  return created;
+}
+
+export async function deleteObligationEvidenceMapping(id: string): Promise<void> {
+  const target = obligationEvidenceMappingsCache.find(m => m.id === id);
+  if (!target) return;
+
+  obligationEvidenceMappingsCache = obligationEvidenceMappingsCache.filter(m => m.id !== id);
+  persistObligationEvidenceMappingsCache();
+
+  await apiObligationEvidenceMappingRepository.deleteMapping(id);
+}
+
+export function getSourceCoverage(sourceId: string) {
+  const source = regulatorySourcesCache.find(s => s.id === sourceId);
+  if (!source) return null;
+  return computeSourceCoverage(source, regulatoryRequirementsCache, obligationsCache, obligationControlsCache, obligationEvidenceMappingsCache, getEvidenceRecords());
+}
+
+export function getObligationCoverage(obligationId: string) {
+  const obligation = obligationsCache.find(o => o.id === obligationId);
+  if (!obligation) return null;
+  return computeObligationCoverage(obligation, obligationControlsCache, obligationEvidenceMappingsCache, getEvidenceRecords());
+}
+
+export function getRegulatoryRequirementCoverage(requirementId: string) {
+  const requirement = regulatoryRequirementsCache.find(r => r.id === requirementId);
+  if (!requirement) return null;
+  return computeRegulatoryRequirementCoverage(requirement, obligationsCache, obligationControlsCache, obligationEvidenceMappingsCache, getEvidenceRecords());
+}
+
+export function getSourceGapsForSource(sourceId: string) {
+  const source = regulatorySourcesCache.find(s => s.id === sourceId);
+  if (!source) return [];
+  return computeSourceGaps(source, regulatoryRequirementsCache, obligationsCache, obligationControlsCache, obligationEvidenceMappingsCache, getEvidenceRecords(), getScheduledReviews());
+}
+
+export function getAllSourceGaps() {
+  return regulatorySourcesCache.flatMap(s => getSourceGapsForSource(s.id));
+}
+
 export function getCorrectiveActions(): CorrectiveAction[] {
   return getItem<CorrectiveAction[]>(STORAGE_KEYS.CORRECTIVE_ACTIONS, INITIAL_CORRECTIVE_ACTIONS);
 }
@@ -2274,12 +2647,35 @@ export function getGovernanceMetrics(): GovernanceMetrics {
     activeCompliancePacksCount: getCompliancePacks().filter(p => p.status === 'Active').length,
     packCoverageBreakdown: { 'Covered': 0, 'Partially Covered': 0, 'Not Covered': 0, 'Not Applicable': 0 },
     totalPackGapsCount: getAllPackGaps().length,
+    activeRegulatorySourcesCount: getRegulatorySources().filter(s => s.status === 'Active').length,
+    requirementsByCategory: {},
+    sourceCoverageBreakdown: { 'Covered': 0, 'Partially Covered': 0, 'Not Covered': 0, 'Not Applicable': 0 },
+    totalRegulatoryGapsCount: getAllSourceGaps().length,
+    topMissingControls: [],
   };
 
   getCompliancePacks().forEach(pack => {
     const coverage = getPackCoverage(pack.id);
     if (coverage) metrics.packCoverageBreakdown[coverage.status]++;
   });
+
+  getRegulatorySources().forEach(source => {
+    const coverage = getSourceCoverage(source.id);
+    if (coverage) metrics.sourceCoverageBreakdown[coverage.status]++;
+  });
+
+  getRegulatoryRequirements().forEach(req => {
+    metrics.requirementsByCategory[req.category] = (metrics.requirementsByCategory[req.category] || 0) + 1;
+  });
+
+  metrics.topMissingControls = getAllSourceGaps()
+    .filter(g => g.gapType === 'Missing Control')
+    .slice(0, 5)
+    .map(g => {
+      const obligation = g.obligationId ? getObligations().find(o => o.id === g.obligationId) : undefined;
+      const requirement = getRegulatoryRequirements().find(r => r.id === g.requirementId);
+      return { name: obligation?.name || requirement?.name || 'Unnamed Requirement', requirementName: requirement?.name || '' };
+    });
 
   let totalGaps = 0;
   assets.forEach(asset => {
@@ -2365,7 +2761,20 @@ export function bootstrapPersistence(options?: { force?: boolean }): Promise<voi
 
   bootstrapPromise = (async () => {
     try {
-      const [assets, evidence, governance, compliancePacks, requirements, packControls, evidenceMappings] = await Promise.all([
+      const [
+        assets,
+        evidence,
+        governance,
+        compliancePacks,
+        requirements,
+        packControls,
+        evidenceMappings,
+        regulatorySources,
+        regulatoryRequirements,
+        obligations,
+        obligationControls,
+        obligationEvidenceMappings,
+      ] = await Promise.all([
         apiAssetRepository.getAssets(),
         apiEvidenceRepository.getEvidence(),
         apiGovernanceRepository.getGovernanceData(),
@@ -2373,6 +2782,11 @@ export function bootstrapPersistence(options?: { force?: boolean }): Promise<voi
         apiRequirementRepository.getRequirements(),
         apiControlRepository.getControls(),
         apiEvidenceMappingRepository.getMappings(),
+        apiRegulatorySourceRepository.getSources(),
+        apiRegulatoryRequirementRepository.getRequirements(),
+        apiObligationRepository.getObligations(),
+        apiObligationControlRepository.getControls(),
+        apiObligationEvidenceMappingRepository.getMappings(),
       ]);
 
       const assetNameById = new Map(assets.map(a => [a.id, a.name]));
@@ -2410,7 +2824,27 @@ export function bootstrapPersistence(options?: { force?: boolean }): Promise<voi
       }));
       persistEvidenceMappingsCache();
 
-      console.info(`OMG persistence: loaded ${assets.length} assets, ${evidence.length} evidence records, ${compliancePacks.length} compliance packs from Neon.`);
+      const sourceNameById = new Map(regulatorySources.map(s => [s.id, s.name]));
+      regulatoryRequirementsCache = regulatoryRequirements.map(r => ({ ...r, sourceName: sourceNameById.get(r.sourceId) || r.sourceName }));
+      const regReqNameById = new Map(regulatoryRequirementsCache.map(r => [r.id, r.name]));
+
+      regulatorySourcesCache = regulatorySources;
+      persistRegulatorySourcesCache();
+      persistRegulatoryRequirementsCache();
+      obligationsCache = obligations.map(o => ({ ...o, requirementName: regReqNameById.get(o.requirementId) || o.requirementName }));
+      persistObligationsCache();
+      const obligationNameById = new Map(obligationsCache.map(o => [o.id, o.name]));
+      obligationControlsCache = obligationControls.map(c => ({ ...c, obligationName: obligationNameById.get(c.obligationId) || c.obligationName }));
+      persistObligationControlsCache();
+      const obligationControlNameById = new Map(obligationControlsCache.map(c => [c.id, c.name]));
+      obligationEvidenceMappingsCache = obligationEvidenceMappings.map(m => ({
+        ...m,
+        controlName: obligationControlNameById.get(m.controlId) || m.controlName,
+        evidenceName: evidenceNameById.get(m.evidenceId) || m.evidenceName,
+      }));
+      persistObligationEvidenceMappingsCache();
+
+      console.info(`OMG persistence: loaded ${assets.length} assets, ${evidence.length} evidence records, ${compliancePacks.length} compliance packs, ${regulatorySources.length} regulatory sources from Neon.`);
     } catch (err) {
       console.warn('OMG persistence: could not reach the governance API at startup; continuing with cached/local data until the next retry.', err);
       bootstrapPromise = null; // allow a later manual retry (e.g. from Tenant Settings)

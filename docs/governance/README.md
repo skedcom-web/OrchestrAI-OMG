@@ -61,6 +61,9 @@ This repository directory contains the **Mandatory Governance Deliverables** spe
 18. 🔗 **[18_Release5_1_Compliance_Persistence_Alignment.md](file:///C:/Users/VT348/Documents/GitHub/OrchestrAI%20OMG/docs/governance/18_Release5_1_Compliance_Persistence_Alignment.md)**  
     *Compliance Pack Framework moved off local storage onto Neon — full Repository Pattern, cache-then-network persistence, seeded demo packs — Compliance Persistence Alignment Patch.*
 
+19. 🗺️ **[19_Release6_Universal_Regulatory_Knowledge_Engine.md](file:///C:/Users/VT348/Documents/GitHub/OrchestrAI%20OMG/docs/governance/19_Release6_Universal_Regulatory_Knowledge_Engine.md)**  
+    *Source → Requirement → Obligation → Control → Evidence, Neon-backed from day one — the Universal Regulatory Knowledge & Obligation Engine, Foundation Edition.*
+
 ---
 
 ## 🌐 Live Production Links

@@ -18,9 +18,15 @@ import type {
   GovernanceState,
   GovernanceStatus,
   HumanOversightType,
+  ObligationControlStatus,
+  ObligationStatus,
   PackControlStatus,
   ReassessmentTriggerStatus,
   ReassessmentTriggerType,
+  RegulatoryRequirementStatus,
+  RegulatorySourceStatus,
+  RegulatorySourceType,
+  RequirementCriticality,
   RequirementPriority,
   RequirementStatus,
   RiskLevel,
@@ -135,6 +141,31 @@ const PACK_CONTROL_STATUS: Record<PackControlStatus, string> = {
   'Draft': 'DRAFT', 'Active': 'ACTIVE', 'Retired': 'RETIRED',
 };
 
+const REGULATORY_SOURCE_TYPE: Record<RegulatorySourceType, string> = {
+  'Regulation': 'REGULATION', 'Standard': 'STANDARD', 'Framework': 'FRAMEWORK',
+  'Internal Policy': 'INTERNAL_POLICY', 'Guidance': 'GUIDANCE',
+};
+
+const REGULATORY_SOURCE_STATUS: Record<RegulatorySourceStatus, string> = {
+  'Draft': 'DRAFT', 'Active': 'ACTIVE', 'Superseded': 'SUPERSEDED', 'Retired': 'RETIRED',
+};
+
+const REQUIREMENT_CRITICALITY: Record<RequirementCriticality, string> = {
+  'Low': 'LOW', 'Medium': 'MEDIUM', 'High': 'HIGH', 'Critical': 'CRITICAL',
+};
+
+const REGULATORY_REQUIREMENT_STATUS: Record<RegulatoryRequirementStatus, string> = {
+  'Draft': 'DRAFT', 'Active': 'ACTIVE', 'Retired': 'RETIRED',
+};
+
+const OBLIGATION_STATUS: Record<ObligationStatus, string> = {
+  'Draft': 'DRAFT', 'Active': 'ACTIVE', 'Retired': 'RETIRED',
+};
+
+const OBLIGATION_CONTROL_STATUS: Record<ObligationControlStatus, string> = {
+  'Draft': 'DRAFT', 'Active': 'ACTIVE', 'Retired': 'RETIRED',
+};
+
 export const enumMaps = {
   assetType: { toBackend: toBackend(ASSET_TYPE), toFrontend: toFrontend(ASSET_TYPE) },
   riskLevel: { toBackend: toBackend(RISK_LEVEL), toFrontend: toFrontend(RISK_LEVEL) },
@@ -152,4 +183,10 @@ export const enumMaps = {
   requirementPriority: { toBackend: toBackend(REQUIREMENT_PRIORITY), toFrontend: toFrontend(REQUIREMENT_PRIORITY) },
   requirementStatus: { toBackend: toBackend(REQUIREMENT_STATUS), toFrontend: toFrontend(REQUIREMENT_STATUS) },
   packControlStatus: { toBackend: toBackend(PACK_CONTROL_STATUS), toFrontend: toFrontend(PACK_CONTROL_STATUS) },
+  regulatorySourceType: { toBackend: toBackend(REGULATORY_SOURCE_TYPE), toFrontend: toFrontend(REGULATORY_SOURCE_TYPE) },
+  regulatorySourceStatus: { toBackend: toBackend(REGULATORY_SOURCE_STATUS), toFrontend: toFrontend(REGULATORY_SOURCE_STATUS) },
+  requirementCriticality: { toBackend: toBackend(REQUIREMENT_CRITICALITY), toFrontend: toFrontend(REQUIREMENT_CRITICALITY) },
+  regulatoryRequirementStatus: { toBackend: toBackend(REGULATORY_REQUIREMENT_STATUS), toFrontend: toFrontend(REGULATORY_REQUIREMENT_STATUS) },
+  obligationStatus: { toBackend: toBackend(OBLIGATION_STATUS), toFrontend: toFrontend(OBLIGATION_STATUS) },
+  obligationControlStatus: { toBackend: toBackend(OBLIGATION_CONTROL_STATUS), toFrontend: toFrontend(OBLIGATION_CONTROL_STATUS) },
 };

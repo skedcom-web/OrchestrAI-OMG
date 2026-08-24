@@ -17,6 +17,11 @@ import type {
   GovernanceData,
   GovernanceRecordKind,
   GovernanceRepository,
+  ObligationControlRepository,
+  ObligationEvidenceMappingRepository,
+  ObligationRepository,
+  RegulatoryRequirementRepository,
+  RegulatorySourceRepository,
   RequirementRepository,
 } from './types';
 import type {
@@ -139,6 +144,81 @@ export const localEvidenceMappingRepository: EvidenceMappingRepository = {
   },
   async deleteMapping(id) {
     await storage.deleteEvidenceMapping(id);
+  },
+};
+
+export const localRegulatorySourceRepository: RegulatorySourceRepository = {
+  async getSources() {
+    return storage.getRegulatorySources();
+  },
+  async createSource(data) {
+    return storage.saveRegulatorySource(data);
+  },
+  async updateSource(id, data) {
+    return storage.saveRegulatorySource({ ...data, id });
+  },
+  async deleteSource(id) {
+    await storage.deleteRegulatorySource(id);
+  },
+};
+
+export const localRegulatoryRequirementRepository: RegulatoryRequirementRepository = {
+  async getRequirements() {
+    return storage.getRegulatoryRequirements();
+  },
+  async createRequirement(data) {
+    return storage.saveRegulatoryRequirement(data);
+  },
+  async updateRequirement(id, data) {
+    return storage.saveRegulatoryRequirement({ ...data, id });
+  },
+  async deleteRequirement(id) {
+    await storage.deleteRegulatoryRequirement(id);
+  },
+};
+
+export const localObligationRepository: ObligationRepository = {
+  async getObligations() {
+    return storage.getObligations();
+  },
+  async createObligation(data) {
+    return storage.saveObligation(data);
+  },
+  async updateObligation(id, data) {
+    return storage.saveObligation({ ...data, id });
+  },
+  async deleteObligation(id) {
+    await storage.deleteObligation(id);
+  },
+};
+
+export const localObligationControlRepository: ObligationControlRepository = {
+  async getControls() {
+    return storage.getObligationControls();
+  },
+  async createControl(data) {
+    return storage.saveObligationControl(data);
+  },
+  async updateControl(id, data) {
+    return storage.saveObligationControl({ ...data, id });
+  },
+  async deleteControl(id) {
+    await storage.deleteObligationControl(id);
+  },
+};
+
+export const localObligationEvidenceMappingRepository: ObligationEvidenceMappingRepository = {
+  async getMappings() {
+    return storage.getObligationEvidenceMappings();
+  },
+  async createMapping(data) {
+    return storage.saveObligationEvidenceMapping(data);
+  },
+  async updateMapping(id, data) {
+    return storage.saveObligationEvidenceMapping({ ...data, id });
+  },
+  async deleteMapping(id) {
+    await storage.deleteObligationEvidenceMapping(id);
   },
 };
 

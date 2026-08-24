@@ -15,8 +15,13 @@ import type {
   EvidenceMapping,
   EvidenceRecord,
   GovernanceReauthorizationRecord,
+  Obligation,
+  ObligationControl,
+  ObligationEvidenceMapping,
   PackControl,
   ReassessmentTrigger,
+  RegulatoryRequirement,
+  RegulatorySource,
   ScheduledReview,
 } from '../types';
 
@@ -87,5 +92,47 @@ export interface EvidenceMappingRepository {
   getMappings(): Promise<EvidenceMapping[]>;
   createMapping(data: Partial<EvidenceMapping>): Promise<EvidenceMapping>;
   updateMapping(id: string, data: Partial<EvidenceMapping>): Promise<EvidenceMapping>;
+  deleteMapping(id: string): Promise<void>;
+}
+
+/**
+ * Release 6 — Universal Regulatory Knowledge & Obligation Engine. Same
+ * Repository Pattern one layer deeper: Source -> Requirement -> Obligation ->
+ * Control -> Evidence. Api-first from day one — no local-storage-first
+ * detour, per the Release 6 blueprint's production principles and the
+ * Release 5.1 correction they generalize.
+ */
+export interface RegulatorySourceRepository {
+  getSources(): Promise<RegulatorySource[]>;
+  createSource(data: Partial<RegulatorySource>): Promise<RegulatorySource>;
+  updateSource(id: string, data: Partial<RegulatorySource>): Promise<RegulatorySource>;
+  deleteSource(id: string): Promise<void>;
+}
+
+export interface RegulatoryRequirementRepository {
+  getRequirements(): Promise<RegulatoryRequirement[]>;
+  createRequirement(data: Partial<RegulatoryRequirement>): Promise<RegulatoryRequirement>;
+  updateRequirement(id: string, data: Partial<RegulatoryRequirement>): Promise<RegulatoryRequirement>;
+  deleteRequirement(id: string): Promise<void>;
+}
+
+export interface ObligationRepository {
+  getObligations(): Promise<Obligation[]>;
+  createObligation(data: Partial<Obligation>): Promise<Obligation>;
+  updateObligation(id: string, data: Partial<Obligation>): Promise<Obligation>;
+  deleteObligation(id: string): Promise<void>;
+}
+
+export interface ObligationControlRepository {
+  getControls(): Promise<ObligationControl[]>;
+  createControl(data: Partial<ObligationControl>): Promise<ObligationControl>;
+  updateControl(id: string, data: Partial<ObligationControl>): Promise<ObligationControl>;
+  deleteControl(id: string): Promise<void>;
+}
+
+export interface ObligationEvidenceMappingRepository {
+  getMappings(): Promise<ObligationEvidenceMapping[]>;
+  createMapping(data: Partial<ObligationEvidenceMapping>): Promise<ObligationEvidenceMapping>;
+  updateMapping(id: string, data: Partial<ObligationEvidenceMapping>): Promise<ObligationEvidenceMapping>;
   deleteMapping(id: string): Promise<void>;
 }

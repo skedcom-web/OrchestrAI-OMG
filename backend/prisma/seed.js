@@ -276,11 +276,92 @@ async function seedCompliance() {
   console.log(`  Compliance packs: ${packs.length}, requirements: ${requirements.length}, controls: ${controls.length}, evidence mappings: ${mappingCount}`);
 }
 
+// Release 6 — Universal Regulatory Knowledge & Obligation Engine (Foundation
+// Edition). One generic sample source illustrating Source -> Requirement ->
+// Obligation -> Control -> Evidence — no RBI/ISO/EU AI Act/NIST content, per
+// the blueprint's explicit "foundation, not regulation" scoping. Neon-backed
+// from day one, so this seeds unconditionally alongside (not deferred like
+// Release 5's compliance packs were).
+async function seedRegulatoryKnowledge() {
+  const existingSourceCount = await prisma.regulatorySource.count();
+  if (existingSourceCount > 0) {
+    console.log(`Skipping regulatory knowledge seed — RegulatorySource already has ${existingSourceCount} row(s).`);
+    return;
+  }
+
+  console.log('Seeding regulatory sources, requirements, obligations, controls and evidence mappings...');
+
+  await prisma.regulatorySource.create({
+    data: {
+      id: 'src-demo-001', name: 'Sample Regulatory Source', sourceType: 'FRAMEWORK', status: 'ACTIVE',
+      jurisdiction: 'Cross-Jurisdiction', industry: 'Cross-Industry', version: '1.0',
+      effectiveDate: new Date('2026-01-01'), reviewDate: new Date('2026-12-01'),
+    },
+  });
+
+  const requirements = [
+    { id: 'REQ-OVERSIGHT-001', name: 'Human Oversight Required', description: 'In-scope AI systems must have documented, effective human oversight arrangements.', category: 'Oversight', criticality: 'CRITICAL', status: 'ACTIVE', sourceId: 'src-demo-001' },
+    { id: 'REQ-VALIDATION-001', name: 'Independent Validation Required', description: 'In-scope AI systems must undergo independent validation before production use.', category: 'Validation', criticality: 'HIGH', status: 'ACTIVE', sourceId: 'src-demo-001' },
+    { id: 'REQ-AUDIT-001', name: 'Audit Trail Required', description: 'In-scope AI systems must maintain a retrievable audit trail of governance decisions.', category: 'Audit', criticality: 'HIGH', status: 'ACTIVE', sourceId: 'src-demo-001' },
+    { id: 'REQ-REVIEW-001', name: 'Periodic Review Required', description: 'In-scope AI systems must undergo periodic governance review on a defined cadence.', category: 'Review', criticality: 'MEDIUM', status: 'DRAFT', sourceId: 'src-demo-001' },
+  ];
+  for (const r of requirements) {
+    await prisma.regulatoryRequirement.create({ data: r });
+  }
+
+  const obligations = [
+    { id: 'obl-named-owner', name: 'Named Owner', description: 'A named individual is accountable for human oversight of the system.', owner: 'David Chen', status: 'ACTIVE', requirementId: 'REQ-OVERSIGHT-001' },
+    { id: 'obl-approval-authority', name: 'Approval Authority', description: 'A named authority must approve the system before it operates autonomously.', owner: 'David Chen', status: 'ACTIVE', requirementId: 'REQ-OVERSIGHT-001' },
+    { id: 'obl-escalation-path', name: 'Escalation Path', description: 'A defined path exists for escalating oversight concerns.', owner: 'Elena Rostova', status: 'ACTIVE', requirementId: 'REQ-OVERSIGHT-001' },
+    { id: 'obl-override-capability', name: 'Override Capability', description: 'A human can override or halt the system’s autonomous action.', owner: null, status: 'DRAFT', requirementId: 'REQ-OVERSIGHT-001' },
+    { id: 'obl-validation-signoff', name: 'Validation Sign-Off', description: 'An independent validator signs off before production use.', owner: 'Dr. Aris Thorne', status: 'ACTIVE', requirementId: 'REQ-VALIDATION-001' },
+    { id: 'obl-audit-log-retention', name: 'Audit Log Retention', description: 'Governance decisions are logged and retained for the audit trail.', owner: 'Robert Vance', status: 'ACTIVE', requirementId: 'REQ-AUDIT-001' },
+  ];
+  for (const o of obligations) {
+    await prisma.obligation.create({ data: o });
+  }
+
+  const controls = [
+    { id: 'octl-authority-profile', name: 'Governance Authority Profile Control', description: 'Verifies the asset’s Governance Authority Profile names an accountable owner.', owner: 'David Chen', status: 'ACTIVE', obligationId: 'obl-named-owner' },
+    { id: 'octl-approval-authority', name: 'Approval Authority Control', description: 'Verifies a named approval authority signed off before autonomous operation.', owner: 'David Chen', status: 'ACTIVE', obligationId: 'obl-approval-authority' },
+    { id: 'octl-escalation-path', name: 'Escalation Path Control', description: 'Verifies a documented escalation path exists for oversight concerns.', owner: 'Elena Rostova', status: 'ACTIVE', obligationId: 'obl-escalation-path' },
+    { id: 'octl-override-capability', name: 'Override Capability Control', description: 'Verifies a human override or kill switch capability exists.', owner: null, status: 'DRAFT', obligationId: 'obl-override-capability' },
+    { id: 'octl-validation-signoff', name: 'Validation Sign-Off Control', description: 'Verifies independent validation was completed and recorded.', owner: 'Dr. Aris Thorne', status: 'ACTIVE', obligationId: 'obl-validation-signoff' },
+    { id: 'octl-audit-log-retention', name: 'Audit Log Retention Control', description: 'Verifies governance decisions are logged and retained.', owner: 'Robert Vance', status: 'ACTIVE', obligationId: 'obl-audit-log-retention' },
+  ];
+  for (const c of controls) {
+    await prisma.obligationControl.create({ data: c });
+  }
+
+  // Evidence collected once (Release 3) and reused here too — three of six
+  // controls end up Covered, two Not Covered (missing evidence / missing
+  // both owner and evidence) and the Draft requirement is Not Applicable, so
+  // the Coverage Engine demonstrates every live outcome from one source.
+  const mappingSpecs = [
+    { controlId: 'octl-authority-profile', evidenceName: 'Fraud Sentinel Agent — Independent Validation Report' },
+    { controlId: 'octl-approval-authority', evidenceName: 'Credit Scoring Engine — Conditional GO Approval Record' },
+    { controlId: 'octl-validation-signoff', evidenceName: 'Credit Scoring Engine — Risk Assessment' },
+  ];
+  let mappingCount = 0;
+  for (const m of mappingSpecs) {
+    const evidence = await prisma.evidenceRecord.findFirst({ where: { name: m.evidenceName } });
+    if (!evidence) {
+      console.warn(`  Evidence record not found for mapping: "${m.evidenceName}" — skipping.`);
+      continue;
+    }
+    await prisma.obligationEvidenceMapping.create({ data: { controlId: m.controlId, evidenceRecordId: evidence.id } });
+    mappingCount++;
+  }
+
+  console.log(`  Regulatory sources: 1, requirements: ${requirements.length}, obligations: ${obligations.length}, controls: ${controls.length}, evidence mappings: ${mappingCount}`);
+}
+
 async function main() {
   const existingAssetCount = await prisma.aIAsset.count();
   if (existingAssetCount > 0) {
     console.log(`AIAsset already has ${existingAssetCount} row(s) — skipping asset/evidence/continuity seed.`);
     await seedCompliance();
+    await seedRegulatoryKnowledge();
     return;
   }
 
@@ -356,6 +437,7 @@ async function main() {
   console.log(`  Scheduled reviews: ${reviewCount}`);
 
   await seedCompliance();
+  await seedRegulatoryKnowledge();
 
   console.log('Seed complete.');
 }

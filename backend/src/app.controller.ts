@@ -309,6 +309,175 @@ export class AppController {
     return { deleted: true, id };
   }
 
+  // --- RELEASE 6: UNIVERSAL REGULATORY KNOWLEDGE & OBLIGATION ENGINE ---
+  @Get('regulatory-sources')
+  @Roles(
+    'SUPER_ADMIN',
+    'GOVERNANCE_ADMIN',
+    'RISK_OFFICER',
+    'BUSINESS_OWNER',
+    'VALIDATOR',
+    'AUDITOR',
+    'VIEWER',
+  )
+  async getRegulatorySources() {
+    return this.prisma.regulatorySource.findMany({
+      include: { requirements: { include: { obligations: { include: { controls: true } } } } },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  @Post('regulatory-sources')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async createRegulatorySource(@Body() body: any) {
+    return this.prisma.regulatorySource.create({ data: body });
+  }
+
+  @Patch('regulatory-sources/:id')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async updateRegulatorySource(@Param('id') id: string, @Body() body: any) {
+    return this.prisma.regulatorySource.update({ where: { id }, data: body });
+  }
+
+  @Delete('regulatory-sources/:id')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async deleteRegulatorySource(@Param('id') id: string) {
+    await this.prisma.regulatorySource.delete({ where: { id } });
+    return { deleted: true, id };
+  }
+
+  @Get('regulatory-requirements')
+  @Roles(
+    'SUPER_ADMIN',
+    'GOVERNANCE_ADMIN',
+    'RISK_OFFICER',
+    'BUSINESS_OWNER',
+    'VALIDATOR',
+    'AUDITOR',
+    'VIEWER',
+  )
+  async getRegulatoryRequirements() {
+    return this.prisma.regulatoryRequirement.findMany({ orderBy: { createdAt: 'desc' } });
+  }
+
+  @Post('regulatory-requirements')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async createRegulatoryRequirement(@Body() body: any) {
+    return this.prisma.regulatoryRequirement.create({ data: body });
+  }
+
+  @Patch('regulatory-requirements/:id')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async updateRegulatoryRequirement(@Param('id') id: string, @Body() body: any) {
+    return this.prisma.regulatoryRequirement.update({ where: { id }, data: body });
+  }
+
+  @Delete('regulatory-requirements/:id')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async deleteRegulatoryRequirement(@Param('id') id: string) {
+    await this.prisma.regulatoryRequirement.delete({ where: { id } });
+    return { deleted: true, id };
+  }
+
+  @Get('obligations')
+  @Roles(
+    'SUPER_ADMIN',
+    'GOVERNANCE_ADMIN',
+    'RISK_OFFICER',
+    'BUSINESS_OWNER',
+    'VALIDATOR',
+    'AUDITOR',
+    'VIEWER',
+  )
+  async getObligations() {
+    return this.prisma.obligation.findMany({ orderBy: { createdAt: 'desc' } });
+  }
+
+  @Post('obligations')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async createObligation(@Body() body: any) {
+    return this.prisma.obligation.create({ data: body });
+  }
+
+  @Patch('obligations/:id')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async updateObligation(@Param('id') id: string, @Body() body: any) {
+    return this.prisma.obligation.update({ where: { id }, data: body });
+  }
+
+  @Delete('obligations/:id')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async deleteObligation(@Param('id') id: string) {
+    await this.prisma.obligation.delete({ where: { id } });
+    return { deleted: true, id };
+  }
+
+  @Get('obligation-controls')
+  @Roles(
+    'SUPER_ADMIN',
+    'GOVERNANCE_ADMIN',
+    'RISK_OFFICER',
+    'BUSINESS_OWNER',
+    'VALIDATOR',
+    'AUDITOR',
+    'VIEWER',
+  )
+  async getObligationControls() {
+    return this.prisma.obligationControl.findMany({ orderBy: { createdAt: 'desc' } });
+  }
+
+  @Post('obligation-controls')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async createObligationControl(@Body() body: any) {
+    return this.prisma.obligationControl.create({ data: body });
+  }
+
+  @Patch('obligation-controls/:id')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async updateObligationControl(@Param('id') id: string, @Body() body: any) {
+    return this.prisma.obligationControl.update({ where: { id }, data: body });
+  }
+
+  @Delete('obligation-controls/:id')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async deleteObligationControl(@Param('id') id: string) {
+    await this.prisma.obligationControl.delete({ where: { id } });
+    return { deleted: true, id };
+  }
+
+  @Get('obligation-evidence-mappings')
+  @Roles(
+    'SUPER_ADMIN',
+    'GOVERNANCE_ADMIN',
+    'RISK_OFFICER',
+    'BUSINESS_OWNER',
+    'VALIDATOR',
+    'AUDITOR',
+    'VIEWER',
+  )
+  async getObligationEvidenceMappings() {
+    return this.prisma.obligationEvidenceMapping.findMany({ orderBy: { createdAt: 'desc' } });
+  }
+
+  @Post('obligation-evidence-mappings')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER')
+  async createObligationEvidenceMapping(@Body() body: any) {
+    return this.prisma.obligationEvidenceMapping.create({ data: body });
+  }
+
+  @Patch('obligation-evidence-mappings/:id')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER')
+  async updateObligationEvidenceMapping(@Param('id') id: string, @Body() body: any) {
+    return this.prisma.obligationEvidenceMapping.update({ where: { id }, data: body });
+  }
+
+  @Delete('obligation-evidence-mappings/:id')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async deleteObligationEvidenceMapping(@Param('id') id: string) {
+    await this.prisma.obligationEvidenceMapping.delete({ where: { id } });
+    return { deleted: true, id };
+  }
+
   // --- PHASE 7: CONTINUOUS MONITORING ENDPOINTS ---
   @Get('monitoring/alerts')
   @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER', 'AUDITOR')

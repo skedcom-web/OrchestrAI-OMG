@@ -14,6 +14,7 @@ import {
   getAssets,
   getAuditLogs,
   getAllPackGaps,
+  getAllSourceGaps,
   getCompliancePacks,
   getCorrectiveActions,
   getEvidence,
@@ -21,6 +22,10 @@ import {
   getFindings,
   getGovernanceMetrics,
   getPackCoverage,
+  getRegulatoryRequirementCoverage,
+  getRegulatoryRequirements,
+  getRegulatorySources,
+  getSourceCoverage,
   getScheduledReviews,
   getValidations,
 } from './storageService';
@@ -199,6 +204,33 @@ export function getCompliancePackOverview(): CompliancePackOverview {
       coverageStatus: getPackCoverage(p.id)?.status || 'Not Applicable',
     })),
     topGaps: gaps.slice(0, 5).map(g => ({ packName: g.packName, gapType: g.gapType, detail: g.detail })),
+  };
+}
+
+/** Release 6 — Universal Regulatory Knowledge & Obligation Engine. */
+export interface RegulatoryReadinessOverview {
+  activeSourcesCount: number;
+  sources: { id: string; name: string; status: string; coverageStatus: string }[];
+  coveredRequirementsCount: number;
+  openGapsCount: number;
+  topGaps: { sourceName: string; gapType: string; detail: string }[];
+}
+
+export function getRegulatoryReadinessOverview(): RegulatoryReadinessOverview {
+  const sources = getRegulatorySources();
+  const gaps = getAllSourceGaps();
+
+  return {
+    activeSourcesCount: sources.filter(s => s.status === 'Active').length,
+    sources: sources.map(s => ({
+      id: s.id,
+      name: s.name,
+      status: s.status,
+      coverageStatus: getSourceCoverage(s.id)?.status || 'Not Applicable',
+    })),
+    coveredRequirementsCount: getRegulatoryRequirements().filter(r => getRegulatoryRequirementCoverage(r.id)?.status === 'Covered').length,
+    openGapsCount: gaps.length,
+    topGaps: gaps.slice(0, 5).map(g => ({ sourceName: g.sourceName, gapType: g.gapType, detail: g.detail })),
   };
 }
 

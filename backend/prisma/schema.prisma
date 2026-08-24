@@ -150,48 +150,48 @@ enum UserRole {
 }
 
 model User {
-  id              String         @id @default(uuid())
-  email           String         @unique
-  name            String
-  role            UserRole       @default(GOVERNANCE_ADMIN)
-  department      String
-  status          String         @default("Active")
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
-  
-  businessAssets   AssetOwner[]  @relation("BusinessOwner")
-  technicalAssets  AssetOwner[]  @relation("TechnicalOwner")
-  riskAssets       AssetOwner[]  @relation("RiskOwner")
-  complianceAssets AssetOwner[]  @relation("ComplianceOwner")
-  approvedAssets   AssetOwner[]  @relation("Approver")
+  id         String   @id @default(uuid())
+  email      String   @unique
+  name       String
+  role       UserRole @default(GOVERNANCE_ADMIN)
+  department String
+  status     String   @default("Active")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  businessAssets   AssetOwner[] @relation("BusinessOwner")
+  technicalAssets  AssetOwner[] @relation("TechnicalOwner")
+  riskAssets       AssetOwner[] @relation("RiskOwner")
+  complianceAssets AssetOwner[] @relation("ComplianceOwner")
+  approvedAssets   AssetOwner[] @relation("Approver")
   auditLogs        AuditLog[]
 
   @@map("users")
 }
 
 model AIAsset {
-  id               String            @id @default(uuid())
-  name             String
-  type             AssetType
-  description      String            @db.Text
-  department       String
-  version          String            @default("1.0.0")
-  status           GovernanceStatus  @default(DRAFT)
+  id                String           @id @default(uuid())
+  name              String
+  type              AssetType
+  description       String           @db.Text
+  department        String
+  version           String           @default("1.0.0")
+  status            GovernanceStatus @default(DRAFT)
   operationalStatus String           @default("Active")
-  riskLevel        RiskLevel         @default(MEDIUM)
-  techStack        String[]
-  dataSensitivity  String            @default("Confidential")
-  validationScore  Int?
-  decisionOutcome  DecisionOutcome   @default(PENDING)
-  tags             String[]
+  riskLevel         RiskLevel        @default(MEDIUM)
+  techStack         String[]
+  dataSensitivity   String           @default("Confidential")
+  validationScore   Int?
+  decisionOutcome   DecisionOutcome  @default(PENDING)
+  tags              String[]
 
   // Release 1 — Governance Authority Profile (Capability 1)
   /// Ultimately accountable individual — distinct from AssetOwner.businessOwner.
-  accountableOwner        String?
-  governanceSponsor       String?
-  humanOverrideAuthority  String?
-  killSwitchAuthority     String?
-  reassessmentAuthority   String?
+  accountableOwner         String?
+  governanceSponsor        String?
+  humanOverrideAuthority   String?
+  killSwitchAuthority      String?
+  reassessmentAuthority    String?
   /// Release 4 — completes the Authority Profile as flat, API-writable scalars
   /// (distinct from the legacy User-relation-based AssetOwner.riskOwner etc.).
   authorityRiskOwner       String?
@@ -204,94 +204,94 @@ model AIAsset {
   ownershipJson Json?
 
   // Release 1 — Human Oversight Classification (Capability 2)
-  oversightType    HumanOversightType?
+  oversightType HumanOversightType?
 
   // Release 1 — Autonomy Classification (Capability 3), Level 0-5
-  autonomyLevel    Int?
+  autonomyLevel Int?
 
   // Release 1 recommendation / Release 2 — Governance Classification
   governanceClassification GovernanceClassification?
 
   // Release 2 — Governance State Model (Capability 1)
-  governanceState  AssetGovernanceState? @default(DRAFT)
-  nextReviewDate   DateTime?
+  governanceState AssetGovernanceState? @default(DRAFT)
+  nextReviewDate  DateTime?
 
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  owners           AssetOwner?
-  decisions        DecisionRecord[]
-  riskAssessments  RiskAssessment[]
-  validations      ValidationRecord[]
-  reassessmentTriggers    ReassessmentTrigger[]
-  reauthorizations        GovernanceReauthorizationRecord[]
-  evidenceRecords         EvidenceRecord[]
-  evidence         EvidenceDocument[]
-  findings         Finding[]
+  owners                AssetOwner?
+  decisions             DecisionRecord[]
+  riskAssessments       RiskAssessment[]
+  validations           ValidationRecord[]
+  reassessmentTriggers  ReassessmentTrigger[]
+  reauthorizations      GovernanceReauthorizationRecord[]
+  evidenceRecords       EvidenceRecord[]
+  evidence              EvidenceDocument[]
+  findings              Finding[]
   complianceAssessments ComplianceAssessmentRecord[]
-  killSwitches     KillSwitchRecord[]
-  overrides        OverrideRecord[]
-  incidents        GovernanceIncident[]
-  retirements      RetirementRecord[]
-  scheduledReviews ScheduledReview[]
-  correctiveActions CorrectiveAction[]
-  alerts           GovernanceAlert[]
-  auditLogs        AuditLog[]
-  policyViolations PolicyViolation[]
-  changeRequests   ChangeRequest[]
-  stateTransitions StateTransition[]
+  killSwitches          KillSwitchRecord[]
+  overrides             OverrideRecord[]
+  incidents             GovernanceIncident[]
+  retirements           RetirementRecord[]
+  scheduledReviews      ScheduledReview[]
+  correctiveActions     CorrectiveAction[]
+  alerts                GovernanceAlert[]
+  auditLogs             AuditLog[]
+  policyViolations      PolicyViolation[]
+  changeRequests        ChangeRequest[]
+  stateTransitions      StateTransition[]
 
   @@map("ai_assets")
 }
 
 model AssetOwner {
-  id                String   @id @default(uuid())
-  assetId           String   @unique
-  asset             AIAsset  @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  id      String  @id @default(uuid())
+  assetId String  @unique
+  asset   AIAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
 
-  businessOwnerId   String?
-  businessOwner     User?    @relation("BusinessOwner", fields: [businessOwnerId], references: [id])
+  businessOwnerId String?
+  businessOwner   User?   @relation("BusinessOwner", fields: [businessOwnerId], references: [id])
 
-  technicalOwnerId  String?
-  technicalOwner    User?    @relation("TechnicalOwner", fields: [technicalOwnerId], references: [id])
+  technicalOwnerId String?
+  technicalOwner   User?   @relation("TechnicalOwner", fields: [technicalOwnerId], references: [id])
 
-  riskOwnerId       String?
-  riskOwner         User?    @relation("RiskOwner", fields: [riskOwnerId], references: [id])
+  riskOwnerId String?
+  riskOwner   User?   @relation("RiskOwner", fields: [riskOwnerId], references: [id])
 
   complianceOwnerId String?
-  complianceOwner   User?    @relation("ComplianceOwner", fields: [complianceOwnerId], references: [id])
+  complianceOwner   User?   @relation("ComplianceOwner", fields: [complianceOwnerId], references: [id])
 
-  approverId        String?
-  approver          User?    @relation("Approver", fields: [approverId], references: [id])
+  approverId String?
+  approver   User?   @relation("Approver", fields: [approverId], references: [id])
 
   @@map("asset_owners")
 }
 
 model RiskAssessment {
-  id                 String     @id @default(uuid())
-  assetId            String
-  asset              AIAsset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
-  overallRiskTier    RiskLevel
-  context            String
-  dataSensitivity    String
-  decisionImpact     String
-  operationalImpact  String
-  controlOversight   String
-  assessedBy         String
-  createdAt          DateTime   @default(now())
+  id                String    @id @default(uuid())
+  assetId           String
+  asset             AIAsset   @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  overallRiskTier   RiskLevel
+  context           String
+  dataSensitivity   String
+  decisionImpact    String
+  operationalImpact String
+  controlOversight  String
+  assessedBy        String
+  createdAt         DateTime  @default(now())
 
   @@map("risk_assessments")
 }
 
 model DecisionRecord {
-  id             String          @id @default(uuid())
-  assetId        String
-  asset          AIAsset         @relation(fields: [assetId], references: [id], onDelete: Cascade)
-  outcome        DecisionOutcome
-  checklist      Json
-  decisionOwner  String
-  justification  String          @db.Text
-  createdAt      DateTime        @default(now())
+  id            String          @id @default(uuid())
+  assetId       String
+  asset         AIAsset         @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  outcome       DecisionOutcome
+  checklist     Json
+  decisionOwner String
+  justification String          @db.Text
+  createdAt     DateTime        @default(now())
 
   @@map("decision_records")
 }
@@ -493,21 +493,21 @@ enum PolicyViolationStatus {
 }
 
 model Policy {
-  id              String          @id @default(uuid())
-  policyRef       String          @unique
+  id              String         @id @default(uuid())
+  policyRef       String         @unique
   name            String
-  category        PolicyCategory  @default(GOVERNANCE)
+  category        PolicyCategory @default(GOVERNANCE)
   owner           String
   ownerRole       String
   effectiveDate   DateTime
   reviewDate      DateTime
-  status          PolicyStatus    @default(DRAFT)
-  description     String          @db.Text
-  mandatory       Boolean         @default(false)
+  status          PolicyStatus   @default(DRAFT)
+  description     String         @db.Text
+  mandatory       Boolean        @default(false)
   /// Enforcement rule key evaluated against live governance state.
   enforcementRule String?
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
 
   mappings   PolicyMapping[]
   violations PolicyViolation[]
@@ -532,22 +532,22 @@ model PolicyMapping {
 }
 
 model PolicyViolation {
-  id                String                @id @default(uuid())
-  policyId          String
-  policy            Policy                @relation(fields: [policyId], references: [id], onDelete: Cascade)
-  violationType     String
-  assetId           String
-  asset             AIAsset               @relation(fields: [assetId], references: [id], onDelete: Cascade)
-  severity          String
-  owner             String
-  detectionDate     DateTime              @default(now())
-  status            PolicyViolationStatus @default(OPEN)
-  description       String                @db.Text
-  remediationNotes  String?               @db.Text
+  id               String                @id @default(uuid())
+  policyId         String
+  policy           Policy                @relation(fields: [policyId], references: [id], onDelete: Cascade)
+  violationType    String
+  assetId          String
+  asset            AIAsset               @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  severity         String
+  owner            String
+  detectionDate    DateTime              @default(now())
+  status           PolicyViolationStatus @default(OPEN)
+  description      String                @db.Text
+  remediationNotes String?               @db.Text
   /// True when raised by the enforcement engine rather than logged by a human.
-  autoDetected      Boolean               @default(false)
-  createdAt         DateTime              @default(now())
-  updatedAt         DateTime              @updatedAt
+  autoDetected     Boolean               @default(false)
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
 
   @@map("policy_violations")
 }
@@ -620,51 +620,51 @@ enum GovernanceState {
 }
 
 model ChangeRequest {
-  id                    String                   @id @default(uuid())
-  changeRef             String                   @unique
+  id                    String         @id @default(uuid())
+  changeRef             String         @unique
   title                 String
-  description           String                   @db.Text
+  description           String         @db.Text
   assetId               String
-  asset                 AIAsset                  @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  asset                 AIAsset        @relation(fields: [assetId], references: [id], onDelete: Cascade)
   requestedBy           String
   requestedByRole       String
   category              ChangeCategory
-  businessJustification String                   @db.Text
-  requestedDate         DateTime                 @default(now())
-  status                ChangeStatus             @default(DRAFT)
+  businessJustification String         @db.Text
+  requestedDate         DateTime       @default(now())
+  status                ChangeStatus   @default(DRAFT)
 
   /// WS3 — impact outcome per governance impact area, keyed by area name.
-  impact                Json?
+  impact       Json?
   /// WS4 — weighted 0-100 impact score derived from the assessment.
-  impactScore           Int?
-  magnitude             ChangeMagnitude?
-  reassessment          ReassessmentRequirement?
+  impactScore  Int?
+  magnitude    ChangeMagnitude?
+  reassessment ReassessmentRequirement?
 
-  submittedDate         DateTime?
-  decidedDate           DateTime?
-  implementedDate       DateTime?
-  closedDate            DateTime?
-  decisionRationale     String?                  @db.Text
+  submittedDate     DateTime?
+  decidedDate       DateTime?
+  implementedDate   DateTime?
+  closedDate        DateTime?
+  decisionRationale String?   @db.Text
 
-  createdAt             DateTime                 @default(now())
-  updatedAt             DateTime                 @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  approvals             ChangeApproval[]
-  transitions           StateTransition[]
-  historyEntries        ChangeHistoryEntry[]
+  approvals      ChangeApproval[]
+  transitions    StateTransition[]
+  historyEntries ChangeHistoryEntry[]
 
   @@map("change_requests")
 }
 
 model ChangeApproval {
-  id         String           @id @default(uuid())
-  changeId   String
-  change     ChangeRequest    @relation(fields: [changeId], references: [id], onDelete: Cascade)
-  role       ApproverRole
-  approver   String
-  decision   ApprovalDecision @default(PENDING)
-  decidedAt  DateTime?
-  notes      String?          @db.Text
+  id        String           @id @default(uuid())
+  changeId  String
+  change    ChangeRequest    @relation(fields: [changeId], references: [id], onDelete: Cascade)
+  role      ApproverRole
+  approver  String
+  decision  ApprovalDecision @default(PENDING)
+  decidedAt DateTime?
+  notes     String?          @db.Text
 
   @@unique([changeId, role])
   @@map("change_approvals")
@@ -707,15 +707,15 @@ model ChangeHistoryEntry {
 }
 
 model GovernanceTriggerRule {
-  id          String   @id @default(uuid())
+  id          String           @id @default(uuid())
   condition   String
   action      String
-  description String   @db.Text
+  description String           @db.Text
   /// Change categories that arm this rule.
   categories  ChangeCategory[]
-  enabled     Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  enabled     Boolean          @default(true)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
 
   @@map("governance_trigger_rules")
 }
@@ -728,16 +728,16 @@ model GovernanceTriggerRule {
 /// register, not a rule engine (see PolicyViolation / GovernanceTriggerRule
 /// for the Phase 10 automated equivalent, which Release 2 does not replace).
 model ReassessmentTrigger {
-  id            String                     @id @default(uuid())
-  assetId       String
-  asset         AIAsset                    @relation(fields: [assetId], references: [id], onDelete: Cascade)
-  triggerType   ReassessmentTriggerType
-  dateDetected  DateTime                   @default(now())
-  severity      RiskLevel
-  owner         String
-  status        ReassessmentTriggerStatus  @default(OPEN)
-  comments      String                     @db.Text
-  createdAt     DateTime                   @default(now())
+  id           String                    @id @default(uuid())
+  assetId      String
+  asset        AIAsset                   @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  triggerType  ReassessmentTriggerType
+  dateDetected DateTime                  @default(now())
+  severity     RiskLevel
+  owner        String
+  status       ReassessmentTriggerStatus @default(OPEN)
+  comments     String                    @db.Text
+  createdAt    DateTime                  @default(now())
 
   @@map("reassessment_triggers")
 }
@@ -745,17 +745,17 @@ model ReassessmentTrigger {
 /// Capability 5 — Governance Reauthorization Record. Traces every decision
 /// that moves an asset's Governance State forward again after reassessment.
 model GovernanceReauthorizationRecord {
-  id                String                @id @default(uuid())
-  assetId           String
-  asset             AIAsset               @relation(fields: [assetId], references: [id], onDelete: Cascade)
-  reviewedBy        String
-  reviewDate        DateTime              @default(now())
-  decision          DecisionOutcome
-  reason            String                @db.Text
-  supportingNotes   String?               @db.Text
-  previousState     AssetGovernanceState
-  newState          AssetGovernanceState
-  createdAt         DateTime              @default(now())
+  id              String               @id @default(uuid())
+  assetId         String
+  asset           AIAsset              @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  reviewedBy      String
+  reviewDate      DateTime             @default(now())
+  decision        DecisionOutcome
+  reason          String               @db.Text
+  supportingNotes String?              @db.Text
+  previousState   AssetGovernanceState
+  newState        AssetGovernanceState
+  createdAt       DateTime             @default(now())
 
   @@map("governance_reauthorization_records")
 }
@@ -767,16 +767,16 @@ model GovernanceReauthorizationRecord {
 /// Capability 1 — Evidence Registry. The universal governance evidence
 /// object, distinct from the earlier ODF-deliverable EvidenceDocument model.
 model EvidenceRecord {
-  id           String                @id @default(uuid())
+  id           String               @id @default(uuid())
   name         String
   evidenceType EvidenceRecordType
-  status       EvidenceRecordStatus  @default(DRAFT)
-  createdDate  DateTime              @default(now())
+  status       EvidenceRecordStatus @default(DRAFT)
+  createdDate  DateTime             @default(now())
   expiryDate   DateTime?
-  description  String                @db.Text
+  description  String               @db.Text
 
-  assetId      String
-  asset        AIAsset               @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  assetId String
+  asset   AIAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
 
   // Capability 3 — Evidence Ownership
   evidenceOwner     String
@@ -793,10 +793,11 @@ model EvidenceRecord {
   reauthorizationRecordRef String?
   timelineEventRef         String?
 
-  createdAt    DateTime              @default(now())
-  updatedAt    DateTime              @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  evidenceMappings EvidenceMapping[]
+  evidenceMappings   EvidenceMapping[]
+  obligationMappings ObligationEvidenceMapping[]
 
   @@map("evidence_records")
 }
@@ -836,18 +837,18 @@ enum PackControlStatus {
 
 /// Capability 1 — Compliance Pack Registry.
 model CompliancePack {
-  id            String                @id
+  id            String               @id
   name          String
-  version       String                @default("1.0")
-  status        CompliancePackStatus  @default(DRAFT)
+  version       String               @default("1.0")
+  status        CompliancePackStatus @default(DRAFT)
   owner         String
-  description   String                @db.Text
+  description   String               @db.Text
   industry      String
   effectiveDate DateTime
-  createdAt     DateTime              @default(now())
-  updatedAt     DateTime              @updatedAt
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
 
-  requirements  ComplianceRequirement[]
+  requirements ComplianceRequirement[]
 
   @@map("compliance_packs")
 }
@@ -867,24 +868,24 @@ model ComplianceRequirement {
   createdAt   DateTime            @default(now())
   updatedAt   DateTime            @updatedAt
 
-  controls    PackControl[]
+  controls PackControl[]
 
   @@map("compliance_requirements")
 }
 
 /// Capability 3 — Control Registry.
 model PackControl {
-  id            String            @id
+  id            String                @id
   name          String
-  description   String            @db.Text
+  description   String                @db.Text
   requirementId String
   requirement   ComplianceRequirement @relation(fields: [requirementId], references: [id], onDelete: Cascade)
   owner         String?
-  status        PackControlStatus @default(DRAFT)
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
+  status        PackControlStatus     @default(DRAFT)
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
 
-  mappings      EvidenceMapping[]
+  mappings EvidenceMapping[]
 
   @@map("pack_controls")
 }
@@ -893,15 +894,164 @@ model PackControl {
 /// Evidence, reusing the Release 3 EvidenceRecord so evidence is collected
 /// once and applied across every pack that needs it.
 model EvidenceMapping {
-  id              String         @id @default(uuid())
-  controlId       String
-  control         PackControl    @relation(fields: [controlId], references: [id], onDelete: Cascade)
+  id               String         @id @default(uuid())
+  controlId        String
+  control          PackControl    @relation(fields: [controlId], references: [id], onDelete: Cascade)
   evidenceRecordId String
-  evidenceRecord  EvidenceRecord @relation(fields: [evidenceRecordId], references: [id], onDelete: Cascade)
-  createdAt       DateTime       @default(now())
+  evidenceRecord   EvidenceRecord @relation(fields: [evidenceRecordId], references: [id], onDelete: Cascade)
+  createdAt        DateTime       @default(now())
 
   @@unique([controlId, evidenceRecordId])
   @@map("evidence_mappings")
+}
+
+// ---------------------------------------------------------------------------
+// RELEASE 6 — UNIVERSAL REGULATORY KNOWLEDGE & OBLIGATION ENGINE (FOUNDATION)
+// Source -> Requirement -> Obligation -> Control -> Evidence. Generalizes the
+// Release 5 Pack -> Requirement -> Control -> Evidence chain one layer
+// deeper so a future regulation onboards as data (register a source, add
+// requirements, obligations, map controls, map evidence) rather than a
+// platform redesign. Neon is the System of Record from day one for this
+// domain — no local-storage-first detour, per Release 6's explicit
+// production principles and the Release 5.1 correction they generalize.
+// ---------------------------------------------------------------------------
+
+enum RegulatorySourceType {
+  REGULATION
+  STANDARD
+  FRAMEWORK
+  INTERNAL_POLICY
+  GUIDANCE
+}
+
+enum RegulatorySourceStatus {
+  DRAFT
+  ACTIVE
+  SUPERSEDED
+  RETIRED
+}
+
+/// Capability 1 — Regulatory Source Registry.
+model RegulatorySource {
+  id            String                 @id
+  name          String
+  sourceType    RegulatorySourceType   @default(REGULATION)
+  jurisdiction  String
+  industry      String
+  version       String                 @default("1.0")
+  effectiveDate DateTime
+  reviewDate    DateTime?
+  status        RegulatorySourceStatus @default(DRAFT)
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
+
+  requirements RegulatoryRequirement[]
+
+  @@map("regulatory_sources")
+}
+
+enum RequirementCriticality {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum RegulatoryRequirementStatus {
+  DRAFT
+  ACTIVE
+  RETIRED
+}
+
+/// Capability 2 — Requirement Registry. Client-supplied human-readable ids,
+/// the id itself is meaningful regulatory-reference content (mirrors Release
+/// 5's ComplianceRequirement).
+model RegulatoryRequirement {
+  id          String                      @id
+  name        String
+  description String                      @db.Text
+  category    String
+  criticality RequirementCriticality      @default(MEDIUM)
+  status      RegulatoryRequirementStatus @default(DRAFT)
+
+  sourceId String
+  source   RegulatorySource @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  obligations Obligation[]
+
+  @@map("regulatory_requirements")
+}
+
+enum ObligationStatus {
+  DRAFT
+  ACTIVE
+  RETIRED
+}
+
+/// Capability 3 — Obligation Engine. Translates a requirement into actionable
+/// obligations (e.g. "Human Oversight Required" -> "Named Owner", "Approval
+/// Authority", "Escalation Path", "Override Capability" — each its own row).
+model Obligation {
+  id          String           @id
+  name        String
+  description String           @db.Text
+  owner       String?
+  status      ObligationStatus @default(DRAFT)
+
+  requirementId String
+  requirement   RegulatoryRequirement @relation(fields: [requirementId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  controls ObligationControl[]
+
+  @@map("obligations")
+}
+
+enum ObligationControlStatus {
+  DRAFT
+  ACTIVE
+  RETIRED
+}
+
+/// Capability 4 — Control Mapping Engine. Maps an obligation to the OMG
+/// control that satisfies it (e.g. Governance Authority Profile, Human
+/// Oversight Classification, Autonomy Level, Approval Authority).
+model ObligationControl {
+  id          String                  @id
+  name        String
+  description String                  @db.Text
+  owner       String?
+  status      ObligationControlStatus @default(DRAFT)
+
+  obligationId String
+  obligation   Obligation @relation(fields: [obligationId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  mappings ObligationEvidenceMapping[]
+
+  @@map("obligation_controls")
+}
+
+/// Capability 5 — Evidence Mapping Engine. Control -> Evidence, reusing the
+/// Release 3 EvidenceRecord so evidence collected once is reused across
+/// every requirement/obligation that needs it.
+model ObligationEvidenceMapping {
+  id               String            @id @default(uuid())
+  controlId        String
+  control          ObligationControl @relation(fields: [controlId], references: [id], onDelete: Cascade)
+  evidenceRecordId String
+  evidenceRecord   EvidenceRecord    @relation(fields: [evidenceRecordId], references: [id], onDelete: Cascade)
+  createdAt        DateTime          @default(now())
+
+  @@unique([controlId, evidenceRecordId])
+  @@map("obligation_evidence_mappings")
 }
 
 model AuditLog {
@@ -918,8 +1068,8 @@ model AuditLog {
   details    String   @db.Text
   ipAddress  String?
 
-  assetId    String?
-  asset      AIAsset? @relation(fields: [assetId], references: [id])
+  assetId String?
+  asset   AIAsset? @relation(fields: [assetId], references: [id])
 
   @@map("audit_logs")
 }
