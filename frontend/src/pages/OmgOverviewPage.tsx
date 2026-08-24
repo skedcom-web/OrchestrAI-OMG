@@ -13,11 +13,18 @@ import {
   DESIGN_PARTNER_INDUSTRIES,
   ENGAGEMENT_PHASES,
   ENTERPRISE_PROBLEMS,
-  EXECUTIVE_MESSAGE_FOCUS_AREAS,
+  EXECUTIVE_MESSAGE_STATEMENT,
+  FINAL_DECLARATION_STATEMENT,
+  FINAL_DECLARATION_TITLE,
+  FOUNDING_PARTNERS_STATEMENT,
+  FUTURE_COMPLIANCE_ACCELERATORS_STATEMENT,
+  PARTNER_WITH_US_STATEMENT,
   PERSONAS,
   PLATFORM_CAPABILITIES_SUMMARY,
   PLATFORM_JOURNEY,
   PLATFORM_STATUS_CAPABILITIES,
+  PLATFORM_STATUS_STATEMENT,
+  PLATFORM_STATUS_TITLE,
   REGULATORY_COMPLIANCE_PACKS,
 } from '../config/landingContent';
 
@@ -81,8 +88,12 @@ export const OmgOverviewPage: React.FC = () => {
               From AI idea to AI approval — and beyond.
             </p>
 
-            <p className="text-[13px] font-bold text-gradient-brand">
-              Built Once. Configured Together. Governed Continuously. — a configurable AI Governance Operating Platform, extended with design partners through the Governance Intelligence Studio, not rebuilt per customer.
+            <p className="text-[15px] font-bold text-gradient-brand">
+              Built Once. Configured Together. Governed Continuously.
+            </p>
+
+            <p className="text-[13px] font-semibold text-[var(--text-secondary)] leading-relaxed max-w-xl">
+              OMG provides a configurable AI Governance Operating Platform that helps organizations govern AI assets, manage risk, demonstrate accountability, maintain traceability, and operationalize governance at scale.
             </p>
 
             <ul className="flex flex-col gap-1.5">
@@ -176,24 +187,31 @@ export const OmgOverviewPage: React.FC = () => {
         </div>
       </section>
 
-      {/* ============== PLATFORM STATUS STRIP ============== */}
+      {/* ============== SECTION: CORE PLATFORM STATUS ============== */}
       <section
         data-noglass
-        className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-5"
+        className="rounded-2xl border border-[var(--status-success)]/30 bg-[var(--bg-card)] p-5 sm:p-6 flex flex-col gap-3"
+        style={{ background: 'var(--grad-hero)' }}
       >
-        <p className="text-[11px] font-extrabold uppercase tracking-[0.1em] text-[var(--status-success)] shrink-0">
-          Platform Status — v1.0 Complete
-        </p>
-        <div className="flex flex-wrap items-center gap-1.5">
+        <div className="flex items-center gap-2">
+          <span className="text-[18px]" aria-hidden>✅</span>
+          <h2 className="text-[18px] sm:text-[20px] font-extrabold text-[var(--text-primary)]">{PLATFORM_STATUS_TITLE}</h2>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
           {PLATFORM_STATUS_CAPABILITIES.map(cap => (
             <span
               key={cap}
-              className="px-2.5 py-1 rounded-full text-[10.5px] font-semibold bg-[var(--bg-badge)] border border-[var(--border-color)] text-[var(--text-secondary)]"
+              data-noglass
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-[11.5px] font-bold bg-[var(--bg-card)] border border-[var(--border-color)] text-[var(--text-primary)]"
             >
+              <span className="text-[var(--status-success)]" aria-hidden>✔</span>
               {cap}
             </span>
           ))}
         </div>
+        <p className="text-[12.5px] text-[var(--text-secondary)] leading-relaxed max-w-3xl">
+          {PLATFORM_STATUS_STATEMENT}
+        </p>
       </section>
 
       {/* ============== SECTION 1 — THE ENTERPRISE PROBLEM ============== */}
@@ -460,12 +478,12 @@ export const OmgOverviewPage: React.FC = () => {
         </div>
       </section>
 
-      {/* ============== SECTION 8.6 — PLATFORM JOURNEY ============== */}
+      {/* ============== SECTION 8.6 — THE OMG PLATFORM JOURNEY ============== */}
       <section className="flex flex-col gap-4">
         <SectionHeader
           eyebrow="Section 8.6"
-          title="The Platform Journey"
-          subtitle="Eleven stops across the platform, from governing your first AI asset to deploying with confidence alongside us."
+          title="The OMG Platform Journey"
+          subtitle="Eleven stops across the platform, from governing your first AI asset to deploying with confidence alongside us. A separate, platform-level view — the asset lifecycle in Section 2 above is unchanged."
           icon="🧭"
         />
 
@@ -490,7 +508,7 @@ export const OmgOverviewPage: React.FC = () => {
         <SectionHeader
           eyebrow="Section 9"
           title="Partner With Us"
-          subtitle="OMG provides the governance operating platform. We work alongside customers to configure, validate, test, and operationalize governance capabilities before production deployment."
+          subtitle={PARTNER_WITH_US_STATEMENT}
           icon="🤝"
         />
 
@@ -499,9 +517,9 @@ export const OmgOverviewPage: React.FC = () => {
           className="rounded-2xl border border-[var(--border-color)] p-5 sm:p-6"
           style={{ background: 'var(--grad-hero)' }}
         >
-          <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[var(--accent-primary)]">Seeking Design Partners</p>
+          <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[var(--accent-primary)]">Founding Governance Partners Program</p>
           <p className="text-[13px] text-[var(--text-secondary)] mt-1.5 leading-relaxed max-w-2xl">
-            Organizations building or scaling AI initiatives are invited to collaborate with us to shape the next generation of AI governance — co-designing governance accelerators, operating models, and compliance packs on top of OMG.
+            {FOUNDING_PARTNERS_STATEMENT}
           </p>
 
           <p className="text-[10px] font-extrabold uppercase tracking-[0.1em] text-[var(--text-muted)] mt-5">Across</p>
@@ -518,91 +536,107 @@ export const OmgOverviewPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-5 flex flex-col gap-3">
-            <p className="text-[12px] font-extrabold uppercase tracking-[0.1em] text-[var(--accent-primary)]">Customer Engagement Model</p>
-            <div className="flex flex-col gap-3">
-              {ENGAGEMENT_PHASES.map(phase => (
-                <div key={phase.phase} className="flex items-start gap-3">
-                  <span
-                    data-noglass
-                    className="shrink-0 w-6 h-6 grid place-items-center rounded-full text-[10.5px] font-extrabold bg-[var(--accent-light)] text-[var(--accent-primary)] border border-[var(--accent-border)]"
-                  >
-                    {phase.phase}
-                  </span>
-                  <div className="min-w-0">
-                    <p className="text-[12.5px] font-bold text-[var(--text-primary)]">{phase.title}</p>
-                    <p className="text-[11px] text-[var(--text-muted)] leading-relaxed">{phase.items.join(' · ')}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-5 flex flex-col gap-3">
-            <p className="text-[12px] font-extrabold uppercase tracking-[0.1em] text-[var(--text-muted)]">Future Compliance Packs</p>
-            <p className="text-[11.5px] text-[var(--text-secondary)] leading-relaxed">Implemented through configuration, not platform redesign:</p>
-            <div className="flex flex-wrap gap-2">
-              {REGULATORY_COMPLIANCE_PACKS.map(pack => (
+        <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-5 flex flex-col gap-3">
+          <p className="text-[12px] font-extrabold uppercase tracking-[0.1em] text-[var(--accent-primary)]">Customer Engagement Model</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+            {ENGAGEMENT_PHASES.map(phase => (
+              <div key={phase.phase} className="flex items-start gap-3">
                 <span
-                  key={pack}
-                  className="px-2.5 py-1 rounded-full text-[10.5px] font-semibold bg-[var(--bg-badge)] border border-[var(--border-color)] text-[var(--text-secondary)]"
+                  data-noglass
+                  className="shrink-0 w-6 h-6 grid place-items-center rounded-full text-[10.5px] font-extrabold bg-[var(--accent-light)] text-[var(--accent-primary)] border border-[var(--accent-border)]"
                 >
-                  {pack}
+                  {phase.phase}
                 </span>
-              ))}
-            </div>
-            <button
-              onClick={() => navigate('/governance-studio')}
-              className="mt-1 self-start text-[11px] font-bold text-[var(--accent-primary)] hover:underline cursor-pointer"
-            >
-              See how packs are configured in the Studio →
-            </button>
+                <div className="min-w-0">
+                  <p className="text-[12.5px] font-bold text-[var(--text-primary)]">{phase.title}</p>
+                  <p className="text-[11px] text-[var(--text-muted)] leading-relaxed">{phase.items.join(' · ')}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* ============== CLOSING — EXECUTIVE MESSAGE & WHERE TO START ============== */}
+      {/* ============== SECTION 10 — FUTURE COMPLIANCE ACCELERATORS ============== */}
+      <section className="flex flex-col gap-4">
+        <SectionHeader
+          eyebrow="Section 10"
+          title="Future Compliance Accelerators"
+          subtitle={FUTURE_COMPLIANCE_ACCELERATORS_STATEMENT}
+          icon="🧩"
+        />
+
+        <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-5 flex flex-col gap-3">
+          <div className="flex flex-wrap gap-2">
+            {REGULATORY_COMPLIANCE_PACKS.map(pack => (
+              <span
+                key={pack}
+                className="px-2.5 py-1 rounded-full text-[10.5px] font-semibold bg-[var(--bg-badge)] border border-[var(--border-color)] text-[var(--text-secondary)]"
+              >
+                {pack}
+              </span>
+            ))}
+          </div>
+          <button
+            onClick={() => navigate('/governance-studio')}
+            className="mt-1 self-start text-[11px] font-bold text-[var(--accent-primary)] hover:underline cursor-pointer"
+          >
+            See how accelerators are configured in the Studio →
+          </button>
+        </div>
+      </section>
+
+      {/* ============== CLOSING — WHERE TO START ============== */}
       <section
-        className="rounded-3xl border p-6 sm:p-8 flex flex-col gap-6"
+        className="rounded-3xl border p-6 sm:p-8 flex flex-col lg:flex-row lg:items-center gap-6"
         style={{ background: 'var(--grad-brand)', borderColor: 'transparent' }}
       >
-        <div className="flex flex-col lg:flex-row lg:items-center gap-6">
-          <div className="min-w-0 flex-1">
-            <h2 className="text-[22px] font-bold text-white">Where to start</h2>
-            <p className="text-[13px] text-white/85 mt-1.5 leading-relaxed max-w-2xl">
-              If you take one action: register an AI asset and assign its five owners. Everything else
-              in OMG — risk, validation, evidence, decision, monitoring and reassessment — keys off
-              that first record.
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2.5 shrink-0">
-            <button
-              onClick={() => navigate('/assets')}
-              data-noglass
-              className="px-4 py-2.5 rounded-xl text-[13px] font-bold bg-white text-[var(--accent-primary)] shadow-md hover:shadow-lg transition-all active:scale-[0.98] cursor-pointer"
-            >
-              Register an AI Asset
-            </button>
-            <button
-              onClick={() => setTourOpen(true)}
-              data-noglass
-              className="px-4 py-2.5 rounded-xl text-[13px] font-bold border border-white/40 text-white hover:bg-white/10 transition-all cursor-pointer"
-            >
-              Start Guided Tour
-            </button>
-          </div>
+        <div className="min-w-0 flex-1">
+          <h2 className="text-[22px] font-bold text-white">Where to start</h2>
+          <p className="text-[13px] text-white/85 mt-1.5 leading-relaxed max-w-2xl">
+            If you take one action: register an AI asset and assign its five owners. Everything else
+            in OMG — risk, validation, evidence, decision, monitoring and reassessment — keys off
+            that first record.
+          </p>
         </div>
+        <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+          <button
+            onClick={() => navigate('/assets')}
+            data-noglass
+            className="px-4 py-2.5 rounded-xl text-[13px] font-bold bg-white text-[var(--accent-primary)] shadow-md hover:shadow-lg transition-all active:scale-[0.98] cursor-pointer"
+          >
+            Register an AI Asset
+          </button>
+          <button
+            onClick={() => setTourOpen(true)}
+            data-noglass
+            className="px-4 py-2.5 rounded-xl text-[13px] font-bold border border-white/40 text-white hover:bg-white/10 transition-all cursor-pointer"
+          >
+            Start Guided Tour
+          </button>
+        </div>
+      </section>
 
-        <div className="pt-5 border-t border-white/20">
-          <p className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-white/70">Executive Message</p>
-          <p className="text-[12.5px] text-white/85 mt-1.5 leading-relaxed max-w-3xl">
-            The OMG platform baseline is complete. Future work focuses on {EXECUTIVE_MESSAGE_FOCUS_AREAS.join(', ')} — without major architectural redesign.
-          </p>
-          <p className="text-[15px] font-extrabold text-white mt-4">
-            OMG Core Platform v1.0 Complete — Built Once. Configured Together. Governed Continuously.
-          </p>
-        </div>
+      {/* ============== CLOSING — EXECUTIVE MESSAGE ============== */}
+      <section
+        data-noglass
+        className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-6 sm:p-7 flex flex-col gap-2"
+      >
+        <p className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-[var(--text-muted)]">Executive Message</p>
+        <p className="text-[13px] text-[var(--text-secondary)] leading-relaxed max-w-3xl">
+          {EXECUTIVE_MESSAGE_STATEMENT}
+        </p>
+      </section>
+
+      {/* ============== FINAL DECLARATION ============== */}
+      <section
+        data-noglass
+        className="rounded-3xl border p-7 sm:p-9 flex flex-col items-center text-center gap-2"
+        style={{ background: 'var(--grad-brand)', borderColor: 'transparent' }}
+      >
+        <span className="text-[22px]" aria-hidden>🏁</span>
+        <h2 className="text-[20px] sm:text-[24px] font-extrabold text-white">{FINAL_DECLARATION_TITLE}</h2>
+        <p className="text-[15px] font-bold text-white/90">{FINAL_DECLARATION_STATEMENT}</p>
       </section>
 
       <GuidedTour open={tourOpen} onClose={() => setTourOpen(false)} />

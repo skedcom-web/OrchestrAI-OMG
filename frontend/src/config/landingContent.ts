@@ -715,15 +715,21 @@ export const BUSINESS_VALUE: { title: string; detail: string; icon: string }[] =
   { title: 'Governance at scale', detail: 'The same operating model applies to every AI asset class.', icon: '⚖️' },
 ];
 
-/* ======= Section 9 — Final Strategic Blueprint: Design Partner Program == */
+/* ======= Section 9 — Final Strategic Positioning: Founding Partners ===== */
 
 /**
- * Final Strategic Blueprint — OMG Core Platform v1.0 is complete; the
- * platform's own next phase is co-designing configuration on top of it with
- * design partners, not rebuilding it. This section is purely business
- * positioning content — no new schema, no new module, per the blueprint's
- * own framing ("without major architectural redesign").
+ * Final Strategic Positioning update — OMG Core Platform v1.0 is complete;
+ * the platform's own next phase is co-designing configuration on top of it
+ * with Founding Governance Partners, not rebuilding it. This section is
+ * purely business positioning content — no new schema, no new module, per
+ * the mandate's own framing ("without major architectural redesign").
  */
+export const PLATFORM_STATUS_TITLE = 'OMG Core Platform v1.0 Complete';
+
+export const PLATFORM_STATUS_STATEMENT =
+  'The OMG platform baseline has been completed and is ready for customer onboarding, configuration, validation, and production deployment.';
+
+/** One-to-one with Releases 1-10 — see docs/governance/12 through 23. */
 export const PLATFORM_STATUS_CAPABILITIES: string[] = [
   'Governance Authority',
   'Governance Continuity',
@@ -731,9 +737,9 @@ export const PLATFORM_STATUS_CAPABILITIES: string[] = [
   'Production Persistence',
   'Compliance Framework',
   'Regulatory Knowledge Engine',
-  'Governance Intelligence',
-  'Governance Actions',
-  'Decision Traceability',
+  'Governance Intelligence Engine',
+  'Governance Actions Engine',
+  'Governance Decision Traceability',
   'Governance Intelligence Studio',
 ];
 
@@ -746,25 +752,32 @@ export interface PlatformJourneyStep {
 }
 
 /**
- * The Final Strategic Blueprint's "Viewer Journey" — eleven platform-level
- * capability areas ending in the engagement outcome ("Deploy With
- * Confidence"), distinct from the nine-stage per-asset JOURNEY_STAGES above.
- * Deliberately not merged into JOURNEY_STAGES: this is what a viewer sees
- * across the whole platform, not what a single AI asset progresses through.
+ * The OMG Platform Journey — eleven platform-level capability areas ending
+ * in the engagement outcome ("Deploy With Confidence"), distinct from the
+ * nine-stage per-asset JOURNEY_STAGES above and from the existing asset
+ * lifecycle, which this deliberately does not modify. This is what a viewer
+ * sees across the whole platform, not what a single AI asset progresses
+ * through.
  */
 export const PLATFORM_JOURNEY: PlatformJourneyStep[] = [
   { step: 1, label: 'Govern AI Assets', icon: '🗂️', path: '/assets' },
   { step: 2, label: 'Governance Continuity', icon: '🔁', path: '/change-requests' },
   { step: 3, label: 'Evidence Management', icon: '📄', path: '/evidence' },
-  { step: 4, label: 'Readiness', icon: '📊', path: '/command-center' },
-  { step: 5, label: 'Compliance', icon: '🧩', path: '/compliance-center' },
-  { step: 6, label: 'Regulatory Knowledge', icon: '🗺️', path: '/mapping-workspace' },
-  { step: 7, label: 'Governance Intelligence', icon: '🧠', path: '/governance-intelligence' },
-  { step: 8, label: 'Governance Actions', icon: '🛠️', path: '/governance-actions' },
-  { step: 9, label: 'Decision Traceability', icon: '🧭', path: '/decision-traceability' },
-  { step: 10, label: 'Customer Governance Configuration', icon: '🎛️', path: '/governance-studio' },
+  { step: 4, label: 'Demonstrate Readiness', icon: '📊', path: '/command-center' },
+  { step: 5, label: 'Assess Compliance', icon: '🧩', path: '/compliance-center' },
+  { step: 6, label: 'Map Regulatory Obligations', icon: '🗺️', path: '/mapping-workspace' },
+  { step: 7, label: 'Apply Governance Intelligence', icon: '🧠', path: '/governance-intelligence' },
+  { step: 8, label: 'Manage Governance Actions', icon: '🛠️', path: '/governance-actions' },
+  { step: 9, label: 'Reconstruct Decisions', icon: '🧭', path: '/decision-traceability' },
+  { step: 10, label: 'Configure Customer Governance', icon: '🎛️', path: '/governance-studio' },
   { step: 11, label: 'Deploy With Confidence', icon: '🤝', path: '#partner' },
 ];
+
+export const PARTNER_WITH_US_STATEMENT =
+  'OMG provides the governance operating platform. We work alongside customers to configure, validate, test, and operationalize governance capabilities aligned to their regulatory, compliance, risk, and business requirements before production deployment.';
+
+export const FOUNDING_PARTNERS_STATEMENT =
+  'We are actively engaging a select group of Founding Governance Partners across Banking, NBFC, Insurance, Healthcare, Government, and Enterprise sectors to help shape industry-specific governance accelerators, operating models, and compliance packs on top of the OMG platform.';
 
 export const DESIGN_PARTNER_INDUSTRIES: { name: string; icon: string }[] = [
   { name: 'Banking', icon: '🏦' },
@@ -782,25 +795,27 @@ export interface EngagementPhase {
 }
 
 export const ENGAGEMENT_PHASES: EngagementPhase[] = [
-  { phase: 1, title: 'Governance Discovery', items: ['Governance assessment', 'AI operating model review', 'Compliance assessment', 'Gap analysis'] },
-  { phase: 2, title: 'Configuration & Extension', items: ['Policies', 'Conditions', 'Outcomes', 'Actions', 'Governance profiles', 'Compliance mappings'] },
-  { phase: 3, title: 'Joint Validation & QA', items: ['Governance walkthroughs', 'Scenario testing', 'UAT', 'Executive reviews'] },
-  { phase: 4, title: 'Production Deployment', items: ['Production rollout', 'User enablement', 'Operational support', 'Continuous improvement'] },
+  { phase: 1, title: 'Governance Discovery', items: ['Governance Assessment', 'AI Operating Model Review', 'Compliance Assessment', 'Gap Analysis'] },
+  { phase: 2, title: 'Configuration & Extension', items: ['Governance Policies', 'Conditions', 'Outcomes', 'Actions', 'Governance Profiles', 'Compliance Mappings'] },
+  { phase: 3, title: 'Joint Validation & QA', items: ['Governance Walkthroughs', 'Scenario Testing', 'User Acceptance Testing', 'Executive Reviews'] },
+  { phase: 4, title: 'Production Deployment', items: ['Production Rollout', 'User Enablement', 'Operational Support', 'Continuous Improvement'] },
 ];
 
-/** Regulatory-framework compliance packs — distinct from CUSTOMER_PACKS above (which are industry-scoped); these are named regulations, each implemented as Studio configuration once co-designed with a partner in that space. */
+export const FUTURE_COMPLIANCE_ACCELERATORS_STATEMENT =
+  'OMG is designed as a configurable governance platform. Future compliance accelerators can be implemented through configuration and governance mappings without requiring platform redesign.';
+
+/** Regulatory-framework and customer-specific accelerators — distinct from CUSTOMER_PACKS above (which are industry-scoped); each implemented as Studio configuration once co-designed with a partner in that space. */
 export const REGULATORY_COMPLIANCE_PACKS: string[] = [
-  'RBI',
-  'ISO 42001',
+  'RBI Guidance',
+  'ISO/IEC 42001',
   'EU AI Act',
   'NIST AI RMF',
   'Internal Enterprise Policies',
+  'Customer-Specific Governance Controls',
 ];
 
-export const EXECUTIVE_MESSAGE_FOCUS_AREAS: string[] = [
-  'Customer onboarding',
-  'Compliance packs',
-  'Industry accelerators',
-  'Regulatory mappings',
-  'Governance transformation engagements',
-];
+export const EXECUTIVE_MESSAGE_STATEMENT =
+  'The OMG platform baseline is complete. Future work focuses on customer onboarding, governance transformation engagements, industry accelerators, compliance packs, and production deployments without requiring major architectural redesign.';
+
+export const FINAL_DECLARATION_TITLE = 'OMG Core Platform Version 1.0 Complete';
+export const FINAL_DECLARATION_STATEMENT = 'Built Once. Configured Together. Governed Continuously.';

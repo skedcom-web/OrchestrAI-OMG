@@ -77,7 +77,7 @@ This repository directory contains the **Mandatory Governance Deliverables** spe
     *Configure governance logic without code changes — Condition, Outcome and Action Designers, Rule Mapping Engine, Compliance Pack Builder foundation, Customer Governance Profiles — the final core-platform release before customer-specific compliance packs.*
 
 24. 🤝 **[24_Final_Strategic_Blueprint_Design_Partner_Program.md](file:///C:/Users/VT348/Documents/GitHub/OrchestrAI%20OMG/docs/governance/24_Final_Strategic_Blueprint_Design_Partner_Program.md)**  
-    *OMG Core Platform v1.0 Complete — Built Once. Configured Together. Governed Continuously. Positioning and go-to-market content only: Platform Status, the Platform Journey, the Design Partner Program and its four-phase engagement model, and Future Compliance Packs.*
+    *OMG Core Platform v1.0 Complete — Built Once. Configured Together. Governed Continuously. Positioning and viewer-experience content only: Core Platform Status, the OMG Platform Journey, the Founding Governance Partners Program and its four-phase engagement model, and Future Compliance Accelerators.*
 
 ---
 
