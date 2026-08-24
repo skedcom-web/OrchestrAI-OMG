@@ -47,7 +47,11 @@ import type {
   GovernanceCondition,
   GovernancePolicyViolation,
   GovernanceOutcome,
-  RecommendedAction
+  RecommendedAction,
+  ConditionDefinition,
+  OutcomeRule,
+  ActionRule,
+  GovernanceProfile
 } from '../types';
 import {
   INITIAL_ASSETS,
@@ -120,6 +124,10 @@ import {
   apiGovernancePolicyRepository,
   apiGovernanceFindingRepository,
   apiRecommendedActionRepository,
+  apiConditionDefinitionRepository,
+  apiOutcomeRuleRepository,
+  apiActionRuleRepository,
+  apiGovernanceProfileRepository,
 } from '../repositories/apiRepositories';
 
 /**
@@ -175,6 +183,10 @@ const STORAGE_KEYS = {
   GOVERNANCE_POLICIES: 'omg_governance_policies_v7',
   GOVERNANCE_FINDINGS: 'omg_governance_findings_v7',
   RECOMMENDED_ACTIONS: 'omg_recommended_actions_v7',
+  CONDITION_DEFINITIONS: 'omg_condition_definitions_v10',
+  OUTCOME_RULES: 'omg_outcome_rules_v10',
+  ACTION_RULES: 'omg_action_rules_v10',
+  GOVERNANCE_PROFILES: 'omg_governance_profiles_v10',
 };
 
 function getItem<T>(key: string, defaultData: T): T {
@@ -2531,7 +2543,7 @@ export async function deleteGovernanceFinding(id: string): Promise<void> {
   await apiGovernanceFindingRepository.deleteFinding(id);
 }
 
-/** Objective 2 — Condition Engine, computed live. */
+/** Objective 2 — Condition Engine, computed live. Filtered through Release 10's Condition Designer (condition types disabled in the Studio are never raised). */
 export function getGovernanceConditionsForAsset(assetId: string): GovernanceCondition[] {
   const asset = assetsCache.find(a => a.id === assetId);
   if (!asset) return [];
@@ -2540,7 +2552,8 @@ export function getGovernanceConditionsForAsset(assetId: string): GovernanceCond
     evidenceCache.filter(e => e.assetId === assetId),
     reviewsCache.filter(r => r.assetId === assetId),
     getValidations().filter(v => v.assetId === assetId),
-    reauthorizationsCache.filter(r => r.assetId === assetId)
+    reauthorizationsCache.filter(r => r.assetId === assetId),
+    getEnabledConditionTypes()
   );
 }
 
@@ -2557,15 +2570,16 @@ export function getAllPolicyViolations(): GovernancePolicyViolation[] {
   return evaluatePolicyViolations(governancePoliciesCache, getAllGovernanceConditions());
 }
 
-/** Objectives 5 & 6 — Governance Outcome Engine + Explainability, computed live. */
+/** Objectives 5 & 6 — Governance Outcome Engine + Explainability, computed live. Tiers disabled in Release 10's Outcome Designer are skipped, cascading to the next enabled tier. */
 export function getGovernanceOutcomeForAsset(assetId: string): GovernanceOutcome | null {
   const asset = assetsCache.find(a => a.id === assetId);
   if (!asset) return null;
-  return computeGovernanceOutcome(asset, getGovernanceConditionsForAsset(assetId), getPolicyViolationsForAsset(assetId), getGovernanceFindingsForAsset(assetId));
+  return computeGovernanceOutcome(asset, getGovernanceConditionsForAsset(assetId), getPolicyViolationsForAsset(assetId), getGovernanceFindingsForAsset(assetId), getDisabledOutcomes());
 }
 
 export function getAllGovernanceOutcomes(): GovernanceOutcome[] {
-  return assetsCache.map(a => computeGovernanceOutcome(a, getGovernanceConditionsForAsset(a.id), getPolicyViolationsForAsset(a.id), getGovernanceFindingsForAsset(a.id)));
+  const disabled = getDisabledOutcomes();
+  return assetsCache.map(a => computeGovernanceOutcome(a, getGovernanceConditionsForAsset(a.id), getPolicyViolationsForAsset(a.id), getGovernanceFindingsForAsset(a.id), disabled));
 }
 
 // --- RELEASE 8 — GOVERNANCE INTELLIGENCE ENGINE (ACTIONS EDITION) ---
@@ -2669,7 +2683,7 @@ export async function generateRecommendedActionsForAsset(assetId: string): Promi
 
   const findings = getGovernanceFindingsForAsset(assetId);
   const outcome = getGovernanceOutcomeForAsset(assetId);
-  const drafts = generateActionDrafts(asset, findings, outcome);
+  const drafts = generateActionDrafts(asset, findings, outcome, actionRulesCache);
 
   const activeActions = getRecommendedActionsForAsset(assetId).filter(a => a.status !== 'Rejected' && a.status !== 'Completed');
   const activeFindingKeys = new Set(activeActions.filter(a => a.findingId).map(a => a.findingId));
@@ -2678,6 +2692,179 @@ export async function generateRecommendedActionsForAsset(assetId: string): Promi
   const newDrafts = drafts.filter(d => (d.findingId ? !activeFindingKeys.has(d.findingId) : !activeOutcomeActionTypes.has(d.actionType)));
 
   return Promise.all(newDrafts.map(d => saveRecommendedAction(d)));
+}
+
+// --- RELEASE 10 — GOVERNANCE INTELLIGENCE STUDIO (CUSTOMER CONFIGURATION) ---
+// Converts the parts of the reasoning/actions engines above that were
+// hardcoded config into genuinely editable Neon-backed rules. All four
+// catalogues are persisted, cache-then-network, same pattern as every
+// domain since Release 6. ConditionDefinition/OutcomeRule have no delete —
+// fixed one-row-per-platform-primitive catalogues, seeded once.
+
+let conditionDefinitionsCache: ConditionDefinition[] = getItem<ConditionDefinition[]>(STORAGE_KEYS.CONDITION_DEFINITIONS, []);
+let outcomeRulesCache: OutcomeRule[] = getItem<OutcomeRule[]>(STORAGE_KEYS.OUTCOME_RULES, []);
+let actionRulesCache: ActionRule[] = getItem<ActionRule[]>(STORAGE_KEYS.ACTION_RULES, []);
+let governanceProfilesCache: GovernanceProfile[] = getItem<GovernanceProfile[]>(STORAGE_KEYS.GOVERNANCE_PROFILES, []);
+
+function persistConditionDefinitionsCache() { setItem(STORAGE_KEYS.CONDITION_DEFINITIONS, conditionDefinitionsCache); }
+function persistOutcomeRulesCache() { setItem(STORAGE_KEYS.OUTCOME_RULES, outcomeRulesCache); }
+function persistActionRulesCache() { setItem(STORAGE_KEYS.ACTION_RULES, actionRulesCache); }
+function persistGovernanceProfilesCache() { setItem(STORAGE_KEYS.GOVERNANCE_PROFILES, governanceProfilesCache); }
+
+/** Condition types with no explicit (disabled) definition are treated as enabled — same "nothing disabled" default the reasoning engine assumes when the Studio hasn't loaded yet. */
+function getEnabledConditionTypes(): Set<GovernanceCondition['conditionType']> | undefined {
+  if (conditionDefinitionsCache.length === 0) return undefined;
+  return new Set(conditionDefinitionsCache.filter(c => c.enabled).map(c => c.conditionType));
+}
+
+function getDisabledOutcomes(): Set<GovernanceOutcome['status']> | undefined {
+  if (outcomeRulesCache.length === 0) return undefined;
+  const disabled = outcomeRulesCache.filter(r => !r.enabled).map(r => r.outcomeStatus);
+  return disabled.length > 0 ? new Set(disabled) : undefined;
+}
+
+export function getConditionDefinitions(): ConditionDefinition[] {
+  return conditionDefinitionsCache;
+}
+
+export async function saveConditionDefinition(data: Partial<ConditionDefinition>): Promise<ConditionDefinition> {
+  const idx = conditionDefinitionsCache.findIndex(c => c.id === data.id);
+  if (idx === -1) throw new Error('Condition Definitions are a fixed catalogue and cannot be created from the client.');
+
+  const updated: ConditionDefinition = { ...conditionDefinitionsCache[idx], ...data };
+  conditionDefinitionsCache = [...conditionDefinitionsCache];
+  conditionDefinitionsCache[idx] = updated;
+  persistConditionDefinitionsCache();
+
+  addAuditLog('usr-2', 'David Chen', 'GOVERNANCE_ADMIN', 'CONDITION_DEFINITION_UPDATED', 'Policy', updated.id, updated.label, `Condition Designer: ${updated.label} ${updated.enabled ? 'enabled' : 'disabled'}.`);
+
+  const saved = await apiConditionDefinitionRepository.updateDefinition(updated.id, updated);
+  const i2 = conditionDefinitionsCache.findIndex(c => c.id === updated.id);
+  if (i2 !== -1) { conditionDefinitionsCache = [...conditionDefinitionsCache]; conditionDefinitionsCache[i2] = saved; persistConditionDefinitionsCache(); }
+  return saved;
+}
+
+export function getOutcomeRules(): OutcomeRule[] {
+  return outcomeRulesCache;
+}
+
+export async function saveOutcomeRule(data: Partial<OutcomeRule>): Promise<OutcomeRule> {
+  const idx = outcomeRulesCache.findIndex(r => r.id === data.id);
+  if (idx === -1) throw new Error('Outcome Rules are a fixed catalogue and cannot be created from the client.');
+
+  const updated: OutcomeRule = { ...outcomeRulesCache[idx], ...data };
+  outcomeRulesCache = [...outcomeRulesCache];
+  outcomeRulesCache[idx] = updated;
+  persistOutcomeRulesCache();
+
+  addAuditLog('usr-2', 'David Chen', 'GOVERNANCE_ADMIN', 'OUTCOME_RULE_UPDATED', 'Policy', updated.id, updated.outcomeStatus, `Outcome Designer: ${updated.outcomeStatus} ${updated.enabled ? 'enabled' : 'disabled'}.`);
+
+  const saved = await apiOutcomeRuleRepository.updateRule(updated.id, updated);
+  const i2 = outcomeRulesCache.findIndex(r => r.id === updated.id);
+  if (i2 !== -1) { outcomeRulesCache = [...outcomeRulesCache]; outcomeRulesCache[i2] = saved; persistOutcomeRulesCache(); }
+  return saved;
+}
+
+export function getActionRules(): ActionRule[] {
+  return actionRulesCache;
+}
+
+export async function saveActionRule(data: Partial<ActionRule>): Promise<ActionRule> {
+  if (data.id) {
+    const idx = actionRulesCache.findIndex(r => r.id === data.id);
+    if (idx !== -1) {
+      const updated: ActionRule = { ...actionRulesCache[idx], ...data };
+      actionRulesCache = [...actionRulesCache];
+      actionRulesCache[idx] = updated;
+      persistActionRulesCache();
+
+      addAuditLog('usr-2', 'David Chen', 'GOVERNANCE_ADMIN', 'ACTION_RULE_UPDATED', 'Policy', updated.id, updated.actionName, `Action Designer: ${updated.actionName} updated (${updated.triggerType}: ${updated.triggerValue}).`);
+
+      const saved = await apiActionRuleRepository.updateRule(updated.id, updated);
+      const i2 = actionRulesCache.findIndex(r => r.id === updated.id);
+      if (i2 !== -1) { actionRulesCache = [...actionRulesCache]; actionRulesCache[i2] = saved; persistActionRulesCache(); }
+      return saved;
+    }
+  }
+
+  const draftRule: ActionRule = {
+    id: `local-action-rule-${Date.now()}`,
+    triggerType: data.triggerType || 'Condition',
+    triggerValue: data.triggerValue || '',
+    actionType: data.actionType || 'Review',
+    actionName: data.actionName || 'New Action Rule',
+    actionDescription: data.actionDescription || '',
+    enabled: data.enabled ?? true,
+  };
+
+  actionRulesCache = [draftRule, ...actionRulesCache];
+  persistActionRulesCache();
+  addAuditLog('usr-2', 'David Chen', 'GOVERNANCE_ADMIN', 'ACTION_RULE_CREATED', 'Policy', draftRule.id, draftRule.actionName, `Action Designer: new rule ${draftRule.actionName} for ${draftRule.triggerType}: ${draftRule.triggerValue}.`);
+
+  const { id: _draftId, ...payload } = draftRule;
+  const created = await apiActionRuleRepository.createRule(payload);
+  actionRulesCache = actionRulesCache.map(r => (r.id === draftRule.id ? created : r));
+  persistActionRulesCache();
+  return created;
+}
+
+export async function deleteActionRule(id: string): Promise<void> {
+  const target = actionRulesCache.find(r => r.id === id);
+  if (!target) return;
+
+  actionRulesCache = actionRulesCache.filter(r => r.id !== id);
+  persistActionRulesCache();
+
+  await apiActionRuleRepository.deleteRule(id);
+}
+
+export function getGovernanceProfiles(): GovernanceProfile[] {
+  return governanceProfilesCache;
+}
+
+/** Exactly one Governance Profile is active at a time — activating one deactivates the rest, all persisted. */
+export async function saveGovernanceProfile(data: Partial<GovernanceProfile>): Promise<GovernanceProfile> {
+  if (data.id) {
+    const idx = governanceProfilesCache.findIndex(p => p.id === data.id);
+    if (idx !== -1) {
+      const activating = data.isActive === true && !governanceProfilesCache[idx].isActive;
+      const updated: GovernanceProfile = { ...governanceProfilesCache[idx], ...data };
+      governanceProfilesCache = governanceProfilesCache.map(p => (p.id === updated.id ? updated : (activating ? { ...p, isActive: false } : p)));
+      persistGovernanceProfilesCache();
+
+      addAuditLog('usr-2', 'David Chen', 'GOVERNANCE_ADMIN', 'GOVERNANCE_PROFILE_UPDATED', 'Policy', updated.id, updated.name, activating ? `Customer Governance Profile activated: ${updated.name}.` : `Customer Governance Profile updated: ${updated.name}.`);
+
+      const saved = await apiGovernanceProfileRepository.updateProfile(updated.id, updated);
+      if (activating) {
+        await Promise.all(
+          governanceProfilesCache
+            .filter(p => p.id !== updated.id && p.isActive === false)
+            .map(p => apiGovernanceProfileRepository.updateProfile(p.id, { isActive: false }).catch(err => logPersistenceFailure('governance profile deactivation', err)))
+        );
+      }
+      const i2 = governanceProfilesCache.findIndex(p => p.id === updated.id);
+      if (i2 !== -1) { governanceProfilesCache = [...governanceProfilesCache]; governanceProfilesCache[i2] = saved; persistGovernanceProfilesCache(); }
+      return saved;
+    }
+  }
+
+  const draftProfile: GovernanceProfile = {
+    id: `local-profile-${Date.now()}`,
+    name: data.name || 'New Governance Profile',
+    industry: data.industry || 'Enterprise',
+    description: data.description || '',
+    isActive: data.isActive ?? false,
+  };
+
+  governanceProfilesCache = [draftProfile, ...governanceProfilesCache];
+  persistGovernanceProfilesCache();
+  addAuditLog('usr-2', 'David Chen', 'GOVERNANCE_ADMIN', 'GOVERNANCE_PROFILE_CREATED', 'Policy', draftProfile.id, draftProfile.name, `Customer Governance Profile created: ${draftProfile.name}.`);
+
+  const { id: _draftId, ...payload } = draftProfile;
+  const created = await apiGovernanceProfileRepository.createProfile(payload);
+  governanceProfilesCache = governanceProfilesCache.map(p => (p.id === draftProfile.id ? created : p));
+  persistGovernanceProfilesCache();
+  return created;
 }
 
 // --- RELEASE 9 — GOVERNANCE DECISION TRACEABILITY ENGINE ---
@@ -3177,6 +3364,10 @@ export function bootstrapPersistence(options?: { force?: boolean }): Promise<voi
         governancePolicies,
         governanceFindings,
         recommendedActions,
+        conditionDefinitions,
+        outcomeRules,
+        actionRules,
+        governanceProfiles,
       ] = await Promise.all([
         apiAssetRepository.getAssets(),
         apiEvidenceRepository.getEvidence(),
@@ -3193,6 +3384,10 @@ export function bootstrapPersistence(options?: { force?: boolean }): Promise<voi
         apiGovernancePolicyRepository.getPolicies(),
         apiGovernanceFindingRepository.getFindings(),
         apiRecommendedActionRepository.getActions(),
+        apiConditionDefinitionRepository.getDefinitions(),
+        apiOutcomeRuleRepository.getRules(),
+        apiActionRuleRepository.getRules(),
+        apiGovernanceProfileRepository.getProfiles(),
       ]);
 
       const assetNameById = new Map(assets.map(a => [a.id, a.name]));
@@ -3267,7 +3462,16 @@ export function bootstrapPersistence(options?: { force?: boolean }): Promise<voi
       }));
       persistRecommendedActionsCache();
 
-      console.info(`OMG persistence: loaded ${assets.length} assets, ${evidence.length} evidence records, ${compliancePacks.length} compliance packs, ${regulatorySources.length} regulatory sources, ${governancePolicies.length} governance policies, ${recommendedActions.length} recommended actions from Neon.`);
+      conditionDefinitionsCache = conditionDefinitions;
+      persistConditionDefinitionsCache();
+      outcomeRulesCache = outcomeRules;
+      persistOutcomeRulesCache();
+      actionRulesCache = actionRules;
+      persistActionRulesCache();
+      governanceProfilesCache = governanceProfiles;
+      persistGovernanceProfilesCache();
+
+      console.info(`OMG persistence: loaded ${assets.length} assets, ${evidence.length} evidence records, ${compliancePacks.length} compliance packs, ${regulatorySources.length} regulatory sources, ${governancePolicies.length} governance policies, ${recommendedActions.length} recommended actions, ${conditionDefinitions.length} condition definitions, ${outcomeRules.length} outcome rules, ${actionRules.length} action rules, ${governanceProfiles.length} governance profiles from Neon.`);
     } catch (err) {
       console.warn('OMG persistence: could not reach the governance API at startup; continuing with cached/local data until the next retry.', err);
       bootstrapPromise = null; // allow a later manual retry (e.g. from Tenant Settings)

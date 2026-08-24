@@ -1228,6 +1228,102 @@ model RecommendedAction {
   @@map("recommended_actions")
 }
 
+// ---------------------------------------------------------------------------
+// RELEASE 10 — GOVERNANCE INTELLIGENCE STUDIO (CUSTOMER CONFIGURATION EDITION)
+// Converts the parts of the Release 7/8 reasoning engine that were hardcoded
+// TypeScript config into genuinely editable Neon-backed rules — "configure
+// governance logic without code changes." The Condition -> Policy link
+// already existed as data since Release 7 (GovernancePolicy.triggerCondition)
+// and needs no new table; this release covers the two links that were still
+// code (Policy -> Outcome, Outcome -> Action) plus the Condition and
+// Customer Governance Profile catalogues. Detection *mechanisms* and outcome
+// *evaluation order* remain platform primitives (same "foundation, not a
+// rules DSL" discipline as every prior release) — what's configurable is
+// which of them are enabled, and what they're labelled/produce.
+// ---------------------------------------------------------------------------
+
+/// Objective 3 — Condition Designer. One row per GovernanceConditionType;
+/// enabled=false makes detectGovernanceConditions() skip that condition type
+/// entirely for every asset, without touching code.
+model ConditionDefinition {
+  id              String                   @id
+  conditionType   GovernanceConditionType  @unique
+  label           String
+  description     String                   @db.Text
+  defaultSeverity GovernancePolicySeverity @default(MEDIUM)
+  enabled         Boolean                  @default(true)
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+
+  @@map("condition_definitions")
+}
+
+enum GovernanceOutcomeStatus {
+  COMPLIANT
+  ATTENTION_REQUIRED
+  REVIEW_REQUIRED
+  REASSESSMENT_RECOMMENDED
+  ESCALATION_RECOMMENDED
+}
+
+/// Objective 4 — Outcome Designer. One row per outcome tier in the fixed
+/// escalation ladder; enabled=false makes computeGovernanceOutcome() skip
+/// that tier's check and fall through to the next enabled one. The ladder's
+/// severity *order* is a platform primitive (Escalation outranks Review,
+/// always); only which tiers are active is configurable.
+model OutcomeRule {
+  id            String                  @id
+  outcomeStatus GovernanceOutcomeStatus @unique
+  description   String                  @db.Text
+  enabled       Boolean                 @default(true)
+  createdAt     DateTime                @default(now())
+  updatedAt     DateTime                @updatedAt
+
+  @@map("outcome_rules")
+}
+
+enum ActionRuleTriggerType {
+  CONDITION
+  OUTCOME
+}
+
+/// Objectives 5 & 6 — Action Designer and the Outcome -> Action / Condition
+/// -> Action legs of the Rule Mapping Engine. Replaces the hardcoded
+/// CONDITION_ACTION_TEMPLATES / OUTCOME_ACTION_TEMPLATES maps from Release 8
+/// with editable rows — the Action Recommendation Library made configurable.
+model ActionRule {
+  id                String                @id @default(uuid())
+  triggerType       ActionRuleTriggerType
+  /// A GovernanceConditionType or GovernanceOutcomeStatus, stored as its
+  /// string value — loose reference, same pattern EvidenceRecord's
+  /// traceability fields and GovernancePolicy.obligationId already use.
+  triggerValue      String
+  actionType        RecommendedActionType
+  actionName        String
+  actionDescription String                @db.Text
+  enabled           Boolean               @default(true)
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+
+  @@unique([triggerType, triggerValue])
+  @@map("action_rules")
+}
+
+/// Objective 8 — Customer Governance Profiles. Named presets (Banking,
+/// Insurance, Healthcare, Government, Enterprise); exactly one is active at
+/// a time, representing which industry configuration the tenant is running.
+model GovernanceProfile {
+  id          String   @id
+  name        String
+  industry    String
+  description String   @db.Text
+  isActive    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("governance_profiles")
+}
+
 model AuditLog {
   id         String   @id @default(uuid())
   timestamp  DateTime @default(now())

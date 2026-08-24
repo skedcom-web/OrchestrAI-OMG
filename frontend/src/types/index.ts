@@ -611,6 +611,57 @@ export interface RecommendedAction {
   createdAt?: string;
 }
 
+/**
+ * Release 10 — Governance Intelligence Studio (Customer Configuration
+ * Edition). Converts the parts of the reasoning engine that were hardcoded
+ * config into genuinely editable Neon-backed rules — "configure governance
+ * logic without code changes." Condition -> Policy is already data (Release
+ * 7's GovernancePolicy.triggerCondition); this covers Policy -> Outcome
+ * (enable/disable a tier) and Outcome/Condition -> Action (the Action
+ * Recommendation Library, made editable), plus the Condition catalogue and
+ * Customer Governance Profiles.
+ */
+
+/** Objective 3 — Condition Designer. */
+export interface ConditionDefinition {
+  id: string;
+  conditionType: GovernanceConditionType;
+  label: string;
+  description: string;
+  defaultSeverity: GovernancePolicySeverity;
+  enabled: boolean;
+}
+
+/** Objective 4 — Outcome Designer. Severity order is a platform primitive; only enabled/disabled per tier is configurable. */
+export interface OutcomeRule {
+  id: string;
+  outcomeStatus: GovernanceOutcomeStatus;
+  description: string;
+  enabled: boolean;
+}
+
+export type ActionRuleTriggerType = 'Condition' | 'Outcome';
+
+/** Objectives 5 & 6 — Action Designer and the Outcome/Condition -> Action leg of the Rule Mapping Engine. */
+export interface ActionRule {
+  id: string;
+  triggerType: ActionRuleTriggerType;
+  triggerValue: string;
+  actionType: RecommendedActionType;
+  actionName: string;
+  actionDescription: string;
+  enabled: boolean;
+}
+
+/** Objective 8 — Customer Governance Profiles. Exactly one active at a time. */
+export interface GovernanceProfile {
+  id: string;
+  name: string;
+  industry: string;
+  description: string;
+  isActive: boolean;
+}
+
 export interface AIAsset {
   id: string;
   name: string;

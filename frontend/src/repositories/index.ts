@@ -9,51 +9,63 @@
  */
 
 import {
+  localActionRuleRepository,
   localAssetRepository,
   localCompliancePackRepository,
+  localConditionDefinitionRepository,
   localControlRepository,
   localEvidenceMappingRepository,
   localEvidenceRepository,
   localGovernanceFindingRepository,
   localGovernancePolicyRepository,
+  localGovernanceProfileRepository,
   localGovernanceRepository,
   localObligationControlRepository,
   localObligationEvidenceMappingRepository,
   localObligationRepository,
+  localOutcomeRuleRepository,
   localRecommendedActionRepository,
   localRegulatoryRequirementRepository,
   localRegulatorySourceRepository,
   localRequirementRepository,
 } from './localRepositories';
 import {
+  apiActionRuleRepository,
   apiAssetRepository,
   apiCompliancePackRepository,
+  apiConditionDefinitionRepository,
   apiControlRepository,
   apiEvidenceMappingRepository,
   apiEvidenceRepository,
   apiGovernanceFindingRepository,
   apiGovernancePolicyRepository,
+  apiGovernanceProfileRepository,
   apiGovernanceRepository,
   apiObligationControlRepository,
   apiObligationEvidenceMappingRepository,
   apiObligationRepository,
+  apiOutcomeRuleRepository,
   apiRecommendedActionRepository,
   apiRegulatoryRequirementRepository,
   apiRegulatorySourceRepository,
   apiRequirementRepository,
 } from './apiRepositories';
 import type {
+  ActionRuleRepository,
   AssetRepository,
   CompliancePackRepository,
+  ConditionDefinitionRepository,
   ControlRepository,
   EvidenceMappingRepository,
   EvidenceRepository,
   GovernanceFindingRepository,
   GovernancePolicyRepository,
+  GovernanceProfileRepository,
   GovernanceRepository,
   ObligationControlRepository,
   ObligationEvidenceMappingRepository,
   ObligationRepository,
+  OutcomeRuleRepository,
   RecommendedActionRepository,
   RegulatoryRequirementRepository,
   RegulatorySourceRepository,
@@ -168,5 +180,32 @@ export function getRecommendedActionRepository(): RecommendedActionRepository {
 }
 
 export { localRecommendedActionRepository };
+
+/**
+ * Release 10 — Governance Intelligence Studio. Api-first from day one, same
+ * reasoning as Release 6/7/8's factories above.
+ */
+export function getConditionDefinitionRepository(): ConditionDefinitionRepository {
+  return apiConditionDefinitionRepository;
+}
+
+export function getOutcomeRuleRepository(): OutcomeRuleRepository {
+  return apiOutcomeRuleRepository;
+}
+
+export function getActionRuleRepository(): ActionRuleRepository {
+  return apiActionRuleRepository;
+}
+
+export function getGovernanceProfileRepository(): GovernanceProfileRepository {
+  return apiGovernanceProfileRepository;
+}
+
+export {
+  localConditionDefinitionRepository,
+  localOutcomeRuleRepository,
+  localActionRuleRepository,
+  localGovernanceProfileRepository,
+};
 
 export * from './types';

@@ -193,6 +193,7 @@ export const ENTERPRISE_PROBLEMS: { problem: string; solution: string; path: str
   { problem: 'Governance silos across teams', solution: 'One Governance Operating Model', path: '/command-center' },
   { problem: 'No reassessment after deployment', solution: 'Governance Continuity', path: '/change-requests' },
   { problem: 'Cannot reconstruct why a decision was made', solution: 'Decision Traceability', path: '/decision-traceability' },
+  { problem: 'Every customer or regulation needs a platform rebuild', solution: 'Governance Intelligence Studio', path: '/governance-studio' },
 ];
 
 /* ============ Section 3 — worked example (illustrative walkthrough) ====== */
@@ -612,6 +613,15 @@ export const TOUR_STEPS: TourStep[] = [
     why: 'A reviewer should be able to understand exactly why a decision occurred, who acted, and what evidence supported it — not just that it happened.',
     look: 'The Timeline view replays the full reasoning chain for any asset; Generate a Decision Evidence Pack for the audit-ready version.',
   },
+  {
+    n: 36,
+    title: 'Governance Intelligence Studio',
+    path: '/governance-studio',
+    icon: '🎛️',
+    what: 'Configure governance logic without code changes: Condition, Outcome and Action Designers, a Rule Mapping Engine, the Compliance Pack Builder foundation and Customer Governance Profiles.',
+    why: 'Built Once. Configured Many Times. The same platform serves Banking, Insurance, Healthcare, Government and Enterprise by configuration, not by rebuilding — the final core-platform release before customer-specific compliance packs.',
+    look: 'Toggle a condition or outcome tier off and the reasoning engine skips it immediately; edit an action rule and the next generated recommendation reflects it — no deployment required.',
+  },
 ];
 
 /* ==================== Section 6 — who uses OMG ========================== */
@@ -665,6 +675,32 @@ export const CAPABILITIES: { label: string; icon: string; path: string; blurb: s
   { label: 'Governance Intelligence', icon: '🧠', path: '/governance-intelligence', blurb: 'Policy → condition → finding → outcome' },
   { label: 'Governance Actions', icon: '🛠️', path: '/governance-actions', blurb: 'Accept, reject or defer — human-governed' },
   { label: 'Decision Traceability', icon: '🧭', path: '/decision-traceability', blurb: 'Reconstruct any decision end-to-end' },
+  { label: 'Governance Intelligence Studio', icon: '🎛️', path: '/governance-studio', blurb: 'Configure governance logic without code changes' },
+];
+
+/* ======= Section 8.5 — sales positioning: platform vs. customer packs === */
+
+/**
+ * Release 10 — the platform/pack boundary. Everything under "platform" is
+ * built and live today; everything under "packs" is what a customer
+ * configures through the Governance Intelligence Studio — Condition, Outcome
+ * and Action Designers plus a Customer Governance Profile — not a rebuild.
+ */
+export const PLATFORM_CAPABILITIES_SUMMARY: string[] = [
+  'AI Registry, Ownership, Risk, Validation, Evidence and Decision Authority',
+  'Continuous Monitoring and Governance Continuity',
+  'Compliance Pack Framework and the Regulatory Knowledge Engine (Source → Requirement → Obligation → Control → Evidence)',
+  'Governance Intelligence (Policy → Condition → Violation → Finding → Outcome) and Governance Actions',
+  'Decision Traceability, end-to-end',
+  'The Governance Intelligence Studio itself: Condition, Outcome and Action Designers, the Rule Mapping Engine, the Compliance Pack Builder foundation',
+];
+
+export const CUSTOMER_PACKS: { name: string; icon: string; detail: string }[] = [
+  { name: 'Banking Pack', icon: '🏦', detail: 'Credit, fraud and prudential-risk conditions, outcome tiers and actions, mapped to the Banking Governance Profile.' },
+  { name: 'Insurance Pack', icon: '📑', detail: 'Underwriting, claims and actuarial-risk conditions and controls, mapped to the Insurance Governance Profile.' },
+  { name: 'Healthcare Pack', icon: '🏥', detail: 'Clinical-safety and patient-data conditions and controls, mapped to the Healthcare Governance Profile.' },
+  { name: 'Government Pack', icon: '🏛️', detail: 'Transparency and citizen-impact conditions and controls, mapped to the Government Governance Profile.' },
+  { name: 'Enterprise Pack', icon: '🏢', detail: 'General-purpose configuration for AI outside a regulated vertical, mapped to the Enterprise Governance Profile.' },
 ];
 
 /* ==================== Section 8 — business value ======================== */
@@ -677,4 +713,94 @@ export const BUSINESS_VALUE: { title: string; detail: string; icon: string }[] =
   { title: 'Reduced regulatory risk', detail: 'Policy breaches surface as they arise, not at examination.', icon: '🛡️' },
   { title: 'Continuous assurance', detail: 'Health monitoring and reassessment keep approvals current.', icon: '📡' },
   { title: 'Governance at scale', detail: 'The same operating model applies to every AI asset class.', icon: '⚖️' },
+];
+
+/* ======= Section 9 — Final Strategic Blueprint: Design Partner Program == */
+
+/**
+ * Final Strategic Blueprint — OMG Core Platform v1.0 is complete; the
+ * platform's own next phase is co-designing configuration on top of it with
+ * design partners, not rebuilding it. This section is purely business
+ * positioning content — no new schema, no new module, per the blueprint's
+ * own framing ("without major architectural redesign").
+ */
+export const PLATFORM_STATUS_CAPABILITIES: string[] = [
+  'Governance Authority',
+  'Governance Continuity',
+  'Evidence Management',
+  'Production Persistence',
+  'Compliance Framework',
+  'Regulatory Knowledge Engine',
+  'Governance Intelligence',
+  'Governance Actions',
+  'Decision Traceability',
+  'Governance Intelligence Studio',
+];
+
+export interface PlatformJourneyStep {
+  step: number;
+  label: string;
+  icon: string;
+  /** A route path, or the sentinel '#partner' to scroll to the Partner With Us section on this page instead of navigating. */
+  path: string;
+}
+
+/**
+ * The Final Strategic Blueprint's "Viewer Journey" — eleven platform-level
+ * capability areas ending in the engagement outcome ("Deploy With
+ * Confidence"), distinct from the nine-stage per-asset JOURNEY_STAGES above.
+ * Deliberately not merged into JOURNEY_STAGES: this is what a viewer sees
+ * across the whole platform, not what a single AI asset progresses through.
+ */
+export const PLATFORM_JOURNEY: PlatformJourneyStep[] = [
+  { step: 1, label: 'Govern AI Assets', icon: '🗂️', path: '/assets' },
+  { step: 2, label: 'Governance Continuity', icon: '🔁', path: '/change-requests' },
+  { step: 3, label: 'Evidence Management', icon: '📄', path: '/evidence' },
+  { step: 4, label: 'Readiness', icon: '📊', path: '/command-center' },
+  { step: 5, label: 'Compliance', icon: '🧩', path: '/compliance-center' },
+  { step: 6, label: 'Regulatory Knowledge', icon: '🗺️', path: '/mapping-workspace' },
+  { step: 7, label: 'Governance Intelligence', icon: '🧠', path: '/governance-intelligence' },
+  { step: 8, label: 'Governance Actions', icon: '🛠️', path: '/governance-actions' },
+  { step: 9, label: 'Decision Traceability', icon: '🧭', path: '/decision-traceability' },
+  { step: 10, label: 'Customer Governance Configuration', icon: '🎛️', path: '/governance-studio' },
+  { step: 11, label: 'Deploy With Confidence', icon: '🤝', path: '#partner' },
+];
+
+export const DESIGN_PARTNER_INDUSTRIES: { name: string; icon: string }[] = [
+  { name: 'Banking', icon: '🏦' },
+  { name: 'NBFC', icon: '💳' },
+  { name: 'Insurance', icon: '📑' },
+  { name: 'Healthcare', icon: '🏥' },
+  { name: 'Government', icon: '🏛️' },
+  { name: 'Enterprise', icon: '🏢' },
+];
+
+export interface EngagementPhase {
+  phase: number;
+  title: string;
+  items: string[];
+}
+
+export const ENGAGEMENT_PHASES: EngagementPhase[] = [
+  { phase: 1, title: 'Governance Discovery', items: ['Governance assessment', 'AI operating model review', 'Compliance assessment', 'Gap analysis'] },
+  { phase: 2, title: 'Configuration & Extension', items: ['Policies', 'Conditions', 'Outcomes', 'Actions', 'Governance profiles', 'Compliance mappings'] },
+  { phase: 3, title: 'Joint Validation & QA', items: ['Governance walkthroughs', 'Scenario testing', 'UAT', 'Executive reviews'] },
+  { phase: 4, title: 'Production Deployment', items: ['Production rollout', 'User enablement', 'Operational support', 'Continuous improvement'] },
+];
+
+/** Regulatory-framework compliance packs — distinct from CUSTOMER_PACKS above (which are industry-scoped); these are named regulations, each implemented as Studio configuration once co-designed with a partner in that space. */
+export const REGULATORY_COMPLIANCE_PACKS: string[] = [
+  'RBI',
+  'ISO 42001',
+  'EU AI Act',
+  'NIST AI RMF',
+  'Internal Enterprise Policies',
+];
+
+export const EXECUTIVE_MESSAGE_FOCUS_AREAS: string[] = [
+  'Customer onboarding',
+  'Compliance packs',
+  'Industry accelerators',
+  'Regulatory mappings',
+  'Governance transformation engagements',
 ];

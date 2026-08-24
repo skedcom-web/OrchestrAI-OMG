@@ -10,6 +10,7 @@
  */
 
 import type {
+  ActionRule,
   AIAsset,
   GovernanceConditionType,
   GovernanceFinding,
@@ -74,14 +75,32 @@ export interface RecommendedActionDraft {
  * asset's current Outcome tier if it maps to one (via the Outcome mapping).
  * Recommendation only — nothing here persists or executes; the caller
  * decides which drafts are genuinely new (storageService.generateRecommendedActionsForAsset).
+ *
+ * `actionRules` is Release 10's Action Designer / Rule Mapping Engine: a
+ * matching enabled rule (by triggerType + triggerValue) overrides the
+ * hardcoded template's action type/name/description; a matching disabled
+ * rule suppresses the draft entirely; no matching rule falls back to the
+ * hardcoded template above, so behavior is unchanged when omitted.
  */
-export function generateActionDrafts(asset: AIAsset, findings: GovernanceFinding[], outcome: GovernanceOutcome | null): RecommendedActionDraft[] {
+export function generateActionDrafts(
+  asset: AIAsset,
+  findings: GovernanceFinding[],
+  outcome: GovernanceOutcome | null,
+  actionRules?: ActionRule[]
+): RecommendedActionDraft[] {
+  const findRule = (triggerType: ActionRule['triggerType'], triggerValue: string) =>
+    actionRules?.find(r => r.triggerType === triggerType && r.triggerValue === triggerValue);
+
   const drafts: RecommendedActionDraft[] = [];
 
   findings
     .filter(f => f.status === 'Open' || f.status === 'Under Review')
     .forEach(f => {
-      const template = CONDITION_ACTION_TEMPLATES[f.conditionType];
+      const rule = findRule('Condition', f.conditionType);
+      if (rule && !rule.enabled) return;
+      const template = rule
+        ? { actionType: rule.actionType, name: rule.actionName, description: rule.actionDescription }
+        : CONDITION_ACTION_TEMPLATES[f.conditionType];
       drafts.push({
         actionType: template.actionType,
         name: template.name,
@@ -94,7 +113,10 @@ export function generateActionDrafts(asset: AIAsset, findings: GovernanceFinding
     });
 
   if (outcome) {
-    const template = OUTCOME_ACTION_TEMPLATES[outcome.status];
+    const rule = findRule('Outcome', outcome.status);
+    const template = rule
+      ? (rule.enabled ? { actionType: rule.actionType, name: rule.actionName, description: rule.actionDescription } : undefined)
+      : OUTCOME_ACTION_TEMPLATES[outcome.status];
     if (template) {
       drafts.push({
         actionType: template.actionType,

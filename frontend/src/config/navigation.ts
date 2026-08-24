@@ -386,6 +386,14 @@ export const NAV_DOMAINS: NavDomain[] = [
         keywords: ['governance actions', 'recommended action', 'accept', 'reject', 'defer', 'playbook'],
         badge: 'Release 8',
       },
+      {
+        path: '/governance-studio',
+        label: 'Governance Intelligence Studio',
+        icon: '🎛️',
+        description: 'Configure governance logic without code changes — Condition, Outcome and Action Designers, Rule Mapping, Compliance Pack Builder and Customer Governance Profiles.',
+        keywords: ['governance studio', 'condition designer', 'outcome designer', 'action designer', 'rule mapping', 'compliance pack builder', 'customer profile', 'configuration'],
+        badge: 'Release 10',
+      },
     ],
   },
   {

@@ -9,19 +9,23 @@
 
 import * as storage from '../services/storageService';
 import type {
+  ActionRuleRepository,
   AssetRepository,
   CompliancePackRepository,
+  ConditionDefinitionRepository,
   ControlRepository,
   EvidenceMappingRepository,
   EvidenceRepository,
   GovernanceData,
   GovernanceFindingRepository,
   GovernancePolicyRepository,
+  GovernanceProfileRepository,
   GovernanceRecordKind,
   GovernanceRepository,
   ObligationControlRepository,
   ObligationEvidenceMappingRepository,
   ObligationRepository,
+  OutcomeRuleRepository,
   RecommendedActionRepository,
   RegulatoryRequirementRepository,
   RegulatorySourceRepository,
@@ -267,6 +271,53 @@ export const localRecommendedActionRepository: RecommendedActionRepository = {
   },
   async deleteAction(id) {
     await storage.deleteRecommendedAction(id);
+  },
+};
+
+// --- RELEASE 10 — GOVERNANCE INTELLIGENCE STUDIO (CUSTOMER CONFIGURATION) ---
+
+export const localConditionDefinitionRepository: ConditionDefinitionRepository = {
+  async getDefinitions() {
+    return storage.getConditionDefinitions();
+  },
+  async updateDefinition(id, data) {
+    return storage.saveConditionDefinition({ ...data, id });
+  },
+};
+
+export const localOutcomeRuleRepository: OutcomeRuleRepository = {
+  async getRules() {
+    return storage.getOutcomeRules();
+  },
+  async updateRule(id, data) {
+    return storage.saveOutcomeRule({ ...data, id });
+  },
+};
+
+export const localActionRuleRepository: ActionRuleRepository = {
+  async getRules() {
+    return storage.getActionRules();
+  },
+  async createRule(data) {
+    return storage.saveActionRule(data);
+  },
+  async updateRule(id, data) {
+    return storage.saveActionRule({ ...data, id });
+  },
+  async deleteRule(id) {
+    await storage.deleteActionRule(id);
+  },
+};
+
+export const localGovernanceProfileRepository: GovernanceProfileRepository = {
+  async getProfiles() {
+    return storage.getGovernanceProfiles();
+  },
+  async createProfile(data) {
+    return storage.saveGovernanceProfile(data);
+  },
+  async updateProfile(id, data) {
+    return storage.saveGovernanceProfile({ ...data, id });
   },
 };
 

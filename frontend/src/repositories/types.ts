@@ -9,17 +9,21 @@
  */
 
 import type {
+  ActionRule,
   AIAsset,
   CompliancePack,
   ComplianceRequirement,
+  ConditionDefinition,
   EvidenceMapping,
   EvidenceRecord,
   GovernanceFinding,
   GovernancePolicy,
+  GovernanceProfile,
   GovernanceReauthorizationRecord,
   Obligation,
   ObligationControl,
   ObligationEvidenceMapping,
+  OutcomeRule,
   PackControl,
   ReassessmentTrigger,
   RecommendedAction,
@@ -171,4 +175,35 @@ export interface RecommendedActionRepository {
   createAction(data: Partial<RecommendedAction>): Promise<RecommendedAction>;
   updateAction(id: string, data: Partial<RecommendedAction>): Promise<RecommendedAction>;
   deleteAction(id: string): Promise<void>;
+}
+
+/**
+ * Release 10 — Governance Intelligence Studio. All four are persisted,
+ * Api-first from day one, same reasoning as every domain since Release 6.
+ * No delete on ConditionDefinition/OutcomeRule — they're a fixed one-row-
+ * per-platform-primitive catalogue (seeded once), only enable/disable and
+ * metadata are editable; ActionRule and GovernanceProfile are genuinely
+ * user-managed collections and support full CRUD.
+ */
+export interface ConditionDefinitionRepository {
+  getDefinitions(): Promise<ConditionDefinition[]>;
+  updateDefinition(id: string, data: Partial<ConditionDefinition>): Promise<ConditionDefinition>;
+}
+
+export interface OutcomeRuleRepository {
+  getRules(): Promise<OutcomeRule[]>;
+  updateRule(id: string, data: Partial<OutcomeRule>): Promise<OutcomeRule>;
+}
+
+export interface ActionRuleRepository {
+  getRules(): Promise<ActionRule[]>;
+  createRule(data: Partial<ActionRule>): Promise<ActionRule>;
+  updateRule(id: string, data: Partial<ActionRule>): Promise<ActionRule>;
+  deleteRule(id: string): Promise<void>;
+}
+
+export interface GovernanceProfileRepository {
+  getProfiles(): Promise<GovernanceProfile[]>;
+  createProfile(data: Partial<GovernanceProfile>): Promise<GovernanceProfile>;
+  updateProfile(id: string, data: Partial<GovernanceProfile>): Promise<GovernanceProfile>;
 }

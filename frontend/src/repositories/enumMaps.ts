@@ -27,6 +27,8 @@ import type {
   PackControlStatus,
   ReassessmentTriggerStatus,
   ReassessmentTriggerType,
+  ActionRuleTriggerType,
+  GovernanceOutcomeStatus,
   RecommendedActionPriority,
   RecommendedActionStatus,
   RecommendedActionType,
@@ -207,6 +209,18 @@ const RECOMMENDED_ACTION_STATUS: Record<RecommendedActionStatus, string> = {
   'Open': 'OPEN', 'Accepted': 'ACCEPTED', 'Deferred': 'DEFERRED', 'Rejected': 'REJECTED', 'In Progress': 'IN_PROGRESS', 'Completed': 'COMPLETED',
 };
 
+const ACTION_RULE_TRIGGER_TYPE: Record<ActionRuleTriggerType, string> = {
+  'Condition': 'CONDITION', 'Outcome': 'OUTCOME',
+};
+
+const GOVERNANCE_OUTCOME_STATUS: Record<GovernanceOutcomeStatus, string> = {
+  'Compliant': 'COMPLIANT',
+  'Attention Required': 'ATTENTION_REQUIRED',
+  'Review Required': 'REVIEW_REQUIRED',
+  'Reassessment Recommended': 'REASSESSMENT_RECOMMENDED',
+  'Escalation Recommended': 'ESCALATION_RECOMMENDED',
+};
+
 export const enumMaps = {
   assetType: { toBackend: toBackend(ASSET_TYPE), toFrontend: toFrontend(ASSET_TYPE) },
   riskLevel: { toBackend: toBackend(RISK_LEVEL), toFrontend: toFrontend(RISK_LEVEL) },
@@ -237,4 +251,6 @@ export const enumMaps = {
   recommendedActionType: { toBackend: toBackend(RECOMMENDED_ACTION_TYPE), toFrontend: toFrontend(RECOMMENDED_ACTION_TYPE) },
   recommendedActionPriority: { toBackend: toBackend(RECOMMENDED_ACTION_PRIORITY), toFrontend: toFrontend(RECOMMENDED_ACTION_PRIORITY) },
   recommendedActionStatus: { toBackend: toBackend(RECOMMENDED_ACTION_STATUS), toFrontend: toFrontend(RECOMMENDED_ACTION_STATUS) },
+  actionRuleTriggerType: { toBackend: toBackend(ACTION_RULE_TRIGGER_TYPE), toFrontend: toFrontend(ACTION_RULE_TRIGGER_TYPE) },
+  governanceOutcomeStatus: { toBackend: toBackend(GOVERNANCE_OUTCOME_STATUS), toFrontend: toFrontend(GOVERNANCE_OUTCOME_STATUS) },
 };

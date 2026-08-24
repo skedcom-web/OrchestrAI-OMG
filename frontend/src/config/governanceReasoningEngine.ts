@@ -24,17 +24,27 @@ import type {
   ValidationRecord,
 } from '../types';
 
-/** Objective 2 — Condition Engine. One entry per detected condition type per asset; detection only. */
+/**
+ * Objective 2 — Condition Engine. One entry per detected condition type per
+ * asset; detection only. `enabledConditionTypes` is Release 10's Condition
+ * Designer: when provided, a disabled condition type is never raised for any
+ * asset — the detection mechanism itself stays platform code, only whether
+ * it's switched on is configurable. Omitted (undefined) preserves prior
+ * behavior exactly — every condition type detected, same as Release 7-9.
+ */
 export function detectGovernanceConditions(
   asset: AIAsset,
   assetEvidence: EvidenceRecord[],
   assetReviews: ScheduledReview[],
   assetValidations: ValidationRecord[],
-  assetReauthorizations: GovernanceReauthorizationRecord[]
+  assetReauthorizations: GovernanceReauthorizationRecord[],
+  enabledConditionTypes?: Set<GovernanceCondition['conditionType']>
 ): GovernanceCondition[] {
   const conditions: GovernanceCondition[] = [];
-  const push = (conditionType: GovernanceCondition['conditionType'], detail: string) =>
+  const push = (conditionType: GovernanceCondition['conditionType'], detail: string) => {
+    if (enabledConditionTypes && !enabledConditionTypes.has(conditionType)) return;
     conditions.push({ assetId: asset.id, assetName: asset.name, conditionType, detail });
+  };
 
   const expired = assetEvidence.filter(e => getExpiryIndicator(e.expiryDate) === 'Expired');
   if (expired.length > 0) {
@@ -98,40 +108,52 @@ export function evaluatePolicyViolations(policies: GovernancePolicy[], condition
  * the outcome was generated — every outcome must be explainable per
  * Objective 6, so the reason list is part of the outcome itself, not a
  * separate lookup.
+ *
+ * `disabledOutcomes` is Release 10's Outcome Designer: a disabled tier is
+ * skipped even when its trigger condition is true, falling through to the
+ * next tier's own (independent) check — the fixed escalation ORDER
+ * (Escalation > Reassessment > Review > Attention > Compliant) is a platform
+ * primitive and never changes; only which tiers are active is configurable.
+ * Omitted (undefined) preserves prior behavior exactly.
  */
 export function computeGovernanceOutcome(
   asset: AIAsset,
   assetConditions: GovernanceCondition[],
   assetViolations: GovernancePolicyViolation[],
-  assetFindings: GovernanceFinding[]
+  assetFindings: GovernanceFinding[],
+  disabledOutcomes?: Set<GovernanceOutcome['status']>
 ): GovernanceOutcome {
-  const reasons: string[] = [];
+  const isEnabled = (status: GovernanceOutcome['status']) => !disabledOutcomes || !disabledOutcomes.has(status);
   const openFindings = assetFindings.filter(f => f.status === 'Open' || f.status === 'Under Review');
   const criticalViolations = assetViolations.filter(v => v.severity === 'Critical');
   const criticalOpenFindings = openFindings.filter(f => f.severity === 'Critical');
   const missingReauth = assetConditions.some(c => c.conditionType === 'Missing Reauthorization');
   const reviewOverdue = assetConditions.some(c => c.conditionType === 'Review Overdue');
 
-  if (criticalViolations.length > 0 || criticalOpenFindings.length > 0) {
+  if ((criticalViolations.length > 0 || criticalOpenFindings.length > 0) && isEnabled('Escalation Recommended')) {
+    const reasons: string[] = [];
     criticalViolations.forEach(v => reasons.push(`Critical policy violation: ${v.policyName} (${v.conditionType}).`));
     criticalOpenFindings.forEach(f => reasons.push(`Open critical finding: ${f.policyName} — ${f.detail}`));
     return { assetId: asset.id, assetName: asset.name, status: 'Escalation Recommended', reasons };
   }
 
-  if (asset.governanceState === 'Reassessment Required' || missingReauth) {
+  if ((asset.governanceState === 'Reassessment Required' || missingReauth) && isEnabled('Reassessment Recommended')) {
+    const reasons: string[] = [];
     if (asset.governanceState === 'Reassessment Required') reasons.push('Governance State is Reassessment Required.');
     if (missingReauth) reasons.push('No reauthorization decision on record since reassessment was triggered.');
     return { assetId: asset.id, assetName: asset.name, status: 'Reassessment Recommended', reasons };
   }
 
-  if (reviewOverdue || openFindings.length > 0) {
+  if ((reviewOverdue || openFindings.length > 0) && isEnabled('Review Required')) {
+    const reasons: string[] = [];
     if (reviewOverdue) reasons.push('Scheduled Review Overdue.');
     assetViolations.forEach(v => reasons.push(`Policy Triggered: ${v.policyName} (${v.conditionType}).`));
     if (openFindings.length > 0) reasons.push(`${openFindings.length} open governance finding(s) awaiting review.`);
     return { assetId: asset.id, assetName: asset.name, status: 'Review Required', reasons };
   }
 
-  if (assetViolations.length > 0 || assetConditions.length > 0) {
+  if ((assetViolations.length > 0 || assetConditions.length > 0) && isEnabled('Attention Required')) {
+    const reasons: string[] = [];
     assetViolations.forEach(v => reasons.push(`Policy Triggered: ${v.policyName} (${v.conditionType}).`));
     assetConditions
       .filter(c => !assetViolations.some(v => v.conditionType === c.conditionType))
@@ -139,8 +161,6 @@ export function computeGovernanceOutcome(
     return { assetId: asset.id, assetName: asset.name, status: 'Attention Required', reasons };
   }
 
-  reasons.push('No governance conditions detected.');
-  reasons.push('No policy violations.');
-  reasons.push('Evidence Valid.');
+  const reasons: string[] = ['No governance conditions detected.', 'No policy violations.', 'Evidence Valid.'];
   return { assetId: asset.id, assetName: asset.name, status: 'Compliant', reasons };
 }

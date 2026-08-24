@@ -12,35 +12,43 @@ import { fromBackendAsset, toBackendAsset } from './assetMapper';
 import { fromBackendEvidence, toBackendEvidence } from './evidenceMapper';
 import { enumMaps } from './enumMaps';
 import type {
+  ActionRuleRepository,
   AssetRepository,
   CompliancePackRepository,
+  ConditionDefinitionRepository,
   ControlRepository,
   EvidenceMappingRepository,
   EvidenceRepository,
   GovernanceData,
   GovernanceFindingRepository,
   GovernancePolicyRepository,
+  GovernanceProfileRepository,
   GovernanceRecordKind,
   GovernanceRepository,
   ObligationControlRepository,
   ObligationEvidenceMappingRepository,
   ObligationRepository,
+  OutcomeRuleRepository,
   RecommendedActionRepository,
   RegulatoryRequirementRepository,
   RegulatorySourceRepository,
   RequirementRepository,
 } from './types';
 import type {
+  ActionRule,
   AIAsset,
   CompliancePack,
   ComplianceRequirement,
+  ConditionDefinition,
   EvidenceMapping,
   GovernanceFinding,
   GovernancePolicy,
+  GovernanceProfile,
   GovernanceReauthorizationRecord,
   Obligation,
   ObligationControl,
   ObligationEvidenceMapping,
+  OutcomeRule,
   PackControl,
   ReassessmentTrigger,
   RecommendedAction,
@@ -693,6 +701,125 @@ export const apiRecommendedActionRepository: RecommendedActionRepository = {
   },
   async deleteAction(id) {
     await apiRequest<void>(`/recommended-actions/${id}`, { method: 'DELETE' });
+  },
+};
+
+// --- RELEASE 10 — GOVERNANCE INTELLIGENCE STUDIO (CUSTOMER CONFIGURATION) ---
+
+function conditionDefinitionToBackend(data: Partial<ConditionDefinition>) {
+  const body: Record<string, unknown> = { ...data };
+  if (data.conditionType) body.conditionType = enumMaps.governanceConditionType.toBackend(data.conditionType);
+  if (data.defaultSeverity) body.defaultSeverity = enumMaps.governancePolicySeverity.toBackend(data.defaultSeverity);
+  return body;
+}
+
+function conditionDefinitionFromBackend(row: any): ConditionDefinition {
+  return {
+    id: row.id,
+    conditionType: enumMaps.governanceConditionType.toFrontend(row.conditionType),
+    label: row.label,
+    description: row.description,
+    defaultSeverity: enumMaps.governancePolicySeverity.toFrontend(row.defaultSeverity),
+    enabled: row.enabled,
+  };
+}
+
+function outcomeRuleToBackend(data: Partial<OutcomeRule>) {
+  const body: Record<string, unknown> = { ...data };
+  if (data.outcomeStatus) body.outcomeStatus = enumMaps.governanceOutcomeStatus.toBackend(data.outcomeStatus);
+  return body;
+}
+
+function outcomeRuleFromBackend(row: any): OutcomeRule {
+  return {
+    id: row.id,
+    outcomeStatus: enumMaps.governanceOutcomeStatus.toFrontend(row.outcomeStatus),
+    description: row.description,
+    enabled: row.enabled,
+  };
+}
+
+function actionRuleToBackend(data: Partial<ActionRule>) {
+  const body: Record<string, unknown> = { ...data };
+  if (data.triggerType) body.triggerType = enumMaps.actionRuleTriggerType.toBackend(data.triggerType);
+  if (data.actionType) body.actionType = enumMaps.recommendedActionType.toBackend(data.actionType);
+  return body;
+}
+
+function actionRuleFromBackend(row: any): ActionRule {
+  return {
+    id: row.id,
+    triggerType: enumMaps.actionRuleTriggerType.toFrontend(row.triggerType),
+    triggerValue: row.triggerValue,
+    actionType: enumMaps.recommendedActionType.toFrontend(row.actionType),
+    actionName: row.actionName,
+    actionDescription: row.actionDescription,
+    enabled: row.enabled,
+  };
+}
+
+function governanceProfileFromBackend(row: any): GovernanceProfile {
+  return {
+    id: row.id,
+    name: row.name,
+    industry: row.industry,
+    description: row.description,
+    isActive: row.isActive,
+  };
+}
+
+export const apiConditionDefinitionRepository: ConditionDefinitionRepository = {
+  async getDefinitions() {
+    const rows = await apiRequest<any[]>('/condition-definitions');
+    return rows.map(conditionDefinitionFromBackend);
+  },
+  async updateDefinition(id, data) {
+    const row = await apiRequest<any>(`/condition-definitions/${id}`, { method: 'PATCH', body: JSON.stringify(conditionDefinitionToBackend(data)) });
+    return conditionDefinitionFromBackend(row);
+  },
+};
+
+export const apiOutcomeRuleRepository: OutcomeRuleRepository = {
+  async getRules() {
+    const rows = await apiRequest<any[]>('/outcome-rules');
+    return rows.map(outcomeRuleFromBackend);
+  },
+  async updateRule(id, data) {
+    const row = await apiRequest<any>(`/outcome-rules/${id}`, { method: 'PATCH', body: JSON.stringify(outcomeRuleToBackend(data)) });
+    return outcomeRuleFromBackend(row);
+  },
+};
+
+export const apiActionRuleRepository: ActionRuleRepository = {
+  async getRules() {
+    const rows = await apiRequest<any[]>('/action-rules');
+    return rows.map(actionRuleFromBackend);
+  },
+  async createRule(data) {
+    const row = await apiRequest<any>('/action-rules', { method: 'POST', body: JSON.stringify(actionRuleToBackend(data)) });
+    return actionRuleFromBackend(row);
+  },
+  async updateRule(id, data) {
+    const row = await apiRequest<any>(`/action-rules/${id}`, { method: 'PATCH', body: JSON.stringify(actionRuleToBackend(data)) });
+    return actionRuleFromBackend(row);
+  },
+  async deleteRule(id) {
+    await apiRequest<void>(`/action-rules/${id}`, { method: 'DELETE' });
+  },
+};
+
+export const apiGovernanceProfileRepository: GovernanceProfileRepository = {
+  async getProfiles() {
+    const rows = await apiRequest<any[]>('/governance-profiles');
+    return rows.map(governanceProfileFromBackend);
+  },
+  async createProfile(data) {
+    const row = await apiRequest<any>('/governance-profiles', { method: 'POST', body: JSON.stringify(data) });
+    return governanceProfileFromBackend(row);
+  },
+  async updateProfile(id, data) {
+    const row = await apiRequest<any>(`/governance-profiles/${id}`, { method: 'PATCH', body: JSON.stringify(data) });
+    return governanceProfileFromBackend(row);
   },
 };
 

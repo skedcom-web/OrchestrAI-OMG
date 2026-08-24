@@ -73,6 +73,12 @@ This repository directory contains the **Mandatory Governance Deliverables** spe
 22. 🧭 **[22_Release9_Decision_Traceability_Engine.md](file:///C:/Users/VT348/Documents/GitHub/OrchestrAI%20OMG/docs/governance/22_Release9_Decision_Traceability_Engine.md)**  
     *Every governance decision reconstructable end-to-end — Condition → Policy → Violation → Finding → Outcome → Recommended Action → Human Decision — plus the mandatory landing page, guided tour and executive overview refresh covering Releases 6-9.*
 
+23. 🎛️ **[23_Release10_Governance_Intelligence_Studio.md](file:///C:/Users/VT348/Documents/GitHub/OrchestrAI%20OMG/docs/governance/23_Release10_Governance_Intelligence_Studio.md)**  
+    *Configure governance logic without code changes — Condition, Outcome and Action Designers, Rule Mapping Engine, Compliance Pack Builder foundation, Customer Governance Profiles — the final core-platform release before customer-specific compliance packs.*
+
+24. 🤝 **[24_Final_Strategic_Blueprint_Design_Partner_Program.md](file:///C:/Users/VT348/Documents/GitHub/OrchestrAI%20OMG/docs/governance/24_Final_Strategic_Blueprint_Design_Partner_Program.md)**  
+    *OMG Core Platform v1.0 Complete — Built Once. Configured Together. Governed Continuously. Positioning and go-to-market content only: Platform Status, the Platform Journey, the Design Partner Program and its four-phase engagement model, and Future Compliance Packs.*
+
 ---
 
 ## 🌐 Live Production Links

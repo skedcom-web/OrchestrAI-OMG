@@ -387,6 +387,71 @@ async function seedGovernanceIntelligence() {
   console.log(`  Governance policies: ${policies.length}`);
 }
 
+// Release 10 — Governance Intelligence Studio (Customer Configuration
+// Edition). Seeds the Studio's four catalogues once: ConditionDefinition and
+// OutcomeRule are fixed one-row-per-platform-primitive catalogues (all
+// enabled, matching the exact set the engine has always evaluated);
+// ActionRule mirrors the hardcoded CONDITION_ACTION_TEMPLATES /
+// OUTCOME_ACTION_TEMPLATES defaults from governanceActionsEngine.ts so
+// out-of-the-box behavior is unchanged; GovernanceProfile seeds the five
+// named industry presets with Banking active, matching the demo tenant's
+// "Enterprise Banking Tenant" narrative. triggerValue on ActionRule is
+// stored as the frontend-readable string (not the backend enum) since the
+// Api repository passes it through unmapped, matching what the reasoning
+// engine's conditionType/outcome.status values look like at match time.
+async function seedGovernanceStudio() {
+  const existingCount = await prisma.conditionDefinition.count();
+  if (existingCount > 0) {
+    console.log(`Skipping governance studio seed — ConditionDefinition already has ${existingCount} row(s).`);
+    return;
+  }
+
+  console.log('Seeding governance intelligence studio...');
+
+  const conditionDefinitions = [
+    { id: 'cond-evidence-expired', conditionType: 'EVIDENCE_EXPIRED', label: 'Evidence Expired', description: 'One or more evidence records supporting this asset have passed their expiry date.', defaultSeverity: 'HIGH', enabled: true },
+    { id: 'cond-review-overdue', conditionType: 'REVIEW_OVERDUE', label: 'Review Overdue', description: 'A scheduled governance review has passed its due date without completion.', defaultSeverity: 'MEDIUM', enabled: true },
+    { id: 'cond-missing-approval', conditionType: 'MISSING_APPROVAL', label: 'Missing Approval', description: 'No GO / CONDITIONAL GO / NO GO decision is on record for this asset.', defaultSeverity: 'CRITICAL', enabled: true },
+    { id: 'cond-missing-owner', conditionType: 'MISSING_OWNER', label: 'Missing Owner', description: "The asset's Governance Authority Profile is missing a mandatory role.", defaultSeverity: 'MEDIUM', enabled: true },
+    { id: 'cond-missing-validation', conditionType: 'MISSING_VALIDATION', label: 'Missing Validation', description: 'No approved independent validation is on record for this asset.', defaultSeverity: 'HIGH', enabled: true },
+    { id: 'cond-missing-reauthorization', conditionType: 'MISSING_REAUTHORIZATION', label: 'Missing Reauthorization', description: 'Asset is in Reassessment Required but has no reauthorization decision on record.', defaultSeverity: 'CRITICAL', enabled: true },
+  ];
+  for (const c of conditionDefinitions) await prisma.conditionDefinition.create({ data: c });
+
+  const outcomeRules = [
+    { id: 'outc-compliant', outcomeStatus: 'COMPLIANT', description: 'No governance conditions detected, no policy violations, evidence valid.', enabled: true },
+    { id: 'outc-attention-required', outcomeStatus: 'ATTENTION_REQUIRED', description: 'A policy violation or governance condition was detected but does not yet require review or escalation.', enabled: true },
+    { id: 'outc-review-required', outcomeStatus: 'REVIEW_REQUIRED', description: 'A scheduled review is overdue or open governance findings await review.', enabled: true },
+    { id: 'outc-reassessment-recommended', outcomeStatus: 'REASSESSMENT_RECOMMENDED', description: 'Governance State is Reassessment Required, or no reauthorization decision has been recorded since reassessment was triggered.', enabled: true },
+    { id: 'outc-escalation-recommended', outcomeStatus: 'ESCALATION_RECOMMENDED', description: 'A critical policy violation or open critical finding was detected.', enabled: true },
+  ];
+  for (const o of outcomeRules) await prisma.outcomeRule.create({ data: o });
+
+  const actionRules = [
+    { triggerType: 'CONDITION', triggerValue: 'Evidence Expired', actionType: 'VALIDATION', actionName: 'Renew Evidence', actionDescription: 'Replace the expired evidence record with a current one.', enabled: true },
+    { triggerType: 'CONDITION', triggerValue: 'Review Overdue', actionType: 'REVIEW', actionName: 'Initiate Review', actionDescription: 'Start the overdue scheduled governance review.', enabled: true },
+    { triggerType: 'CONDITION', triggerValue: 'Missing Validation', actionType: 'VALIDATION', actionName: 'Perform Independent Validation', actionDescription: 'Commission an independent validation for this asset.', enabled: true },
+    { triggerType: 'CONDITION', triggerValue: 'Missing Approval', actionType: 'APPROVAL', actionName: 'Obtain Governance Approval', actionDescription: 'Route the asset for a GO / CONDITIONAL GO / NO GO decision.', enabled: true },
+    { triggerType: 'CONDITION', triggerValue: 'Missing Reauthorization', actionType: 'REAUTHORIZATION', actionName: 'Initiate Reauthorization', actionDescription: 'Reauthorize the asset following its reassessment trigger.', enabled: true },
+    { triggerType: 'CONDITION', triggerValue: 'Missing Owner', actionType: 'OWNERSHIP', actionName: 'Assign Accountable Owner', actionDescription: 'Complete the Governance Authority Profile with a named accountable owner.', enabled: true },
+    { triggerType: 'OUTCOME', triggerValue: 'Review Required', actionType: 'REVIEW', actionName: 'Create Governance Review', actionDescription: 'Schedule a governance review to address the open findings driving this outcome.', enabled: true },
+    { triggerType: 'OUTCOME', triggerValue: 'Reassessment Recommended', actionType: 'REASSESSMENT', actionName: 'Initiate Reassessment', actionDescription: "Begin a full reassessment given the asset's governance state.", enabled: true },
+    { triggerType: 'OUTCOME', triggerValue: 'Escalation Recommended', actionType: 'ESCALATION', actionName: 'Escalate To Governance Authority', actionDescription: 'Escalate to the governance authority — a critical policy violation or open critical finding was detected.', enabled: true },
+  ];
+  for (const a of actionRules) await prisma.actionRule.create({ data: a });
+
+  const governanceProfiles = [
+    { id: 'profile-banking', name: 'Banking', industry: 'Banking', description: 'Governance configuration for banking and lending AI — credit, fraud, and prudential-risk oriented controls.', isActive: true },
+    { id: 'profile-insurance', name: 'Insurance', industry: 'Insurance', description: 'Governance configuration for insurance AI — underwriting, claims, and actuarial-risk oriented controls.', isActive: false },
+    { id: 'profile-healthcare', name: 'Healthcare', industry: 'Healthcare', description: 'Governance configuration for healthcare AI — clinical safety and patient-data oriented controls.', isActive: false },
+    { id: 'profile-government', name: 'Government', industry: 'Government', description: 'Governance configuration for public-sector AI — transparency and citizen-impact oriented controls.', isActive: false },
+    { id: 'profile-enterprise', name: 'Enterprise', industry: 'Enterprise', description: 'General-purpose governance configuration for enterprise AI outside a regulated vertical.', isActive: false },
+  ];
+  for (const p of governanceProfiles) await prisma.governanceProfile.create({ data: p });
+
+  console.log(`  Condition definitions: ${conditionDefinitions.length}, outcome rules: ${outcomeRules.length}, action rules: ${actionRules.length}, governance profiles: ${governanceProfiles.length}`);
+}
+
 async function main() {
   const existingAssetCount = await prisma.aIAsset.count();
   if (existingAssetCount > 0) {
@@ -394,6 +459,7 @@ async function main() {
     await seedCompliance();
     await seedRegulatoryKnowledge();
     await seedGovernanceIntelligence();
+    await seedGovernanceStudio();
     return;
   }
 
@@ -471,6 +537,7 @@ async function main() {
   await seedCompliance();
   await seedRegulatoryKnowledge();
   await seedGovernanceIntelligence();
+  await seedGovernanceStudio();
 
   console.log('Seed complete.');
 }

@@ -579,6 +579,118 @@ export class AppController {
     return { deleted: true, id };
   }
 
+  // --- RELEASE 10: GOVERNANCE INTELLIGENCE STUDIO (CUSTOMER CONFIGURATION) ---
+  @Get('condition-definitions')
+  @Roles(
+    'SUPER_ADMIN',
+    'GOVERNANCE_ADMIN',
+    'RISK_OFFICER',
+    'BUSINESS_OWNER',
+    'VALIDATOR',
+    'AUDITOR',
+    'VIEWER',
+  )
+  async getConditionDefinitions() {
+    return this.prisma.conditionDefinition.findMany({ orderBy: { createdAt: 'asc' } });
+  }
+
+  @Post('condition-definitions')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async createConditionDefinition(@Body() body: any) {
+    return this.prisma.conditionDefinition.create({ data: body });
+  }
+
+  @Patch('condition-definitions/:id')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async updateConditionDefinition(@Param('id') id: string, @Body() body: any) {
+    return this.prisma.conditionDefinition.update({ where: { id }, data: body });
+  }
+
+  @Get('outcome-rules')
+  @Roles(
+    'SUPER_ADMIN',
+    'GOVERNANCE_ADMIN',
+    'RISK_OFFICER',
+    'BUSINESS_OWNER',
+    'VALIDATOR',
+    'AUDITOR',
+    'VIEWER',
+  )
+  async getOutcomeRules() {
+    return this.prisma.outcomeRule.findMany({ orderBy: { createdAt: 'asc' } });
+  }
+
+  @Post('outcome-rules')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async createOutcomeRule(@Body() body: any) {
+    return this.prisma.outcomeRule.create({ data: body });
+  }
+
+  @Patch('outcome-rules/:id')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async updateOutcomeRule(@Param('id') id: string, @Body() body: any) {
+    return this.prisma.outcomeRule.update({ where: { id }, data: body });
+  }
+
+  @Get('action-rules')
+  @Roles(
+    'SUPER_ADMIN',
+    'GOVERNANCE_ADMIN',
+    'RISK_OFFICER',
+    'BUSINESS_OWNER',
+    'VALIDATOR',
+    'AUDITOR',
+    'VIEWER',
+  )
+  async getActionRules() {
+    return this.prisma.actionRule.findMany({ orderBy: { createdAt: 'asc' } });
+  }
+
+  @Post('action-rules')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async createActionRule(@Body() body: any) {
+    return this.prisma.actionRule.create({ data: body });
+  }
+
+  @Patch('action-rules/:id')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async updateActionRule(@Param('id') id: string, @Body() body: any) {
+    return this.prisma.actionRule.update({ where: { id }, data: body });
+  }
+
+  @Delete('action-rules/:id')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async deleteActionRule(@Param('id') id: string) {
+    await this.prisma.actionRule.delete({ where: { id } });
+    return { deleted: true, id };
+  }
+
+  @Get('governance-profiles')
+  @Roles(
+    'SUPER_ADMIN',
+    'GOVERNANCE_ADMIN',
+    'RISK_OFFICER',
+    'BUSINESS_OWNER',
+    'VALIDATOR',
+    'AUDITOR',
+    'VIEWER',
+  )
+  async getGovernanceProfiles() {
+    return this.prisma.governanceProfile.findMany({ orderBy: { createdAt: 'asc' } });
+  }
+
+  @Post('governance-profiles')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async createGovernanceProfile(@Body() body: any) {
+    return this.prisma.governanceProfile.create({ data: body });
+  }
+
+  @Patch('governance-profiles/:id')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async updateGovernanceProfile(@Param('id') id: string, @Body() body: any) {
+    return this.prisma.governanceProfile.update({ where: { id }, data: body });
+  }
+
   // --- PHASE 7: CONTINUOUS MONITORING ENDPOINTS ---
   @Get('monitoring/alerts')
   @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER', 'AUDITOR')
