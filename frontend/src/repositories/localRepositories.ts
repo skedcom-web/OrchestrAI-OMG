@@ -15,11 +15,14 @@ import type {
   EvidenceMappingRepository,
   EvidenceRepository,
   GovernanceData,
+  GovernanceFindingRepository,
+  GovernancePolicyRepository,
   GovernanceRecordKind,
   GovernanceRepository,
   ObligationControlRepository,
   ObligationEvidenceMappingRepository,
   ObligationRepository,
+  RecommendedActionRepository,
   RegulatoryRequirementRepository,
   RegulatorySourceRepository,
   RequirementRepository,
@@ -219,6 +222,51 @@ export const localObligationEvidenceMappingRepository: ObligationEvidenceMapping
   },
   async deleteMapping(id) {
     await storage.deleteObligationEvidenceMapping(id);
+  },
+};
+
+export const localGovernancePolicyRepository: GovernancePolicyRepository = {
+  async getPolicies() {
+    return storage.getGovernancePolicies();
+  },
+  async createPolicy(data) {
+    return storage.saveGovernancePolicy(data);
+  },
+  async updatePolicy(id, data) {
+    return storage.saveGovernancePolicy({ ...data, id });
+  },
+  async deletePolicy(id) {
+    await storage.deleteGovernancePolicy(id);
+  },
+};
+
+export const localGovernanceFindingRepository: GovernanceFindingRepository = {
+  async getFindings() {
+    return storage.getGovernanceFindings();
+  },
+  async createFinding(data) {
+    return storage.saveGovernanceFinding(data);
+  },
+  async updateFinding(id, data) {
+    return storage.saveGovernanceFinding({ ...data, id });
+  },
+  async deleteFinding(id) {
+    await storage.deleteGovernanceFinding(id);
+  },
+};
+
+export const localRecommendedActionRepository: RecommendedActionRepository = {
+  async getActions() {
+    return storage.getRecommendedActions();
+  },
+  async createAction(data) {
+    return storage.saveRecommendedAction(data);
+  },
+  async updateAction(id, data) {
+    return storage.saveRecommendedAction({ ...data, id });
+  },
+  async deleteAction(id) {
+    await storage.deleteRecommendedAction(id);
   },
 };
 

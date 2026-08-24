@@ -13,6 +13,7 @@ import {
   calculateAssetGovernanceScore,
   getAssets,
   getAuditLogs,
+  getAllGovernanceOutcomes,
   getAllPackGaps,
   getAllSourceGaps,
   getCompliancePacks,
@@ -20,7 +21,10 @@ import {
   getEvidence,
   getEvidenceRecords,
   getFindings,
+  getGovernanceFindings,
   getGovernanceMetrics,
+  getGovernancePolicies,
+  getRecommendedActions,
   getPackCoverage,
   getRegulatoryRequirementCoverage,
   getRegulatoryRequirements,
@@ -231,6 +235,50 @@ export function getRegulatoryReadinessOverview(): RegulatoryReadinessOverview {
     coveredRequirementsCount: getRegulatoryRequirements().filter(r => getRegulatoryRequirementCoverage(r.id)?.status === 'Covered').length,
     openGapsCount: gaps.length,
     topGaps: gaps.slice(0, 5).map(g => ({ sourceName: g.sourceName, gapType: g.gapType, detail: g.detail })),
+  };
+}
+
+/** Release 7 — Governance Intelligence Engine (Foundation Edition). Recommendations only, no scoring. */
+export interface GovernanceIntelligenceOverview {
+  activePoliciesCount: number;
+  openFindingsCount: number;
+  recommendedReviewsCount: number;
+  recommendedReassessmentsCount: number;
+  escalationsCount: number;
+}
+
+export function getGovernanceIntelligenceOverview(): GovernanceIntelligenceOverview {
+  const outcomes = getAllGovernanceOutcomes();
+
+  return {
+    activePoliciesCount: getGovernancePolicies().filter(p => p.status === 'Active').length,
+    openFindingsCount: getGovernanceFindings().filter(f => f.status === 'Open' || f.status === 'Under Review').length,
+    recommendedReviewsCount: outcomes.filter(o => o.status === 'Review Required').length,
+    recommendedReassessmentsCount: outcomes.filter(o => o.status === 'Reassessment Recommended').length,
+    escalationsCount: outcomes.filter(o => o.status === 'Escalation Recommended').length,
+  };
+}
+
+/** Release 8 — Governance Intelligence Engine (Actions Edition). Recommendation counts only, no scoring. */
+export interface GovernanceActionsOverview {
+  recommendedReviewsCount: number;
+  recommendedReassessmentsCount: number;
+  recommendedReauthorizationsCount: number;
+  escalationsCount: number;
+  actionCompletionStatus: { completed: number; total: number };
+}
+
+export function getGovernanceActionsOverview(): GovernanceActionsOverview {
+  const outcomes = getAllGovernanceOutcomes();
+  const actions = getRecommendedActions();
+  const nonTerminal = (a: { status: string }) => a.status !== 'Rejected' && a.status !== 'Completed';
+
+  return {
+    recommendedReviewsCount: outcomes.filter(o => o.status === 'Review Required').length,
+    recommendedReassessmentsCount: outcomes.filter(o => o.status === 'Reassessment Recommended').length,
+    recommendedReauthorizationsCount: actions.filter(a => a.actionType === 'Reauthorization' && nonTerminal(a)).length,
+    escalationsCount: outcomes.filter(o => o.status === 'Escalation Recommended').length,
+    actionCompletionStatus: { completed: actions.filter(a => a.status === 'Completed').length, total: actions.length },
   };
 }
 

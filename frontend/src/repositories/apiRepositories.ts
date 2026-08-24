@@ -18,11 +18,14 @@ import type {
   EvidenceMappingRepository,
   EvidenceRepository,
   GovernanceData,
+  GovernanceFindingRepository,
+  GovernancePolicyRepository,
   GovernanceRecordKind,
   GovernanceRepository,
   ObligationControlRepository,
   ObligationEvidenceMappingRepository,
   ObligationRepository,
+  RecommendedActionRepository,
   RegulatoryRequirementRepository,
   RegulatorySourceRepository,
   RequirementRepository,
@@ -32,12 +35,15 @@ import type {
   CompliancePack,
   ComplianceRequirement,
   EvidenceMapping,
+  GovernanceFinding,
+  GovernancePolicy,
   GovernanceReauthorizationRecord,
   Obligation,
   ObligationControl,
   ObligationEvidenceMapping,
   PackControl,
   ReassessmentTrigger,
+  RecommendedAction,
   RegulatoryRequirement,
   RegulatorySource,
   ScheduledReview,
@@ -543,6 +549,146 @@ export const apiObligationEvidenceMappingRepository: ObligationEvidenceMappingRe
   },
   async deleteMapping(id) {
     await apiRequest<void>(`/obligation-evidence-mappings/${id}`, { method: 'DELETE' });
+  },
+};
+
+// --- RELEASE 7 — GOVERNANCE INTELLIGENCE ENGINE (FOUNDATION) ---
+
+function policyToBackend(data: Partial<GovernancePolicy>) {
+  const body: Record<string, unknown> = { ...data };
+  if (data.severity) body.severity = enumMaps.governancePolicySeverity.toBackend(data.severity);
+  if (data.status) body.status = enumMaps.governancePolicyStatus.toBackend(data.status);
+  if (data.triggerCondition) body.triggerCondition = enumMaps.governanceConditionType.toBackend(data.triggerCondition);
+  delete body.obligationName;
+  return body;
+}
+
+function policyFromBackend(row: any, obligationName = ''): GovernancePolicy {
+  return {
+    id: row.id,
+    name: row.name,
+    description: row.description,
+    category: row.category,
+    severity: enumMaps.governancePolicySeverity.toFrontend(row.severity),
+    status: enumMaps.governancePolicyStatus.toFrontend(row.status),
+    triggerCondition: enumMaps.governanceConditionType.toFrontend(row.triggerCondition),
+    obligationId: row.obligationId || undefined,
+    obligationName: row.obligationId ? obligationName : undefined,
+    linkedControlIds: row.linkedControlIds || [],
+  };
+}
+
+function findingToBackend(data: Partial<GovernanceFinding>) {
+  const body: Record<string, unknown> = { ...data };
+  delete body.assetName;
+  delete body.policyName;
+  if (data.severity) body.severity = enumMaps.governancePolicySeverity.toBackend(data.severity);
+  if (data.status) body.status = enumMaps.governanceFindingStatus.toBackend(data.status);
+  if (data.conditionType) body.conditionType = enumMaps.governanceConditionType.toBackend(data.conditionType);
+  if (data.createdDate) body.createdDate = new Date(data.createdDate).toISOString();
+  if (data.resolutionDate) body.resolutionDate = new Date(data.resolutionDate).toISOString();
+  return body;
+}
+
+function findingFromBackend(row: any, assetName = '', policyName = ''): GovernanceFinding {
+  return {
+    id: row.id,
+    assetId: row.assetId,
+    assetName,
+    policyId: row.policyId,
+    policyName,
+    conditionType: enumMaps.governanceConditionType.toFrontend(row.conditionType),
+    severity: enumMaps.governancePolicySeverity.toFrontend(row.severity),
+    status: enumMaps.governanceFindingStatus.toFrontend(row.status),
+    detail: row.detail,
+    createdDate: String(row.createdDate).split('T')[0],
+    resolutionDate: row.resolutionDate ? String(row.resolutionDate).split('T')[0] : undefined,
+    resolutionNotes: row.resolutionNotes || undefined,
+  };
+}
+
+export const apiGovernancePolicyRepository: GovernancePolicyRepository = {
+  async getPolicies() {
+    const rows = await apiRequest<any[]>('/governance-policies');
+    return rows.map(r => policyFromBackend(r));
+  },
+  async createPolicy(data) {
+    const row = await apiRequest<any>('/governance-policies', { method: 'POST', body: JSON.stringify(policyToBackend(data)) });
+    return policyFromBackend(row, data.obligationName);
+  },
+  async updatePolicy(id, data) {
+    const row = await apiRequest<any>(`/governance-policies/${id}`, { method: 'PATCH', body: JSON.stringify(policyToBackend(data)) });
+    return policyFromBackend(row, data.obligationName);
+  },
+  async deletePolicy(id) {
+    await apiRequest<void>(`/governance-policies/${id}`, { method: 'DELETE' });
+  },
+};
+
+export const apiGovernanceFindingRepository: GovernanceFindingRepository = {
+  async getFindings() {
+    const rows = await apiRequest<any[]>('/governance-findings');
+    return rows.map(r => findingFromBackend(r));
+  },
+  async createFinding(data) {
+    const row = await apiRequest<any>('/governance-findings', { method: 'POST', body: JSON.stringify(findingToBackend(data)) });
+    return findingFromBackend(row, data.assetName, data.policyName);
+  },
+  async updateFinding(id, data) {
+    const row = await apiRequest<any>(`/governance-findings/${id}`, { method: 'PATCH', body: JSON.stringify(findingToBackend(data)) });
+    return findingFromBackend(row, data.assetName, data.policyName);
+  },
+  async deleteFinding(id) {
+    await apiRequest<void>(`/governance-findings/${id}`, { method: 'DELETE' });
+  },
+};
+
+// --- RELEASE 8 — GOVERNANCE INTELLIGENCE ENGINE (ACTIONS EDITION) ---
+
+function actionToBackend(data: Partial<RecommendedAction>) {
+  const body: Record<string, unknown> = { ...data };
+  delete body.assetName;
+  delete body.policyName;
+  if (data.actionType) body.actionType = enumMaps.recommendedActionType.toBackend(data.actionType);
+  if (data.priority) body.priority = enumMaps.recommendedActionPriority.toBackend(data.priority);
+  if (data.status) body.status = enumMaps.recommendedActionStatus.toBackend(data.status);
+  if (data.dueDate) body.dueDate = new Date(data.dueDate).toISOString();
+  return body;
+}
+
+function actionFromBackend(row: any, assetName = '', policyName = ''): RecommendedAction {
+  return {
+    id: row.id,
+    actionType: enumMaps.recommendedActionType.toFrontend(row.actionType),
+    name: row.name,
+    description: row.description,
+    assetId: row.assetId,
+    assetName,
+    policyId: row.policyId || undefined,
+    policyName: row.policyId ? policyName : undefined,
+    findingId: row.findingId || undefined,
+    priority: enumMaps.recommendedActionPriority.toFrontend(row.priority),
+    owner: row.owner || undefined,
+    dueDate: row.dueDate ? String(row.dueDate).split('T')[0] : undefined,
+    status: enumMaps.recommendedActionStatus.toFrontend(row.status),
+  };
+}
+
+export const apiRecommendedActionRepository: RecommendedActionRepository = {
+  async getActions() {
+    const rows = await apiRequest<any[]>('/recommended-actions');
+    return rows.map(r => actionFromBackend(r));
+  },
+  async createAction(data) {
+    const row = await apiRequest<any>('/recommended-actions', { method: 'POST', body: JSON.stringify(actionToBackend(data)) });
+    return actionFromBackend(row, data.assetName, data.policyName);
+  },
+  async updateAction(id, data) {
+    const row = await apiRequest<any>(`/recommended-actions/${id}`, { method: 'PATCH', body: JSON.stringify(actionToBackend(data)) });
+    return actionFromBackend(row, data.assetName, data.policyName);
+  },
+  async deleteAction(id) {
+    await apiRequest<void>(`/recommended-actions/${id}`, { method: 'DELETE' });
   },
 };
 

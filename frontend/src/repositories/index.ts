@@ -14,10 +14,13 @@ import {
   localControlRepository,
   localEvidenceMappingRepository,
   localEvidenceRepository,
+  localGovernanceFindingRepository,
+  localGovernancePolicyRepository,
   localGovernanceRepository,
   localObligationControlRepository,
   localObligationEvidenceMappingRepository,
   localObligationRepository,
+  localRecommendedActionRepository,
   localRegulatoryRequirementRepository,
   localRegulatorySourceRepository,
   localRequirementRepository,
@@ -28,10 +31,13 @@ import {
   apiControlRepository,
   apiEvidenceMappingRepository,
   apiEvidenceRepository,
+  apiGovernanceFindingRepository,
+  apiGovernancePolicyRepository,
   apiGovernanceRepository,
   apiObligationControlRepository,
   apiObligationEvidenceMappingRepository,
   apiObligationRepository,
+  apiRecommendedActionRepository,
   apiRegulatoryRequirementRepository,
   apiRegulatorySourceRepository,
   apiRequirementRepository,
@@ -42,10 +48,13 @@ import type {
   ControlRepository,
   EvidenceMappingRepository,
   EvidenceRepository,
+  GovernanceFindingRepository,
+  GovernancePolicyRepository,
   GovernanceRepository,
   ObligationControlRepository,
   ObligationEvidenceMappingRepository,
   ObligationRepository,
+  RecommendedActionRepository,
   RegulatoryRequirementRepository,
   RegulatorySourceRepository,
   RequirementRepository,
@@ -135,5 +144,29 @@ export {
   localObligationControlRepository,
   localObligationEvidenceMappingRepository,
 };
+
+/**
+ * Release 7 — Governance Intelligence Engine. Api-first from day one, same
+ * reasoning as Release 6's factories above.
+ */
+export function getGovernancePolicyRepository(): GovernancePolicyRepository {
+  return apiGovernancePolicyRepository;
+}
+
+export function getGovernanceFindingRepository(): GovernanceFindingRepository {
+  return apiGovernanceFindingRepository;
+}
+
+export { localGovernancePolicyRepository, localGovernanceFindingRepository };
+
+/**
+ * Release 8 — Governance Intelligence Engine (Actions Edition). Api-first
+ * from day one, same reasoning as Release 6/7's factories above.
+ */
+export function getRecommendedActionRepository(): RecommendedActionRepository {
+  return apiRecommendedActionRepository;
+}
+
+export { localRecommendedActionRepository };
 
 export * from './types';

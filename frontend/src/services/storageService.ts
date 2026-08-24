@@ -41,7 +41,13 @@ import type {
   RegulatoryRequirement,
   Obligation,
   ObligationControl,
-  ObligationEvidenceMapping
+  ObligationEvidenceMapping,
+  GovernancePolicy,
+  GovernanceFinding,
+  GovernanceCondition,
+  GovernancePolicyViolation,
+  GovernanceOutcome,
+  RecommendedAction
 } from '../types';
 import {
   INITIAL_ASSETS,
@@ -70,7 +76,10 @@ import {
   INITIAL_REGULATORY_REQUIREMENTS,
   INITIAL_OBLIGATIONS,
   INITIAL_OBLIGATION_CONTROLS,
-  INITIAL_OBLIGATION_EVIDENCE_MAPPINGS
+  INITIAL_OBLIGATION_EVIDENCE_MAPPINGS,
+  INITIAL_GOVERNANCE_POLICIES,
+  INITIAL_GOVERNANCE_FINDINGS,
+  INITIAL_RECOMMENDED_ACTIONS
 } from './mockData';
 import { getAuthorityMatrixEntry, defaultAuthorityProfile, authorityProfileCompleteness } from '../config/governanceAuthority';
 import { defaultGovernanceState } from '../config/governanceContinuity';
@@ -89,6 +98,12 @@ import {
   computeObligationCoverage,
   computeSourceGaps,
 } from '../config/regulatoryKnowledgeEngine';
+import {
+  detectGovernanceConditions,
+  evaluatePolicyViolations,
+  computeGovernanceOutcome,
+} from '../config/governanceReasoningEngine';
+import { generateActionDrafts } from '../config/governanceActionsEngine';
 import { apiAssetRepository, apiEvidenceRepository, apiGovernanceRepository } from '../repositories/apiRepositories';
 import {
   apiCompliancePackRepository,
@@ -100,6 +115,9 @@ import {
   apiObligationRepository,
   apiObligationControlRepository,
   apiObligationEvidenceMappingRepository,
+  apiGovernancePolicyRepository,
+  apiGovernanceFindingRepository,
+  apiRecommendedActionRepository,
 } from '../repositories/apiRepositories';
 
 /**
@@ -152,6 +170,9 @@ const STORAGE_KEYS = {
   OBLIGATIONS: 'omg_obligations_v7',
   OBLIGATION_CONTROLS: 'omg_obligation_controls_v7',
   OBLIGATION_EVIDENCE_MAPPINGS: 'omg_obligation_evidence_mappings_v7',
+  GOVERNANCE_POLICIES: 'omg_governance_policies_v7',
+  GOVERNANCE_FINDINGS: 'omg_governance_findings_v7',
+  RECOMMENDED_ACTIONS: 'omg_recommended_actions_v7',
 };
 
 function getItem<T>(key: string, defaultData: T): T {
@@ -2363,6 +2384,296 @@ export function getAllSourceGaps() {
   return regulatorySourcesCache.flatMap(s => getSourceGapsForSource(s.id));
 }
 
+// --- RELEASE 7 — GOVERNANCE INTELLIGENCE ENGINE (FOUNDATION) ---
+// Policy -> Condition -> Violation -> Finding -> Outcome. Policies and
+// Findings are genuinely persisted (Neon-backed, cache-then-network, same as
+// every Release 6 object); Conditions, Violations and Outcomes are computed
+// live from real governance data on every read — detection and
+// recommendation only, never automatic state changes.
+
+let governancePoliciesCache: GovernancePolicy[] = getItem<GovernancePolicy[]>(STORAGE_KEYS.GOVERNANCE_POLICIES, INITIAL_GOVERNANCE_POLICIES);
+let governanceFindingsCache: GovernanceFinding[] = getItem<GovernanceFinding[]>(STORAGE_KEYS.GOVERNANCE_FINDINGS, INITIAL_GOVERNANCE_FINDINGS);
+
+function persistGovernancePoliciesCache() { setItem(STORAGE_KEYS.GOVERNANCE_POLICIES, governancePoliciesCache); }
+function persistGovernanceFindingsCache() { setItem(STORAGE_KEYS.GOVERNANCE_FINDINGS, governanceFindingsCache); }
+
+export function getGovernancePolicies(): GovernancePolicy[] {
+  return governancePoliciesCache;
+}
+
+export async function saveGovernancePolicy(data: Partial<GovernancePolicy>): Promise<GovernancePolicy> {
+  const obligation = data.obligationId ? obligationsCache.find(o => o.id === data.obligationId) : undefined;
+
+  if (data.id) {
+    const idx = governancePoliciesCache.findIndex(p => p.id === data.id);
+    if (idx !== -1) {
+      const updated: GovernancePolicy = { ...governancePoliciesCache[idx], ...data, obligationName: obligation?.name ?? governancePoliciesCache[idx].obligationName };
+      governancePoliciesCache = [...governancePoliciesCache];
+      governancePoliciesCache[idx] = updated;
+      persistGovernancePoliciesCache();
+
+      addAuditLog('usr-2', 'David Chen', 'GOVERNANCE_ADMIN', 'GOVERNANCE_POLICY_UPDATED', 'Policy', updated.id, updated.name, `Updated governance policy ${updated.name}`);
+
+      const saved = await apiGovernancePolicyRepository.updatePolicy(updated.id, updated);
+      const reconciled = { ...saved, obligationName: updated.obligationName };
+      const i2 = governancePoliciesCache.findIndex(p => p.id === updated.id);
+      if (i2 !== -1) { governancePoliciesCache = [...governancePoliciesCache]; governancePoliciesCache[i2] = reconciled; persistGovernancePoliciesCache(); }
+      return reconciled;
+    }
+  }
+
+  const draftPolicy: GovernancePolicy = {
+    id: data.id || `POL-${Date.now().toString().slice(-6)}`,
+    name: data.name || 'New Governance Policy',
+    description: data.description || '',
+    category: data.category || 'General',
+    severity: data.severity || 'Medium',
+    status: data.status || 'Draft',
+    triggerCondition: data.triggerCondition || 'Missing Owner',
+    obligationId: data.obligationId,
+    obligationName: obligation?.name,
+    linkedControlIds: data.linkedControlIds || [],
+  };
+
+  governancePoliciesCache = [draftPolicy, ...governancePoliciesCache];
+  persistGovernancePoliciesCache();
+  addAuditLog('usr-2', 'David Chen', 'GOVERNANCE_ADMIN', 'GOVERNANCE_POLICY_CREATED', 'Policy', draftPolicy.id, draftPolicy.name, `Registered governance policy ${draftPolicy.name}`);
+
+  const created = { ...(await apiGovernancePolicyRepository.createPolicy(draftPolicy)), obligationName: draftPolicy.obligationName };
+  governancePoliciesCache = governancePoliciesCache.map(p => (p.id === draftPolicy.id ? created : p));
+  persistGovernancePoliciesCache();
+  return created;
+}
+
+export async function deleteGovernancePolicy(id: string): Promise<void> {
+  const target = governancePoliciesCache.find(p => p.id === id);
+  if (!target) return;
+
+  governancePoliciesCache = governancePoliciesCache.filter(p => p.id !== id);
+  persistGovernancePoliciesCache();
+  governanceFindingsCache = governanceFindingsCache.filter(f => f.policyId !== id);
+  persistGovernanceFindingsCache();
+
+  addAuditLog('usr-1', 'Sarah Jenkins', 'SUPER_ADMIN', 'GOVERNANCE_POLICY_DELETED', 'Policy', id, target.name, `Deleted governance policy ${target.name}`);
+
+  await apiGovernancePolicyRepository.deletePolicy(id);
+}
+
+export function getGovernanceFindings(): GovernanceFinding[] {
+  return governanceFindingsCache;
+}
+
+export function getGovernanceFindingsForAsset(assetId: string): GovernanceFinding[] {
+  return governanceFindingsCache.filter(f => f.assetId === assetId);
+}
+
+export async function saveGovernanceFinding(data: Partial<GovernanceFinding>): Promise<GovernanceFinding> {
+  const asset = data.assetId ? assetsCache.find(a => a.id === data.assetId) : undefined;
+  const policy = data.policyId ? governancePoliciesCache.find(p => p.id === data.policyId) : undefined;
+
+  if (data.id) {
+    const idx = governanceFindingsCache.findIndex(f => f.id === data.id);
+    if (idx !== -1) {
+      const updated: GovernanceFinding = {
+        ...governanceFindingsCache[idx],
+        ...data,
+        assetName: asset?.name ?? governanceFindingsCache[idx].assetName,
+        policyName: policy?.name ?? governanceFindingsCache[idx].policyName,
+      };
+      governanceFindingsCache = [...governanceFindingsCache];
+      governanceFindingsCache[idx] = updated;
+      persistGovernanceFindingsCache();
+
+      const saved = await apiGovernanceFindingRepository.updateFinding(updated.id, updated);
+      const reconciled = { ...saved, assetName: updated.assetName, policyName: updated.policyName };
+      const i2 = governanceFindingsCache.findIndex(f => f.id === updated.id);
+      if (i2 !== -1) { governanceFindingsCache = [...governanceFindingsCache]; governanceFindingsCache[i2] = reconciled; persistGovernanceFindingsCache(); }
+      return reconciled;
+    }
+  }
+
+  const now = new Date().toISOString().split('T')[0];
+  const draftFinding: GovernanceFinding = {
+    id: `local-finding-${Date.now()}`,
+    assetId: data.assetId || '',
+    assetName: asset?.name || 'AI Asset',
+    policyId: data.policyId || '',
+    policyName: policy?.name || 'Unassigned Policy',
+    conditionType: data.conditionType || 'Missing Owner',
+    severity: data.severity || policy?.severity || 'Medium',
+    status: data.status || 'Open',
+    detail: data.detail || '',
+    createdDate: data.createdDate || now,
+    resolutionDate: data.resolutionDate,
+    resolutionNotes: data.resolutionNotes,
+  };
+
+  governanceFindingsCache = [draftFinding, ...governanceFindingsCache];
+  persistGovernanceFindingsCache();
+  addAuditLog('usr-2', 'David Chen', 'GOVERNANCE_ADMIN', 'GOVERNANCE_FINDING_CREATED', 'Policy', draftFinding.id, draftFinding.policyName, `Finding raised for ${draftFinding.assetName}: ${draftFinding.conditionType}`);
+
+  const { id: _draftId, ...payload } = draftFinding;
+  const created = { ...(await apiGovernanceFindingRepository.createFinding(payload)), assetName: draftFinding.assetName, policyName: draftFinding.policyName };
+  governanceFindingsCache = governanceFindingsCache.map(f => (f.id === draftFinding.id ? created : f));
+  persistGovernanceFindingsCache();
+  return created;
+}
+
+export async function deleteGovernanceFinding(id: string): Promise<void> {
+  const target = governanceFindingsCache.find(f => f.id === id);
+  if (!target) return;
+
+  governanceFindingsCache = governanceFindingsCache.filter(f => f.id !== id);
+  persistGovernanceFindingsCache();
+
+  await apiGovernanceFindingRepository.deleteFinding(id);
+}
+
+/** Objective 2 — Condition Engine, computed live. */
+export function getGovernanceConditionsForAsset(assetId: string): GovernanceCondition[] {
+  const asset = assetsCache.find(a => a.id === assetId);
+  if (!asset) return [];
+  return detectGovernanceConditions(
+    asset,
+    evidenceCache.filter(e => e.assetId === assetId),
+    reviewsCache.filter(r => r.assetId === assetId),
+    getValidations().filter(v => v.assetId === assetId),
+    reauthorizationsCache.filter(r => r.assetId === assetId)
+  );
+}
+
+export function getAllGovernanceConditions(): GovernanceCondition[] {
+  return assetsCache.flatMap(a => getGovernanceConditionsForAsset(a.id));
+}
+
+/** Objective 3 — Governance Rule Engine, computed live. */
+export function getPolicyViolationsForAsset(assetId: string): GovernancePolicyViolation[] {
+  return evaluatePolicyViolations(governancePoliciesCache, getGovernanceConditionsForAsset(assetId));
+}
+
+export function getAllPolicyViolations(): GovernancePolicyViolation[] {
+  return evaluatePolicyViolations(governancePoliciesCache, getAllGovernanceConditions());
+}
+
+/** Objectives 5 & 6 — Governance Outcome Engine + Explainability, computed live. */
+export function getGovernanceOutcomeForAsset(assetId: string): GovernanceOutcome | null {
+  const asset = assetsCache.find(a => a.id === assetId);
+  if (!asset) return null;
+  return computeGovernanceOutcome(asset, getGovernanceConditionsForAsset(assetId), getPolicyViolationsForAsset(assetId), getGovernanceFindingsForAsset(assetId));
+}
+
+export function getAllGovernanceOutcomes(): GovernanceOutcome[] {
+  return assetsCache.map(a => computeGovernanceOutcome(a, getGovernanceConditionsForAsset(a.id), getPolicyViolationsForAsset(a.id), getGovernanceFindingsForAsset(a.id)));
+}
+
+// --- RELEASE 8 — GOVERNANCE INTELLIGENCE ENGINE (ACTIONS EDITION) ---
+// The bridge between Governance Intelligence and Governance Execution:
+// Outcome -> Recommended Action, with a human Accept / Reject / Defer
+// decision layer. Recommendation-driven, not automation-driven — nothing
+// here executes automatically. Recommended Actions are persisted (Neon,
+// cache-then-network, same as Policies/Findings); the drafts that produce
+// them (governanceActionsEngine.ts) are computed live.
+
+let recommendedActionsCache: RecommendedAction[] = getItem<RecommendedAction[]>(STORAGE_KEYS.RECOMMENDED_ACTIONS, INITIAL_RECOMMENDED_ACTIONS);
+
+function persistRecommendedActionsCache() { setItem(STORAGE_KEYS.RECOMMENDED_ACTIONS, recommendedActionsCache); }
+
+export function getRecommendedActions(): RecommendedAction[] {
+  return recommendedActionsCache;
+}
+
+export function getRecommendedActionsForAsset(assetId: string): RecommendedAction[] {
+  return recommendedActionsCache.filter(a => a.assetId === assetId);
+}
+
+export async function saveRecommendedAction(data: Partial<RecommendedAction>): Promise<RecommendedAction> {
+  const asset = data.assetId ? assetsCache.find(a => a.id === data.assetId) : undefined;
+  const policy = data.policyId ? governancePoliciesCache.find(p => p.id === data.policyId) : undefined;
+
+  if (data.id) {
+    const idx = recommendedActionsCache.findIndex(a => a.id === data.id);
+    if (idx !== -1) {
+      const updated: RecommendedAction = {
+        ...recommendedActionsCache[idx],
+        ...data,
+        assetName: asset?.name ?? recommendedActionsCache[idx].assetName,
+        policyName: policy?.name ?? recommendedActionsCache[idx].policyName,
+      };
+      recommendedActionsCache = [...recommendedActionsCache];
+      recommendedActionsCache[idx] = updated;
+      persistRecommendedActionsCache();
+
+      addAuditLog('usr-2', updated.owner || 'David Chen', 'GOVERNANCE_ADMIN', 'RECOMMENDED_ACTION_UPDATED', 'Policy', updated.id, updated.name, `Updated recommended action ${updated.name} for ${updated.assetName}: ${updated.status}`);
+
+      const saved = await apiRecommendedActionRepository.updateAction(updated.id, updated);
+      const reconciled = { ...saved, assetName: updated.assetName, policyName: updated.policyName };
+      const i2 = recommendedActionsCache.findIndex(a => a.id === updated.id);
+      if (i2 !== -1) { recommendedActionsCache = [...recommendedActionsCache]; recommendedActionsCache[i2] = reconciled; persistRecommendedActionsCache(); }
+      return reconciled;
+    }
+  }
+
+  const draftAction: RecommendedAction = {
+    id: `local-action-${Date.now()}`,
+    actionType: data.actionType || 'Review',
+    name: data.name || 'New Recommended Action',
+    description: data.description || '',
+    assetId: data.assetId || '',
+    assetName: asset?.name || 'AI Asset',
+    policyId: data.policyId,
+    policyName: policy?.name,
+    findingId: data.findingId,
+    priority: data.priority || 'Medium',
+    owner: data.owner,
+    dueDate: data.dueDate,
+    status: data.status || 'Open',
+  };
+
+  recommendedActionsCache = [draftAction, ...recommendedActionsCache];
+  persistRecommendedActionsCache();
+  addAuditLog('usr-2', 'David Chen', 'GOVERNANCE_ADMIN', 'RECOMMENDED_ACTION_CREATED', 'Policy', draftAction.id, draftAction.name, `Recommended action raised for ${draftAction.assetName}: ${draftAction.name}`);
+
+  const { id: _draftId, ...payload } = draftAction;
+  const created = { ...(await apiRecommendedActionRepository.createAction(payload)), assetName: draftAction.assetName, policyName: draftAction.policyName };
+  recommendedActionsCache = recommendedActionsCache.map(a => (a.id === draftAction.id ? created : a));
+  persistRecommendedActionsCache();
+  return created;
+}
+
+export async function deleteRecommendedAction(id: string): Promise<void> {
+  const target = recommendedActionsCache.find(a => a.id === id);
+  if (!target) return;
+
+  recommendedActionsCache = recommendedActionsCache.filter(a => a.id !== id);
+  persistRecommendedActionsCache();
+
+  await apiRecommendedActionRepository.deleteAction(id);
+}
+
+/**
+ * Objectives 1 & 3 — Recommended Action Engine. Generates only genuinely new
+ * drafts for this asset (skips anything already open/accepted/in-progress
+ * against the same finding, or of the same outcome-driven action type),
+ * then persists them — mirroring "Generate Findings from Violations" from
+ * Release 7's reasoning engine one link further down the chain.
+ */
+export async function generateRecommendedActionsForAsset(assetId: string): Promise<RecommendedAction[]> {
+  const asset = assetsCache.find(a => a.id === assetId);
+  if (!asset) return [];
+
+  const findings = getGovernanceFindingsForAsset(assetId);
+  const outcome = getGovernanceOutcomeForAsset(assetId);
+  const drafts = generateActionDrafts(asset, findings, outcome);
+
+  const activeActions = getRecommendedActionsForAsset(assetId).filter(a => a.status !== 'Rejected' && a.status !== 'Completed');
+  const activeFindingKeys = new Set(activeActions.filter(a => a.findingId).map(a => a.findingId));
+  const activeOutcomeActionTypes = new Set(activeActions.filter(a => !a.findingId).map(a => a.actionType));
+
+  const newDrafts = drafts.filter(d => (d.findingId ? !activeFindingKeys.has(d.findingId) : !activeOutcomeActionTypes.has(d.actionType)));
+
+  return Promise.all(newDrafts.map(d => saveRecommendedAction(d)));
+}
+
 export function getCorrectiveActions(): CorrectiveAction[] {
   return getItem<CorrectiveAction[]>(STORAGE_KEYS.CORRECTIVE_ACTIONS, INITIAL_CORRECTIVE_ACTIONS);
 }
@@ -2652,6 +2963,16 @@ export function getGovernanceMetrics(): GovernanceMetrics {
     sourceCoverageBreakdown: { 'Covered': 0, 'Partially Covered': 0, 'Not Covered': 0, 'Not Applicable': 0 },
     totalRegulatoryGapsCount: getAllSourceGaps().length,
     topMissingControls: [],
+    openGovernanceFindingsCount: 0,
+    findingsBySeverity: { 'Low': 0, 'Medium': 0, 'High': 0, 'Critical': 0 },
+    topTriggeredPolicies: [],
+    assetsRequiringAttentionCount: 0,
+    recommendedReviewsCount: 0,
+    openActionsCount: 0,
+    highPriorityActionsCount: 0,
+    overdueActionsCount: 0,
+    actionsByStatus: { 'Open': 0, 'Accepted': 0, 'Deferred': 0, 'Rejected': 0, 'In Progress': 0, 'Completed': 0 },
+    actionsByOwner: [],
   };
 
   getCompliancePacks().forEach(pack => {
@@ -2676,6 +2997,33 @@ export function getGovernanceMetrics(): GovernanceMetrics {
       const requirement = getRegulatoryRequirements().find(r => r.id === g.requirementId);
       return { name: obligation?.name || requirement?.name || 'Unnamed Requirement', requirementName: requirement?.name || '' };
     });
+
+  const openFindings = getGovernanceFindings().filter(f => f.status === 'Open' || f.status === 'Under Review');
+  metrics.openGovernanceFindingsCount = openFindings.length;
+  openFindings.forEach(f => { metrics.findingsBySeverity[f.severity]++; });
+
+  const violationCountsByPolicy = new Map<string, { policyName: string; count: number }>();
+  getAllPolicyViolations().forEach(v => {
+    const entry = violationCountsByPolicy.get(v.policyId) || { policyName: v.policyName, count: 0 };
+    entry.count++;
+    violationCountsByPolicy.set(v.policyId, entry);
+  });
+  metrics.topTriggeredPolicies = Array.from(violationCountsByPolicy.values()).sort((a, b) => b.count - a.count).slice(0, 5);
+
+  const outcomes = getAllGovernanceOutcomes();
+  metrics.assetsRequiringAttentionCount = outcomes.filter(o => o.status !== 'Compliant').length;
+  metrics.recommendedReviewsCount = outcomes.filter(o => o.status === 'Review Required').length;
+
+  const allActions = getRecommendedActions();
+  const nonTerminalActions = allActions.filter(a => a.status !== 'Rejected' && a.status !== 'Completed');
+  metrics.openActionsCount = allActions.filter(a => a.status === 'Open').length;
+  metrics.highPriorityActionsCount = nonTerminalActions.filter(a => a.priority === 'High' || a.priority === 'Critical').length;
+  const today = new Date();
+  metrics.overdueActionsCount = nonTerminalActions.filter(a => a.dueDate && new Date(a.dueDate) < today).length;
+  allActions.forEach(a => { metrics.actionsByStatus[a.status]++; });
+  const actionCountsByOwner = new Map<string, number>();
+  nonTerminalActions.filter(a => a.owner).forEach(a => { actionCountsByOwner.set(a.owner!, (actionCountsByOwner.get(a.owner!) || 0) + 1); });
+  metrics.actionsByOwner = Array.from(actionCountsByOwner.entries()).map(([owner, count]) => ({ owner, count })).sort((a, b) => b.count - a.count);
 
   let totalGaps = 0;
   assets.forEach(asset => {
@@ -2774,6 +3122,9 @@ export function bootstrapPersistence(options?: { force?: boolean }): Promise<voi
         obligations,
         obligationControls,
         obligationEvidenceMappings,
+        governancePolicies,
+        governanceFindings,
+        recommendedActions,
       ] = await Promise.all([
         apiAssetRepository.getAssets(),
         apiEvidenceRepository.getEvidence(),
@@ -2787,6 +3138,9 @@ export function bootstrapPersistence(options?: { force?: boolean }): Promise<voi
         apiObligationRepository.getObligations(),
         apiObligationControlRepository.getControls(),
         apiObligationEvidenceMappingRepository.getMappings(),
+        apiGovernancePolicyRepository.getPolicies(),
+        apiGovernanceFindingRepository.getFindings(),
+        apiRecommendedActionRepository.getActions(),
       ]);
 
       const assetNameById = new Map(assets.map(a => [a.id, a.name]));
@@ -2844,7 +3198,24 @@ export function bootstrapPersistence(options?: { force?: boolean }): Promise<voi
       }));
       persistObligationEvidenceMappingsCache();
 
-      console.info(`OMG persistence: loaded ${assets.length} assets, ${evidence.length} evidence records, ${compliancePacks.length} compliance packs, ${regulatorySources.length} regulatory sources from Neon.`);
+      governancePoliciesCache = governancePolicies.map(p => ({ ...p, obligationName: p.obligationId ? (obligationNameById.get(p.obligationId) || p.obligationName) : undefined }));
+      persistGovernancePoliciesCache();
+      const policyNameById = new Map(governancePoliciesCache.map(p => [p.id, p.name]));
+      governanceFindingsCache = governanceFindings.map(f => ({
+        ...f,
+        assetName: assetNameById.get(f.assetId) || f.assetName,
+        policyName: policyNameById.get(f.policyId) || f.policyName,
+      }));
+      persistGovernanceFindingsCache();
+
+      recommendedActionsCache = recommendedActions.map(a => ({
+        ...a,
+        assetName: assetNameById.get(a.assetId) || a.assetName,
+        policyName: a.policyId ? (policyNameById.get(a.policyId) || a.policyName) : undefined,
+      }));
+      persistRecommendedActionsCache();
+
+      console.info(`OMG persistence: loaded ${assets.length} assets, ${evidence.length} evidence records, ${compliancePacks.length} compliance packs, ${regulatorySources.length} regulatory sources, ${governancePolicies.length} governance policies, ${recommendedActions.length} recommended actions from Neon.`);
     } catch (err) {
       console.warn('OMG persistence: could not reach the governance API at startup; continuing with cached/local data until the next retry.', err);
       bootstrapPromise = null; // allow a later manual retry (e.g. from Tenant Settings)

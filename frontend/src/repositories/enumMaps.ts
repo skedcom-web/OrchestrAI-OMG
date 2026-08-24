@@ -15,6 +15,10 @@ import type {
   EvidenceRecordType,
   FindingSeverity,
   GovernanceClassification,
+  GovernanceConditionType,
+  GovernanceFindingStatus,
+  GovernancePolicySeverity,
+  GovernancePolicyStatus,
   GovernanceState,
   GovernanceStatus,
   HumanOversightType,
@@ -23,6 +27,9 @@ import type {
   PackControlStatus,
   ReassessmentTriggerStatus,
   ReassessmentTriggerType,
+  RecommendedActionPriority,
+  RecommendedActionStatus,
+  RecommendedActionType,
   RegulatoryRequirementStatus,
   RegulatorySourceStatus,
   RegulatorySourceType,
@@ -166,6 +173,40 @@ const OBLIGATION_CONTROL_STATUS: Record<ObligationControlStatus, string> = {
   'Draft': 'DRAFT', 'Active': 'ACTIVE', 'Retired': 'RETIRED',
 };
 
+const GOVERNANCE_POLICY_SEVERITY: Record<GovernancePolicySeverity, string> = {
+  'Low': 'LOW', 'Medium': 'MEDIUM', 'High': 'HIGH', 'Critical': 'CRITICAL',
+};
+
+const GOVERNANCE_POLICY_STATUS: Record<GovernancePolicyStatus, string> = {
+  'Draft': 'DRAFT', 'Active': 'ACTIVE', 'Retired': 'RETIRED',
+};
+
+const GOVERNANCE_CONDITION_TYPE: Record<GovernanceConditionType, string> = {
+  'Evidence Expired': 'EVIDENCE_EXPIRED',
+  'Review Overdue': 'REVIEW_OVERDUE',
+  'Missing Approval': 'MISSING_APPROVAL',
+  'Missing Owner': 'MISSING_OWNER',
+  'Missing Validation': 'MISSING_VALIDATION',
+  'Missing Reauthorization': 'MISSING_REAUTHORIZATION',
+};
+
+const GOVERNANCE_FINDING_STATUS: Record<GovernanceFindingStatus, string> = {
+  'Open': 'OPEN', 'Under Review': 'UNDER_REVIEW', 'Accepted Risk': 'ACCEPTED_RISK', 'Resolved': 'RESOLVED',
+};
+
+const RECOMMENDED_ACTION_TYPE: Record<RecommendedActionType, string> = {
+  'Review': 'REVIEW', 'Reassessment': 'REASSESSMENT', 'Validation': 'VALIDATION',
+  'Approval': 'APPROVAL', 'Reauthorization': 'REAUTHORIZATION', 'Ownership': 'OWNERSHIP', 'Escalation': 'ESCALATION',
+};
+
+const RECOMMENDED_ACTION_PRIORITY: Record<RecommendedActionPriority, string> = {
+  'Low': 'LOW', 'Medium': 'MEDIUM', 'High': 'HIGH', 'Critical': 'CRITICAL',
+};
+
+const RECOMMENDED_ACTION_STATUS: Record<RecommendedActionStatus, string> = {
+  'Open': 'OPEN', 'Accepted': 'ACCEPTED', 'Deferred': 'DEFERRED', 'Rejected': 'REJECTED', 'In Progress': 'IN_PROGRESS', 'Completed': 'COMPLETED',
+};
+
 export const enumMaps = {
   assetType: { toBackend: toBackend(ASSET_TYPE), toFrontend: toFrontend(ASSET_TYPE) },
   riskLevel: { toBackend: toBackend(RISK_LEVEL), toFrontend: toFrontend(RISK_LEVEL) },
@@ -189,4 +230,11 @@ export const enumMaps = {
   regulatoryRequirementStatus: { toBackend: toBackend(REGULATORY_REQUIREMENT_STATUS), toFrontend: toFrontend(REGULATORY_REQUIREMENT_STATUS) },
   obligationStatus: { toBackend: toBackend(OBLIGATION_STATUS), toFrontend: toFrontend(OBLIGATION_STATUS) },
   obligationControlStatus: { toBackend: toBackend(OBLIGATION_CONTROL_STATUS), toFrontend: toFrontend(OBLIGATION_CONTROL_STATUS) },
+  governancePolicySeverity: { toBackend: toBackend(GOVERNANCE_POLICY_SEVERITY), toFrontend: toFrontend(GOVERNANCE_POLICY_SEVERITY) },
+  governancePolicyStatus: { toBackend: toBackend(GOVERNANCE_POLICY_STATUS), toFrontend: toFrontend(GOVERNANCE_POLICY_STATUS) },
+  governanceConditionType: { toBackend: toBackend(GOVERNANCE_CONDITION_TYPE), toFrontend: toFrontend(GOVERNANCE_CONDITION_TYPE) },
+  governanceFindingStatus: { toBackend: toBackend(GOVERNANCE_FINDING_STATUS), toFrontend: toFrontend(GOVERNANCE_FINDING_STATUS) },
+  recommendedActionType: { toBackend: toBackend(RECOMMENDED_ACTION_TYPE), toFrontend: toFrontend(RECOMMENDED_ACTION_TYPE) },
+  recommendedActionPriority: { toBackend: toBackend(RECOMMENDED_ACTION_PRIORITY), toFrontend: toFrontend(RECOMMENDED_ACTION_PRIORITY) },
+  recommendedActionStatus: { toBackend: toBackend(RECOMMENDED_ACTION_STATUS), toFrontend: toFrontend(RECOMMENDED_ACTION_STATUS) },
 };

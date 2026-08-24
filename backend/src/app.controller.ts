@@ -478,6 +478,107 @@ export class AppController {
     return { deleted: true, id };
   }
 
+  // --- RELEASE 7: GOVERNANCE INTELLIGENCE ENGINE (FOUNDATION) ---
+  @Get('governance-policies')
+  @Roles(
+    'SUPER_ADMIN',
+    'GOVERNANCE_ADMIN',
+    'RISK_OFFICER',
+    'BUSINESS_OWNER',
+    'VALIDATOR',
+    'AUDITOR',
+    'VIEWER',
+  )
+  async getGovernancePolicies() {
+    return this.prisma.governancePolicy.findMany({ orderBy: { createdAt: 'desc' } });
+  }
+
+  @Post('governance-policies')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async createGovernancePolicy(@Body() body: any) {
+    return this.prisma.governancePolicy.create({ data: body });
+  }
+
+  @Patch('governance-policies/:id')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async updateGovernancePolicy(@Param('id') id: string, @Body() body: any) {
+    return this.prisma.governancePolicy.update({ where: { id }, data: body });
+  }
+
+  @Delete('governance-policies/:id')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async deleteGovernancePolicy(@Param('id') id: string) {
+    await this.prisma.governancePolicy.delete({ where: { id } });
+    return { deleted: true, id };
+  }
+
+  @Get('governance-findings')
+  @Roles(
+    'SUPER_ADMIN',
+    'GOVERNANCE_ADMIN',
+    'RISK_OFFICER',
+    'BUSINESS_OWNER',
+    'VALIDATOR',
+    'AUDITOR',
+    'VIEWER',
+  )
+  async getGovernanceFindings() {
+    return this.prisma.governanceFinding.findMany({ orderBy: { createdAt: 'desc' } });
+  }
+
+  @Post('governance-findings')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER')
+  async createGovernanceFinding(@Body() body: any) {
+    return this.prisma.governanceFinding.create({ data: body });
+  }
+
+  @Patch('governance-findings/:id')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER')
+  async updateGovernanceFinding(@Param('id') id: string, @Body() body: any) {
+    return this.prisma.governanceFinding.update({ where: { id }, data: body });
+  }
+
+  @Delete('governance-findings/:id')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async deleteGovernanceFinding(@Param('id') id: string) {
+    await this.prisma.governanceFinding.delete({ where: { id } });
+    return { deleted: true, id };
+  }
+
+  // --- RELEASE 8: GOVERNANCE INTELLIGENCE ENGINE (ACTIONS EDITION) ---
+  @Get('recommended-actions')
+  @Roles(
+    'SUPER_ADMIN',
+    'GOVERNANCE_ADMIN',
+    'RISK_OFFICER',
+    'BUSINESS_OWNER',
+    'VALIDATOR',
+    'AUDITOR',
+    'VIEWER',
+  )
+  async getRecommendedActions() {
+    return this.prisma.recommendedAction.findMany({ orderBy: { createdAt: 'desc' } });
+  }
+
+  @Post('recommended-actions')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER')
+  async createRecommendedAction(@Body() body: any) {
+    return this.prisma.recommendedAction.create({ data: body });
+  }
+
+  @Patch('recommended-actions/:id')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER', 'BUSINESS_OWNER')
+  async updateRecommendedAction(@Param('id') id: string, @Body() body: any) {
+    return this.prisma.recommendedAction.update({ where: { id }, data: body });
+  }
+
+  @Delete('recommended-actions/:id')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async deleteRecommendedAction(@Param('id') id: string) {
+    await this.prisma.recommendedAction.delete({ where: { id } });
+    return { deleted: true, id };
+  }
+
   // --- PHASE 7: CONTINUOUS MONITORING ENDPOINTS ---
   @Get('monitoring/alerts')
   @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER', 'AUDITOR')

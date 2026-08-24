@@ -370,6 +370,22 @@ export const NAV_DOMAINS: NavDomain[] = [
         description: 'Every requirement translated into actionable obligations, browsable across sources.',
         keywords: ['obligation library', 'named owner', 'approval authority', 'escalation'],
       },
+      {
+        path: '/governance-intelligence',
+        label: 'Governance Intelligence',
+        icon: '🧠',
+        description: 'Policy → Condition → Violation → Finding → Outcome, every outcome explainable — governance reasoning, not just governance records.',
+        keywords: ['governance intelligence', 'policy', 'condition', 'finding', 'outcome', 'explainability', 'reasoning'],
+        badge: 'Release 7',
+      },
+      {
+        path: '/governance-actions',
+        label: 'Governance Actions',
+        icon: '🛠️',
+        description: 'Recommended actions raised from governance outcomes — Accept, Reject or Defer. Nothing executes automatically; humans remain accountable.',
+        keywords: ['governance actions', 'recommended action', 'accept', 'reject', 'defer', 'playbook'],
+        badge: 'Release 8',
+      },
     ],
   },
   {

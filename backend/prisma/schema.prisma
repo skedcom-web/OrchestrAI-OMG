@@ -240,6 +240,8 @@ model AIAsset {
   policyViolations      PolicyViolation[]
   changeRequests        ChangeRequest[]
   stateTransitions      StateTransition[]
+  governanceFindings    GovernanceFinding[]
+  recommendedActions    RecommendedAction[]
 
   @@map("ai_assets")
 }
@@ -1052,6 +1054,171 @@ model ObligationEvidenceMapping {
 
   @@unique([controlId, evidenceRecordId])
   @@map("obligation_evidence_mappings")
+}
+
+// ---------------------------------------------------------------------------
+// RELEASE 7 — GOVERNANCE INTELLIGENCE ENGINE (FOUNDATION)
+// Governance reasoning: Policy -> Condition -> Violation -> Finding ->
+// Outcome, with every outcome explainable. Detection and recommendation
+// only — no automatic state changes, no automatic reassessment/escalation
+// (that is Release 8). One engine only: regulation-specific intelligence
+// (RBI/ISO/EU AI Act) stays out of scope, same "foundation, not regulation"
+// discipline as Releases 5 and 6. Named GovernancePolicy/GovernanceFinding
+// (not Policy/Finding) to avoid colliding with the existing Phase 3 Finding
+// and Phase 9 Policy models, which are different, unrelated concepts.
+// Neon is the System of Record from day one, per the blueprint's mandatory
+// production principles — same discipline Release 6 established.
+// ---------------------------------------------------------------------------
+
+enum GovernancePolicySeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum GovernancePolicyStatus {
+  DRAFT
+  ACTIVE
+  RETIRED
+}
+
+/// The condition types the Condition Engine detects (Objective 2) and a
+/// GovernancePolicy's triggerCondition watches for (Objective 3). Detection
+/// only — computed on read from existing governance data, not a table.
+enum GovernanceConditionType {
+  EVIDENCE_EXPIRED
+  REVIEW_OVERDUE
+  MISSING_APPROVAL
+  MISSING_OWNER
+  MISSING_VALIDATION
+  MISSING_REAUTHORIZATION
+}
+
+/// Objective 1 — Policy Registry. "Linked Obligation" and "Linked Controls"
+/// are loose references (ids only, not enforced foreign keys) since a policy
+/// may reference either Release 5's PackControl or Release 6's
+/// ObligationControl — the same loose-reference pattern EvidenceRecord's
+/// traceability fields already use for exactly this reason.
+model GovernancePolicy {
+  id               String                   @id
+  name             String
+  description      String                   @db.Text
+  category         String
+  severity         GovernancePolicySeverity @default(MEDIUM)
+  status           GovernancePolicyStatus   @default(DRAFT)
+  triggerCondition GovernanceConditionType
+  obligationId     String?
+  linkedControlIds String[]
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
+
+  findings           GovernanceFinding[]
+  recommendedActions RecommendedAction[]
+
+  @@map("governance_policies")
+}
+
+enum GovernanceFindingStatus {
+  OPEN
+  UNDER_REVIEW
+  ACCEPTED_RISK
+  RESOLVED
+}
+
+/// Objective 4 — Findings Engine. Unlike Conditions (detected live) and
+/// Outcomes (recommended live), a Finding is a persisted, owned record with
+/// a manually-managed lifecycle — someone accepts risk or resolves it — so
+/// it is Neon-backed like every other governance record in OMG, not
+/// recomputed on every read.
+model GovernanceFinding {
+  id              String                   @id @default(uuid())
+  assetId         String
+  asset           AIAsset                  @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  policyId        String
+  policy          GovernancePolicy         @relation(fields: [policyId], references: [id], onDelete: Cascade)
+  conditionType   GovernanceConditionType
+  severity        GovernancePolicySeverity
+  status          GovernanceFindingStatus  @default(OPEN)
+  detail          String                   @db.Text
+  createdDate     DateTime                 @default(now())
+  resolutionDate  DateTime?
+  resolutionNotes String?                  @db.Text
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+
+  recommendedActions RecommendedAction[]
+
+  @@map("governance_findings")
+}
+
+// ---------------------------------------------------------------------------
+// RELEASE 8 — GOVERNANCE INTELLIGENCE ENGINE (ACTIONS EDITION)
+// The bridge between Governance Intelligence and Governance Execution:
+// ...Outcome -> Recommended Action, with a human Accept/Reject/Defer layer.
+// Recommendation-driven, not automation-driven — nothing here executes
+// automatically or changes an asset's governance state. Action templates
+// (Condition -> tactical action) and the Outcome -> procedural action
+// mapping, plus the three Governance Playbooks, are static reference config
+// (frontend/src/config/governanceActionsEngine.ts), not database rows —
+// they're reusable logic, not tenant data, the same reasoning that keeps
+// Conditions/Violations/Outcomes computed rather than stored in Release 7.
+// ---------------------------------------------------------------------------
+
+enum RecommendedActionType {
+  REVIEW
+  REASSESSMENT
+  VALIDATION
+  APPROVAL
+  REAUTHORIZATION
+  OWNERSHIP
+  ESCALATION
+}
+
+enum RecommendedActionPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum RecommendedActionStatus {
+  OPEN
+  ACCEPTED
+  DEFERRED
+  REJECTED
+  IN_PROGRESS
+  COMPLETED
+}
+
+/// Objective 1 — Recommended Action Engine. Related Policy and Related
+/// Finding are optional: an action generated from an Outcome (Objective 3)
+/// may not trace to one specific finding, only to the asset's overall
+/// recommendation.
+model RecommendedAction {
+  id          String                @id @default(uuid())
+  actionType  RecommendedActionType
+  name        String
+  description String                @db.Text
+
+  assetId String
+  asset   AIAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  policyId String?
+  policy   GovernancePolicy? @relation(fields: [policyId], references: [id], onDelete: SetNull)
+
+  findingId String?
+  finding   GovernanceFinding? @relation(fields: [findingId], references: [id], onDelete: SetNull)
+
+  priority RecommendedActionPriority @default(MEDIUM)
+  owner    String?
+  dueDate  DateTime?
+  status   RecommendedActionStatus   @default(OPEN)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("recommended_actions")
 }
 
 model AuditLog {

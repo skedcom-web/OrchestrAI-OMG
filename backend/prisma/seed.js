@@ -356,12 +356,44 @@ async function seedRegulatoryKnowledge() {
   console.log(`  Regulatory sources: 1, requirements: ${requirements.length}, obligations: ${obligations.length}, controls: ${controls.length}, evidence mappings: ${mappingCount}`);
 }
 
+// Release 7 — Governance Intelligence Engine (Foundation Edition). One
+// policy per condition type the Condition Engine detects, matching the
+// blueprint's four named examples plus two more for full coverage. No
+// findings are seeded — Conditions, Violations and Outcomes are computed
+// live against real asset data, and the Governance Intelligence Workspace
+// generates Findings from whatever violations are actually detected, so a
+// hardcoded finding can never drift from what the engine currently sees.
+async function seedGovernanceIntelligence() {
+  const existingPolicyCount = await prisma.governancePolicy.count();
+  if (existingPolicyCount > 0) {
+    console.log(`Skipping governance intelligence seed — GovernancePolicy already has ${existingPolicyCount} row(s).`);
+    return;
+  }
+
+  console.log('Seeding governance policies...');
+
+  const policies = [
+    { id: 'POL-EVIDENCE-CURRENT', name: 'Evidence Must Be Current', description: 'All evidence supporting a governance decision must be unexpired.', category: 'Evidence', severity: 'HIGH', status: 'ACTIVE', triggerCondition: 'EVIDENCE_EXPIRED', linkedControlIds: [] },
+    { id: 'POL-REVIEW-PERFORMED', name: 'Review Must Be Performed', description: 'Scheduled governance reviews must be completed by their due date.', category: 'Review', severity: 'MEDIUM', status: 'ACTIVE', triggerCondition: 'REVIEW_OVERDUE', linkedControlIds: [] },
+    { id: 'POL-APPROVAL-BEFORE-GO', name: 'Approval Required Before GO', description: 'No AI asset may operate without a recorded GO / CONDITIONAL GO / NO GO decision.', category: 'Decision', severity: 'CRITICAL', status: 'ACTIVE', triggerCondition: 'MISSING_APPROVAL', obligationId: 'obl-approval-authority', linkedControlIds: ['octl-approval-authority'] },
+    { id: 'POL-VALIDATION-REQUIRED', name: 'Independent Validation Required', description: 'AI assets must carry at least one approved independent validation.', category: 'Validation', severity: 'HIGH', status: 'ACTIVE', triggerCondition: 'MISSING_VALIDATION', obligationId: 'obl-validation-signoff', linkedControlIds: ['octl-validation-signoff'] },
+    { id: 'POL-NAMED-OWNERSHIP', name: 'Named Ownership Required', description: 'Every AI asset must have a complete Governance Authority Profile.', category: 'Governance', severity: 'MEDIUM', status: 'ACTIVE', triggerCondition: 'MISSING_OWNER', obligationId: 'obl-named-owner', linkedControlIds: ['octl-authority-profile'] },
+    { id: 'POL-REAUTH-REQUIRED', name: 'Reauthorization Required After Reassessment', description: 'Assets in Reassessment Required must reach a recorded reauthorization decision.', category: 'Continuity', severity: 'CRITICAL', status: 'ACTIVE', triggerCondition: 'MISSING_REAUTHORIZATION', linkedControlIds: [] },
+  ];
+  for (const p of policies) {
+    await prisma.governancePolicy.create({ data: p });
+  }
+
+  console.log(`  Governance policies: ${policies.length}`);
+}
+
 async function main() {
   const existingAssetCount = await prisma.aIAsset.count();
   if (existingAssetCount > 0) {
     console.log(`AIAsset already has ${existingAssetCount} row(s) — skipping asset/evidence/continuity seed.`);
     await seedCompliance();
     await seedRegulatoryKnowledge();
+    await seedGovernanceIntelligence();
     return;
   }
 
@@ -438,6 +470,7 @@ async function main() {
 
   await seedCompliance();
   await seedRegulatoryKnowledge();
+  await seedGovernanceIntelligence();
 
   console.log('Seed complete.');
 }

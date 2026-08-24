@@ -26,7 +26,10 @@ import type {
   RegulatoryRequirement,
   Obligation,
   ObligationControl,
-  ObligationEvidenceMapping
+  ObligationEvidenceMapping,
+  GovernancePolicy,
+  GovernanceFinding,
+  RecommendedAction
 } from '../types';
 
 export const SEEDED_COMPLIANCE_CONTROLS: ComplianceControl[] = [
@@ -1323,3 +1326,93 @@ export const INITIAL_OBLIGATION_EVIDENCE_MAPPINGS: ObligationEvidenceMapping[] =
     evidenceName: 'Credit Scoring Engine — Risk Assessment',
   },
 ];
+
+/**
+ * Release 7 — Governance Intelligence Engine (Foundation Edition). One
+ * policy per Condition Type the Condition Engine detects, matching the
+ * blueprint's own four named examples plus two more for full coverage.
+ * Conditions, Violations and Outcomes are computed live from real asset data
+ * (governanceReasoningEngine.ts) — only Policies and Findings are persisted.
+ * No Findings are seeded: the Governance Intelligence Workspace generates
+ * them from currently-detected violations against real seeded asset data,
+ * so a stale hardcoded finding can never drift from what the engine
+ * actually detects.
+ */
+export const INITIAL_GOVERNANCE_POLICIES: GovernancePolicy[] = [
+  {
+    id: 'POL-EVIDENCE-CURRENT',
+    name: 'Evidence Must Be Current',
+    description: 'All evidence supporting a governance decision must be unexpired.',
+    category: 'Evidence',
+    severity: 'High',
+    status: 'Active',
+    triggerCondition: 'Evidence Expired',
+    linkedControlIds: [],
+  },
+  {
+    id: 'POL-REVIEW-PERFORMED',
+    name: 'Review Must Be Performed',
+    description: 'Scheduled governance reviews must be completed by their due date.',
+    category: 'Review',
+    severity: 'Medium',
+    status: 'Active',
+    triggerCondition: 'Review Overdue',
+    linkedControlIds: [],
+  },
+  {
+    id: 'POL-APPROVAL-BEFORE-GO',
+    name: 'Approval Required Before GO',
+    description: 'No AI asset may operate without a recorded GO / CONDITIONAL GO / NO GO decision.',
+    category: 'Decision',
+    severity: 'Critical',
+    status: 'Active',
+    triggerCondition: 'Missing Approval',
+    obligationId: 'obl-approval-authority',
+    obligationName: 'Approval Authority',
+    linkedControlIds: ['octl-approval-authority'],
+  },
+  {
+    id: 'POL-VALIDATION-REQUIRED',
+    name: 'Independent Validation Required',
+    description: 'AI assets must carry at least one approved independent validation.',
+    category: 'Validation',
+    severity: 'High',
+    status: 'Active',
+    triggerCondition: 'Missing Validation',
+    obligationId: 'obl-validation-signoff',
+    obligationName: 'Validation Sign-Off',
+    linkedControlIds: ['octl-validation-signoff'],
+  },
+  {
+    id: 'POL-NAMED-OWNERSHIP',
+    name: 'Named Ownership Required',
+    description: 'Every AI asset must have a complete Governance Authority Profile.',
+    category: 'Governance',
+    severity: 'Medium',
+    status: 'Active',
+    triggerCondition: 'Missing Owner',
+    obligationId: 'obl-named-owner',
+    obligationName: 'Named Owner',
+    linkedControlIds: ['octl-authority-profile'],
+  },
+  {
+    id: 'POL-REAUTH-REQUIRED',
+    name: 'Reauthorization Required After Reassessment',
+    description: 'Assets in Reassessment Required must reach a recorded reauthorization decision.',
+    category: 'Continuity',
+    severity: 'Critical',
+    status: 'Active',
+    triggerCondition: 'Missing Reauthorization',
+    linkedControlIds: [],
+  },
+];
+
+export const INITIAL_GOVERNANCE_FINDINGS: GovernanceFinding[] = [];
+
+/**
+ * Release 8 — Governance Intelligence Engine (Actions Edition). No actions
+ * are seeded — same reasoning as Findings above: the Governance Actions
+ * Workspace generates them from whatever the Recommended Action Engine
+ * actually produces against real seeded asset data.
+ */
+export const INITIAL_RECOMMENDED_ACTIONS: RecommendedAction[] = [];

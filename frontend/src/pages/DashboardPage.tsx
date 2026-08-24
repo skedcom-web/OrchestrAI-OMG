@@ -3,13 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { MetricCard } from '../components/ui/MetricCard';
-import { RiskBadge, OversightBadge, GovernanceStateBadge, ClassificationBadge, EvidenceStatusBadge, ReadinessBadge, ComplianceCoverageBadge } from '../components/ui/Badge';
+import { RiskBadge, OversightBadge, GovernanceStateBadge, ClassificationBadge, EvidenceStatusBadge, ReadinessBadge, ComplianceCoverageBadge, GovernancePolicySeverityBadge, RecommendedActionStatusBadge } from '../components/ui/Badge';
 import { StatusBadge } from '../components/ui/StatusBadge';
 import { getGovernanceMetrics, getAssets, getAuditLogs, getEvidenceRecords, getAllGovernanceGaps, getAllPackGaps, getAllSourceGaps } from '../services/storageService';
 import { OVERSIGHT_TYPES, AUTONOMY_LEVELS } from '../config/governanceAuthority';
 import { GOVERNANCE_STATES, GOVERNANCE_CLASSIFICATIONS } from '../config/governanceContinuity';
 import { EVIDENCE_TYPES, EVIDENCE_STATUSES, getExpiryIndicator } from '../config/evidenceFoundation';
-import type { AssetType, RiskLevel, HumanOversightType, ReadinessStatus, ComplianceCoverageStatus } from '../types';
+import type { AssetType, RiskLevel, HumanOversightType, ReadinessStatus, ComplianceCoverageStatus, RecommendedActionStatus } from '../types';
 
 const READINESS_ORDER: ReadinessStatus[] = ['Ready', 'Partially Ready', 'Not Ready'];
 const COVERAGE_ORDER: ComplianceCoverageStatus[] = ['Covered', 'Partially Covered', 'Not Covered', 'Not Applicable'];
@@ -504,6 +504,118 @@ export const DashboardPage: React.FC = () => {
               </div>
             </div>
           )}
+        </Card>
+      </div>
+
+      {/* Release 7 — Governance Intelligence Engine (Foundation) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card className="flex flex-col gap-3">
+          <div>
+            <h3 className="text-lg font-bold text-[var(--text-primary)]">Governance Findings</h3>
+            <p className="text-xs text-[var(--text-secondary)]">{metrics.openGovernanceFindingsCount} open findings across the portfolio</p>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {(['Critical', 'High', 'Medium', 'Low'] as const).map(sev => (
+              <div key={sev} className="p-2.5 rounded-xl bg-[var(--bg-badge)] border border-[var(--border-color)] flex flex-col gap-1">
+                <GovernancePolicySeverityBadge severity={sev} size="sm" />
+                <span className="text-lg font-black text-[var(--text-primary)]">{metrics.findingsBySeverity[sev]}</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        <Card className="flex flex-col gap-3">
+          <div>
+            <h3 className="text-lg font-bold text-[var(--text-primary)]">Top Triggered Policies</h3>
+            <p className="text-xs text-[var(--text-secondary)]">Active policies currently violated across the portfolio</p>
+          </div>
+          <div className="flex flex-col gap-1.5 max-h-40 overflow-y-auto">
+            {metrics.topTriggeredPolicies.length === 0 ? (
+              <span className="text-xs text-[var(--text-muted)] italic">No policies currently triggered.</span>
+            ) : (
+              metrics.topTriggeredPolicies.map((p, i) => (
+                <div key={i} className="flex items-center justify-between gap-2 text-xs p-2 rounded-lg bg-[var(--bg-badge)] border border-[var(--border-color)]">
+                  <span className="text-[var(--text-secondary)] font-semibold truncate">{p.policyName}</span>
+                  <span className="text-[var(--text-primary)] font-black">{p.count}</span>
+                </div>
+              ))
+            )}
+          </div>
+        </Card>
+
+        <Card className="flex flex-col gap-3">
+          <div>
+            <h3 className="text-lg font-bold text-[var(--text-primary)]">Governance Attention</h3>
+            <p className="text-xs text-[var(--text-secondary)]">Recommendations only — no automatic state changes</p>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 flex flex-col gap-1">
+              <span className="text-[10px] font-bold uppercase text-amber-500">Assets Requiring Attention</span>
+              <span className="text-lg font-black text-[var(--text-primary)]">{metrics.assetsRequiringAttentionCount}</span>
+            </div>
+            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 flex flex-col gap-1">
+              <span className="text-[10px] font-bold uppercase text-amber-500">Recommended Reviews</span>
+              <span className="text-lg font-black text-[var(--text-primary)]">{metrics.recommendedReviewsCount}</span>
+            </div>
+          </div>
+          <Button size="sm" variant="ghost" onClick={() => navigate('/governance-intelligence')}>
+            Open Governance Intelligence →
+          </Button>
+        </Card>
+      </div>
+
+      {/* Release 8 — Governance Intelligence Engine (Actions Edition) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card className="flex flex-col gap-3">
+          <div>
+            <h3 className="text-lg font-bold text-[var(--text-primary)]">Governance Actions</h3>
+            <p className="text-xs text-[var(--text-secondary)]">{metrics.openActionsCount} open • {metrics.highPriorityActionsCount} high/critical priority • {metrics.overdueActionsCount} overdue</p>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 flex flex-col gap-1">
+              <span className="text-[10px] font-bold uppercase text-amber-500">Open</span>
+              <span className="text-lg font-black text-[var(--text-primary)]">{metrics.openActionsCount}</span>
+            </div>
+            <div className="p-2.5 rounded-xl bg-orange-500/10 border border-orange-500/30 flex flex-col gap-1">
+              <span className="text-[10px] font-bold uppercase text-orange-500">High Priority</span>
+              <span className="text-lg font-black text-[var(--text-primary)]">{metrics.highPriorityActionsCount}</span>
+            </div>
+            <div className="p-2.5 rounded-xl bg-red-500/10 border border-red-500/30 flex flex-col gap-1">
+              <span className="text-[10px] font-bold uppercase text-red-500">Overdue</span>
+              <span className="text-lg font-black text-[var(--text-primary)]">{metrics.overdueActionsCount}</span>
+            </div>
+          </div>
+          <Button size="sm" variant="ghost" onClick={() => navigate('/governance-actions')}>
+            Open Governance Actions →
+          </Button>
+        </Card>
+
+        <Card className="flex flex-col gap-3">
+          <h3 className="text-lg font-bold text-[var(--text-primary)]">Actions by Status</h3>
+          <div className="grid grid-cols-2 gap-2">
+            {(Object.entries(metrics.actionsByStatus) as [RecommendedActionStatus, number][]).map(([status, count]) => (
+              <div key={status} className="p-2.5 rounded-xl bg-[var(--bg-badge)] border border-[var(--border-color)] flex items-center justify-between gap-2">
+                <RecommendedActionStatusBadge status={status} size="sm" />
+                <span className="text-sm font-black text-[var(--text-primary)]">{count}</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        <Card className="flex flex-col gap-3">
+          <h3 className="text-lg font-bold text-[var(--text-primary)]">Actions by Owner</h3>
+          <div className="flex flex-col gap-1.5 max-h-48 overflow-y-auto">
+            {metrics.actionsByOwner.length === 0 ? (
+              <span className="text-xs text-[var(--text-muted)] italic">No actions assigned to an owner yet.</span>
+            ) : (
+              metrics.actionsByOwner.map((o, i) => (
+                <div key={i} className="flex items-center justify-between gap-2 text-xs p-2 rounded-lg bg-[var(--bg-badge)] border border-[var(--border-color)]">
+                  <span className="text-[var(--text-secondary)] font-semibold truncate">{o.owner}</span>
+                  <span className="text-[var(--text-primary)] font-black">{o.count}</span>
+                </div>
+              ))
+            )}
+          </div>
         </Card>
       </div>
 

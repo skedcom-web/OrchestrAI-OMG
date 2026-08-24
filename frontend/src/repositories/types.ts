@@ -14,12 +14,15 @@ import type {
   ComplianceRequirement,
   EvidenceMapping,
   EvidenceRecord,
+  GovernanceFinding,
+  GovernancePolicy,
   GovernanceReauthorizationRecord,
   Obligation,
   ObligationControl,
   ObligationEvidenceMapping,
   PackControl,
   ReassessmentTrigger,
+  RecommendedAction,
   RegulatoryRequirement,
   RegulatorySource,
   ScheduledReview,
@@ -135,4 +138,37 @@ export interface ObligationEvidenceMappingRepository {
   createMapping(data: Partial<ObligationEvidenceMapping>): Promise<ObligationEvidenceMapping>;
   updateMapping(id: string, data: Partial<ObligationEvidenceMapping>): Promise<ObligationEvidenceMapping>;
   deleteMapping(id: string): Promise<void>;
+}
+
+/**
+ * Release 7 — Governance Intelligence Engine. Policy and Finding are
+ * genuinely persisted, Neon-backed from day one like Release 6 — Conditions,
+ * Violations and Outcomes are computed live (see governanceReasoningEngine.ts)
+ * and have no repository of their own.
+ */
+export interface GovernancePolicyRepository {
+  getPolicies(): Promise<GovernancePolicy[]>;
+  createPolicy(data: Partial<GovernancePolicy>): Promise<GovernancePolicy>;
+  updatePolicy(id: string, data: Partial<GovernancePolicy>): Promise<GovernancePolicy>;
+  deletePolicy(id: string): Promise<void>;
+}
+
+export interface GovernanceFindingRepository {
+  getFindings(): Promise<GovernanceFinding[]>;
+  createFinding(data: Partial<GovernanceFinding>): Promise<GovernanceFinding>;
+  updateFinding(id: string, data: Partial<GovernanceFinding>): Promise<GovernanceFinding>;
+  deleteFinding(id: string): Promise<void>;
+}
+
+/**
+ * Release 8 — Governance Intelligence Engine (Actions Edition). Recommended
+ * Actions are persisted (Neon-backed, Api-first from day one) — the drafts
+ * that produce them (governanceActionsEngine.ts) are pure config, not a
+ * repository of their own.
+ */
+export interface RecommendedActionRepository {
+  getActions(): Promise<RecommendedAction[]>;
+  createAction(data: Partial<RecommendedAction>): Promise<RecommendedAction>;
+  updateAction(id: string, data: Partial<RecommendedAction>): Promise<RecommendedAction>;
+  deleteAction(id: string): Promise<void>;
 }

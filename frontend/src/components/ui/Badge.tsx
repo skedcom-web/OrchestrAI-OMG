@@ -1,4 +1,4 @@
-import type { AutonomyLevel, ComplianceCoverageStatus, CompliancePackStatus, EvidenceExpiryIndicator, EvidenceRecordStatus, GovernanceClassification, GovernanceState, HumanOversightType, ReadinessStatus, RegulatorySourceStatus, RiskLevel } from '../../types';
+import type { AutonomyLevel, ComplianceCoverageStatus, CompliancePackStatus, EvidenceExpiryIndicator, EvidenceRecordStatus, GovernanceClassification, GovernanceFindingStatus, GovernanceOutcomeStatus, GovernancePolicySeverity, GovernanceState, HumanOversightType, ReadinessStatus, RecommendedActionStatus, RegulatorySourceStatus, RiskLevel } from '../../types';
 import { EXPIRY_INDICATOR_TONE } from '../../config/evidenceFoundation';
 
 interface BadgeProps {
@@ -203,6 +203,97 @@ export const RegulatorySourceStatusBadge: React.FC<RegulatorySourceStatusBadgePr
     'Draft': 'bg-slate-500/10 text-slate-400 border-slate-500/30',
     'Superseded': 'bg-amber-500/10 text-amber-500 border-amber-500/30',
     'Retired': 'bg-gray-500/10 text-gray-400 border-gray-500/30',
+  };
+  const padding = size === 'sm' ? 'px-2 py-0.5 text-[10px]' : 'px-2.5 py-1 text-xs';
+
+  return (
+    <span className={`inline-flex items-center gap-1 font-semibold rounded-full border ${padding} ${styles[status]}`}>
+      {status}
+    </span>
+  );
+};
+
+/** Release 7 — Objective 4, Governance Finding lifecycle status. */
+interface GovernanceFindingStatusBadgeProps {
+  status: GovernanceFindingStatus;
+  size?: 'sm' | 'md';
+}
+
+export const GovernanceFindingStatusBadge: React.FC<GovernanceFindingStatusBadgeProps> = ({ status, size = 'md' }) => {
+  const styles: Record<GovernanceFindingStatus, string> = {
+    'Open': 'bg-red-500/15 text-red-500 border-red-500/40 font-bold',
+    'Under Review': 'bg-amber-500/10 text-amber-500 border-amber-500/30',
+    'Accepted Risk': 'bg-slate-500/10 text-slate-400 border-slate-500/30',
+    'Resolved': 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30',
+  };
+  const padding = size === 'sm' ? 'px-2 py-0.5 text-[10px]' : 'px-2.5 py-1 text-xs';
+
+  return (
+    <span className={`inline-flex items-center gap-1 font-semibold rounded-full border ${padding} ${styles[status]}`}>
+      {status}
+    </span>
+  );
+};
+
+/** Release 7 — Objectives 5 & 6, Governance Outcome recommendation. No scoring. */
+interface GovernanceOutcomeBadgeProps {
+  status: GovernanceOutcomeStatus;
+  size?: 'sm' | 'md';
+}
+
+export const GovernanceOutcomeBadge: React.FC<GovernanceOutcomeBadgeProps> = ({ status, size = 'md' }) => {
+  const styles: Record<GovernanceOutcomeStatus, string> = {
+    'Compliant': 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30',
+    'Attention Required': 'bg-amber-500/10 text-amber-500 border-amber-500/30',
+    'Review Required': 'bg-amber-500/15 text-amber-500 border-amber-500/40 font-bold',
+    'Reassessment Recommended': 'bg-orange-500/15 text-orange-500 border-orange-500/40 font-bold',
+    'Escalation Recommended': 'bg-red-500/15 text-red-500 border-red-500/40 font-bold animate-pulse',
+  };
+  const padding = size === 'sm' ? 'px-2 py-0.5 text-[10px]' : 'px-2.5 py-1 text-xs';
+
+  return (
+    <span className={`inline-flex items-center gap-1 font-semibold rounded-full border ${padding} ${styles[status]}`}>
+      {status}
+    </span>
+  );
+};
+
+/** Release 7 — Objective 1, Governance Policy severity. */
+interface GovernancePolicySeverityBadgeProps {
+  severity: GovernancePolicySeverity;
+  size?: 'sm' | 'md';
+}
+
+export const GovernancePolicySeverityBadge: React.FC<GovernancePolicySeverityBadgeProps> = ({ severity, size = 'md' }) => {
+  const styles: Record<GovernancePolicySeverity, string> = {
+    'Low': 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30',
+    'Medium': 'bg-amber-500/10 text-amber-500 border-amber-500/30',
+    'High': 'bg-orange-500/10 text-orange-500 border-orange-500/30',
+    'Critical': 'bg-red-500/15 text-red-500 border-red-500/40 font-bold',
+  };
+  const padding = size === 'sm' ? 'px-2 py-0.5 text-[10px]' : 'px-2.5 py-1 text-xs';
+
+  return (
+    <span className={`inline-flex items-center gap-1 font-semibold rounded-full border ${padding} ${styles[severity]}`}>
+      {severity}
+    </span>
+  );
+};
+
+/** Release 8 — Objective 7, Recommended Action lifecycle status. */
+interface RecommendedActionStatusBadgeProps {
+  status: RecommendedActionStatus;
+  size?: 'sm' | 'md';
+}
+
+export const RecommendedActionStatusBadge: React.FC<RecommendedActionStatusBadgeProps> = ({ status, size = 'md' }) => {
+  const styles: Record<RecommendedActionStatus, string> = {
+    'Open': 'bg-amber-500/10 text-amber-500 border-amber-500/30',
+    'Accepted': 'bg-blue-500/10 text-blue-400 border-blue-500/30',
+    'In Progress': 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30',
+    'Completed': 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30',
+    'Deferred': 'bg-slate-500/10 text-slate-400 border-slate-500/30',
+    'Rejected': 'bg-gray-500/10 text-gray-400 border-gray-500/30',
   };
   const padding = size === 'sm' ? 'px-2 py-0.5 text-[10px]' : 'px-2.5 py-1 text-xs';
 

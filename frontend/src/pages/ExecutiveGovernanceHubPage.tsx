@@ -21,6 +21,8 @@ import {
   getExecutiveAlerts,
   getExecutiveInsights,
   getGovernanceHealthIndex,
+  getGovernanceActionsOverview,
+  getGovernanceIntelligenceOverview,
   getGovernanceScorecards,
   getGovernanceTrends,
   getReadinessOverview,
@@ -74,6 +76,8 @@ export const ExecutiveGovernanceHubPage: React.FC = () => {
       readiness: getReadinessOverview(),
       compliancePacks: getCompliancePackOverview(),
       regulatoryReadiness: getRegulatoryReadinessOverview(),
+      governanceIntelligence: getGovernanceIntelligenceOverview(),
+      governanceActions: getGovernanceActionsOverview(),
       health: getGovernanceHealthIndex(),
       metrics: getGovernanceMetrics(),
       scorecards: getGovernanceScorecards(),
@@ -622,6 +626,92 @@ export const ExecutiveGovernanceHubPage: React.FC = () => {
               ))}
             </div>
           )}
+        </section>
+      )}
+
+      {/* ===================== GOVERNANCE INTELLIGENCE OVERVIEW (Release 7) ===================== */}
+      {(shows('estate') || shows('summary') || shows('portfolio') || shows('policy-compliance')) && (
+        <section className="flex flex-col gap-4">
+          <SectionHeader
+            eyebrow="Release 7"
+            title="Governance Intelligence Overview"
+            subtitle="Policy → Condition → Violation → Finding → Outcome, every outcome explainable. Recommendations only — no scoring, no automatic state changes."
+            icon="🧠"
+            action={
+              <button
+                onClick={() => navigate('/governance-intelligence')}
+                className="text-[11px] font-bold text-[var(--accent-primary)] hover:underline cursor-pointer"
+              >
+                Open governance intelligence →
+              </button>
+            }
+          />
+
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4 flex flex-col gap-1">
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.1em] text-[var(--text-muted)]">Active Policies</p>
+              <p className="tnum text-[1.9rem] font-extrabold text-[var(--text-primary)] leading-none">{data.governanceIntelligence.activePoliciesCount}</p>
+            </div>
+            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4 flex flex-col gap-1">
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.1em] text-[var(--text-muted)]">Open Findings</p>
+              <p className="tnum text-[1.9rem] font-extrabold text-amber-500 leading-none">{data.governanceIntelligence.openFindingsCount}</p>
+            </div>
+            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4 flex flex-col gap-1">
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.1em] text-[var(--text-muted)]">Recommended Reviews</p>
+              <p className="tnum text-[1.9rem] font-extrabold text-[var(--text-primary)] leading-none">{data.governanceIntelligence.recommendedReviewsCount}</p>
+            </div>
+            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4 flex flex-col gap-1">
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.1em] text-[var(--text-muted)]">Recommended Reassessments</p>
+              <p className="tnum text-[1.9rem] font-extrabold text-orange-500 leading-none">{data.governanceIntelligence.recommendedReassessmentsCount}</p>
+            </div>
+            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4 flex flex-col gap-1">
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.1em] text-[var(--text-muted)]">Escalations</p>
+              <p className="tnum text-[1.9rem] font-extrabold text-red-500 leading-none">{data.governanceIntelligence.escalationsCount}</p>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ===================== GOVERNANCE ACTIONS OVERVIEW (Release 8) ===================== */}
+      {(shows('estate') || shows('summary') || shows('portfolio') || shows('policy-compliance')) && (
+        <section className="flex flex-col gap-4">
+          <SectionHeader
+            eyebrow="Release 8"
+            title="Governance Actions Overview"
+            subtitle="Outcome → Recommended Action, with a human Accept / Reject / Defer decision layer. Recommendation-driven, not automation-driven."
+            icon="🛠️"
+            action={
+              <button
+                onClick={() => navigate('/governance-actions')}
+                className="text-[11px] font-bold text-[var(--accent-primary)] hover:underline cursor-pointer"
+              >
+                Open governance actions →
+              </button>
+            }
+          />
+
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4 flex flex-col gap-1">
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.1em] text-[var(--text-muted)]">Recommended Reviews</p>
+              <p className="tnum text-[1.9rem] font-extrabold text-[var(--text-primary)] leading-none">{data.governanceActions.recommendedReviewsCount}</p>
+            </div>
+            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4 flex flex-col gap-1">
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.1em] text-[var(--text-muted)]">Recommended Reassessments</p>
+              <p className="tnum text-[1.9rem] font-extrabold text-orange-500 leading-none">{data.governanceActions.recommendedReassessmentsCount}</p>
+            </div>
+            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4 flex flex-col gap-1">
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.1em] text-[var(--text-muted)]">Recommended Reauthorizations</p>
+              <p className="tnum text-[1.9rem] font-extrabold text-[var(--text-primary)] leading-none">{data.governanceActions.recommendedReauthorizationsCount}</p>
+            </div>
+            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4 flex flex-col gap-1">
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.1em] text-[var(--text-muted)]">Escalation Recommendations</p>
+              <p className="tnum text-[1.9rem] font-extrabold text-red-500 leading-none">{data.governanceActions.escalationsCount}</p>
+            </div>
+            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4 flex flex-col gap-1">
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.1em] text-[var(--text-muted)]">Action Completion</p>
+              <p className="tnum text-[1.9rem] font-extrabold text-emerald-500 leading-none">{data.governanceActions.actionCompletionStatus.completed} / {data.governanceActions.actionCompletionStatus.total}</p>
+            </div>
+          </div>
         </section>
       )}
 

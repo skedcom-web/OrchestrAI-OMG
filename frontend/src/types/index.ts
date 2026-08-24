@@ -494,6 +494,119 @@ export interface RegulatoryGap {
   detail: string;
 }
 
+/**
+ * Release 7 — Governance Intelligence Engine (Foundation Edition). Moves OMG
+ * from governance records to governance reasoning: Policy -> Condition ->
+ * Violation -> Finding -> Outcome, every outcome explainable. Detection and
+ * recommendation only — no automatic state changes (Release 8's scope).
+ * Named GovernancePolicy/GovernanceFinding, not Policy/Finding, to avoid
+ * colliding with the existing Phase 9 Policy and Phase 3 Finding concepts,
+ * which are different, unrelated objects.
+ */
+
+/** Objective 2 — Condition Engine. Detected live from existing governance data, never persisted. */
+export type GovernanceConditionType =
+  | 'Evidence Expired'
+  | 'Review Overdue'
+  | 'Missing Approval'
+  | 'Missing Owner'
+  | 'Missing Validation'
+  | 'Missing Reauthorization';
+
+export interface GovernanceCondition {
+  assetId: string;
+  assetName: string;
+  conditionType: GovernanceConditionType;
+  detail: string;
+}
+
+export type GovernancePolicySeverity = 'Low' | 'Medium' | 'High' | 'Critical';
+export type GovernancePolicyStatus = 'Draft' | 'Active' | 'Retired';
+
+/** Objective 1 — Policy Registry. */
+export interface GovernancePolicy {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  severity: GovernancePolicySeverity;
+  status: GovernancePolicyStatus;
+  /** The condition type that activates this policy (Objective 3 — Governance Rule Engine). */
+  triggerCondition: GovernanceConditionType;
+  obligationId?: string;
+  obligationName?: string;
+  linkedControlIds: string[];
+}
+
+/** Objective 3 — Governance Rule Engine output: a policy evaluated true against a detected condition. */
+export interface GovernancePolicyViolation {
+  policyId: string;
+  policyName: string;
+  assetId: string;
+  assetName: string;
+  conditionType: GovernanceConditionType;
+  detail: string;
+  severity: GovernancePolicySeverity;
+}
+
+export type GovernanceFindingStatus = 'Open' | 'Under Review' | 'Accepted Risk' | 'Resolved';
+
+/** Objective 4 — Findings Engine. Persisted with a manually-managed lifecycle. */
+export interface GovernanceFinding {
+  id: string;
+  assetId: string;
+  assetName: string;
+  policyId: string;
+  policyName: string;
+  conditionType: GovernanceConditionType;
+  severity: GovernancePolicySeverity;
+  status: GovernanceFindingStatus;
+  detail: string;
+  createdDate: string;
+  resolutionDate?: string;
+  resolutionNotes?: string;
+}
+
+/** Objective 5 — Governance Outcome Engine. Recommendations only, no automatic state changes. */
+export type GovernanceOutcomeStatus = 'Compliant' | 'Attention Required' | 'Review Required' | 'Reassessment Recommended' | 'Escalation Recommended';
+
+/** Objective 6 — Explainability Layer: `reasons` is why the outcome was generated, folded directly into the outcome. */
+export interface GovernanceOutcome {
+  assetId: string;
+  assetName: string;
+  status: GovernanceOutcomeStatus;
+  reasons: string[];
+}
+
+/**
+ * Release 8 — Governance Intelligence Engine (Actions Edition). The bridge
+ * between Governance Intelligence and Governance Execution: Outcome ->
+ * Recommended Action, with a human Accept / Reject / Defer decision layer.
+ * Recommendation-driven, not automation-driven — nothing here executes
+ * automatically or changes an asset's governance state.
+ */
+
+export type RecommendedActionType = 'Review' | 'Reassessment' | 'Validation' | 'Approval' | 'Reauthorization' | 'Ownership' | 'Escalation';
+export type RecommendedActionPriority = 'Low' | 'Medium' | 'High' | 'Critical';
+export type RecommendedActionStatus = 'Open' | 'Accepted' | 'Deferred' | 'Rejected' | 'In Progress' | 'Completed';
+
+/** Objective 1 — Recommended Action Engine. */
+export interface RecommendedAction {
+  id: string;
+  actionType: RecommendedActionType;
+  name: string;
+  description: string;
+  assetId: string;
+  assetName: string;
+  policyId?: string;
+  policyName?: string;
+  findingId?: string;
+  priority: RecommendedActionPriority;
+  owner?: string;
+  dueDate?: string;
+  status: RecommendedActionStatus;
+}
+
 export interface AIAsset {
   id: string;
   name: string;
@@ -623,6 +736,18 @@ export interface GovernanceMetrics {
   sourceCoverageBreakdown: Record<ComplianceCoverageStatus, number>;
   totalRegulatoryGapsCount: number;
   topMissingControls: { name: string; requirementName: string }[];
+  // Release 7 — Governance Intelligence Engine
+  openGovernanceFindingsCount: number;
+  findingsBySeverity: Record<GovernancePolicySeverity, number>;
+  topTriggeredPolicies: { policyName: string; count: number }[];
+  assetsRequiringAttentionCount: number;
+  recommendedReviewsCount: number;
+  // Release 8 — Governance Intelligence Engine (Actions Edition)
+  openActionsCount: number;
+  highPriorityActionsCount: number;
+  overdueActionsCount: number;
+  actionsByStatus: Record<RecommendedActionStatus, number>;
+  actionsByOwner: { owner: string; count: number }[];
 }
 
 export interface PersonaDemoUser {

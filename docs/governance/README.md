@@ -64,6 +64,12 @@ This repository directory contains the **Mandatory Governance Deliverables** spe
 19. 🗺️ **[19_Release6_Universal_Regulatory_Knowledge_Engine.md](file:///C:/Users/VT348/Documents/GitHub/OrchestrAI%20OMG/docs/governance/19_Release6_Universal_Regulatory_Knowledge_Engine.md)**  
     *Source → Requirement → Obligation → Control → Evidence, Neon-backed from day one — the Universal Regulatory Knowledge & Obligation Engine, Foundation Edition.*
 
+20. 🧠 **[20_Release7_Governance_Intelligence_Engine.md](file:///C:/Users/VT348/Documents/GitHub/OrchestrAI%20OMG/docs/governance/20_Release7_Governance_Intelligence_Engine.md)**  
+    *Policy → Condition → Violation → Finding → Outcome, every outcome explainable — governance reasoning, not just governance records — the Governance Intelligence Engine, Foundation Edition.*
+
+21. 🛠️ **[21_Release8_Governance_Intelligence_Actions.md](file:///C:/Users/VT348/Documents/GitHub/OrchestrAI%20OMG/docs/governance/21_Release8_Governance_Intelligence_Actions.md)**  
+    *Outcome → Recommended Action, with Accept / Reject / Defer and full lifecycle audit — the Governance Intelligence Engine, Actions Edition. Recommendation-driven, not automation-driven.*
+
 ---
 
 ## 🌐 Live Production Links
