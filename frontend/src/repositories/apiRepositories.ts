@@ -653,6 +653,7 @@ function actionToBackend(data: Partial<RecommendedAction>) {
   if (data.priority) body.priority = enumMaps.recommendedActionPriority.toBackend(data.priority);
   if (data.status) body.status = enumMaps.recommendedActionStatus.toBackend(data.status);
   if (data.dueDate) body.dueDate = new Date(data.dueDate).toISOString();
+  if (data.decidedAt) body.decidedAt = new Date(data.decidedAt).toISOString();
   return body;
 }
 
@@ -671,6 +672,9 @@ function actionFromBackend(row: any, assetName = '', policyName = ''): Recommend
     owner: row.owner || undefined,
     dueDate: row.dueDate ? String(row.dueDate).split('T')[0] : undefined,
     status: enumMaps.recommendedActionStatus.toFrontend(row.status),
+    decidedBy: row.decidedBy || undefined,
+    decidedAt: row.decidedAt ? String(row.decidedAt).split('T')[0] : undefined,
+    createdAt: row.createdAt ? String(row.createdAt) : undefined,
   };
 }
 

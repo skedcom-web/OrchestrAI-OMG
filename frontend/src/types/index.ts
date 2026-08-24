@@ -605,6 +605,10 @@ export interface RecommendedAction {
   owner?: string;
   dueDate?: string;
   status: RecommendedActionStatus;
+  /** Release 9 — Objective 6 made traceable: set only when a human actually decided (Accept / Reject / Defer). */
+  decidedBy?: string;
+  decidedAt?: string;
+  createdAt?: string;
 }
 
 export interface AIAsset {
@@ -748,6 +752,10 @@ export interface GovernanceMetrics {
   overdueActionsCount: number;
   actionsByStatus: Record<RecommendedActionStatus, number>;
   actionsByOwner: { owner: string; count: number }[];
+  // Release 9 — Governance Decision Traceability Engine
+  traceRecordsCount: number;
+  topDecisionDrivers: { conditionType: GovernanceConditionType; count: number }[];
+  humanDecisionStats: { accepted: number; rejected: number; deferred: number };
 }
 
 export interface PersonaDemoUser {

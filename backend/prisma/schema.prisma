@@ -1215,6 +1215,13 @@ model RecommendedAction {
   dueDate  DateTime?
   status   RecommendedActionStatus   @default(OPEN)
 
+  /// Release 9 — Objective 6's Human Decision Layer, made traceable. Set only
+  /// when a human actually decides (Accept / Reject / Defer), not on the
+  /// Start / Complete execution-tracking transitions — this is "who acted",
+  /// not "who last touched the row".
+  decidedBy String?
+  decidedAt DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

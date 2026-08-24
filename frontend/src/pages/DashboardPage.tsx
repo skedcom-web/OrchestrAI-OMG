@@ -619,6 +619,55 @@ export const DashboardPage: React.FC = () => {
         </Card>
       </div>
 
+      {/* Release 9 — Governance Decision Traceability Engine */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card className="flex flex-col gap-3">
+          <div>
+            <h3 className="text-lg font-bold text-[var(--text-primary)]">Decision Trace Records</h3>
+            <p className="text-xs text-[var(--text-secondary)]">Assets with a recorded finding or action behind their outcome</p>
+          </div>
+          <span className="text-3xl font-black text-[var(--text-primary)]">{metrics.traceRecordsCount}</span>
+          <Button size="sm" variant="ghost" onClick={() => navigate('/decision-traceability')}>
+            Open Decision Traceability →
+          </Button>
+        </Card>
+
+        <Card className="flex flex-col gap-3">
+          <h3 className="text-lg font-bold text-[var(--text-primary)]">Top Decision Drivers</h3>
+          <div className="flex flex-col gap-1.5">
+            {metrics.topDecisionDrivers.length === 0 ? (
+              <span className="text-xs text-[var(--text-muted)] italic">No conditions detected across the portfolio.</span>
+            ) : (
+              metrics.topDecisionDrivers.map((d, i) => (
+                <div key={i} className="flex items-center justify-between gap-2 text-xs p-2 rounded-lg bg-[var(--bg-badge)] border border-[var(--border-color)]">
+                  <span className="text-[var(--text-secondary)] font-semibold truncate">{d.conditionType}</span>
+                  <span className="text-[var(--text-primary)] font-black">{d.count}</span>
+                </div>
+              ))
+            )}
+          </div>
+        </Card>
+
+        <Card className="flex flex-col gap-3">
+          <h3 className="text-lg font-bold text-[var(--text-primary)]">Human Decision Statistics</h3>
+          <div className="grid grid-cols-3 gap-2">
+            <div className="p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/30 flex flex-col gap-1">
+              <span className="text-[10px] font-bold uppercase text-blue-400">Accepted</span>
+              <span className="text-lg font-black text-[var(--text-primary)]">{metrics.humanDecisionStats.accepted}</span>
+            </div>
+            <div className="p-2.5 rounded-xl bg-gray-500/10 border border-gray-500/30 flex flex-col gap-1">
+              <span className="text-[10px] font-bold uppercase text-gray-400">Rejected</span>
+              <span className="text-lg font-black text-[var(--text-primary)]">{metrics.humanDecisionStats.rejected}</span>
+            </div>
+            <div className="p-2.5 rounded-xl bg-slate-500/10 border border-slate-500/30 flex flex-col gap-1">
+              <span className="text-[10px] font-bold uppercase text-slate-400">Deferred</span>
+              <span className="text-lg font-black text-[var(--text-primary)]">{metrics.humanDecisionStats.deferred}</span>
+            </div>
+          </div>
+          <span className="text-[10px] text-[var(--text-muted)]">Action completion: {metrics.actionsByStatus.Completed} of {Object.values(metrics.actionsByStatus).reduce((a, b) => a + b, 0)}</span>
+        </Card>
+      </div>
+
       {/* Secondary Row: High Risk Assets requiring review & Recent Audit Stream */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* High Risk Asset Attention Table */}

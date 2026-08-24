@@ -192,6 +192,7 @@ export const ENTERPRISE_PROBLEMS: { problem: string; solution: string; path: str
   { problem: 'Limited audit readiness', solution: 'Audit Trail & Reporting', path: '/audit-logs' },
   { problem: 'Governance silos across teams', solution: 'One Governance Operating Model', path: '/command-center' },
   { problem: 'No reassessment after deployment', solution: 'Governance Continuity', path: '/change-requests' },
+  { problem: 'Cannot reconstruct why a decision was made', solution: 'Decision Traceability', path: '/decision-traceability' },
 ];
 
 /* ============ Section 3 — worked example (illustrative walkthrough) ====== */
@@ -246,6 +247,13 @@ export const WORKED_EXAMPLE_STEPS: ExampleStep[] = [
     detail: ['Underlying model upgraded', 'Data permissions widened', 'Impact scored automatically'],
     outcome: 'Reassessment triggered — approval must be re-earned',
     accent: 'var(--stage-8)',
+  },
+  {
+    step: 7,
+    title: 'Decision Traceability',
+    detail: ['Condition detected: Missing Validation', 'Policy triggered: Independent Validation Required', 'Finding raised, outcome generated, action recommended'],
+    outcome: 'Reconstructed end-to-end — who acted, and what evidence supported it',
+    accent: 'var(--stage-1)',
   },
 ];
 
@@ -568,6 +576,42 @@ export const TOUR_STEPS: TourStep[] = [
     why: 'This is the answer to "prove it" — assembled continuously rather than retrospectively.',
     look: 'Executive Governance and Audit Readiness reports are generated from the live record on demand.',
   },
+  {
+    n: 32,
+    title: 'Regulatory Knowledge Engine',
+    path: '/mapping-workspace',
+    icon: '🗺️',
+    what: 'The reusable foundation every future regulation plugs into: Source → Requirement → Obligation → Control → Evidence.',
+    why: 'A new regulation should onboard as data — register the source, add requirements and obligations, map controls and evidence — not a platform redesign.',
+    look: 'One sample source demonstrates all four coverage outcomes; the Requirement Registry and Obligation Library browse the same data across every source.',
+  },
+  {
+    n: 33,
+    title: 'Governance Intelligence',
+    path: '/governance-intelligence',
+    icon: '🧠',
+    what: 'Governance reasoning: Policy → Condition → Violation → Finding → Outcome, with every outcome explainable.',
+    why: 'Moves OMG from governance records to governance reasoning — detection and recommendation only, never an automatic state change.',
+    look: 'Open any asset to see its triggered conditions, violated policies and the exact reasons behind its recommended outcome.',
+  },
+  {
+    n: 34,
+    title: 'Governance Actions',
+    path: '/governance-actions',
+    icon: '🛠️',
+    what: 'Outcome → Recommended Action, with a human Accept / Reject / Defer decision layer.',
+    why: 'Recommendation-driven, not automation-driven — nothing executes automatically, and humans remain accountable for every decision.',
+    look: 'Open, Accepted, Deferred and Completed actions are filterable by asset, priority, owner and due date, with the full lifecycle audited.',
+  },
+  {
+    n: 35,
+    title: 'Decision Traceability',
+    path: '/decision-traceability',
+    icon: '🧭',
+    what: 'Reconstructs any governance decision end-to-end: Condition → Policy → Violation → Finding → Outcome → Recommended Action → Human Decision.',
+    why: 'A reviewer should be able to understand exactly why a decision occurred, who acted, and what evidence supported it — not just that it happened.',
+    look: 'The Timeline view replays the full reasoning chain for any asset; Generate a Decision Evidence Pack for the audit-ready version.',
+  },
 ];
 
 /* ==================== Section 6 — who uses OMG ========================== */
@@ -616,6 +660,11 @@ export const CAPABILITIES: { label: string; icon: string; path: string; blurb: s
   { label: 'Governance Continuity', icon: '🔁', path: '/change-requests', blurb: 'Change-driven reassessment' },
   { label: 'Audit & Reporting', icon: '📜', path: '/audit-logs', blurb: 'Append-only trail' },
   { label: 'Lifecycle Management', icon: '🔄', path: '/asset-lifecycle', blurb: 'Registration to retirement' },
+  { label: 'Compliance Pack Framework', icon: '🧩', path: '/compliance-packs', blurb: 'Pack, requirement, control, coverage' },
+  { label: 'Regulatory Knowledge Engine', icon: '🗺️', path: '/mapping-workspace', blurb: 'Source, requirement, obligation, evidence' },
+  { label: 'Governance Intelligence', icon: '🧠', path: '/governance-intelligence', blurb: 'Policy → condition → finding → outcome' },
+  { label: 'Governance Actions', icon: '🛠️', path: '/governance-actions', blurb: 'Accept, reject or defer — human-governed' },
+  { label: 'Decision Traceability', icon: '🧭', path: '/decision-traceability', blurb: 'Reconstruct any decision end-to-end' },
 ];
 
 /* ==================== Section 8 — business value ======================== */

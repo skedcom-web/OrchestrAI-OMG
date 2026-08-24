@@ -3,6 +3,7 @@ import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Select } from '../components/ui/Select';
 import { RecommendedActionStatusBadge, GovernancePolicySeverityBadge } from '../components/ui/Badge';
+import { useAuth } from '../contexts/AuthContext';
 import {
   getAssets,
   getRecommendedActions,
@@ -11,6 +12,8 @@ import {
   getGovernanceOutcomeForAsset,
 } from '../services/storageService';
 import type { RecommendedAction, RecommendedActionStatus } from '../types';
+
+const HUMAN_DECISION_STATUSES: RecommendedActionStatus[] = ['Accepted', 'Rejected', 'Deferred'];
 
 type ActionView = 'open' | 'accepted' | 'deferred' | 'completed';
 
@@ -31,6 +34,7 @@ const VIEWS: { key: ActionView; label: string; statuses: RecommendedActionStatus
  * immutable audit trail.
  */
 export const GovernanceActionsWorkspacePage: React.FC = () => {
+  const { currentUser } = useAuth();
   const [assets] = useState(() => getAssets());
   const [, forceRefresh] = useState(0);
   const refreshAll = () => forceRefresh(v => v + 1);
@@ -56,7 +60,8 @@ export const GovernanceActionsWorkspacePage: React.FC = () => {
   });
 
   const handleTransition = async (action: RecommendedAction, status: RecommendedActionStatus) => {
-    const persisting = saveRecommendedAction({ id: action.id, status });
+    const decidedBy = HUMAN_DECISION_STATUSES.includes(status) ? (currentUser?.name || 'Unknown') : undefined;
+    const persisting = saveRecommendedAction({ id: action.id, status, ...(decidedBy ? { decidedBy } : {}) });
     refreshAll();
 
     try {

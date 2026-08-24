@@ -70,6 +70,9 @@ This repository directory contains the **Mandatory Governance Deliverables** spe
 21. 🛠️ **[21_Release8_Governance_Intelligence_Actions.md](file:///C:/Users/VT348/Documents/GitHub/OrchestrAI%20OMG/docs/governance/21_Release8_Governance_Intelligence_Actions.md)**  
     *Outcome → Recommended Action, with Accept / Reject / Defer and full lifecycle audit — the Governance Intelligence Engine, Actions Edition. Recommendation-driven, not automation-driven.*
 
+22. 🧭 **[22_Release9_Decision_Traceability_Engine.md](file:///C:/Users/VT348/Documents/GitHub/OrchestrAI%20OMG/docs/governance/22_Release9_Decision_Traceability_Engine.md)**  
+    *Every governance decision reconstructable end-to-end — Condition → Policy → Violation → Finding → Outcome → Recommended Action → Human Decision — plus the mandatory landing page, guided tour and executive overview refresh covering Releases 6-9.*
+
 ---
 
 ## 🌐 Live Production Links

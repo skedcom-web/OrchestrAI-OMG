@@ -23,6 +23,7 @@ import {
   getGovernanceHealthIndex,
   getGovernanceActionsOverview,
   getGovernanceIntelligenceOverview,
+  getGovernanceTraceabilityOverview,
   getGovernanceScorecards,
   getGovernanceTrends,
   getReadinessOverview,
@@ -78,6 +79,7 @@ export const ExecutiveGovernanceHubPage: React.FC = () => {
       regulatoryReadiness: getRegulatoryReadinessOverview(),
       governanceIntelligence: getGovernanceIntelligenceOverview(),
       governanceActions: getGovernanceActionsOverview(),
+      governanceTraceability: getGovernanceTraceabilityOverview(),
       health: getGovernanceHealthIndex(),
       metrics: getGovernanceMetrics(),
       scorecards: getGovernanceScorecards(),
@@ -712,6 +714,56 @@ export const ExecutiveGovernanceHubPage: React.FC = () => {
               <p className="tnum text-[1.9rem] font-extrabold text-emerald-500 leading-none">{data.governanceActions.actionCompletionStatus.completed} / {data.governanceActions.actionCompletionStatus.total}</p>
             </div>
           </div>
+        </section>
+      )}
+
+      {/* ===================== GOVERNANCE TRACEABILITY OVERVIEW (Release 9) ===================== */}
+      {(shows('estate') || shows('summary') || shows('portfolio') || shows('policy-compliance')) && (
+        <section className="flex flex-col gap-4">
+          <SectionHeader
+            eyebrow="Release 9"
+            title="Governance Traceability Overview"
+            subtitle="Condition → Policy → Violation → Finding → Outcome → Recommended Action → Human Decision — every decision reconstructable end-to-end."
+            icon="🧭"
+            action={
+              <button
+                onClick={() => navigate('/decision-traceability')}
+                className="text-[11px] font-bold text-[var(--accent-primary)] hover:underline cursor-pointer"
+              >
+                Open decision traceability →
+              </button>
+            }
+          />
+
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4 flex flex-col gap-1">
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.1em] text-[var(--text-muted)]">Escalated Decisions</p>
+              <p className="tnum text-[1.9rem] font-extrabold text-red-500 leading-none">{data.governanceTraceability.escalatedDecisionsCount}</p>
+            </div>
+            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4 flex flex-col gap-1">
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.1em] text-[var(--text-muted)]">Reassessments</p>
+              <p className="tnum text-[1.9rem] font-extrabold text-orange-500 leading-none">{data.governanceTraceability.reassessmentsCount}</p>
+            </div>
+            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4 flex flex-col gap-1">
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.1em] text-[var(--text-muted)]">Human Overrides</p>
+              <p className="tnum text-[1.9rem] font-extrabold text-[var(--text-primary)] leading-none">{data.governanceTraceability.humanOverridesCount}</p>
+            </div>
+            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4 flex flex-col gap-1">
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.1em] text-[var(--text-muted)]">Traceability Coverage</p>
+              <p className="tnum text-[1.9rem] font-extrabold text-emerald-500 leading-none">{data.governanceTraceability.traceabilityCoveragePercent}%</p>
+            </div>
+          </div>
+
+          {data.governanceTraceability.recentDecisions.length > 0 && (
+            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4 flex flex-col gap-1.5">
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.1em] text-[var(--text-muted)]">Recent Decisions</p>
+              {data.governanceTraceability.recentDecisions.map((d, i) => (
+                <div key={i} className="text-[11px] p-2 rounded-lg bg-[var(--bg-badge)] border border-[var(--border-color)] text-[var(--text-secondary)]">
+                  <strong>{d.decidedBy}</strong> {d.status} “{d.actionName}” for {d.assetName} ({d.decidedAt})
+                </div>
+              ))}
+            </div>
+          )}
         </section>
       )}
 

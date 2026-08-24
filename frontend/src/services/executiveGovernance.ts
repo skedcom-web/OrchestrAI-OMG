@@ -23,6 +23,7 @@ import {
   getFindings,
   getGovernanceFindings,
   getGovernanceMetrics,
+  getAllDecisionTraces,
   getGovernancePolicies,
   getRecommendedActions,
   getPackCoverage,
@@ -279,6 +280,39 @@ export function getGovernanceActionsOverview(): GovernanceActionsOverview {
     recommendedReauthorizationsCount: actions.filter(a => a.actionType === 'Reauthorization' && nonTerminal(a)).length,
     escalationsCount: outcomes.filter(o => o.status === 'Escalation Recommended').length,
     actionCompletionStatus: { completed: actions.filter(a => a.status === 'Completed').length, total: actions.length },
+  };
+}
+
+/** Release 9 — Governance Decision Traceability Engine. Recommendation counts and coverage only, no scoring. */
+export interface GovernanceTraceabilityOverview {
+  recentDecisions: { assetName: string; actionName: string; status: string; decidedBy: string; decidedAt: string }[];
+  escalatedDecisionsCount: number;
+  reassessmentsCount: number;
+  humanOverridesCount: number;
+  traceabilityCoveragePercent: number;
+}
+
+export function getGovernanceTraceabilityOverview(): GovernanceTraceabilityOverview {
+  const traces = getAllDecisionTraces();
+  const actions = getRecommendedActions();
+  const decided = actions.filter(a => a.decidedBy && a.decidedAt);
+
+  const recentDecisions = [...decided]
+    .sort((a, b) => (b.decidedAt || '').localeCompare(a.decidedAt || ''))
+    .slice(0, 5)
+    .map(a => ({ assetName: a.assetName, actionName: a.name, status: a.status, decidedBy: a.decidedBy!, decidedAt: a.decidedAt! }));
+
+  const tracesWithConditions = traces.filter(t => t.conditionsTriggered.length > 0);
+  const traceabilityCoveragePercent = tracesWithConditions.length === 0
+    ? 100
+    : Math.round((tracesWithConditions.filter(t => t.traceabilityComplete).length / tracesWithConditions.length) * 100);
+
+  return {
+    recentDecisions,
+    escalatedDecisionsCount: actions.filter(a => a.actionType === 'Escalation' && a.status !== 'Rejected' && a.status !== 'Completed').length,
+    reassessmentsCount: actions.filter(a => a.actionType === 'Reassessment' && a.status !== 'Rejected' && a.status !== 'Completed').length,
+    humanOverridesCount: actions.filter(a => a.status === 'Rejected').length,
+    traceabilityCoveragePercent,
   };
 }
 

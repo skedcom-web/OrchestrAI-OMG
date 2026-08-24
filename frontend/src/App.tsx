@@ -88,6 +88,9 @@ import { GovernanceIntelligenceWorkspacePage } from './pages/GovernanceIntellige
 // Release 8 Pages — Governance Intelligence Engine (Actions Edition)
 import { GovernanceActionsWorkspacePage } from './pages/GovernanceActionsWorkspacePage';
 
+// Release 9 Pages — Governance Decision Traceability Engine
+import { DecisionTraceabilityPage } from './pages/DecisionTraceabilityPage';
+
 /** Every governed route declared once, guarded by the same RBAC boundary. */
 const GOVERNED_ROUTES: { path: string; element: React.ReactNode }[] = [
   // Command surfaces — OMG Overview is the landing page, then the operational view.
@@ -139,6 +142,7 @@ const GOVERNED_ROUTES: { path: string; element: React.ReactNode }[] = [
   { path: '/obligation-library', element: <ObligationLibraryPage /> },
   { path: '/governance-intelligence', element: <GovernanceIntelligenceWorkspacePage /> },
   { path: '/governance-actions', element: <GovernanceActionsWorkspacePage /> },
+  { path: '/decision-traceability', element: <DecisionTraceabilityPage /> },
 
   // Domain 3 — Decision Governance
   { path: '/decision-workbench-v4', element: <DecisionWorkbenchPageV4 /> },

@@ -14,11 +14,12 @@ interface GuidedTourProps {
 }
 
 /**
- * Blueprint Section 5 — the three-minute guided tour.
+ * Blueprint Section 5 — the guided tour.
  *
- * Eight steps, one per governance stage, each answering: what the module is,
- * why it exists, and what to look at. Portal-rendered so an animated ancestor
- * cannot reposition the overlay.
+ * Renders TOUR_STEPS from landingContent.ts (currently 35 steps, one per
+ * governance module), each answering: what the module is, why it exists,
+ * and what to look at. Portal-rendered so an animated ancestor cannot
+ * reposition the overlay.
  */
 export const GuidedTour: React.FC<GuidedTourProps> = ({
   open,

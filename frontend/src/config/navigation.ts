@@ -529,6 +529,14 @@ export const NAV_DOMAINS: NavDomain[] = [
         keywords: ['audit', 'log', 'immutable', 'trail'],
         badge: 'Day 1',
       },
+      {
+        path: '/decision-traceability',
+        label: 'Decision Traceability',
+        icon: '🧭',
+        description: 'Reconstruct any governance decision end-to-end — Condition → Policy → Violation → Finding → Outcome → Recommended Action → Human Decision.',
+        keywords: ['decision traceability', 'trace', 'replay', 'explainability', 'audit package', 'evidence pack'],
+        badge: 'Release 9',
+      },
     ],
   },
   {

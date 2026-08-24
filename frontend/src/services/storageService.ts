@@ -104,6 +104,8 @@ import {
   computeGovernanceOutcome,
 } from '../config/governanceReasoningEngine';
 import { generateActionDrafts } from '../config/governanceActionsEngine';
+import { buildDecisionTrace } from '../config/decisionTraceabilityEngine';
+import type { DecisionTrace } from '../config/decisionTraceabilityEngine';
 import { apiAssetRepository, apiEvidenceRepository, apiGovernanceRepository } from '../repositories/apiRepositories';
 import {
   apiCompliancePackRepository,
@@ -2593,9 +2595,12 @@ export async function saveRecommendedAction(data: Partial<RecommendedAction>): P
   if (data.id) {
     const idx = recommendedActionsCache.findIndex(a => a.id === data.id);
     if (idx !== -1) {
+      // Release 9 — stamp decidedAt the moment a human decision (decidedBy) is recorded, so the caller only needs to supply who.
+      const decidedAt = data.decidedBy ? new Date().toISOString().split('T')[0] : data.decidedAt;
       const updated: RecommendedAction = {
         ...recommendedActionsCache[idx],
         ...data,
+        decidedAt,
         assetName: asset?.name ?? recommendedActionsCache[idx].assetName,
         policyName: policy?.name ?? recommendedActionsCache[idx].policyName,
       };
@@ -2603,7 +2608,8 @@ export async function saveRecommendedAction(data: Partial<RecommendedAction>): P
       recommendedActionsCache[idx] = updated;
       persistRecommendedActionsCache();
 
-      addAuditLog('usr-2', updated.owner || 'David Chen', 'GOVERNANCE_ADMIN', 'RECOMMENDED_ACTION_UPDATED', 'Policy', updated.id, updated.name, `Updated recommended action ${updated.name} for ${updated.assetName}: ${updated.status}`);
+      const actorLabel = updated.decidedBy && data.decidedBy ? ` by ${updated.decidedBy}` : '';
+      addAuditLog('usr-2', updated.decidedBy || updated.owner || 'David Chen', 'GOVERNANCE_ADMIN', 'RECOMMENDED_ACTION_UPDATED', 'Policy', updated.id, updated.name, `Updated recommended action ${updated.name} for ${updated.assetName}: ${updated.status}${actorLabel}`);
 
       const saved = await apiRecommendedActionRepository.updateAction(updated.id, updated);
       const reconciled = { ...saved, assetName: updated.assetName, policyName: updated.policyName };
@@ -2672,6 +2678,35 @@ export async function generateRecommendedActionsForAsset(assetId: string): Promi
   const newDrafts = drafts.filter(d => (d.findingId ? !activeFindingKeys.has(d.findingId) : !activeOutcomeActionTypes.has(d.actionType)));
 
   return Promise.all(newDrafts.map(d => saveRecommendedAction(d)));
+}
+
+// --- RELEASE 9 — GOVERNANCE DECISION TRACEABILITY ENGINE ---
+// Makes every governance decision reconstructable end-to-end. A Decision
+// Trace is assembled live from data every prior release already produces —
+// no new persisted domain object, same "computed, not stored" discipline
+// Release 7 established for reasoning itself.
+
+export function getDecisionTraceForAsset(assetId: string): DecisionTrace | null {
+  const asset = assetsCache.find(a => a.id === assetId);
+  if (!asset) return null;
+
+  return buildDecisionTrace(
+    asset,
+    getEvidenceRecordsForAsset(assetId),
+    reviewsCache.filter(r => r.assetId === assetId),
+    getValidations().filter(v => v.assetId === assetId),
+    reauthorizationsCache.filter(r => r.assetId === assetId),
+    governancePoliciesCache.filter(p => p.status === 'Active'),
+    getGovernanceConditionsForAsset(assetId),
+    getPolicyViolationsForAsset(assetId),
+    getGovernanceFindingsForAsset(assetId),
+    getGovernanceOutcomeForAsset(assetId),
+    getRecommendedActionsForAsset(assetId)
+  );
+}
+
+export function getAllDecisionTraces(): DecisionTrace[] {
+  return assetsCache.map(a => getDecisionTraceForAsset(a.id)).filter((t): t is DecisionTrace => t !== null);
 }
 
 export function getCorrectiveActions(): CorrectiveAction[] {
@@ -2973,6 +3008,9 @@ export function getGovernanceMetrics(): GovernanceMetrics {
     overdueActionsCount: 0,
     actionsByStatus: { 'Open': 0, 'Accepted': 0, 'Deferred': 0, 'Rejected': 0, 'In Progress': 0, 'Completed': 0 },
     actionsByOwner: [],
+    traceRecordsCount: 0,
+    topDecisionDrivers: [],
+    humanDecisionStats: { accepted: 0, rejected: 0, deferred: 0 },
   };
 
   getCompliancePacks().forEach(pack => {
@@ -3024,6 +3062,20 @@ export function getGovernanceMetrics(): GovernanceMetrics {
   const actionCountsByOwner = new Map<string, number>();
   nonTerminalActions.filter(a => a.owner).forEach(a => { actionCountsByOwner.set(a.owner!, (actionCountsByOwner.get(a.owner!) || 0) + 1); });
   metrics.actionsByOwner = Array.from(actionCountsByOwner.entries()).map(([owner, count]) => ({ owner, count })).sort((a, b) => b.count - a.count);
+
+  const allTraces = getAllDecisionTraces();
+  metrics.traceRecordsCount = allTraces.filter(t => t.findingsGenerated.length > 0 || t.actionsRecommended.length > 0).length;
+  const driverCounts = new Map<string, number>();
+  allTraces.forEach(t => t.conditionsTriggered.forEach(c => { driverCounts.set(c.conditionType, (driverCounts.get(c.conditionType) || 0) + 1); }));
+  metrics.topDecisionDrivers = Array.from(driverCounts.entries())
+    .map(([conditionType, count]) => ({ conditionType: conditionType as GovernanceCondition['conditionType'], count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 5);
+  allActions.filter(a => a.decidedBy).forEach(a => {
+    if (a.status === 'Accepted') metrics.humanDecisionStats.accepted++;
+    else if (a.status === 'Rejected') metrics.humanDecisionStats.rejected++;
+    else if (a.status === 'Deferred') metrics.humanDecisionStats.deferred++;
+  });
 
   let totalGaps = 0;
   assets.forEach(asset => {
