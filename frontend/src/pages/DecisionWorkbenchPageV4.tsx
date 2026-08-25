@@ -9,9 +9,13 @@ import {
   getEvidence
 } from '../services/storageService';
 import { DecisionPackageModal } from '../components/common/DecisionPackageModal';
+import { useAuth } from '../contexts/AuthContext';
 import type { DecisionOutcome, DecisionReadinessChecklist } from '../types';
 
 export const DecisionWorkbenchPageV4: React.FC = () => {
+  // Q1 Stabilization — Phase 2: recording a GO/CONDITIONAL GO/NO GO decision has no dedicated
+  // ActionKey in roleActionMatrix.ts yet, so it is gated with the safe !isReadOnly fallback.
+  const { isReadOnly } = useAuth();
   const [assets, setAssets] = useState(() => getAssets());
   const [selectedAssetId, setSelectedAssetId] = useState<string>(assets[0]?.id || '');
   const [outcome, setOutcome] = useState<DecisionOutcome>('GO');
@@ -218,7 +222,13 @@ export const DecisionWorkbenchPageV4: React.FC = () => {
               />
             </div>
 
-            <Button type="submit" size="lg" className="w-full">
+            <Button
+              type="submit"
+              size="lg"
+              className="w-full"
+              disabled={isReadOnly}
+              title={isReadOnly ? 'Your governance role does not permit executing or signing a governance decision.' : undefined}
+            >
               Execute & Sign Governance Decision
             </Button>
           </form>

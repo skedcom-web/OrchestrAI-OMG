@@ -55,6 +55,11 @@ export const OperationalDashboardPage: React.FC = () => {
         </h3>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-1">
+          {assets.length === 0 && (
+            <p className="text-sm text-[var(--text-muted)] text-center py-6 sm:col-span-2">
+              No AI assets are currently tracked in production operations.
+            </p>
+          )}
           {assets.map(asset => {
             const status = asset.operationalStatus || 'Active';
 

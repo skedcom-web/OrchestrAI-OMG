@@ -56,6 +56,11 @@ export const RegulatoryLibraryPage: React.FC = () => {
       </div>
 
       {/* Control Cards Grid */}
+      {filtered.length === 0 ? (
+        <Card className="!p-8 text-center text-[var(--text-muted)]">
+          No regulatory controls found for this source.
+        </Card>
+      ) : (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {filtered.map(ctrl => (
           <Card key={ctrl.id} className="!p-5 flex flex-col justify-between gap-4 border-[var(--border-color)]">
@@ -83,6 +88,7 @@ export const RegulatoryLibraryPage: React.FC = () => {
           </Card>
         ))}
       </div>
+      )}
     </div>
   );
 };

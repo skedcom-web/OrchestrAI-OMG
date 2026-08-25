@@ -43,7 +43,10 @@ const SEVERITY_TONE: Record<PolicyViolationSeverity, string> = {
 
 /** Phase 9 WS5 — Policy Violation Management. */
 export const PolicyViolationsPage: React.FC = () => {
-  const { currentUser } = useAuth();
+  // Q1 Stabilization — Phase 2: PolicyViolation has no matching ActionKey in
+  // roleActionMatrix.ts (distinct from GovernancePolicyViolation), so writes here fall
+  // back to the safe !isReadOnly minimum.
+  const { currentUser, isReadOnly } = useAuth();
   const [version, setVersion] = useState(0);
   const [statusFilter, setStatusFilter] = useState<PolicyViolationStatus | 'all'>('all');
   const [severityFilter, setSeverityFilter] = useState<PolicyViolationSeverity | 'all'>('all');
@@ -137,6 +140,8 @@ export const PolicyViolationsPage: React.FC = () => {
               status: 'Open',
             })
           }
+          disabled={isReadOnly}
+          title={isReadOnly ? 'Your governance role does not permit logging policy violations.' : undefined}
         >
           Log Violation
         </Button>
@@ -355,7 +360,7 @@ export const PolicyViolationsPage: React.FC = () => {
                       onClick={() => openSelected(violation)}
                       className="text-[11px] font-bold text-[var(--accent-primary)] hover:underline cursor-pointer whitespace-nowrap"
                     >
-                      Disposition
+                      {isReadOnly ? 'View' : 'Disposition'}
                     </button>
                   </td>
                 </tr>
@@ -449,7 +454,13 @@ export const PolicyViolationsPage: React.FC = () => {
               <Button variant="secondary" onClick={() => setSelected(null)}>
                 Cancel
               </Button>
-              <Button onClick={applyTransition}>Record Disposition</Button>
+              <Button
+                onClick={applyTransition}
+                disabled={isReadOnly}
+                title={isReadOnly ? 'Your governance role does not permit changing violation disposition.' : undefined}
+              >
+                Record Disposition
+              </Button>
             </div>
           </div>
         </Modal>

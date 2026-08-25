@@ -67,7 +67,7 @@ const Field: React.FC<{ label: string; children: React.ReactNode }> = ({ label, 
  * engine set the reassessment requirement, and work the routed approval chain.
  */
 export const ChangeRequestCenterPage: React.FC = () => {
-  const { currentUser, currentPersona } = useAuth();
+  const { currentUser, currentPersona, isReadOnly } = useAuth();
   const actor = currentUser?.name || 'Governance Admin';
   const actorRole = currentPersona?.role || 'GOVERNANCE_ADMIN';
 
@@ -176,6 +176,8 @@ export const ChangeRequestCenterPage: React.FC = () => {
               status: 'Draft',
             })
           }
+          disabled={isReadOnly}
+          title={isReadOnly ? 'Your governance role does not permit raising change requests.' : undefined}
         >
           Raise Change Request
         </Button>
@@ -508,7 +510,11 @@ export const ChangeRequestCenterPage: React.FC = () => {
               <Button variant="secondary" onClick={() => setDraft(null)}>
                 Cancel
               </Button>
-              <Button onClick={saveDraft} disabled={!draft.title?.trim() || !draft.assetId}>
+              <Button
+                onClick={saveDraft}
+                disabled={isReadOnly || !draft.title?.trim() || !draft.assetId}
+                title={isReadOnly ? 'Your governance role does not permit raising change requests.' : undefined}
+              >
                 Save Draft
               </Button>
             </div>
@@ -681,7 +687,13 @@ export const ChangeRequestCenterPage: React.FC = () => {
                     <Button variant="secondary" onClick={() => setSelected(null)}>
                       Close
                     </Button>
-                    <Button onClick={doSubmit}>Submit For Governance</Button>
+                    <Button
+                      onClick={doSubmit}
+                      disabled={isReadOnly}
+                      title={isReadOnly ? 'Your governance role does not permit submitting change requests for governance.' : undefined}
+                    >
+                      Submit For Governance
+                    </Button>
                   </div>
                 </>
               )}
@@ -697,6 +709,8 @@ export const ChangeRequestCenterPage: React.FC = () => {
                       setSelected(null);
                       refresh();
                     }}
+                    disabled={isReadOnly}
+                    title={isReadOnly ? 'Your governance role does not permit opening a governance review.' : undefined}
                   >
                     Open Governance Review
                   </Button>
@@ -738,14 +752,16 @@ export const ChangeRequestCenterPage: React.FC = () => {
                     </Button>
                     <Button
                       variant="danger"
-                      disabled={!approverRole}
+                      disabled={isReadOnly || !approverRole}
+                      title={isReadOnly ? 'Your governance role does not permit deciding on change requests.' : undefined}
                       onClick={() => doApproval('Rejected')}
                     >
                       Reject
                     </Button>
                     <Button
                       variant="success"
-                      disabled={!approverRole}
+                      disabled={isReadOnly || !approverRole}
+                      title={isReadOnly ? 'Your governance role does not permit deciding on change requests.' : undefined}
                       onClick={() => doApproval('Approved')}
                     >
                       Approve
@@ -768,7 +784,13 @@ export const ChangeRequestCenterPage: React.FC = () => {
                     <Button variant="secondary" onClick={() => setSelected(null)}>
                       Close
                     </Button>
-                    <Button onClick={() => doAdvance('Implemented')}>Mark Implemented</Button>
+                    <Button
+                      onClick={() => doAdvance('Implemented')}
+                      disabled={isReadOnly}
+                      title={isReadOnly ? 'Your governance role does not permit marking a change implemented.' : undefined}
+                    >
+                      Mark Implemented
+                    </Button>
                   </div>
                 </>
               )}
@@ -787,7 +809,13 @@ export const ChangeRequestCenterPage: React.FC = () => {
                     <Button variant="secondary" onClick={() => setSelected(null)}>
                       Close
                     </Button>
-                    <Button onClick={() => doAdvance('Closed')}>Close Change</Button>
+                    <Button
+                      onClick={() => doAdvance('Closed')}
+                      disabled={isReadOnly}
+                      title={isReadOnly ? 'Your governance role does not permit closing a change.' : undefined}
+                    >
+                      Close Change
+                    </Button>
                   </div>
                 </>
               )}

@@ -30,7 +30,7 @@ const SettingRow: React.FC<{
 export const TenantSettingsPage: React.FC = () => {
   const { theme, setTheme } = useTheme();
   const { mode, setMode } = useExperience();
-  const { currentPersona } = useAuth();
+  const { currentPersona, isReadOnly } = useAuth();
   const metrics = getGovernanceMetrics();
 
   // Release 4.1 — Persistence Completion: Neon is the only System of Record.
@@ -194,7 +194,13 @@ export const TenantSettingsPage: React.FC = () => {
           label="Reload from Neon"
           description={`Currently showing ${getAssets().length} assets and ${getEvidenceRecords().length} evidence records from this session's cache.${reloadedAt ? ` Last reloaded ${reloadedAt}.` : ''}`}
         >
-          <Button size="sm" variant="secondary" onClick={reloadFromNeon} disabled={reloading}>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={reloadFromNeon}
+            disabled={reloading || isReadOnly}
+            title={isReadOnly ? 'Your governance role does not permit reloading tenant data.' : undefined}
+          >
             {reloading ? 'Reloading…' : 'Reload from Neon'}
           </Button>
         </SettingRow>
@@ -209,7 +215,12 @@ export const TenantSettingsPage: React.FC = () => {
                 live database; already-synced records are unaffected.
               </p>
             </div>
-            <Button size="sm" onClick={runMigration} disabled={migrating}>
+            <Button
+              size="sm"
+              onClick={runMigration}
+              disabled={migrating || isReadOnly}
+              title={isReadOnly ? 'Your governance role does not permit migrating tenant data.' : undefined}
+            >
               {migrating ? 'Migrating…' : 'Migrate Local Data to Neon'}
             </Button>
           </div>

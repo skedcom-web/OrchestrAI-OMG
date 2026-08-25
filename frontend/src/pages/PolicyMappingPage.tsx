@@ -37,7 +37,9 @@ const ASSET_TYPES: AssetType[] = [
 
 /** Phase 9 WS4 — Policy Mapping. */
 export const PolicyMappingPage: React.FC = () => {
-  const { currentUser } = useAuth();
+  // Q1 Stabilization — Phase 2: PolicyMapping has no matching ActionKey in
+  // roleActionMatrix.ts, so writes here fall back to the safe !isReadOnly minimum.
+  const { currentUser, isReadOnly } = useAuth();
   const [version, setVersion] = useState(0);
   const [targetFilter, setTargetFilter] = useState<PolicyTargetType | 'all'>('all');
   const [draft, setDraft] = useState<Partial<PolicyMapping> | null>(null);
@@ -127,7 +129,11 @@ export const PolicyMappingPage: React.FC = () => {
             applies to every asset inside it — coverage is computed, not maintained by hand.
           </p>
         </div>
-        <Button onClick={() => setDraft({ targetType: 'AI Asset', policyId: policies[0]?.id })}>
+        <Button
+          onClick={() => setDraft({ targetType: 'AI Asset', policyId: policies[0]?.id })}
+          disabled={isReadOnly}
+          title={isReadOnly ? 'Your governance role does not permit mapping policies.' : undefined}
+        >
           Map Policy
         </Button>
       </div>
@@ -301,7 +307,11 @@ export const PolicyMappingPage: React.FC = () => {
                     <td className="py-3">
                       <button
                         onClick={() => handleDelete(mapping.id)}
-                        className="text-[11px] font-bold text-[var(--status-danger)] hover:underline cursor-pointer whitespace-nowrap"
+                        disabled={isReadOnly}
+                        title={isReadOnly ? 'Your governance role does not permit removing policy mappings.' : undefined}
+                        className={`text-[11px] font-bold text-[var(--status-danger)] whitespace-nowrap ${
+                          isReadOnly ? 'opacity-50 cursor-not-allowed' : 'hover:underline cursor-pointer'
+                        }`}
                       >
                         Unmap
                       </button>
@@ -430,7 +440,7 @@ export const PolicyMappingPage: React.FC = () => {
               <Button variant="secondary" onClick={() => setDraft(null)}>
                 Cancel
               </Button>
-              <Button onClick={handleSave} disabled={!draft.policyId || !draft.targetId}>
+              <Button onClick={handleSave} disabled={!draft.policyId || !draft.targetId || isReadOnly}>
                 Create Mapping
               </Button>
             </div>

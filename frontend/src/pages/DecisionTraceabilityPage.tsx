@@ -56,6 +56,12 @@ export const DecisionTraceabilityPage: React.FC = () => {
         </div>
       </div>
 
+      {!trace && assets.length === 0 && (
+        <Card className="!p-8 text-center text-sm text-[var(--text-muted)]">
+          No AI assets registered yet — there is no decision trace to reconstruct.
+        </Card>
+      )}
+
       {trace && (
         <Card className="!p-0 overflow-hidden">
           <div className="p-5 border-b border-[var(--border-color)] flex flex-col sm:flex-row sm:items-center justify-between gap-3">

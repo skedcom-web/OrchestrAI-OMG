@@ -4,9 +4,14 @@ import { Button } from '../components/ui/Button';
 import { Select } from '../components/ui/Select';
 import { Input } from '../components/ui/Input';
 import { getAssets, getCorrectiveActions, saveCorrectiveAction } from '../services/storageService';
+import { useAuth } from '../contexts/AuthContext';
 import type { CorrectiveAction, CorrectiveActionStatus, FindingSeverity } from '../types';
 
 export const CorrectiveActionsPage: React.FC = () => {
+  // Q1 Stabilization — Phase 2: 'correctiveAction:create' exists in roleActionMatrix.ts;
+  // status-transition workflow buttons have no matching edit ActionKey, so they fall back
+  // to the safe !isReadOnly minimum.
+  const { canPerform, isReadOnly } = useAuth();
   const [assets] = useState(() => getAssets());
   const [actions, setActions] = useState<CorrectiveAction[]>(() => getCorrectiveActions());
   const [selectedAssetId, setSelectedAssetId] = useState<string>(assets[0]?.id || '');
@@ -111,7 +116,12 @@ export const CorrectiveActionsPage: React.FC = () => {
             />
           </div>
 
-          <Button type="submit" className="w-full">
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={!canPerform('correctiveAction:create')}
+            title={!canPerform('correctiveAction:create') ? 'Your governance role does not permit assigning corrective actions.' : undefined}
+          >
             🛠️ Assign Corrective Remediation Task
           </Button>
         </form>
@@ -123,7 +133,11 @@ export const CorrectiveActionsPage: React.FC = () => {
           Corrective Action Remediation Directory ({actions.length})
         </h3>
 
-        {actions.map(act => (
+        {actions.length === 0 ? (
+          <Card className="!p-8 text-center text-[var(--text-muted)] text-sm">
+            No corrective actions have been assigned yet.
+          </Card>
+        ) : actions.map(act => (
           <Card key={act.id} className="!p-4 border-[var(--border-color)] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-start gap-3">
               <span className="text-2xl shrink-0">🛠️</span>
@@ -156,11 +170,13 @@ export const CorrectiveActionsPage: React.FC = () => {
                   key={st}
                   type="button"
                   onClick={() => handleStatusChange(act.id, st)}
+                  disabled={isReadOnly}
+                  title={isReadOnly ? 'Your governance role does not permit updating corrective action status.' : undefined}
                   className={`px-2 py-1 rounded text-[10px] font-bold transition-all border ${
                     act.status === st
                       ? 'bg-[var(--accent-primary)] text-white border-[var(--accent-primary)]'
                       : 'bg-[var(--bg-badge)] border-[var(--border-color)] text-[var(--text-muted)] hover:bg-[var(--bg-card-hover)]'
-                  }`}
+                  } ${isReadOnly ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   {st}
                 </button>

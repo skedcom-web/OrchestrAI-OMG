@@ -8,9 +8,14 @@ import {
   saveComplianceAssessment,
   calculateAssetComplianceScore 
 } from '../services/storageService';
+import { useAuth } from '../contexts/AuthContext';
 import type { ComplianceEvaluationStatus } from '../types';
 
 export const ComplianceAssessmentPage: React.FC = () => {
+  // Q1 Stabilization — Phase 2: this legacy RBI ComplianceControl assessment has no dedicated
+  // ActionKey in roleActionMatrix.ts (it predates the compliancePack/complianceRequirement
+  // framework), so it is gated with the safe !isReadOnly fallback.
+  const { isReadOnly } = useAuth();
   const [assets] = useState(() => getAssets());
   const [controls] = useState(() => getComplianceControls());
   const [selectedAssetId, setSelectedAssetId] = useState<string>(assets[0]?.id || '');
@@ -97,7 +102,9 @@ export const ComplianceAssessmentPage: React.FC = () => {
                       key={st}
                       type="button"
                       onClick={() => handleAssessmentChange(ctrl.id, st, currentNotes)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${
+                      disabled={isReadOnly}
+                      title={isReadOnly ? 'Your governance role does not permit updating a control assessment.' : undefined}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border disabled:opacity-50 disabled:cursor-not-allowed ${
                         currentStatus === st
                           ? st === 'Compliant'
                             ? 'bg-emerald-500 text-white border-emerald-400 shadow-sm'

@@ -13,7 +13,13 @@ import type { UserRole } from '../types';
  * never drift from what the sidebar actually exposes.
  */
 export const RbacAdministrationPage: React.FC = () => {
-  const { currentUser, switchPersona } = useAuth();
+  // Q1 Stabilization — Phase 2: a prior audit flagged that the (nominally read-only)
+  // Auditor persona has nav access to this page. switchPersona() has no dedicated
+  // ActionKey in roleActionMatrix.ts, so — per the instruction to treat any
+  // permission-changing control here as Super Admin/Governance Admin only — it falls
+  // back to the safe !isReadOnly minimum: a read-only role must not be able to act on
+  // this matrix, even to reassign its own preview persona.
+  const { currentUser, switchPersona, isReadOnly } = useAuth();
   const [domainFilter, setDomainFilter] = useState<string>('all');
 
   const domains = useMemo(
@@ -80,13 +86,14 @@ export const RbacAdministrationPage: React.FC = () => {
               <button
                 key={persona.role}
                 onClick={() => switchPersona(persona.role)}
+                disabled={isReadOnly}
                 data-noglass
-                title={`Switch to ${persona.title}`}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-all cursor-pointer text-left ${
+                title={isReadOnly ? 'Your governance role does not permit changing role assignments.' : `Switch to ${persona.title}`}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-all text-left ${
                   isCurrent
                     ? 'border-[var(--accent-primary)] bg-[var(--accent-light)]'
                     : 'border-[var(--border-subtle)] hover:border-[var(--accent-border)]'
-                }`}
+                } ${isReadOnly ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
               >
                 <span className="text-base shrink-0" aria-hidden>
                   {persona.icon}

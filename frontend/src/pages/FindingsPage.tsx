@@ -5,9 +5,14 @@ import { Input } from '../components/ui/Input';
 import { Select } from '../components/ui/Select';
 import { Modal } from '../components/ui/Modal';
 import { getFindings, saveFinding, getAssets } from '../services/storageService';
+import { useAuth } from '../contexts/AuthContext';
 import type { Finding, FindingSeverity, FindingStatus } from '../types';
 
 export const FindingsPage: React.FC = () => {
+  // Q1 Stabilization — Phase 2: this page's Finding model is a distinct type from the
+  // roleActionMatrix's 'governanceFinding:*' keys (Governance Intelligence Engine), so there is
+  // no exact ActionKey match — gated with the safe !isReadOnly fallback.
+  const { isReadOnly } = useAuth();
   const [findings, setFindings] = useState<Finding[]>(() => getFindings());
   const [assets] = useState(() => getAssets());
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -57,7 +62,12 @@ export const FindingsPage: React.FC = () => {
             Governance Defect & Risk Finding Tracker • 4 Severity Tiers (Low, Medium, High, Critical)
           </p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)} icon={<span>⚠️</span>}>
+        <Button
+          onClick={() => setIsModalOpen(true)}
+          icon={<span>⚠️</span>}
+          disabled={isReadOnly}
+          title={isReadOnly ? 'Your governance role does not permit logging governance findings.' : undefined}
+        >
           Log Governance Finding
         </Button>
       </div>
@@ -112,7 +122,14 @@ export const FindingsPage: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border-color)]">
-              {filtered.map(fnd => (
+              {filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="p-8 text-center text-[var(--text-muted)]">
+                    No findings match the selected severity filter.
+                  </td>
+                </tr>
+              ) : (
+              filtered.map(fnd => (
                 <tr key={fnd.id} className="hover:bg-[var(--bg-card-hover)] transition-colors">
                   <td className="p-4">
                     <div className="flex flex-col">
@@ -151,7 +168,9 @@ export const FindingsPage: React.FC = () => {
                     <select
                       value={fnd.status}
                       onChange={e => handleStatusChange(fnd, e.target.value as FindingStatus)}
-                      className="px-2 py-1 rounded-lg bg-[var(--bg-badge)] border border-[var(--border-color)] text-xs text-[var(--text-primary)] focus:outline-none"
+                      disabled={isReadOnly}
+                      title={isReadOnly ? 'Your governance role does not permit updating finding status.' : undefined}
+                      className="px-2 py-1 rounded-lg bg-[var(--bg-badge)] border border-[var(--border-color)] text-xs text-[var(--text-primary)] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <option value="Open">Open</option>
                       <option value="In Progress">In Progress</option>
@@ -160,7 +179,8 @@ export const FindingsPage: React.FC = () => {
                     </select>
                   </td>
                 </tr>
-              ))}
+              ))
+              )}
             </tbody>
           </table>
         </div>

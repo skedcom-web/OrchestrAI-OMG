@@ -53,7 +53,11 @@ const EMPTY_FORM: Partial<Policy> = {
 /** Phase 9 WS3 — Policy Registry. */
 export const PolicyRegistryPage: React.FC = () => {
   const navigate = useNavigate();
-  const { currentUser } = useAuth();
+  // Q1 Stabilization — Phase 2: this page's `Policy` type is the Policy Registry entity,
+  // distinct from `GovernancePolicy` (the Governance Intelligence Engine entity that owns
+  // 'governancePolicy:create/edit/delete' in roleActionMatrix.ts) — no matching ActionKey
+  // exists yet, so writes here fall back to the safe !isReadOnly minimum.
+  const { currentUser, isReadOnly } = useAuth();
 
   const [version, setVersion] = useState(0);
   const [categoryFilter, setCategoryFilter] = useState<PolicyCategory | 'all'>('all');
@@ -119,7 +123,11 @@ export const PolicyRegistryPage: React.FC = () => {
             policies — each one is owned, dated, reviewed and enforceable.
           </p>
         </div>
-        <Button onClick={() => setEditing({ ...EMPTY_FORM, owner: currentUser?.name || '' })}>
+        <Button
+          onClick={() => setEditing({ ...EMPTY_FORM, owner: currentUser?.name || '' })}
+          disabled={isReadOnly}
+          title={isReadOnly ? 'Your governance role does not permit registering policies.' : undefined}
+        >
           Register Policy
         </Button>
       </div>
@@ -361,7 +369,11 @@ export const PolicyRegistryPage: React.FC = () => {
                     <td className="py-3">
                       <button
                         onClick={() => setEditing(policy)}
-                        className="text-[11px] font-bold text-[var(--accent-primary)] hover:underline cursor-pointer whitespace-nowrap"
+                        disabled={isReadOnly}
+                        title={isReadOnly ? 'Your governance role does not permit editing policies.' : undefined}
+                        className={`text-[11px] font-bold text-[var(--accent-primary)] whitespace-nowrap ${
+                          isReadOnly ? 'opacity-50 cursor-not-allowed' : 'hover:underline cursor-pointer'
+                        }`}
                       >
                         Edit
                       </button>
@@ -504,7 +516,7 @@ export const PolicyRegistryPage: React.FC = () => {
               <Button variant="secondary" onClick={() => setEditing(null)}>
                 Cancel
               </Button>
-              <Button onClick={handleSave} disabled={!editing.name?.trim()}>
+              <Button onClick={handleSave} disabled={!editing.name?.trim() || isReadOnly}>
                 {editing.id ? 'Save Policy' : 'Register Policy'}
               </Button>
             </div>

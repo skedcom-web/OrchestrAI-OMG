@@ -91,5 +91,10 @@ export function fromBackendAsset(row: any): AIAsset {
     updatedAt: String(row.updatedAt).split('T')[0],
     decisionOutcome: enumMaps.decisionOutcome.toFrontend(row.decisionOutcome),
     tags: row.tags,
+    // Q1 Stabilization — Phase 3: soft delete/archive model.
+    isArchived: row.isArchived ?? false,
+    archivedAt: row.archivedAt ? String(row.archivedAt).split('T')[0] : undefined,
+    archivedBy: row.archivedBy || undefined,
+    archiveReason: row.archiveReason || undefined,
   };
 }

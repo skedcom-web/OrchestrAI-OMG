@@ -58,7 +58,9 @@ export const ComplianceDashboardPage: React.FC = () => {
           </h3>
 
           <div className="flex flex-col gap-3 mt-2">
-            {assets.map(asset => {
+            {assets.length === 0 ? (
+              <p className="text-xs text-[var(--text-muted)] italic p-3">No AI assets registered yet.</p>
+            ) : assets.map(asset => {
               const compDetails = calculateAssetComplianceScore(asset.id);
               const score = compDetails.score;
 
@@ -111,7 +113,9 @@ export const ComplianceDashboardPage: React.FC = () => {
           </h3>
 
           <div className="flex flex-col gap-2 mt-1">
-            {controls.slice(0, 6).map(ctrl => (
+            {controls.length === 0 ? (
+              <p className="text-xs text-[var(--text-muted)] italic p-3">No regulatory controls registered yet.</p>
+            ) : controls.slice(0, 6).map(ctrl => (
               <div key={ctrl.id} className="p-3 rounded-xl bg-[var(--bg-badge)] border border-[var(--border-color)] flex items-center justify-between text-xs">
                 <div className="flex items-center gap-2">
                   <span className="font-bold text-[var(--accent-primary)]">{ctrl.id}</span>

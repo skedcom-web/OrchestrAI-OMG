@@ -302,7 +302,18 @@ function persistAssetsCache() {
   setItem(STORAGE_KEYS.ASSETS, assetsCache);
 }
 
+/** Excludes archived assets — the default, everyday view every existing page already expects. */
 export function getAssets(): AIAsset[] {
+  return assetsCache.filter(a => !a.isArchived);
+}
+
+/** Q1 Stabilization — Phase 4: the Archived Assets view's data source. */
+export function getArchivedAssets(): AIAsset[] {
+  return assetsCache.filter(a => a.isArchived);
+}
+
+/** Q1 Stabilization — used by the local repository's includeArchived path. */
+export function getAllAssetsIncludingArchived(): AIAsset[] {
   return assetsCache;
 }
 
@@ -399,25 +410,87 @@ export async function saveAsset(assetData: Partial<AIAsset>): Promise<AIAsset> {
   return created;
 }
 
-export async function deleteAsset(id: string): Promise<void> {
-  const target = assetsCache.find(a => a.id === id);
-  if (!target) return;
+/**
+ * Q1 Stabilization — Phase 3: soft delete/archive model. The asset row is
+ * never removed — evidence, findings, decisions, incidents and every other
+ * cascaded governance record it owns stays intact, reachable from the
+ * Archived Assets view (getArchivedAssets) for as long as it stays archived.
+ */
+export async function archiveAsset(id: string, archivedBy: string, archiveReason: string): Promise<void> {
+  const index = assetsCache.findIndex(a => a.id === id);
+  if (index === -1) return;
+  const target = assetsCache[index];
+  const archivedAt = new Date().toISOString().split('T')[0];
 
-  assetsCache = assetsCache.filter(a => a.id !== id);
+  assetsCache = [...assetsCache];
+  assetsCache[index] = {
+    ...target,
+    status: 'Retirement',
+    isArchived: true,
+    archivedAt,
+    archivedBy,
+    archiveReason,
+  };
+  persistAssetsCache();
+
+  addAuditLog(
+    'usr-1',
+    archivedBy,
+    'GOVERNANCE_ADMIN',
+    'ASSET_ARCHIVED',
+    'Asset',
+    id,
+    target.name,
+    `Archived asset ${target.name}. Reason: ${archiveReason}`
+  );
+
+  await apiAssetRepository.archiveAsset(id, archivedBy, archiveReason);
+}
+
+/** Q1 Stabilization — Phase 4: reverses an archive; the asset returns to the default (non-archived) view. */
+export async function restoreAsset(id: string): Promise<void> {
+  const index = assetsCache.findIndex(a => a.id === id);
+  if (index === -1) return;
+  const target = assetsCache[index];
+
+  assetsCache = [...assetsCache];
+  assetsCache[index] = {
+    ...target,
+    isArchived: false,
+    archivedAt: undefined,
+    archivedBy: undefined,
+    archiveReason: undefined,
+  };
   persistAssetsCache();
 
   addAuditLog(
     'usr-1',
     'Sarah Jenkins',
-    'SUPER_ADMIN',
-    'ASSET_DELETED',
+    'GOVERNANCE_ADMIN',
+    'ASSET_RESTORED',
     'Asset',
     id,
     target.name,
-    `Deleted asset ${target.name} from registry.`
+    `Restored archived asset ${target.name}.`
   );
 
-  await apiAssetRepository.deleteAsset(id);
+  await apiAssetRepository.restoreAsset(id);
+  await refreshAssetFromServer(id);
+}
+
+async function refreshAssetFromServer(id: string): Promise<void> {
+  try {
+    const fresh = await apiAssetRepository.getAssets(true);
+    const match = fresh.find(a => a.id === id);
+    if (!match) return;
+    const index = assetsCache.findIndex(a => a.id === id);
+    if (index === -1) return;
+    assetsCache = [...assetsCache];
+    assetsCache[index] = normalizeAsset(match);
+    persistAssetsCache();
+  } catch {
+    // best-effort reconciliation only — the optimistic local update already stands
+  }
 }
 
 export function updateAssetOperationalStatus(id: string, operationalStatus: OperationalStatus, user: string): void {
@@ -3369,7 +3442,7 @@ export function bootstrapPersistence(options?: { force?: boolean }): Promise<voi
         actionRules,
         governanceProfiles,
       ] = await Promise.all([
-        apiAssetRepository.getAssets(),
+        apiAssetRepository.getAssets(true), // Q1 Stabilization — include archived so the local cache is complete; getAssets()/getArchivedAssets() split the view.
         apiEvidenceRepository.getEvidence(),
         apiGovernanceRepository.getGovernanceData(),
         apiCompliancePackRepository.getCompliancePacks(),

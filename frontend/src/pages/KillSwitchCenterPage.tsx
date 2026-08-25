@@ -3,9 +3,16 @@ import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Select } from '../components/ui/Select';
 import { getAssets, getKillSwitches, requestKillSwitch, releaseKillSwitch } from '../services/storageService';
+import { useAuth } from '../contexts/AuthContext';
 import type { KillSwitchTriggerCategory } from '../types';
 
 export const KillSwitchCenterPage: React.FC = () => {
+  // Q1 Stabilization — Phase 2/4: dedicated ActionKeys (killSwitch:engage/release), scoped to
+  // Super Admin/Governance Admin/Risk Officer — tighter than the generic !isReadOnly fallback,
+  // since over-permissioning an emergency stop is a worse failure mode than ordinary CRUD.
+  const { canPerform } = useAuth();
+  const canEngage = canPerform('killSwitch:engage');
+  const canRelease = canPerform('killSwitch:release');
   const [assets] = useState(() => getAssets());
   const [records, setRecords] = useState(() => getKillSwitches());
   const [selectedAssetId, setSelectedAssetId] = useState<string>(assets[0]?.id || '');
@@ -94,7 +101,14 @@ export const KillSwitchCenterPage: React.FC = () => {
             />
           </div>
 
-          <Button type="submit" variant="danger" size="lg" className="w-full">
+          <Button
+            type="submit"
+            variant="danger"
+            size="lg"
+            className="w-full"
+            disabled={!canEngage}
+            title={!canEngage ? 'Your governance role does not permit activating the kill switch.' : undefined}
+          >
             🚨 ENGAGE EMERGENCY KILL SWITCH IMMEDIATELY
           </Button>
         </form>
@@ -106,7 +120,12 @@ export const KillSwitchCenterPage: React.FC = () => {
           Kill Switch Audit Log & Active Suspensions ({records.length})
         </h3>
 
-        {records.map(rec => (
+        {records.length === 0 ? (
+          <Card className="!p-8 text-center text-[var(--text-muted)]">
+            No kill switch events recorded.
+          </Card>
+        ) : (
+        records.map(rec => (
           <Card key={rec.id} className="!p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-[var(--border-color)]">
             <div className="flex items-start gap-3">
               <span className="text-2xl shrink-0">{rec.status === 'Activated' ? '🚨' : '✅'}</span>
@@ -130,12 +149,19 @@ export const KillSwitchCenterPage: React.FC = () => {
             </div>
 
             {rec.status === 'Activated' && (
-              <Button size="sm" variant="outline" onClick={() => handleRelease(rec.id)}>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleRelease(rec.id)}
+                disabled={!canRelease}
+                title={!canRelease ? 'Your governance role does not permit releasing the kill switch.' : undefined}
+              >
                 Release Kill Switch
               </Button>
             )}
           </Card>
-        ))}
+        ))
+        )}
       </div>
     </div>
   );

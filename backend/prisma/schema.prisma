@@ -187,15 +187,17 @@ model AIAsset {
 
   // Release 1 — Governance Authority Profile (Capability 1)
   /// Ultimately accountable individual — distinct from AssetOwner.businessOwner.
-  accountableOwner         String?
-  governanceSponsor        String?
-  humanOverrideAuthority   String?
-  killSwitchAuthority      String?
-  reassessmentAuthority    String?
+  /// Q1 Stabilization: required — no asset may exist without named accountability.
+  accountableOwner       String
+  governanceSponsor      String
+  humanOverrideAuthority String?
+  killSwitchAuthority    String?
+  reassessmentAuthority  String?
   /// Release 4 — completes the Authority Profile as flat, API-writable scalars
   /// (distinct from the legacy User-relation-based AssetOwner.riskOwner etc.).
-  authorityRiskOwner       String?
-  authorityTechnicalOwner  String?
+  /// Q1 Stabilization: required — no asset may exist without named accountability.
+  authorityRiskOwner       String
+  authorityTechnicalOwner  String
   authorityComplianceOwner String?
 
   /// Release 4 — the free-text five-role Ownership Matrix (OwnershipAssignment),
@@ -215,6 +217,14 @@ model AIAsset {
   // Release 2 — Governance State Model (Capability 1)
   governanceState AssetGovernanceState? @default(DRAFT)
   nextReviewDate  DateTime?
+
+  // Q1 Stabilization — Soft Delete / Archive Model (Phase 3).
+  // Deletion is no longer destructive: an "archived" asset keeps its row (and
+  // therefore every cascaded evidence/finding/decision/incident record) intact.
+  isArchived    Boolean   @default(false)
+  archivedAt    DateTime?
+  archivedBy    String?
+  archiveReason String?   @db.Text
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

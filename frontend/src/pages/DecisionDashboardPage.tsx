@@ -57,7 +57,9 @@ export const DecisionDashboardPage: React.FC = () => {
           </h3>
 
           <div className="flex flex-col gap-3 mt-2">
-            {assets.map(asset => {
+            {assets.length === 0 ? (
+              <p className="text-xs text-[var(--text-muted)] italic p-3">No AI assets registered yet.</p>
+            ) : assets.map(asset => {
               const scoreBreakdown = calculateAssetGovernanceScore(asset.id);
               const score = scoreBreakdown.overallScore;
 

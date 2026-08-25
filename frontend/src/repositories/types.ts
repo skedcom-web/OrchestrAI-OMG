@@ -33,10 +33,13 @@ import type {
 } from '../types';
 
 export interface AssetRepository {
-  getAssets(): Promise<AIAsset[]>;
+  /** Q1 Stabilization — includeArchived also returns archived assets (used by the Archived Assets view). */
+  getAssets(includeArchived?: boolean): Promise<AIAsset[]>;
   createAsset(data: Partial<AIAsset>): Promise<AIAsset>;
   updateAsset(id: string, data: Partial<AIAsset>): Promise<AIAsset>;
-  deleteAsset(id: string): Promise<void>;
+  /** Q1 Stabilization — Phase 3: soft delete/archive, never a physical row removal. */
+  archiveAsset(id: string, archivedBy: string, archiveReason: string): Promise<void>;
+  restoreAsset(id: string): Promise<void>;
 }
 
 export interface EvidenceRepository {

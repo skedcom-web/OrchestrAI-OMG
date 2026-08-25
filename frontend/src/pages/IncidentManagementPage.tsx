@@ -4,9 +4,14 @@ import { Button } from '../components/ui/Button';
 import { Select } from '../components/ui/Select';
 import { Input } from '../components/ui/Input';
 import { getAssets, getIncidents, saveIncident } from '../services/storageService';
+import { useAuth } from '../contexts/AuthContext';
 import type { GovernanceIncident, IncidentType, IncidentSeverity, IncidentStatus } from '../types';
 
 export const IncidentManagementPage: React.FC = () => {
+  // Q1 Stabilization — Phase 2: no ActionKey exists yet for incidents in roleActionMatrix.ts,
+  // so write actions here fall back to the safe !isReadOnly minimum (Auditor/Viewer are never
+  // granted a write endpoint on the real backend).
+  const { isReadOnly } = useAuth();
   const [assets] = useState(() => getAssets());
   const [incidents, setIncidents] = useState<GovernanceIncident[]>(() => getIncidents());
   const [selectedAssetId, setSelectedAssetId] = useState<string>(assets[0]?.id || '');
@@ -107,7 +112,12 @@ export const IncidentManagementPage: React.FC = () => {
             />
           </div>
 
-          <Button type="submit" className="w-full">
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={isReadOnly}
+            title={isReadOnly ? 'Your governance role does not permit logging incidents.' : undefined}
+          >
             Log Governance Incident
           </Button>
         </form>
@@ -119,7 +129,11 @@ export const IncidentManagementPage: React.FC = () => {
           Governance Incidents Directory ({incidents.length})
         </h3>
 
-        {incidents.map(inc => (
+        {incidents.length === 0 ? (
+          <Card className="!p-8 text-center text-[var(--text-muted)] text-sm">
+            No governance incidents logged yet.
+          </Card>
+        ) : incidents.map(inc => (
           <Card key={inc.id} className="!p-4 border-[var(--border-color)] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-start gap-3">
               <span className="text-2xl shrink-0">
@@ -149,11 +163,13 @@ export const IncidentManagementPage: React.FC = () => {
                   key={st}
                   type="button"
                   onClick={() => handleStatusChange(inc.id, st)}
+                  disabled={isReadOnly}
+                  title={isReadOnly ? 'Your governance role does not permit changing incident status.' : undefined}
                   className={`px-2 py-1 rounded text-[10px] font-bold transition-all border ${
                     inc.status === st
                       ? 'bg-[var(--accent-primary)] text-white border-[var(--accent-primary)]'
                       : 'bg-[var(--bg-badge)] border-[var(--border-color)] text-[var(--text-muted)] hover:bg-[var(--bg-card-hover)]'
-                  }`}
+                  } ${isReadOnly ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   {st}
                 </button>

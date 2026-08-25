@@ -246,6 +246,14 @@ export const NAV_DOMAINS: NavDomain[] = [
         description: 'Controlled decommissioning and archival of AI assets.',
         keywords: ['decommission', 'archive', 'sunset', 'retire'],
       },
+      {
+        path: '/archived-assets',
+        label: 'Archived Assets',
+        icon: '🗄️',
+        description: 'Soft-deleted assets, restorable by an authorised role — nothing is ever physically removed.',
+        keywords: ['archive', 'restore', 'deleted', 'soft delete', 'audit history'],
+        badge: 'Q1',
+      },
     ],
   },
   {

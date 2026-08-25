@@ -5,9 +5,14 @@ import { Input } from '../components/ui/Input';
 import { Select } from '../components/ui/Select';
 import { Modal } from '../components/ui/Modal';
 import { getEvidence, saveEvidence, getAssets } from '../services/storageService';
+import { useAuth } from '../contexts/AuthContext';
 import type { EvidenceDocument, EvidenceCategory, GovernanceDeliverableType } from '../types';
 
 export const EvidenceCenterPage: React.FC = () => {
+  // Q1 Stabilization — Phase 2: this page's EvidenceDocument (ODF deliverables) is a distinct
+  // model from the roleActionMatrix's 'evidenceRecord:*' keys (Evidence Registry), so there is
+  // no exact ActionKey match — gated with the safe !isReadOnly fallback.
+  const { isReadOnly } = useAuth();
   const [evidenceList, setEvidenceList] = useState<EvidenceDocument[]>(() => getEvidence());
   const [assets] = useState(() => getAssets());
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -71,7 +76,12 @@ export const EvidenceCenterPage: React.FC = () => {
             Central Repository for Governance Evidence • Aligned with OrchestrAI Governance Blueprint v1
           </p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)} icon={<span>📄</span>}>
+        <Button
+          onClick={() => setIsModalOpen(true)}
+          icon={<span>📄</span>}
+          disabled={isReadOnly}
+          title={isReadOnly ? 'Your governance role does not permit submitting governance evidence.' : undefined}
+        >
           Submit Governance Evidence
         </Button>
       </div>
@@ -132,7 +142,14 @@ export const EvidenceCenterPage: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border-color)]">
-              {filtered.map(evd => (
+              {filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="p-8 text-center text-[var(--text-muted)]">
+                    No governance evidence found for this category.
+                  </td>
+                </tr>
+              ) : (
+              filtered.map(evd => (
                 <tr key={evd.id} className="hover:bg-[var(--bg-card-hover)] transition-colors">
                   <td className="p-4">
                     <div className="flex flex-col">
@@ -163,7 +180,8 @@ export const EvidenceCenterPage: React.FC = () => {
                   </td>
                   <td className="p-4 text-right text-xs text-[var(--text-muted)]">{evd.uploadDate}</td>
                 </tr>
-              ))}
+              ))
+              )}
             </tbody>
           </table>
         </div>

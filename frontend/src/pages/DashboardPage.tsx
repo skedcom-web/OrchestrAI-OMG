@@ -688,19 +688,27 @@ export const DashboardPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--border-color)]">
-                {assets
-                  .filter(a => a.riskLevel === 'High' || a.riskLevel === 'Critical')
-                  .slice(0, 4)
-                  .map(a => (
-                    <tr key={a.id} className="hover:bg-[var(--bg-card-hover)] transition-colors">
-                      <td className="py-2.5 font-bold text-[var(--text-primary)]">{a.name}</td>
-                      <td className="py-2.5"><RiskBadge level={a.riskLevel} size="sm" /></td>
-                      <td className="py-2.5"><StatusBadge status={a.status} size="sm" /></td>
-                      <td className="py-2.5 text-right">
-                        <StatusBadge status={a.decisionOutcome || 'PENDING'} size="sm" />
-                      </td>
-                    </tr>
-                  ))}
+                {assets.filter(a => a.riskLevel === 'High' || a.riskLevel === 'Critical').length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="py-6 text-center text-[var(--text-muted)] italic">
+                      No High or Critical risk assets currently require review.
+                    </td>
+                  </tr>
+                ) : (
+                  assets
+                    .filter(a => a.riskLevel === 'High' || a.riskLevel === 'Critical')
+                    .slice(0, 4)
+                    .map(a => (
+                      <tr key={a.id} className="hover:bg-[var(--bg-card-hover)] transition-colors">
+                        <td className="py-2.5 font-bold text-[var(--text-primary)]">{a.name}</td>
+                        <td className="py-2.5"><RiskBadge level={a.riskLevel} size="sm" /></td>
+                        <td className="py-2.5"><StatusBadge status={a.status} size="sm" /></td>
+                        <td className="py-2.5 text-right">
+                          <StatusBadge status={a.decisionOutcome || 'PENDING'} size="sm" />
+                        </td>
+                      </tr>
+                    ))
+                )}
               </tbody>
             </table>
           </div>
@@ -716,20 +724,24 @@ export const DashboardPage: React.FC = () => {
           </div>
 
           <div className="flex flex-col gap-3">
-            {auditLogs.map(log => (
-              <div key={log.id} className="p-3 rounded-xl bg-[var(--bg-badge)] border border-[var(--border-color)] flex items-start gap-3">
-                <span className="p-1.5 rounded-lg bg-[var(--accent-light)] text-[var(--accent-primary)] text-xs font-bold">
-                  📜
-                </span>
-                <div className="flex-1 min-w-0 text-xs">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-[var(--text-primary)] truncate">{log.action}</span>
-                    <span className="text-[10px] text-[var(--text-muted)] shrink-0">{log.timestamp}</span>
+            {auditLogs.length === 0 ? (
+              <span className="text-xs text-[var(--text-muted)] italic">No governance activity recorded yet.</span>
+            ) : (
+              auditLogs.map(log => (
+                <div key={log.id} className="p-3 rounded-xl bg-[var(--bg-badge)] border border-[var(--border-color)] flex items-start gap-3">
+                  <span className="p-1.5 rounded-lg bg-[var(--accent-light)] text-[var(--accent-primary)] text-xs font-bold">
+                    📜
+                  </span>
+                  <div className="flex-1 min-w-0 text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-[var(--text-primary)] truncate">{log.action}</span>
+                      <span className="text-[10px] text-[var(--text-muted)] shrink-0">{log.timestamp}</span>
+                    </div>
+                    <p className="text-[11px] text-[var(--text-secondary)] mt-0.5 line-clamp-1">{log.details}</p>
                   </div>
-                  <p className="text-[11px] text-[var(--text-secondary)] mt-0.5 line-clamp-1">{log.details}</p>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </Card>
       </div>

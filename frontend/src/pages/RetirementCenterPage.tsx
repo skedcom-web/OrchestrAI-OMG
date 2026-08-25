@@ -4,9 +4,14 @@ import { Button } from '../components/ui/Button';
 import { Select } from '../components/ui/Select';
 import { Input } from '../components/ui/Input';
 import { getAssets, getRetirements, retireAsset } from '../services/storageService';
+import { useAuth } from '../contexts/AuthContext';
 import type { RetirementRecord, RetirementReason } from '../types';
 
 export const RetirementCenterPage: React.FC = () => {
+  // Q1 Stabilization — Phase 2: no ActionKey exists yet for asset retirement in
+  // roleActionMatrix.ts (distinct from 'asset:archive'), so this falls back to the
+  // safe !isReadOnly minimum.
+  const { isReadOnly } = useAuth();
   const [assets] = useState(() => getAssets().filter(a => a.status !== 'Retirement'));
   const [retirements, setRetirements] = useState<RetirementRecord[]>(() => getRetirements());
   const [selectedAssetId, setSelectedAssetId] = useState<string>(assets[0]?.id || '');
@@ -74,7 +79,13 @@ export const RetirementCenterPage: React.FC = () => {
             placeholder="e.g. Replaced by Retail Credit Scoring Engine (ast-102). Evidence archived in S3 Glacier..."
           />
 
-          <Button type="submit" variant="danger" className="w-full">
+          <Button
+            type="submit"
+            variant="danger"
+            className="w-full"
+            disabled={isReadOnly}
+            title={isReadOnly ? 'Your governance role does not permit retiring AI assets.' : undefined}
+          >
             📦 Approve & Retire AI System
           </Button>
         </form>
@@ -86,7 +97,11 @@ export const RetirementCenterPage: React.FC = () => {
           Retired Assets Audit Directory ({retirements.length})
         </h3>
 
-        {retirements.map(rec => (
+        {retirements.length === 0 ? (
+          <Card className="!p-8 text-center text-[var(--text-muted)] text-sm">
+            No AI assets have been retired yet.
+          </Card>
+        ) : retirements.map(rec => (
           <Card key={rec.id} className="!p-4 border-[var(--border-color)] flex flex-col gap-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">

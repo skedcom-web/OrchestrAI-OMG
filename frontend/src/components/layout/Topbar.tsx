@@ -50,7 +50,7 @@ const ModeToggle: React.FC = () => {
 export const Topbar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { currentUser, currentPersona, switchPersona, logout } = useAuth();
+  const { currentUser, currentPersona, switchPersona, logout, isReadOnly } = useAuth();
   const { setMobileNavOpen } = useExperience();
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -164,6 +164,18 @@ export const Topbar: React.FC = () => {
               </span>
             )}
           </button>
+
+          {/* Q1 Stabilization — persistent, unmissable read-only indicator for Auditor/Viewer */}
+          {isReadOnly && (
+            <span
+              data-noglass
+              title={`${currentPersona?.title || 'This role'} has read-only access — no create, edit, archive, or restore actions are available.`}
+              className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[10px] font-extrabold uppercase tracking-[0.08em] bg-[var(--status-warning-bg)] border border-[var(--status-warning-border)] text-[var(--status-warning)]"
+            >
+              <span aria-hidden>👁</span>
+              Read-Only
+            </span>
+          )}
 
           <div className="hidden md:block">
             <ModeToggle />

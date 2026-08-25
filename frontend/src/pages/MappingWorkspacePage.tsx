@@ -23,6 +23,7 @@ import {
   getObligationCoverage,
   getSourceGapsForSource,
 } from '../services/storageService';
+import { useAuth } from '../contexts/AuthContext';
 import type { RegulatorySource, RegulatoryRequirement, Obligation, ObligationControl } from '../types';
 
 type WorkspaceTab = 'requirements' | 'obligations' | 'controls' | 'evidence' | 'coverage' | 'gaps';
@@ -46,6 +47,7 @@ const TABS: { key: WorkspaceTab; label: string; icon: string }[] = [
  * Neon-first, mirroring the Release 5.1-corrected pattern from the start.
  */
 export const MappingWorkspacePage: React.FC = () => {
+  const { canPerform } = useAuth();
   const [sources, setSources] = useState<RegulatorySource[]>(() => getRegulatorySources());
   const [selectedSourceId, setSelectedSourceId] = useState<string>(sources[0]?.id || '');
   const [activeTab, setActiveTab] = useState<WorkspaceTab>('requirements');
@@ -187,6 +189,8 @@ export const MappingWorkspacePage: React.FC = () => {
         <Button
           onClick={() => { setEditingSource({ name: '', sourceType: 'Regulation', status: 'Draft', jurisdiction: '', industry: 'Cross-Industry', version: '1.0', effectiveDate: new Date().toISOString().split('T')[0] }); setIsSourceModalOpen(true); }}
           icon={<span>➕</span>}
+          disabled={!canPerform('regulatorySource:create')}
+          title={!canPerform('regulatorySource:create') ? 'Your governance role does not permit registering regulatory sources.' : undefined}
         >
           Register Regulatory Source
         </Button>
@@ -208,7 +212,13 @@ export const MappingWorkspacePage: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border-color)]">
-              {sources.map(source => {
+              {sources.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="p-8 text-center text-[var(--text-muted)]">
+                    No regulatory sources registered yet.
+                  </td>
+                </tr>
+              ) : sources.map(source => {
                 const coverage = getSourceCoverage(source.id);
                 return (
                   <tr
@@ -228,7 +238,15 @@ export const MappingWorkspacePage: React.FC = () => {
                     <td className="p-4"><RegulatorySourceStatusBadge status={source.status} size="sm" /></td>
                     <td className="p-4">{coverage && <ComplianceCoverageBadge status={coverage.status} size="sm" />}</td>
                     <td className="p-4 text-right" onClick={e => e.stopPropagation()}>
-                      <Button size="sm" variant="ghost" onClick={() => { setEditingSource({ ...source }); setIsSourceModalOpen(true); }}>Edit</Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => { setEditingSource({ ...source }); setIsSourceModalOpen(true); }}
+                        disabled={!canPerform('regulatorySource:edit')}
+                        title={!canPerform('regulatorySource:edit') ? 'Your governance role does not permit editing regulatory sources.' : undefined}
+                      >
+                        Edit
+                      </Button>
                     </td>
                   </tr>
                 );
@@ -271,7 +289,12 @@ export const MappingWorkspacePage: React.FC = () => {
             {activeTab === 'requirements' && (
               <div className="flex flex-col gap-3">
                 <div className="flex justify-end">
-                  <Button size="sm" onClick={() => { setEditingReq({ name: '', description: '', category: 'General', criticality: 'Medium', status: 'Draft' }); setIsReqModalOpen(true); }}>
+                  <Button
+                    size="sm"
+                    onClick={() => { setEditingReq({ name: '', description: '', category: 'General', criticality: 'Medium', status: 'Draft' }); setIsReqModalOpen(true); }}
+                    disabled={!canPerform('regulatoryRequirement:create')}
+                    title={!canPerform('regulatoryRequirement:create') ? 'Your governance role does not permit adding requirements.' : undefined}
+                  >
                     Add Requirement
                   </Button>
                 </div>
@@ -301,7 +324,12 @@ export const MappingWorkspacePage: React.FC = () => {
             {activeTab === 'obligations' && (
               <div className="flex flex-col gap-3">
                 <div className="flex justify-end">
-                  <Button size="sm" onClick={() => { setEditingObligation({ name: '', description: '', requirementId: requirements[0]?.id || '', owner: '', status: 'Draft' }); setIsObligationModalOpen(true); }} disabled={requirements.length === 0}>
+                  <Button
+                    size="sm"
+                    onClick={() => { setEditingObligation({ name: '', description: '', requirementId: requirements[0]?.id || '', owner: '', status: 'Draft' }); setIsObligationModalOpen(true); }}
+                    disabled={requirements.length === 0 || !canPerform('obligation:create')}
+                    title={!canPerform('obligation:create') ? 'Your governance role does not permit adding obligations.' : undefined}
+                  >
                     Add Obligation
                   </Button>
                 </div>
@@ -333,7 +361,12 @@ export const MappingWorkspacePage: React.FC = () => {
             {activeTab === 'controls' && (
               <div className="flex flex-col gap-3">
                 <div className="flex justify-end">
-                  <Button size="sm" onClick={() => { setEditingControl({ name: '', description: '', obligationId: obligations[0]?.id || '', owner: '', status: 'Draft' }); setIsControlModalOpen(true); }} disabled={obligations.length === 0}>
+                  <Button
+                    size="sm"
+                    onClick={() => { setEditingControl({ name: '', description: '', obligationId: obligations[0]?.id || '', owner: '', status: 'Draft' }); setIsControlModalOpen(true); }}
+                    disabled={obligations.length === 0 || !canPerform('obligationControl:create')}
+                    title={!canPerform('obligationControl:create') ? 'Your governance role does not permit adding controls.' : undefined}
+                  >
                     Add Control
                   </Button>
                 </div>
@@ -359,7 +392,12 @@ export const MappingWorkspacePage: React.FC = () => {
             {activeTab === 'evidence' && (
               <div className="flex flex-col gap-3">
                 <div className="flex justify-end">
-                  <Button size="sm" onClick={() => setIsMappingModalOpen(true)} disabled={controls.length === 0}>
+                  <Button
+                    size="sm"
+                    onClick={() => setIsMappingModalOpen(true)}
+                    disabled={controls.length === 0 || !canPerform('obligationEvidenceMapping:create')}
+                    title={!canPerform('obligationEvidenceMapping:create') ? 'Your governance role does not permit mapping evidence to controls.' : undefined}
+                  >
                     Map Evidence to Control
                   </Button>
                 </div>
@@ -378,7 +416,15 @@ export const MappingWorkspacePage: React.FC = () => {
                             controlMappings.map(m => (
                               <div key={m.id} className="flex items-center justify-between gap-2 text-xs p-2 rounded-lg bg-[var(--bg-card)] border border-[var(--border-color)]">
                                 <span className="text-[var(--text-primary)] font-semibold truncate">{m.evidenceName}</span>
-                                <Button size="sm" variant="ghost" onClick={() => handleUnlinkMapping(m.id)}>Unlink</Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => handleUnlinkMapping(m.id)}
+                                  disabled={!canPerform('obligationEvidenceMapping:delete')}
+                                  title={!canPerform('obligationEvidenceMapping:delete') ? 'Your governance role does not permit unlinking evidence mappings.' : undefined}
+                                >
+                                  Unlink
+                                </Button>
                               </div>
                             ))
                           )}
@@ -455,7 +501,13 @@ export const MappingWorkspacePage: React.FC = () => {
             </div>
             <div className="flex items-center justify-end gap-3 pt-4 border-t border-[var(--border-color)]">
               <Button type="button" variant="ghost" onClick={() => setIsSourceModalOpen(false)}>Cancel</Button>
-              <Button type="submit">{editingSource.id ? 'Save Changes' : 'Register Source'}</Button>
+              <Button
+                type="submit"
+                disabled={!canPerform(editingSource.id ? 'regulatorySource:edit' : 'regulatorySource:create')}
+                title={!canPerform(editingSource.id ? 'regulatorySource:edit' : 'regulatorySource:create') ? 'Your governance role does not permit saving regulatory sources.' : undefined}
+              >
+                {editingSource.id ? 'Save Changes' : 'Register Source'}
+              </Button>
             </div>
           </form>
         </Modal>
@@ -478,7 +530,13 @@ export const MappingWorkspacePage: React.FC = () => {
             </div>
             <div className="flex items-center justify-end gap-3 pt-4 border-t border-[var(--border-color)]">
               <Button type="button" variant="ghost" onClick={() => setIsReqModalOpen(false)}>Cancel</Button>
-              <Button type="submit">Add Requirement</Button>
+              <Button
+                type="submit"
+                disabled={!canPerform('regulatoryRequirement:create')}
+                title={!canPerform('regulatoryRequirement:create') ? 'Your governance role does not permit adding requirements.' : undefined}
+              >
+                Add Requirement
+              </Button>
             </div>
           </form>
         </Modal>
@@ -500,7 +558,13 @@ export const MappingWorkspacePage: React.FC = () => {
             </div>
             <div className="flex items-center justify-end gap-3 pt-4 border-t border-[var(--border-color)]">
               <Button type="button" variant="ghost" onClick={() => setIsObligationModalOpen(false)}>Cancel</Button>
-              <Button type="submit">Add Obligation</Button>
+              <Button
+                type="submit"
+                disabled={!canPerform('obligation:create')}
+                title={!canPerform('obligation:create') ? 'Your governance role does not permit adding obligations.' : undefined}
+              >
+                Add Obligation
+              </Button>
             </div>
           </form>
         </Modal>
@@ -522,7 +586,13 @@ export const MappingWorkspacePage: React.FC = () => {
             </div>
             <div className="flex items-center justify-end gap-3 pt-4 border-t border-[var(--border-color)]">
               <Button type="button" variant="ghost" onClick={() => setIsControlModalOpen(false)}>Cancel</Button>
-              <Button type="submit">Add Control</Button>
+              <Button
+                type="submit"
+                disabled={!canPerform('obligationControl:create')}
+                title={!canPerform('obligationControl:create') ? 'Your governance role does not permit adding controls.' : undefined}
+              >
+                Add Control
+              </Button>
             </div>
           </form>
         </Modal>
@@ -536,7 +606,13 @@ export const MappingWorkspacePage: React.FC = () => {
             <Select label="Evidence Record" required options={evidenceRecords.map(e => ({ value: e.id, label: `${e.name} (${e.status})` }))} value={mappingEvidenceId} onChange={e => setMappingEvidenceId(e.target.value)} />
             <div className="flex items-center justify-end gap-3 pt-4 border-t border-[var(--border-color)]">
               <Button type="button" variant="ghost" onClick={() => setIsMappingModalOpen(false)}>Cancel</Button>
-              <Button type="submit">Map Evidence</Button>
+              <Button
+                type="submit"
+                disabled={!canPerform('obligationEvidenceMapping:create')}
+                title={!canPerform('obligationEvidenceMapping:create') ? 'Your governance role does not permit mapping evidence to controls.' : undefined}
+              >
+                Map Evidence
+              </Button>
             </div>
           </form>
         </Modal>

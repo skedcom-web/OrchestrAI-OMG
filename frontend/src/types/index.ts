@@ -693,6 +693,11 @@ export interface AIAsset {
   lastReviewDate?: string;
   decisionOutcome?: DecisionOutcome;
   tags?: string[];
+  /** Q1 Stabilization — Phase 3: soft delete/archive model. Deletion never removes the row. */
+  isArchived?: boolean;
+  archivedAt?: string;
+  archivedBy?: string;
+  archiveReason?: string;
 }
 
 export interface User {

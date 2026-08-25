@@ -62,7 +62,9 @@ export const ValidationDashboardPage: React.FC = () => {
           </p>
 
           <div className="flex flex-col gap-3 mt-2">
-            {assets.map(asset => {
+            {assets.length === 0 ? (
+              <p className="text-xs text-[var(--text-muted)] italic p-3">No AI assets registered yet.</p>
+            ) : assets.map(asset => {
               const score = asset.validationScore ?? 0;
               return (
                 <div key={asset.id} className="p-3.5 rounded-xl bg-[var(--bg-badge)] border border-[var(--border-color)] flex flex-col gap-2">

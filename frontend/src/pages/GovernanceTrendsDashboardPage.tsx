@@ -55,6 +55,11 @@ export const GovernanceTrendsDashboardPage: React.FC = () => {
         </h3>
 
         <div className="flex flex-col gap-3 mt-2">
+          {assets.length === 0 && (
+            <p className="text-sm text-[var(--text-muted)] text-center py-6">
+              No AI assets available for governance health trending.
+            </p>
+          )}
           {assets.map(asset => {
             const health = calculateAssetGovernanceHealthScore(asset.id);
             const score = health.overallHealthScore;

@@ -8,6 +8,7 @@ import { Modal } from '../components/ui/Modal';
 import { EvidenceStatusBadge, EvidenceExpiryBadge, ReadinessBadge } from '../components/ui/Badge';
 import { getAssets, getEvidenceRecords, getEvidenceTimeline, saveEvidenceRecord, deleteEvidenceRecord, getEvidenceReadiness } from '../services/storageService';
 import { EVIDENCE_TYPES, EVIDENCE_STATUSES, getExpiryIndicator, daysRemaining } from '../config/evidenceFoundation';
+import { useAuth } from '../contexts/AuthContext';
 import type { EvidenceRecord, EvidenceRecordType, EvidenceRecordStatus } from '../types';
 
 /**
@@ -20,6 +21,7 @@ import type { EvidenceRecord, EvidenceRecordType, EvidenceRecordStatus } from '.
  */
 export const EvidenceRegistryPage: React.FC = () => {
   const navigate = useNavigate();
+  const { canPerform } = useAuth();
   const [assets] = useState(() => getAssets());
   const [records, setRecords] = useState<EvidenceRecord[]>(() => getEvidenceRecords());
 
@@ -106,7 +108,12 @@ export const EvidenceRegistryPage: React.FC = () => {
             The universal governance evidence object — audit-ready, traceable, and linked to every AI asset
           </p>
         </div>
-        <Button onClick={handleOpenCreateModal} icon={<span>➕</span>}>
+        <Button
+          onClick={handleOpenCreateModal}
+          icon={<span>➕</span>}
+          disabled={!canPerform('evidenceRecord:create')}
+          title={!canPerform('evidenceRecord:create') ? 'Your governance role does not permit registering new evidence records.' : undefined}
+        >
           Register Evidence
         </Button>
       </div>
@@ -172,7 +179,15 @@ export const EvidenceRegistryPage: React.FC = () => {
                     <td className="p-4"><EvidenceExpiryBadge indicator={getExpiryIndicator(record.expiryDate)} size="sm" /></td>
                     <td className="p-4 text-right" onClick={e => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-2">
-                        <Button size="sm" variant="ghost" onClick={() => handleOpenEditModal(record)}>Edit</Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleOpenEditModal(record)}
+                          disabled={!canPerform('evidenceRecord:edit')}
+                          title={!canPerform('evidenceRecord:edit') ? 'Your governance role does not permit editing evidence records.' : undefined}
+                        >
+                          Edit
+                        </Button>
                         <Button size="sm" variant="outline" onClick={() => navigate(`/assets?assetId=${record.assetId}`)}>Asset</Button>
                       </div>
                     </td>
@@ -338,7 +353,15 @@ export const EvidenceRegistryPage: React.FC = () => {
             </div>
 
             <div className="flex items-center justify-between pt-4 border-t border-[var(--border-color)]">
-              <Button variant="danger" size="sm" onClick={() => handleDelete(selectedRecord.id)}>Delete Evidence</Button>
+              <Button
+                variant="danger"
+                size="sm"
+                onClick={() => handleDelete(selectedRecord.id)}
+                disabled={!canPerform('evidenceRecord:delete')}
+                title={!canPerform('evidenceRecord:delete') ? 'Your governance role does not permit deleting evidence records.' : undefined}
+              >
+                Delete Evidence
+              </Button>
               <Button size="sm" onClick={() => navigate(`/assets?assetId=${selectedRecord.assetId}`)}>Open Linked Asset</Button>
             </div>
           </div>
@@ -441,7 +464,13 @@ export const EvidenceRegistryPage: React.FC = () => {
 
             <div className="flex items-center justify-end gap-3 pt-4 border-t border-[var(--border-color)]">
               <Button type="button" variant="ghost" onClick={() => setIsModalOpen(false)}>Cancel</Button>
-              <Button type="submit">{editingRecord.id ? 'Save Changes' : 'Register Evidence'}</Button>
+              <Button
+                type="submit"
+                disabled={!canPerform(editingRecord.id ? 'evidenceRecord:edit' : 'evidenceRecord:create')}
+                title={!canPerform(editingRecord.id ? 'evidenceRecord:edit' : 'evidenceRecord:create') ? 'Your governance role does not permit saving evidence records.' : undefined}
+              >
+                {editingRecord.id ? 'Save Changes' : 'Register Evidence'}
+              </Button>
             </div>
           </form>
         </Modal>

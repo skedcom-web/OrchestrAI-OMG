@@ -4,9 +4,11 @@ import { Button } from '../components/ui/Button';
 import { Select } from '../components/ui/Select';
 import { Input } from '../components/ui/Input';
 import { getAssets, getScheduledReviews, saveScheduledReview } from '../services/storageService';
+import { useAuth } from '../contexts/AuthContext';
 import type { ScheduledReview, ReviewType, ReviewStatus } from '../types';
 
 export const ReviewCalendarPage: React.FC = () => {
+  const { canPerform } = useAuth();
   const [assets] = useState(() => getAssets());
   const [reviews, setReviews] = useState<ScheduledReview[]>(() => getScheduledReviews());
   const [selectedAssetId, setSelectedAssetId] = useState<string>(assets[0]?.id || '');
@@ -97,7 +99,12 @@ export const ReviewCalendarPage: React.FC = () => {
             placeholder="e.g. Elena Rostova (Risk Officer)"
           />
 
-          <Button type="submit" className="w-full">
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={!canPerform('scheduledReview:create')}
+            title={!canPerform('scheduledReview:create') ? 'Your governance role does not permit scheduling governance reviews.' : undefined}
+          >
             📅 Schedule Governance Review
           </Button>
         </form>
@@ -108,6 +115,12 @@ export const ReviewCalendarPage: React.FC = () => {
         <h3 className="text-base font-extrabold text-[var(--text-primary)]">
           Scheduled & Overdue Reviews Directory ({reviews.length})
         </h3>
+
+        {reviews.length === 0 && (
+          <Card className="!p-8 text-center text-sm text-[var(--text-muted)]">
+            No governance reviews scheduled yet.
+          </Card>
+        )}
 
         {reviews.map(rev => (
           <Card key={rev.id} className="!p-4 border-[var(--border-color)] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -137,7 +150,9 @@ export const ReviewCalendarPage: React.FC = () => {
                   key={st}
                   type="button"
                   onClick={() => handleStatusChange(rev.id, st)}
-                  className={`px-2 py-1 rounded text-[10px] font-bold transition-all border ${
+                  disabled={!canPerform('scheduledReview:edit')}
+                  title={!canPerform('scheduledReview:edit') ? 'Your governance role does not permit updating review status.' : undefined}
+                  className={`px-2 py-1 rounded text-[10px] font-bold transition-all border disabled:opacity-50 disabled:cursor-not-allowed ${
                     rev.status === st
                       ? 'bg-[var(--accent-primary)] text-white border-[var(--accent-primary)]'
                       : 'bg-[var(--bg-badge)] border-[var(--border-color)] text-[var(--text-muted)] hover:bg-[var(--bg-card-hover)]'

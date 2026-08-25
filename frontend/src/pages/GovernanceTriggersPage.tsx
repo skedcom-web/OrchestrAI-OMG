@@ -9,6 +9,7 @@ import {
   getTriggerRules,
   setTriggerRuleEnabled,
 } from '../services/changeManagementService';
+import { useAuth } from '../contexts/AuthContext';
 import type { FiredTrigger, TriggerActionType } from '../types/changeManagement';
 
 const SEVERITY_TONE: Record<FiredTrigger['severity'], string> = {
@@ -33,6 +34,10 @@ const ACTION_META: Record<TriggerActionType, { icon: string; tone: string; route
  */
 export const GovernanceTriggersPage: React.FC = () => {
   const navigate = useNavigate();
+  // Q1 Stabilization — Phase 2: TriggerRule (distinct from ActionRule) has no matching
+  // ActionKey in roleActionMatrix.ts, so enabling/disabling a rule falls back to the
+  // safe !isReadOnly minimum.
+  const { isReadOnly } = useAuth();
   const [version, setVersion] = useState(0);
 
   const rules = useMemo(
@@ -141,11 +146,15 @@ export const GovernanceTriggersPage: React.FC = () => {
                     </p>
                   </div>
 
-                  <label className="flex items-center gap-2 shrink-0 cursor-pointer">
+                  <label
+                    className={`flex items-center gap-2 shrink-0 ${isReadOnly ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}
+                    title={isReadOnly ? 'Your governance role does not permit changing trigger rules.' : undefined}
+                  >
                     <input
                       type="checkbox"
                       checked={rule.enabled}
                       onChange={e => toggle(rule.id, e.target.checked)}
+                      disabled={isReadOnly}
                       aria-label={`${rule.condition} rule enabled`}
                     />
                     <span className="text-[10px] font-extrabold uppercase text-[var(--text-muted)]">

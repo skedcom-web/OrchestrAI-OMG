@@ -1,4 +1,16 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards, NotFoundException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from './prisma.service';
 import { Roles } from './auth/roles.decorator';
 import { RolesGuard } from './auth/roles.guard';
@@ -14,6 +26,34 @@ import { RolesGuard } from './auth/roles.guard';
 @UseGuards(RolesGuard)
 export class AppController {
   constructor(private readonly prisma: PrismaService) {}
+
+  /**
+   * Q1 Stabilization — Governance Validation (Phase 1).
+   * No AI asset may be created or updated without its four named governance
+   * owners. Called against the full, merged record so partial PATCH bodies
+   * can't drop an owner that isn't in the request payload.
+   */
+  private validateGovernanceOwnership(data: {
+    accountableOwner?: string | null;
+    governanceSponsor?: string | null;
+    authorityRiskOwner?: string | null;
+    authorityTechnicalOwner?: string | null;
+  }) {
+    const required: Record<string, string | null | undefined> = {
+      'Accountable Owner': data.accountableOwner,
+      'Governance Sponsor': data.governanceSponsor,
+      'Risk Owner': data.authorityRiskOwner,
+      'Technical Owner': data.authorityTechnicalOwner,
+    };
+    const missing = Object.entries(required)
+      .filter(([, v]) => !v || !v.trim())
+      .map(([label]) => label);
+    if (missing.length > 0) {
+      throw new BadRequestException(
+        `AI assets require named governance ownership before they can be saved. Missing: ${missing.join(', ')}.`,
+      );
+    }
+  }
 
   /** Public liveness probe. Deliberately exposes no governance data. */
   @Get('health')
@@ -37,8 +77,9 @@ export class AppController {
     'AUDITOR',
     'VIEWER',
   )
-  async getAssets() {
+  async getAssets(@Query('includeArchived') includeArchived?: string) {
     return this.prisma.aIAsset.findMany({
+      where: includeArchived === 'true' ? undefined : { isArchived: false },
       include: {
         owners: true,
         validations: true,
@@ -76,20 +117,67 @@ export class AppController {
   @Post('assets')
   @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
   async createAsset(@Body() body: any) {
+    this.validateGovernanceOwnership(body);
     return this.prisma.aIAsset.create({ data: body });
   }
 
   @Patch('assets/:id')
   @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
   async updateAsset(@Param('id') id: string, @Body() body: any) {
+    const existing = await this.prisma.aIAsset.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundException(`Asset ${id} not found`);
+    this.validateGovernanceOwnership({ ...existing, ...body });
     return this.prisma.aIAsset.update({ where: { id }, data: body });
   }
 
+  /**
+   * Q1 Stabilization — Soft Delete / Archive Model (Phase 3).
+   * Deletion is no longer destructive: the asset is archived (status moves to
+   * RETIREMENT, isArchived is set) instead of removed, so every cascaded
+   * evidence/finding/decision/incident record it owns stays intact.
+   */
   @Delete('assets/:id')
   @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
-  async deleteAsset(@Param('id') id: string) {
-    await this.prisma.aIAsset.delete({ where: { id } });
-    return { deleted: true, id };
+  async archiveAsset(
+    @Param('id') id: string,
+    @Body() body: { archivedBy?: string; archiveReason?: string } = {},
+  ) {
+    const existing = await this.prisma.aIAsset.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundException(`Asset ${id} not found`);
+    const asset = await this.prisma.aIAsset.update({
+      where: { id },
+      data: {
+        status: 'RETIREMENT',
+        isArchived: true,
+        archivedAt: new Date(),
+        archivedBy: body?.archivedBy ?? null,
+        archiveReason: body?.archiveReason ?? null,
+      },
+    });
+    return { archived: true, id, asset };
+  }
+
+  /** Q1 Stabilization — reverses an archive; restores a sensible pre-archive status. */
+  @Patch('assets/:id/restore')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async restoreAsset(@Param('id') id: string) {
+    const existing = await this.prisma.aIAsset.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundException(`Asset ${id} not found`);
+    const restoredStatus =
+      existing.governanceState === 'MONITORING' || existing.governanceState === 'AUTHORIZED'
+        ? 'PRODUCTION'
+        : 'DRAFT';
+    const asset = await this.prisma.aIAsset.update({
+      where: { id },
+      data: {
+        status: restoredStatus,
+        isArchived: false,
+        archivedAt: null,
+        archivedBy: null,
+        archiveReason: null,
+      },
+    });
+    return { restored: true, id, asset };
   }
 
   // --- RELEASE 4: EVIDENCE REPOSITORY ENDPOINTS ---

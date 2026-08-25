@@ -34,7 +34,7 @@ const VIEWS: { key: ActionView; label: string; statuses: RecommendedActionStatus
  * immutable audit trail.
  */
 export const GovernanceActionsWorkspacePage: React.FC = () => {
-  const { currentUser } = useAuth();
+  const { currentUser, canPerform } = useAuth();
   const [assets] = useState(() => getAssets());
   const [, forceRefresh] = useState(0);
   const refreshAll = () => forceRefresh(v => v + 1);
@@ -151,24 +151,84 @@ export const GovernanceActionsWorkspacePage: React.FC = () => {
                 <div className="flex items-center gap-2 shrink-0 flex-wrap">
                   {action.status === 'Open' && (
                     <>
-                      <Button size="sm" onClick={() => handleTransition(action, 'Accepted')}>Accept</Button>
-                      <Button size="sm" variant="ghost" onClick={() => handleTransition(action, 'Deferred')}>Defer</Button>
-                      <Button size="sm" variant="ghost" onClick={() => handleTransition(action, 'Rejected')}>Reject</Button>
+                      <Button
+                        size="sm"
+                        onClick={() => handleTransition(action, 'Accepted')}
+                        disabled={!canPerform('recommendedAction:edit')}
+                        title={!canPerform('recommendedAction:edit') ? 'Your governance role does not permit deciding on recommended actions.' : undefined}
+                      >
+                        Accept
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleTransition(action, 'Deferred')}
+                        disabled={!canPerform('recommendedAction:edit')}
+                        title={!canPerform('recommendedAction:edit') ? 'Your governance role does not permit deciding on recommended actions.' : undefined}
+                      >
+                        Defer
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleTransition(action, 'Rejected')}
+                        disabled={!canPerform('recommendedAction:edit')}
+                        title={!canPerform('recommendedAction:edit') ? 'Your governance role does not permit deciding on recommended actions.' : undefined}
+                      >
+                        Reject
+                      </Button>
                     </>
                   )}
                   {action.status === 'Accepted' && (
                     <>
-                      <Button size="sm" onClick={() => handleTransition(action, 'In Progress')}>Start</Button>
-                      <Button size="sm" variant="ghost" onClick={() => handleTransition(action, 'Deferred')}>Defer</Button>
+                      <Button
+                        size="sm"
+                        onClick={() => handleTransition(action, 'In Progress')}
+                        disabled={!canPerform('recommendedAction:edit')}
+                        title={!canPerform('recommendedAction:edit') ? 'Your governance role does not permit progressing recommended actions.' : undefined}
+                      >
+                        Start
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleTransition(action, 'Deferred')}
+                        disabled={!canPerform('recommendedAction:edit')}
+                        title={!canPerform('recommendedAction:edit') ? 'Your governance role does not permit deciding on recommended actions.' : undefined}
+                      >
+                        Defer
+                      </Button>
                     </>
                   )}
                   {action.status === 'In Progress' && (
-                    <Button size="sm" onClick={() => handleTransition(action, 'Completed')}>Mark Completed</Button>
+                    <Button
+                      size="sm"
+                      onClick={() => handleTransition(action, 'Completed')}
+                      disabled={!canPerform('recommendedAction:edit')}
+                      title={!canPerform('recommendedAction:edit') ? 'Your governance role does not permit completing recommended actions.' : undefined}
+                    >
+                      Mark Completed
+                    </Button>
                   )}
                   {action.status === 'Deferred' && (
                     <>
-                      <Button size="sm" onClick={() => handleTransition(action, 'Accepted')}>Accept</Button>
-                      <Button size="sm" variant="ghost" onClick={() => handleTransition(action, 'Rejected')}>Reject</Button>
+                      <Button
+                        size="sm"
+                        onClick={() => handleTransition(action, 'Accepted')}
+                        disabled={!canPerform('recommendedAction:edit')}
+                        title={!canPerform('recommendedAction:edit') ? 'Your governance role does not permit deciding on recommended actions.' : undefined}
+                      >
+                        Accept
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleTransition(action, 'Rejected')}
+                        disabled={!canPerform('recommendedAction:edit')}
+                        title={!canPerform('recommendedAction:edit') ? 'Your governance role does not permit deciding on recommended actions.' : undefined}
+                      >
+                        Reject
+                      </Button>
                     </>
                   )}
                 </div>

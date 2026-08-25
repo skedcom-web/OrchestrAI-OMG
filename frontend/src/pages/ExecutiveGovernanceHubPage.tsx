@@ -1077,11 +1077,17 @@ export const ExecutiveGovernanceHubPage: React.FC = () => {
               </button>
             }
           />
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 stagger">
-            {data.scorecards.map(scorecard => (
-              <ScorecardPanel key={scorecard.id} scorecard={scorecard} compact />
-            ))}
-          </div>
+          {data.scorecards.length === 0 ? (
+            <p className="py-8 text-center text-[13px] text-[var(--text-muted)]">
+              No governance scorecards computed yet.
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 stagger">
+              {data.scorecards.map(scorecard => (
+                <ScorecardPanel key={scorecard.id} scorecard={scorecard} compact />
+              ))}
+            </div>
+          )}
         </section>
       )}
 
@@ -1102,11 +1108,17 @@ export const ExecutiveGovernanceHubPage: React.FC = () => {
               </button>
             }
           />
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 stagger">
-            {data.trends.slice(0, 3).map(series => (
-              <TrendChart key={series.id} series={series} />
-            ))}
-          </div>
+          {data.trends.length === 0 ? (
+            <p className="py-8 text-center text-[13px] text-[var(--text-muted)]">
+              No trend data available yet.
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 stagger">
+              {data.trends.slice(0, 3).map(series => (
+                <TrendChart key={series.id} series={series} />
+              ))}
+            </div>
+          )}
         </section>
       )}
 
@@ -1120,6 +1132,11 @@ export const ExecutiveGovernanceHubPage: React.FC = () => {
             icon="💡"
           />
 
+          {data.insights.length === 0 ? (
+            <p className="py-8 text-center text-[13px] text-[var(--text-muted)]">
+              No insights available yet — governance posture is clean.
+            </p>
+          ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
             {data.insights.slice(0, 6).map(insight => (
               <button
@@ -1152,6 +1169,7 @@ export const ExecutiveGovernanceHubPage: React.FC = () => {
               </button>
             ))}
           </div>
+          )}
         </section>
       )}
 

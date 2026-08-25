@@ -75,7 +75,13 @@ export const ComplianceCenterPage: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border-color)]">
-              {assets.map(asset => {
+              {assets.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="p-8 text-center text-[var(--text-muted)]">
+                    No AI assets registered yet — nothing to evaluate for compliance.
+                  </td>
+                </tr>
+              ) : assets.map(asset => {
                 const compDetails = calculateAssetComplianceScore(asset.id);
                 const assetGaps = getComplianceGaps(asset.id);
 

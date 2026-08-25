@@ -22,6 +22,7 @@ import {
   getObligations,
   getObligationControls,
 } from '../services/storageService';
+import { useAuth } from '../contexts/AuthContext';
 import type { ActionRule, ConditionDefinition, GovernanceProfile, OutcomeRule, RecommendedActionType } from '../types';
 
 type StudioTab = 'conditions' | 'policies' | 'outcomes' | 'actions' | 'mapping' | 'packs' | 'profiles';
@@ -56,6 +57,7 @@ const emptyActionRule: Partial<ActionRule> = {
  * customer-specific compliance packs.
  */
 export const GovernanceIntelligenceStudioPage: React.FC = () => {
+  const { canPerform } = useAuth();
   const [activeTab, setActiveTab] = useState<StudioTab>('conditions');
   const [conditions, setConditions] = useState<ConditionDefinition[]>(() => getConditionDefinitions());
   const [outcomes, setOutcomes] = useState<OutcomeRule[]>(() => getOutcomeRules());
@@ -190,21 +192,34 @@ export const GovernanceIntelligenceStudioPage: React.FC = () => {
             <p className="text-xs text-[var(--text-secondary)] mt-0.5">The detection mechanism for each condition type is platform code; enabling or disabling one here controls whether it is ever raised, for every asset, without touching code.</p>
           </div>
           <div className="flex flex-col divide-y divide-[var(--border-color)]">
-            {conditions.map(c => (
-              <div key={c.id} className="p-4 flex items-center justify-between gap-3">
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-bold text-sm text-[var(--text-primary)]">{c.label}</span>
-                    <GovernancePolicySeverityBadge severity={c.defaultSeverity} size="sm" />
+            {conditions.length === 0 ? (
+              <p className="p-6 text-center text-sm text-[var(--text-muted)] italic">No condition definitions configured yet.</p>
+            ) : (
+              conditions.map(c => (
+                <div key={c.id} className="p-4 flex items-center justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-bold text-sm text-[var(--text-primary)]">{c.label}</span>
+                      <GovernancePolicySeverityBadge severity={c.defaultSeverity} size="sm" />
+                    </div>
+                    <p className="text-xs text-[var(--text-secondary)] mt-0.5">{c.description}</p>
                   </div>
-                  <p className="text-xs text-[var(--text-secondary)] mt-0.5">{c.description}</p>
+                  <label
+                    className={`flex items-center gap-2 text-xs font-semibold text-[var(--text-secondary)] shrink-0 ${!canPerform('conditionDefinition:edit') ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                    title={!canPerform('conditionDefinition:edit') ? 'Your governance role does not permit toggling condition definitions.' : undefined}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={c.enabled}
+                      disabled={!canPerform('conditionDefinition:edit')}
+                      onChange={() => handleToggleCondition(c)}
+                      className={!canPerform('conditionDefinition:edit') ? 'cursor-not-allowed' : 'cursor-pointer'}
+                    />
+                    {c.enabled ? 'Enabled' : 'Disabled'}
+                  </label>
                 </div>
-                <label className="flex items-center gap-2 text-xs font-semibold text-[var(--text-secondary)] shrink-0 cursor-pointer">
-                  <input type="checkbox" checked={c.enabled} onChange={() => handleToggleCondition(c)} className="cursor-pointer" />
-                  {c.enabled ? 'Enabled' : 'Disabled'}
-                </label>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </Card>
       )}
@@ -229,7 +244,11 @@ export const GovernanceIntelligenceStudioPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--border-color)]">
-                {policies.map(p => (
+                {policies.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="p-8 text-center text-[var(--text-muted)]">No governance policies registered yet.</td>
+                  </tr>
+                ) : policies.map(p => (
                   <tr key={p.id}>
                     <td className="p-4 font-bold text-[var(--text-primary)]">{p.name}</td>
                     <td className="p-4 text-xs text-[var(--text-secondary)]">{p.triggerCondition}</td>
@@ -250,20 +269,33 @@ export const GovernanceIntelligenceStudioPage: React.FC = () => {
             <p className="text-xs text-[var(--text-secondary)] mt-0.5">The escalation order (Escalation &gt; Reassessment &gt; Review &gt; Attention &gt; Compliant) is a platform primitive and never changes. Disabling a tier here skips it — the engine falls through to the next enabled tier.</p>
           </div>
           <div className="flex flex-col divide-y divide-[var(--border-color)]">
-            {outcomes.map(o => (
-              <div key={o.id} className="p-4 flex items-center justify-between gap-3">
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <GovernanceOutcomeBadge status={o.outcomeStatus} size="sm" />
+            {outcomes.length === 0 ? (
+              <p className="p-6 text-center text-sm text-[var(--text-muted)] italic">No outcome rules configured yet.</p>
+            ) : (
+              outcomes.map(o => (
+                <div key={o.id} className="p-4 flex items-center justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <GovernanceOutcomeBadge status={o.outcomeStatus} size="sm" />
+                    </div>
+                    <p className="text-xs text-[var(--text-secondary)] mt-0.5">{o.description}</p>
                   </div>
-                  <p className="text-xs text-[var(--text-secondary)] mt-0.5">{o.description}</p>
+                  <label
+                    className={`flex items-center gap-2 text-xs font-semibold text-[var(--text-secondary)] shrink-0 ${!canPerform('outcomeRule:edit') ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                    title={!canPerform('outcomeRule:edit') ? 'Your governance role does not permit toggling outcome rules.' : undefined}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={o.enabled}
+                      disabled={!canPerform('outcomeRule:edit')}
+                      onChange={() => handleToggleOutcome(o)}
+                      className={!canPerform('outcomeRule:edit') ? 'cursor-not-allowed' : 'cursor-pointer'}
+                    />
+                    {o.enabled ? 'Enabled' : 'Disabled'}
+                  </label>
                 </div>
-                <label className="flex items-center gap-2 text-xs font-semibold text-[var(--text-secondary)] shrink-0 cursor-pointer">
-                  <input type="checkbox" checked={o.enabled} onChange={() => handleToggleOutcome(o)} className="cursor-pointer" />
-                  {o.enabled ? 'Enabled' : 'Disabled'}
-                </label>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </Card>
       )}
@@ -275,28 +307,65 @@ export const GovernanceIntelligenceStudioPage: React.FC = () => {
               <h3 className="text-lg font-bold text-[var(--text-primary)]">Action Designer</h3>
               <p className="text-xs text-[var(--text-secondary)] mt-0.5">The Action Recommendation Library, made editable — one rule per Condition or Outcome trigger. A matching enabled rule overrides the platform default; a disabled rule suppresses the draft entirely.</p>
             </div>
-            <Button size="sm" icon={<span>➕</span>} onClick={() => { setEditingActionRule({ ...emptyActionRule }); setIsActionModalOpen(true); }}>New Action Rule</Button>
+            <Button
+              size="sm"
+              icon={<span>➕</span>}
+              onClick={() => { setEditingActionRule({ ...emptyActionRule }); setIsActionModalOpen(true); }}
+              disabled={!canPerform('actionRule:create')}
+              title={!canPerform('actionRule:create') ? 'Your governance role does not permit creating action rules.' : undefined}
+            >
+              New Action Rule
+            </Button>
           </div>
           <div className="flex flex-col divide-y divide-[var(--border-color)]">
-            {actionRules.map(r => (
-              <div key={r.id} className="p-4 flex items-center justify-between gap-3">
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-bold text-sm text-[var(--text-primary)]">{r.actionName}</span>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-[var(--bg-badge)] border border-[var(--border-color)] text-[var(--text-muted)] font-mono">{r.triggerType}: {r.triggerValue}</span>
+            {actionRules.length === 0 ? (
+              <p className="p-6 text-center text-sm text-[var(--text-muted)] italic">No action rules configured yet.</p>
+            ) : (
+              actionRules.map(r => (
+                <div key={r.id} className="p-4 flex items-center justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-bold text-sm text-[var(--text-primary)]">{r.actionName}</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-[var(--bg-badge)] border border-[var(--border-color)] text-[var(--text-muted)] font-mono">{r.triggerType}: {r.triggerValue}</span>
+                    </div>
+                    <p className="text-xs text-[var(--text-secondary)] mt-0.5">{r.actionType} • {r.actionDescription}</p>
                   </div>
-                  <p className="text-xs text-[var(--text-secondary)] mt-0.5">{r.actionType} • {r.actionDescription}</p>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <label
+                      className={`flex items-center gap-2 text-xs font-semibold text-[var(--text-secondary)] ${!canPerform('actionRule:edit') ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                      title={!canPerform('actionRule:edit') ? 'Your governance role does not permit toggling action rules.' : undefined}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={r.enabled}
+                        disabled={!canPerform('actionRule:edit')}
+                        onChange={() => handleToggleActionRule(r)}
+                        className={!canPerform('actionRule:edit') ? 'cursor-not-allowed' : 'cursor-pointer'}
+                      />
+                      {r.enabled ? 'Enabled' : 'Disabled'}
+                    </label>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => { setEditingActionRule({ ...r }); setIsActionModalOpen(true); }}
+                      disabled={!canPerform('actionRule:edit')}
+                      title={!canPerform('actionRule:edit') ? 'Your governance role does not permit editing action rules.' : undefined}
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleDeleteActionRule(r.id)}
+                      disabled={!canPerform('actionRule:delete')}
+                      title={!canPerform('actionRule:delete') ? 'Your governance role does not permit deleting action rules.' : undefined}
+                    >
+                      Delete
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-3 shrink-0">
-                  <label className="flex items-center gap-2 text-xs font-semibold text-[var(--text-secondary)] cursor-pointer">
-                    <input type="checkbox" checked={r.enabled} onChange={() => handleToggleActionRule(r)} className="cursor-pointer" />
-                    {r.enabled ? 'Enabled' : 'Disabled'}
-                  </label>
-                  <Button size="sm" variant="ghost" onClick={() => { setEditingActionRule({ ...r }); setIsActionModalOpen(true); }}>Edit</Button>
-                  <Button size="sm" variant="ghost" onClick={() => handleDeleteActionRule(r.id)}>Delete</Button>
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </Card>
       )}
@@ -306,6 +375,9 @@ export const GovernanceIntelligenceStudioPage: React.FC = () => {
           <h3 className="text-lg font-bold text-[var(--text-primary)]">Rule Mapping Engine</h3>
           <p className="text-xs text-[var(--text-secondary)] mt-0.5 mb-4">Condition → Policy → Outcome → Action, read-only — how the configuration above chains together right now.</p>
           <div className="flex flex-col gap-3">
+            {conditions.length === 0 && (
+              <p className="text-sm text-[var(--text-muted)] italic">No condition definitions configured yet.</p>
+            )}
             {conditions.map(c => {
               const policy = policies.find(p => p.triggerCondition === c.conditionType);
               const conditionAction = actionRules.find(r => r.triggerType === 'Condition' && r.triggerValue === c.label);
@@ -341,6 +413,9 @@ export const GovernanceIntelligenceStudioPage: React.FC = () => {
           <h3 className="text-lg font-bold text-[var(--text-primary)]">Compliance Pack Builder Foundation</h3>
           <p className="text-xs text-[var(--text-secondary)] mt-0.5 mb-4">Regulatory Source → Requirement → Obligation → Control, cross-linked to the Policies that enforce them — the foundation a customer-specific compliance pack builds on.</p>
           <div className="flex flex-col gap-3">
+            {sources.length === 0 && (
+              <p className="text-sm text-[var(--text-muted)] italic">No regulatory sources registered yet.</p>
+            )}
             {sources.map(s => {
               const sourceReqs = requirements.filter(r => r.sourceId === s.id);
               return (
@@ -385,18 +460,31 @@ export const GovernanceIntelligenceStudioPage: React.FC = () => {
             <p className="text-xs text-[var(--text-secondary)] mt-0.5">Exactly one profile is active at a time, representing which industry configuration this tenant is running.</p>
           </div>
           <div className="flex flex-col divide-y divide-[var(--border-color)]">
-            {profiles.map(p => (
-              <div key={p.id} className="p-4 flex items-center justify-between gap-3">
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-bold text-sm text-[var(--text-primary)]">{p.name}</span>
-                    {p.isActive && <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-500 border border-emerald-500/30 font-bold">ACTIVE</span>}
+            {profiles.length === 0 ? (
+              <p className="p-6 text-center text-sm text-[var(--text-muted)] italic">No customer governance profiles configured yet.</p>
+            ) : (
+              profiles.map(p => (
+                <div key={p.id} className="p-4 flex items-center justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-bold text-sm text-[var(--text-primary)]">{p.name}</span>
+                      {p.isActive && <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-500 border border-emerald-500/30 font-bold">ACTIVE</span>}
+                    </div>
+                    <p className="text-xs text-[var(--text-secondary)] mt-0.5">{p.description}</p>
                   </div>
-                  <p className="text-xs text-[var(--text-secondary)] mt-0.5">{p.description}</p>
+                  {!p.isActive && (
+                    <Button
+                      size="sm"
+                      onClick={() => handleActivateProfile(p)}
+                      disabled={!canPerform('governanceProfile:edit')}
+                      title={!canPerform('governanceProfile:edit') ? 'Your governance role does not permit activating governance profiles.' : undefined}
+                    >
+                      Activate
+                    </Button>
+                  )}
                 </div>
-                {!p.isActive && <Button size="sm" onClick={() => handleActivateProfile(p)}>Activate</Button>}
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </Card>
       )}
@@ -426,7 +514,13 @@ export const GovernanceIntelligenceStudioPage: React.FC = () => {
             <Select label="Action Type" options={ACTION_TYPES.map(v => ({ value: v, label: v }))} value={editingActionRule.actionType || 'Review'} onChange={e => setEditingActionRule({ ...editingActionRule, actionType: e.target.value as RecommendedActionType })} />
             <div className="flex items-center justify-end gap-3 pt-4 border-t border-[var(--border-color)]">
               <Button type="button" variant="ghost" onClick={() => setIsActionModalOpen(false)}>Cancel</Button>
-              <Button type="submit">{editingActionRule.id ? 'Save Changes' : 'Create Action Rule'}</Button>
+              <Button
+                type="submit"
+                disabled={!canPerform(editingActionRule.id ? 'actionRule:edit' : 'actionRule:create')}
+                title={!canPerform(editingActionRule.id ? 'actionRule:edit' : 'actionRule:create') ? 'Your governance role does not permit saving action rules.' : undefined}
+              >
+                {editingActionRule.id ? 'Save Changes' : 'Create Action Rule'}
+              </Button>
             </div>
           </form>
         </Modal>

@@ -4,9 +4,11 @@ import { Button } from '../components/ui/Button';
 import { Select } from '../components/ui/Select';
 import { Modal } from '../components/ui/Modal';
 import { getAssets, getUsers, saveAsset } from '../services/storageService';
+import { useAuth } from '../contexts/AuthContext';
 import type { AIAsset, User, OwnershipAssignment } from '../types';
 
 export const OwnershipMatrixPage: React.FC = () => {
+  const { canPerform } = useAuth();
   const [assets, setAssets] = useState<AIAsset[]>(() => getAssets());
   const [users] = useState<User[]>(() => getUsers());
   const [selectedAsset, setSelectedAsset] = useState<AIAsset | null>(null);
@@ -24,17 +26,24 @@ export const OwnershipMatrixPage: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleSaveOwnership = (e: React.FormEvent) => {
+  const handleSaveOwnership = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedAsset) return;
 
-    saveAsset({
+    const persisting = saveAsset({
       ...selectedAsset,
       ownership: formOwnership,
     });
-    refreshAssets();
+    refreshAssets(); // optimistic — the cache update happens synchronously before this line
     setIsModalOpen(false);
     setSelectedAsset(null);
+
+    try {
+      await persisting;
+      refreshAssets();
+    } catch (err) {
+      alert(`Ownership saved to the local cache but could not be synced to Neon: ${(err as Error).message}. It will not be visible on other devices until sync succeeds.`);
+    }
   };
 
   const userOptions = [
@@ -131,7 +140,13 @@ export const OwnershipMatrixPage: React.FC = () => {
                       </span>
                     </td>
                     <td className="p-4 text-right">
-                      <Button size="sm" variant="secondary" onClick={() => handleOpenAssignModal(asset)}>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => handleOpenAssignModal(asset)}
+                        disabled={!canPerform('asset:edit')}
+                        title={!canPerform('asset:edit') ? 'Your governance role does not permit editing asset ownership.' : undefined}
+                      >
                         Assign Owners
                       </Button>
                     </td>

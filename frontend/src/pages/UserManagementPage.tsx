@@ -5,9 +5,14 @@ import { Input } from '../components/ui/Input';
 import { Select } from '../components/ui/Select';
 import { Modal } from '../components/ui/Modal';
 import { getUsers, saveUser, toggleUserStatus } from '../services/storageService';
+import { useAuth } from '../contexts/AuthContext';
 import type { User, UserRole } from '../types';
 
 export const UserManagementPage: React.FC = () => {
+  // Q1 Stabilization — Phase 2: user create/edit/deactivate has no dedicated ActionKey in
+  // roleActionMatrix.ts yet, so this is gated with the safe !isReadOnly fallback (Auditor/Viewer
+  // are never granted a write endpoint on the real backend).
+  const { isReadOnly } = useAuth();
   const [users, setUsers] = useState<User[]>(() => getUsers());
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<Partial<User> | null>(null);
@@ -67,7 +72,12 @@ export const UserManagementPage: React.FC = () => {
             Phase 2.5 Governance Identity Layer • 7 Standardized Governance Roles
           </p>
         </div>
-        <Button onClick={handleOpenCreateModal} icon={<span>➕</span>}>
+        <Button
+          onClick={handleOpenCreateModal}
+          icon={<span>➕</span>}
+          disabled={isReadOnly}
+          title={isReadOnly ? 'Your governance role does not permit creating governance users.' : undefined}
+        >
           Create Governance User
         </Button>
       </div>
@@ -97,7 +107,14 @@ export const UserManagementPage: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border-color)]">
-              {users.map(user => (
+              {users.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="p-8 text-center text-[var(--text-muted)]">
+                    No governance users found.
+                  </td>
+                </tr>
+              ) : (
+              users.map(user => (
                 <tr key={user.id} className="hover:bg-[var(--bg-card-hover)] transition-colors">
                   <td className="p-4">
                     <div className="flex items-center gap-3">
@@ -128,16 +145,29 @@ export const UserManagementPage: React.FC = () => {
                   </td>
                   <td className="p-4 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <Button size="sm" variant="ghost" onClick={() => handleOpenEditModal(user)}>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleOpenEditModal(user)}
+                        disabled={isReadOnly}
+                        title={isReadOnly ? 'Your governance role does not permit editing user roles.' : undefined}
+                      >
                         Edit Role
                       </Button>
-                      <Button size="sm" variant="outline" onClick={() => handleToggleStatus(user.id)}>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleToggleStatus(user.id)}
+                        disabled={isReadOnly}
+                        title={isReadOnly ? `Your governance role does not permit ${user.status === 'Active' ? 'deactivating' : 'activating'} users.` : undefined}
+                      >
                         {user.status === 'Active' ? 'Deactivate' : 'Activate'}
                       </Button>
                     </div>
                   </td>
                 </tr>
-              ))}
+              ))
+              )}
             </tbody>
           </table>
         </div>

@@ -7,14 +7,29 @@ import { Select } from '../components/ui/Select';
 import { Modal } from '../components/ui/Modal';
 import { RiskBadge, OversightBadge, AutonomyBadge, GovernanceStateBadge, ClassificationBadge, EvidenceStatusBadge, EvidenceExpiryBadge, ReadinessBadge } from '../components/ui/Badge';
 import { StatusBadge } from '../components/ui/StatusBadge';
-import { getAssets, getUsers, saveAsset, deleteAsset, getReassessmentTriggers, getScheduledReviews, getEvidenceRecordsForAsset, getGovernanceReadiness, getEvidenceReadiness, getReviewReadiness, getAuditReadiness, getGovernanceGapsForAsset } from '../services/storageService';
+import { getAssets, getUsers, saveAsset, archiveAsset, getReassessmentTriggers, getScheduledReviews, getEvidenceRecordsForAsset, getGovernanceReadiness, getEvidenceReadiness, getReviewReadiness, getAuditReadiness, getGovernanceGapsForAsset } from '../services/storageService';
 import { OVERSIGHT_TYPES, AUTONOMY_LEVELS, getAuthorityMatrixEntry, defaultAuthorityProfile } from '../config/governanceAuthority';
 import { GOVERNANCE_STATES, GOVERNANCE_CLASSIFICATIONS, defaultGovernanceState } from '../config/governanceContinuity';
 import { getExpiryIndicator } from '../config/evidenceFoundation';
+import { useAuth } from '../contexts/AuthContext';
 import type { AIAsset, AssetType, RiskLevel, GovernanceStatus, HumanOversightType, AutonomyLevel, GovernanceState, GovernanceClassification } from '../types';
+
+/** Q1 Stabilization — Phase 1: the four owners no AI asset may be saved without. */
+const REQUIRED_OWNER_FIELDS: { key: 'accountableOwner' | 'governanceSponsor' | 'riskOwner' | 'technicalOwner'; label: string }[] = [
+  { key: 'accountableOwner', label: 'Accountable Owner' },
+  { key: 'governanceSponsor', label: 'Governance Sponsor' },
+  { key: 'riskOwner', label: 'Risk Owner' },
+  { key: 'technicalOwner', label: 'Technical Owner' },
+];
+
+function missingOwnerFields(asset: Partial<AIAsset> | null): string[] {
+  if (!asset) return REQUIRED_OWNER_FIELDS.map(f => f.label);
+  return REQUIRED_OWNER_FIELDS.filter(f => !asset.authorityProfile?.[f.key]?.trim()).map(f => f.label);
+}
 
 export const AssetRegistryPage: React.FC = () => {
   const navigate = useNavigate();
+  const { currentUser, canPerform } = useAuth();
   const [assets, setAssets] = useState<AIAsset[]>(() => getAssets());
   const [users] = useState(() => getUsers());
   const [searchParams] = useSearchParams();
@@ -26,6 +41,14 @@ export const AssetRegistryPage: React.FC = () => {
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingAsset, setEditingAsset] = useState<Partial<AIAsset> | null>(null);
+  // Q1 Stabilization — Phase 1: shown only after a submit attempt, so the form
+  // doesn't greet a first-time user with red fields before they've typed anything.
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+
+  // Q1 Stabilization — Phase 3: archive (was delete) now asks for a reason instead
+  // of a bare window.confirm(), and the reason is preserved as governance history.
+  const [archiveTarget, setArchiveTarget] = useState<AIAsset | null>(null);
+  const [archiveReason, setArchiveReason] = useState('');
 
   // View Detail Drawer — preselects the asset named by ?assetId= (e.g. deep-linked from Evidence Registry).
   const [selectedAsset, setSelectedAsset] = useState<AIAsset | null>(() => {
@@ -67,12 +90,15 @@ export const AssetRegistryPage: React.FC = () => {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingAsset?.name || !editingAsset?.type) return;
+    setSubmitAttempted(true);
+    const missingOwners = missingOwnerFields(editingAsset);
+    if (!editingAsset?.name || !editingAsset?.type || missingOwners.length > 0) return;
 
     const persisting = saveAsset(editingAsset as any); // synchronous cache update happens before this line returns
     refreshAssets(); // reflects that optimistic update immediately
     setIsModalOpen(false);
     setEditingAsset(null);
+    setSubmitAttempted(false);
 
     try {
       await persisting;
@@ -82,17 +108,27 @@ export const AssetRegistryPage: React.FC = () => {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this AI asset from the registry?')) return;
+  /** Q1 Stabilization — Phase 3: opens the reason-prompt modal; the actual archive call is handleConfirmArchive. */
+  const handleRequestArchive = (asset: AIAsset) => {
+    setArchiveReason('');
+    setArchiveTarget(asset);
+  };
 
-    const deleting = deleteAsset(id); // synchronous cache removal happens before this line returns
+  const handleConfirmArchive = async () => {
+    if (!archiveTarget || !archiveReason.trim()) return;
+    const id = archiveTarget.id;
+
+    const archiving = archiveAsset(id, currentUser?.name || 'Unknown user', archiveReason.trim());
     refreshAssets();
     if (selectedAsset?.id === id) setSelectedAsset(null);
+    setArchiveTarget(null);
+    setArchiveReason('');
 
     try {
-      await deleting;
+      await archiving;
+      refreshAssets();
     } catch (err) {
-      alert(`Removed from this device but could not be deleted on Neon: ${(err as Error).message}. It may reappear once sync succeeds.`);
+      alert(`Archived locally but could not sync to Neon: ${(err as Error).message}. It may reappear as active once sync succeeds.`);
       refreshAssets();
     }
   };
@@ -140,7 +176,12 @@ export const AssetRegistryPage: React.FC = () => {
             Centralized inventory of all enterprise AI applications, agents, models, & services
           </p>
         </div>
-        <Button onClick={handleOpenCreateModal} icon={<span>➕</span>}>
+        <Button
+          onClick={handleOpenCreateModal}
+          icon={<span>➕</span>}
+          disabled={!canPerform('asset:create')}
+          title={!canPerform('asset:create') ? 'Your governance role does not permit registering new AI assets.' : undefined}
+        >
           Register New AI Asset
         </Button>
       </div>
@@ -233,10 +274,22 @@ export const AssetRegistryPage: React.FC = () => {
                     </td>
                     <td className="p-4 text-right" onClick={e => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-2">
-                        <Button size="sm" variant="ghost" onClick={() => handleOpenEditModal(asset)}>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleOpenEditModal(asset)}
+                          disabled={!canPerform('asset:edit')}
+                          title={!canPerform('asset:edit') ? 'Your governance role does not permit editing AI assets.' : undefined}
+                        >
                           Edit
                         </Button>
-                        <Button size="sm" variant="outline" onClick={() => navigate(`/risk?assetId=${asset.id}`)}>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => navigate(`/risk?assetId=${asset.id}`)}
+                          disabled={!canPerform('asset:edit')}
+                          title={!canPerform('asset:edit') ? 'Your governance role does not permit updating an asset’s risk profile.' : undefined}
+                        >
                           Risk
                         </Button>
                       </div>
@@ -476,8 +529,14 @@ export const AssetRegistryPage: React.FC = () => {
             </div>
 
             <div className="flex items-center justify-between pt-4 border-t border-[var(--border-color)]">
-              <Button variant="danger" size="sm" onClick={() => handleDelete(selectedAsset.id)}>
-                Delete Asset
+              <Button
+                variant="danger"
+                size="sm"
+                onClick={() => handleRequestArchive(selectedAsset)}
+                disabled={!canPerform('asset:archive')}
+                title={!canPerform('asset:archive') ? 'Your governance role does not permit archiving AI assets.' : undefined}
+              >
+                Archive Asset
               </Button>
               <div className="flex items-center gap-2">
                 <Button variant="secondary" size="sm" onClick={() => navigate(`/ownership?assetId=${selectedAsset.id}`)}>
@@ -487,6 +546,49 @@ export const AssetRegistryPage: React.FC = () => {
                   Decision Gatekeeper
                 </Button>
               </div>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* ARCHIVE REASON MODAL — Q1 Stabilization Phase 3: replaces the bare window.confirm(). */}
+      {archiveTarget && (
+        <Modal
+          isOpen={!!archiveTarget}
+          onClose={() => setArchiveTarget(null)}
+          title="Archive AI Asset"
+          subtitle={archiveTarget.name}
+          maxWidth="md"
+        >
+          <div className="flex flex-col gap-4 py-2">
+            <p className="text-sm text-[var(--text-secondary)]">
+              This asset moves to <strong>Archived</strong> and out of the active registry. Nothing is deleted —
+              every evidence record, finding, decision, incident and review it owns is preserved and stays
+              reachable from the Archived Assets view, where it can be restored by an authorised role.
+            </p>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
+                Archive Reason <span className="text-[var(--status-danger)]">*</span>
+              </label>
+              <textarea
+                rows={3}
+                autoFocus
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[var(--bg-input)] text-[var(--text-primary)] border border-[var(--border-color)] text-sm focus:outline-none focus:border-[var(--border-focus)] transition-all"
+                value={archiveReason}
+                onChange={e => setArchiveReason(e.target.value)}
+                placeholder="Why is this asset being archived? (e.g. decommissioned, superseded by v2, duplicate registration)"
+              />
+              {!archiveReason.trim() && (
+                <span className="text-[11px] text-[var(--status-danger)]">An archive reason is required.</span>
+              )}
+            </div>
+            <div className="flex items-center justify-end gap-3 pt-2 border-t border-[var(--border-color)]">
+              <Button variant="ghost" onClick={() => setArchiveTarget(null)}>
+                Cancel
+              </Button>
+              <Button variant="danger" onClick={handleConfirmArchive} disabled={!archiveReason.trim()}>
+                Archive Asset
+              </Button>
             </div>
           </div>
         </Modal>
@@ -589,11 +691,18 @@ export const AssetRegistryPage: React.FC = () => {
               <h4 className="text-xs font-bold uppercase text-[var(--text-secondary)] tracking-wider mb-3">
                 Governance Authority Profile
               </h4>
+              {/* Q1 Stabilization — Phase 1: no asset may be saved without all four owners. */}
+              {submitAttempted && missingOwnerFields(editingAsset).length > 0 && (
+                <div className="mb-3 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/30 text-xs text-red-500 font-semibold">
+                  Required before this asset can be saved: {missingOwnerFields(editingAsset).join(', ')}.
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-4">
                 <Select
                   label="Accountable Owner *"
                   options={userOptions}
                   value={editingAsset.authorityProfile?.accountableOwner || ''}
+                  error={submitAttempted && !editingAsset.authorityProfile?.accountableOwner ? 'Required' : undefined}
                   onChange={e => setEditingAsset({
                     ...editingAsset,
                     authorityProfile: { ...(editingAsset.authorityProfile || defaultAuthorityProfile()), accountableOwner: e.target.value },
@@ -603,6 +712,7 @@ export const AssetRegistryPage: React.FC = () => {
                   label="Governance Sponsor *"
                   options={userOptions}
                   value={editingAsset.authorityProfile?.governanceSponsor || ''}
+                  error={submitAttempted && !editingAsset.authorityProfile?.governanceSponsor ? 'Required' : undefined}
                   onChange={e => setEditingAsset({
                     ...editingAsset,
                     authorityProfile: { ...(editingAsset.authorityProfile || defaultAuthorityProfile()), governanceSponsor: e.target.value },
@@ -612,6 +722,7 @@ export const AssetRegistryPage: React.FC = () => {
                   label="Risk Owner *"
                   options={userOptions}
                   value={editingAsset.authorityProfile?.riskOwner || ''}
+                  error={submitAttempted && !editingAsset.authorityProfile?.riskOwner ? 'Required' : undefined}
                   onChange={e => setEditingAsset({
                     ...editingAsset,
                     authorityProfile: { ...(editingAsset.authorityProfile || defaultAuthorityProfile()), riskOwner: e.target.value },
@@ -621,6 +732,7 @@ export const AssetRegistryPage: React.FC = () => {
                   label="Technical Owner *"
                   options={userOptions}
                   value={editingAsset.authorityProfile?.technicalOwner || ''}
+                  error={submitAttempted && !editingAsset.authorityProfile?.technicalOwner ? 'Required' : undefined}
                   onChange={e => setEditingAsset({
                     ...editingAsset,
                     authorityProfile: { ...(editingAsset.authorityProfile || defaultAuthorityProfile()), technicalOwner: e.target.value },
@@ -724,7 +836,15 @@ export const AssetRegistryPage: React.FC = () => {
               <Button type="button" variant="ghost" onClick={() => setIsModalOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit">
+              <Button
+                type="submit"
+                disabled={!editingAsset.name || !editingAsset.type || missingOwnerFields(editingAsset).length > 0}
+                title={
+                  missingOwnerFields(editingAsset).length > 0
+                    ? `Missing required governance ownership: ${missingOwnerFields(editingAsset).join(', ')}.`
+                    : undefined
+                }
+              >
                 {editingAsset.id ? 'Save Changes' : 'Register AI Asset'}
               </Button>
             </div>

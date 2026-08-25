@@ -43,6 +43,7 @@ import { OverrideCenterPage } from './pages/OverrideCenterPage';
 import { IncidentManagementPage } from './pages/IncidentManagementPage';
 import { OperationalDashboardPage } from './pages/OperationalDashboardPage';
 import { RetirementCenterPage } from './pages/RetirementCenterPage';
+import { ArchivedAssetsPage } from './pages/ArchivedAssetsPage';
 import { GovernanceTimelinePage } from './pages/GovernanceTimelinePage';
 
 // Phase 7 Pages
@@ -125,6 +126,7 @@ const GOVERNED_ROUTES: { path: string; element: React.ReactNode }[] = [
   { path: '/ownership', element: <OwnershipMatrixPage /> },
   { path: '/asset-lifecycle', element: <AssetLifecyclePage /> },
   { path: '/retirement', element: <RetirementCenterPage /> },
+  { path: '/archived-assets', element: <ArchivedAssetsPage /> },
 
   // Domain 2 — Risk & Compliance
   { path: '/risk', element: <RiskCenterPage /> },

@@ -2,8 +2,12 @@ import React, { useState } from 'react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { getValidations, getEvidence, getAssets, saveValidation } from '../services/storageService';
+import { useAuth } from '../contexts/AuthContext';
 
 export const ReviewWorkbenchPage: React.FC = () => {
+  // Q1 Stabilization — Phase 2: this page's ValidationRecord has no dedicated ActionKey in
+  // roleActionMatrix.ts, so approve/reject is gated with the safe !isReadOnly fallback.
+  const { isReadOnly } = useAuth();
   const [validations, setValidations] = useState(() => getValidations());
   const [evidenceList] = useState(() => getEvidence());
   const [assets] = useState(() => getAssets());
@@ -92,10 +96,21 @@ export const ReviewWorkbenchPage: React.FC = () => {
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <Button size="sm" variant="danger" onClick={() => handleAction('Rejected')}>
+                <Button
+                  size="sm"
+                  variant="danger"
+                  onClick={() => handleAction('Rejected')}
+                  disabled={isReadOnly}
+                  title={isReadOnly ? 'Your governance role does not permit rejecting a validation.' : undefined}
+                >
                   Reject Validation ❌
                 </Button>
-                <Button size="sm" onClick={() => handleAction('Approved')}>
+                <Button
+                  size="sm"
+                  onClick={() => handleAction('Approved')}
+                  disabled={isReadOnly}
+                  title={isReadOnly ? 'Your governance role does not permit approving a validation.' : undefined}
+                >
                   Approve Validation ✅
                 </Button>
               </div>

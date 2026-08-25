@@ -5,9 +5,13 @@ import { Input } from '../components/ui/Input';
 import { Select } from '../components/ui/Select';
 import { Modal } from '../components/ui/Modal';
 import { getValidations, saveValidation, getAssets } from '../services/storageService';
+import { useAuth } from '../contexts/AuthContext';
 import type { ValidationRecord, ValidationCategory } from '../types';
 
 export const ValidationCenterPage: React.FC = () => {
+  // Q1 Stabilization — Phase 2: this page's ValidationRecord has no dedicated ActionKey in
+  // roleActionMatrix.ts, so recording a validation is gated with the safe !isReadOnly fallback.
+  const { isReadOnly } = useAuth();
   const [validations, setValidations] = useState<ValidationRecord[]>(() => getValidations());
   const [assets] = useState(() => getAssets());
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -57,7 +61,12 @@ export const ValidationCenterPage: React.FC = () => {
             Phase 3 Command Center • Can this AI asset prove it is ready for deployment?
           </p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)} icon={<span>🧪</span>}>
+        <Button
+          onClick={() => setIsModalOpen(true)}
+          icon={<span>🧪</span>}
+          disabled={isReadOnly}
+          title={isReadOnly ? 'Your governance role does not permit executing a validation review.' : undefined}
+        >
           Execute Validation Review
         </Button>
       </div>
@@ -105,7 +114,14 @@ export const ValidationCenterPage: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border-color)]">
-              {filteredValidations.map(val => (
+              {filteredValidations.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="p-8 text-center text-[var(--text-muted)]">
+                    No validation reviews found for this category.
+                  </td>
+                </tr>
+              ) : (
+              filteredValidations.map(val => (
                 <tr key={val.id} className="hover:bg-[var(--bg-card-hover)] transition-colors">
                   <td className="p-4">
                     <div className="flex flex-col">
@@ -147,7 +163,8 @@ export const ValidationCenterPage: React.FC = () => {
                     </span>
                   </td>
                 </tr>
-              ))}
+              ))
+              )}
             </tbody>
           </table>
         </div>

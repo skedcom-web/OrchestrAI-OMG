@@ -58,8 +58,8 @@ import type {
 } from '../types';
 
 export const apiAssetRepository: AssetRepository = {
-  async getAssets() {
-    const rows = await apiRequest<any[]>('/assets');
+  async getAssets(includeArchived) {
+    const rows = await apiRequest<any[]>(`/assets${includeArchived ? '?includeArchived=true' : ''}`);
     return rows.map(fromBackendAsset);
   },
   async createAsset(data) {
@@ -70,8 +70,14 @@ export const apiAssetRepository: AssetRepository = {
     const row = await apiRequest<any>(`/assets/${id}`, { method: 'PATCH', body: JSON.stringify(toBackendAsset(data)) });
     return fromBackendAsset(row);
   },
-  async deleteAsset(id) {
-    await apiRequest<void>(`/assets/${id}`, { method: 'DELETE' });
+  async archiveAsset(id, archivedBy, archiveReason) {
+    await apiRequest<void>(`/assets/${id}`, {
+      method: 'DELETE',
+      body: JSON.stringify({ archivedBy, archiveReason }),
+    });
+  },
+  async restoreAsset(id) {
+    await apiRequest<void>(`/assets/${id}/restore`, { method: 'PATCH' });
   },
 };
 

@@ -163,7 +163,15 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       '/executive-hub', '/governance-scorecards', '/executive-heatmaps', '/governance-insights',
       '/board-reporting', '/policy-management', '/policy-mapping', '/policy-violations',
       // Phase 10 — Governance Change Management
-      '/change-requests', '/change-impact', '/change-dashboard', '/change-history', '/governance-triggers'
+      '/change-requests', '/change-impact', '/change-dashboard', '/change-history', '/governance-triggers',
+      // Q1 Stabilization — Releases 6-10 were missing from every non-Super-Admin
+      // persona's allowedNav (R-2). Every one of these GET endpoints already
+      // grants all 7 roles read access on the backend, so nav visibility is
+      // restored to match that reality; write actions within each page are
+      // gated individually by roleActionMatrix.ts, not by hiding the page.
+      '/mapping-workspace', '/requirement-registry', '/obligation-library',
+      '/governance-intelligence', '/governance-actions', '/decision-traceability', '/governance-studio',
+      '/archived-assets'
     ],
   },
   {
@@ -186,7 +194,11 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       '/executive-hub', '/governance-scorecards', '/executive-heatmaps', '/governance-insights',
       '/policy-management', '/policy-violations',
       // Phase 10 — Governance Change Management
-      '/change-requests', '/change-impact', '/change-dashboard', '/change-history', '/governance-triggers'
+      '/change-requests', '/change-impact', '/change-dashboard', '/change-history', '/governance-triggers',
+      // Q1 Stabilization — see note on Governance Admin above.
+      '/mapping-workspace', '/requirement-registry', '/obligation-library',
+      '/governance-intelligence', '/governance-actions', '/decision-traceability', '/governance-studio',
+      '/archived-assets'
     ],
   },
   {
@@ -206,7 +218,11 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       // Phase 9 — Executive Governance & Policy Governance
       '/executive-hub', '/policy-management', '/policy-violations',
       // Phase 10 — Governance Change Management
-      '/change-requests', '/change-dashboard', '/change-history'
+      '/change-requests', '/change-dashboard', '/change-history',
+      // Q1 Stabilization — see note on Governance Admin above.
+      '/mapping-workspace', '/requirement-registry', '/obligation-library',
+      '/governance-intelligence', '/governance-actions', '/decision-traceability', '/governance-studio',
+      '/archived-assets'
     ],
   },
   {
@@ -226,7 +242,11 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       // Phase 9 — Executive Governance & Policy Governance
       '/governance-scorecards', '/policy-management', '/policy-violations',
       // Phase 10 — Governance Change Management
-      '/change-requests', '/change-impact', '/change-history'
+      '/change-requests', '/change-impact', '/change-history',
+      // Q1 Stabilization — see note on Governance Admin above.
+      '/mapping-workspace', '/requirement-registry', '/obligation-library',
+      '/governance-intelligence', '/governance-actions', '/decision-traceability', '/governance-studio',
+      '/archived-assets'
     ],
   },
   {
@@ -248,7 +268,11 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       '/executive-hub', '/governance-scorecards', '/executive-heatmaps', '/governance-insights',
       '/board-reporting', '/policy-management', '/policy-mapping', '/policy-violations',
       // Phase 10 — Governance Change Management
-      '/change-requests', '/change-impact', '/change-dashboard', '/change-history', '/governance-triggers'
+      '/change-requests', '/change-impact', '/change-dashboard', '/change-history', '/governance-triggers',
+      // Q1 Stabilization — see note on Governance Admin above.
+      '/mapping-workspace', '/requirement-registry', '/obligation-library',
+      '/governance-intelligence', '/governance-actions', '/decision-traceability', '/governance-studio',
+      '/archived-assets'
     ],
   },
   {
@@ -266,7 +290,11 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       // Phase 9 — Executive Governance (board observer, read-only surfaces)
       '/executive-hub', '/governance-scorecards', '/executive-heatmaps', '/governance-insights',
       // Phase 10 — Governance Change Management
-      '/change-dashboard'
+      '/change-dashboard',
+      // Q1 Stabilization — see note on Governance Admin above.
+      '/mapping-workspace', '/requirement-registry', '/obligation-library',
+      '/governance-intelligence', '/governance-actions', '/decision-traceability', '/governance-studio',
+      '/archived-assets'
     ],
   },
 ];

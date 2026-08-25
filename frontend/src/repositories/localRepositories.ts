@@ -40,8 +40,8 @@ import type {
 } from '../types';
 
 export const localAssetRepository: AssetRepository = {
-  async getAssets() {
-    return storage.getAssets();
+  async getAssets(includeArchived) {
+    return includeArchived ? storage.getAllAssetsIncludingArchived() : storage.getAssets();
   },
   async createAsset(data) {
     return storage.saveAsset(data);
@@ -49,8 +49,11 @@ export const localAssetRepository: AssetRepository = {
   async updateAsset(id, data) {
     return storage.saveAsset({ ...data, id });
   },
-  async deleteAsset(id) {
-    storage.deleteAsset(id);
+  async archiveAsset(id, archivedBy, archiveReason) {
+    await storage.archiveAsset(id, archivedBy, archiveReason);
+  },
+  async restoreAsset(id) {
+    await storage.restoreAsset(id);
   },
 };
 

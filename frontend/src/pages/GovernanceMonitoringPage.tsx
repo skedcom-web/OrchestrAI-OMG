@@ -26,6 +26,11 @@ export const GovernanceMonitoringPage: React.FC = () => {
 
       {/* Health Overview Grid */}
       <div className="grid grid-cols-1 gap-4">
+        {assets.length === 0 && (
+          <Card className="!p-8 text-center text-[var(--text-muted)] text-sm">
+            No AI assets available for governance health monitoring.
+          </Card>
+        )}
         {assets.map(asset => {
           const health = calculateAssetGovernanceHealthScore(asset.id);
           const comp = calculateAssetComplianceScore(asset.id);

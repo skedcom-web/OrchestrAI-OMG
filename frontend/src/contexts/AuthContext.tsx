@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import type { User, UserRole, PersonaDemoUser } from '../types';
 import { DEMO_PERSONAS, INITIAL_USERS } from '../services/mockData';
+import { ROLE_ACTION_MATRIX, isReadOnlyRole, type ActionKey } from '../config/roleActionMatrix';
 
 interface AuthContextType {
   currentUser: User | null;
@@ -10,6 +11,10 @@ interface AuthContextType {
   switchPersona: (role: UserRole) => void;
   logout: () => void;
   hasPermission: (path: string) => boolean;
+  /** Q1 Stabilization — Phase 2: per-action (not just per-page) permission check, driven by roleActionMatrix.ts. */
+  canPerform: (action: ActionKey) => boolean;
+  /** True for Auditor/Viewer — every write action is unavailable regardless of individual action grants. */
+  isReadOnly: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -70,6 +75,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return currentPersona.allowedNav.includes(path);
   };
 
+  const canPerform = (action: ActionKey): boolean => {
+    if (!currentUser || !currentPersona) return false;
+    if (currentPersona.role === 'SUPER_ADMIN') return true;
+    const allowedRoles = ROLE_ACTION_MATRIX[action];
+    return !!allowedRoles && allowedRoles.includes(currentPersona.role);
+  };
+
+  const isReadOnly = isReadOnlyRole(currentPersona?.role);
+
   useEffect(() => {
     if (currentUser) {
       const persona = DEMO_PERSONAS.find(p => p.role === currentUser.role);
@@ -87,6 +101,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         switchPersona,
         logout,
         hasPermission,
+        canPerform,
+        isReadOnly,
       }}
     >
       {children}

@@ -18,6 +18,7 @@ import {
   generateRecommendedActionsForAsset,
 } from '../services/storageService';
 import { GOVERNANCE_PLAYBOOKS } from '../config/governanceActionsEngine';
+import { useAuth } from '../contexts/AuthContext';
 import type { GovernanceConditionType, GovernanceFindingStatus, GovernancePolicy } from '../types';
 
 const OUTCOME_PLAYBOOK: Partial<Record<string, keyof typeof GOVERNANCE_PLAYBOOKS>> = {
@@ -56,6 +57,7 @@ const FINDING_STATUS_FLOW: Record<GovernanceFindingStatus, GovernanceFindingStat
  * asset's governance state automatically.
  */
 export const GovernanceIntelligenceWorkspacePage: React.FC = () => {
+  const { canPerform } = useAuth();
   const [policies, setPolicies] = useState<GovernancePolicy[]>(() => getGovernancePolicies());
   const [assets] = useState(() => getAssets());
   const [selectedAssetId, setSelectedAssetId] = useState<string>(assets[0]?.id || '');
@@ -159,6 +161,8 @@ export const GovernanceIntelligenceWorkspacePage: React.FC = () => {
         <Button
           onClick={() => { setEditingPolicy({ name: '', description: '', category: 'General', severity: 'Medium', status: 'Draft', triggerCondition: 'Missing Owner', linkedControlIds: [] }); setIsPolicyModalOpen(true); }}
           icon={<span>➕</span>}
+          disabled={!canPerform('governancePolicy:create')}
+          title={!canPerform('governancePolicy:create') ? 'Your governance role does not permit registering governance policies.' : undefined}
         >
           Register Policy
         </Button>
@@ -195,7 +199,13 @@ export const GovernanceIntelligenceWorkspacePage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--border-color)]">
-                {policies.map(policy => (
+                {policies.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="p-8 text-center text-[var(--text-muted)]">
+                      No governance policies registered yet.
+                    </td>
+                  </tr>
+                ) : policies.map(policy => (
                   <tr key={policy.id} className="hover:bg-[var(--bg-card-hover)] transition-colors">
                     <td className="p-4">
                       <div className="flex flex-col">
@@ -209,7 +219,15 @@ export const GovernanceIntelligenceWorkspacePage: React.FC = () => {
                     <td className="p-4"><GovernancePolicySeverityBadge severity={policy.severity} size="sm" /></td>
                     <td className="p-4 text-xs text-[var(--text-secondary)]">{policy.status}</td>
                     <td className="p-4 text-right">
-                      <Button size="sm" variant="ghost" onClick={() => { setEditingPolicy({ ...policy }); setIsPolicyModalOpen(true); }}>Edit</Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => { setEditingPolicy({ ...policy }); setIsPolicyModalOpen(true); }}
+                        disabled={!canPerform('governancePolicy:edit')}
+                        title={!canPerform('governancePolicy:edit') ? 'Your governance role does not permit editing governance policies.' : undefined}
+                      >
+                        Edit
+                      </Button>
                     </td>
                   </tr>
                 ))}
@@ -261,7 +279,12 @@ export const GovernanceIntelligenceWorkspacePage: React.FC = () => {
             {activeTab === 'findings' && (
               <div className="flex flex-col gap-3">
                 <div className="flex justify-end">
-                  <Button size="sm" onClick={handleGenerateFindings} disabled={violations.length === 0}>
+                  <Button
+                    size="sm"
+                    onClick={handleGenerateFindings}
+                    disabled={violations.length === 0 || !canPerform('governanceFinding:create')}
+                    title={!canPerform('governanceFinding:create') ? 'Your governance role does not permit raising governance findings.' : undefined}
+                  >
                     Generate Findings from Violations
                   </Button>
                 </div>
@@ -282,8 +305,28 @@ export const GovernanceIntelligenceWorkspacePage: React.FC = () => {
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
                           <GovernanceFindingStatusBadge status={f.status} size="sm" />
-                          {next && <Button size="sm" variant="ghost" onClick={() => handleAdvanceFinding(f.id, next)}>Mark {next}</Button>}
-                          {f.status === 'Open' && <Button size="sm" variant="ghost" onClick={() => handleAcceptRisk(f.id)}>Accept Risk</Button>}
+                          {next && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleAdvanceFinding(f.id, next)}
+                              disabled={!canPerform('governanceFinding:edit')}
+                              title={!canPerform('governanceFinding:edit') ? 'Your governance role does not permit updating findings.' : undefined}
+                            >
+                              Mark {next}
+                            </Button>
+                          )}
+                          {f.status === 'Open' && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleAcceptRisk(f.id)}
+                              disabled={!canPerform('governanceFinding:edit')}
+                              title={!canPerform('governanceFinding:edit') ? 'Your governance role does not permit updating findings.' : undefined}
+                            >
+                              Accept Risk
+                            </Button>
+                          )}
                         </div>
                       </div>
                     );
@@ -316,7 +359,14 @@ export const GovernanceIntelligenceWorkspacePage: React.FC = () => {
                 <div className="flex flex-col gap-3">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold uppercase text-[var(--text-muted)]">Recommended Actions</span>
-                    <Button size="sm" onClick={handleGenerateActions}>Generate Recommended Actions</Button>
+                    <Button
+                      size="sm"
+                      onClick={handleGenerateActions}
+                      disabled={!canPerform('recommendedAction:create')}
+                      title={!canPerform('recommendedAction:create') ? 'Your governance role does not permit generating recommended actions.' : undefined}
+                    >
+                      Generate Recommended Actions
+                    </Button>
                   </div>
                   {recommendedActions.length === 0 ? (
                     <span className="text-sm text-[var(--text-muted)] italic">No recommended actions raised for this asset yet.</span>
@@ -390,7 +440,13 @@ export const GovernanceIntelligenceWorkspacePage: React.FC = () => {
             <Input label="Linked Control IDs (comma-separated, optional)" value={(editingPolicy.linkedControlIds || []).join(', ')} onChange={e => setEditingPolicy({ ...editingPolicy, linkedControlIds: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })} placeholder="e.g. octl-approval-authority" />
             <div className="flex items-center justify-end gap-3 pt-4 border-t border-[var(--border-color)]">
               <Button type="button" variant="ghost" onClick={() => setIsPolicyModalOpen(false)}>Cancel</Button>
-              <Button type="submit">{editingPolicy.id ? 'Save Changes' : 'Register Policy'}</Button>
+              <Button
+                type="submit"
+                disabled={!canPerform(editingPolicy.id ? 'governancePolicy:edit' : 'governancePolicy:create')}
+                title={!canPerform(editingPolicy.id ? 'governancePolicy:edit' : 'governancePolicy:create') ? 'Your governance role does not permit saving governance policies.' : undefined}
+              >
+                {editingPolicy.id ? 'Save Changes' : 'Register Policy'}
+              </Button>
             </div>
           </form>
         </Modal>

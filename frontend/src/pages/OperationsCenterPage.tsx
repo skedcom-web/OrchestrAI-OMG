@@ -2,9 +2,14 @@ import React, { useState } from 'react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { getAssets, updateAssetOperationalStatus } from '../services/storageService';
+import { useAuth } from '../contexts/AuthContext';
 import type { OperationalStatus } from '../types';
 
 export const OperationsCenterPage: React.FC = () => {
+  // Q1 Stabilization — Phase 2: changing an asset's operational status (Active/Suspended) has
+  // no dedicated ActionKey in roleActionMatrix.ts, so it is gated with the safe !isReadOnly
+  // fallback (Auditor/Viewer are never granted a write endpoint on the real backend).
+  const { isReadOnly } = useAuth();
   const [assets, setAssets] = useState(() => getAssets());
 
   const handleStatusChange = (id: string, newStatus: OperationalStatus) => {
@@ -53,7 +58,14 @@ export const OperationsCenterPage: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border-color)]">
-              {assets.map(asset => {
+              {assets.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="p-8 text-center text-[var(--text-muted)]">
+                    No AI assets found.
+                  </td>
+                </tr>
+              ) : (
+              assets.map(asset => {
                 const currentOpStatus = asset.operationalStatus || 'Active';
 
                 return (
@@ -93,12 +105,24 @@ export const OperationsCenterPage: React.FC = () => {
                     <td className="p-4 text-right">
                       <div className="flex items-center justify-end gap-1">
                         {currentOpStatus !== 'Active' && (
-                          <Button size="sm" variant="outline" onClick={() => handleStatusChange(asset.id, 'Active')}>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleStatusChange(asset.id, 'Active')}
+                            disabled={isReadOnly}
+                            title={isReadOnly ? 'Your governance role does not permit restoring an asset to active operational status.' : undefined}
+                          >
                             Set Active
                           </Button>
                         )}
                         {currentOpStatus !== 'Suspended' && (
-                          <Button size="sm" variant="danger" onClick={() => handleStatusChange(asset.id, 'Suspended')}>
+                          <Button
+                            size="sm"
+                            variant="danger"
+                            onClick={() => handleStatusChange(asset.id, 'Suspended')}
+                            disabled={isReadOnly}
+                            title={isReadOnly ? 'Your governance role does not permit suspending an AI asset.' : undefined}
+                          >
                             Suspend
                           </Button>
                         )}
@@ -106,7 +130,8 @@ export const OperationsCenterPage: React.FC = () => {
                     </td>
                   </tr>
                 );
-              })}
+              })
+              )}
             </tbody>
           </table>
         </div>

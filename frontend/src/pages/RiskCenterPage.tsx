@@ -5,9 +5,11 @@ import { Button } from '../components/ui/Button';
 import { Select } from '../components/ui/Select';
 import { RiskBadge } from '../components/ui/Badge';
 import { getAssets, saveAsset } from '../services/storageService';
+import { useAuth } from '../contexts/AuthContext';
 import type { AIAsset, RiskLevel } from '../types';
 
 export const RiskCenterPage: React.FC = () => {
+  const { canPerform } = useAuth();
   const [searchParams] = useSearchParams();
   const initialAssetId = searchParams.get('assetId') || '';
 
@@ -60,17 +62,21 @@ export const RiskCenterPage: React.FC = () => {
 
   const calculatedTier = calculateRiskTier();
 
-  const handleCompleteAssessment = () => {
+  const handleCompleteAssessment = async () => {
     if (!selectedAsset) return;
 
-    saveAsset({
-      ...selectedAsset,
-      riskLevel: calculatedTier,
-      dataSensitivity,
-    });
-
-    setAssets(getAssets());
-    alert(`Risk Assessment Complete! Asset '${selectedAsset.name}' risk tier updated to ${calculatedTier.toUpperCase()}.`);
+    try {
+      await saveAsset({
+        ...selectedAsset,
+        riskLevel: calculatedTier,
+        dataSensitivity,
+      });
+      setAssets(getAssets());
+      alert(`Risk Assessment Complete! Asset '${selectedAsset.name}' risk tier updated to ${calculatedTier.toUpperCase()}.`);
+    } catch (err) {
+      setAssets(getAssets()); // reflect the optimistic local update even though sync failed
+      alert(`Risk profile saved to the local cache but could not be synced to Neon: ${(err as Error).message}. It will not be visible on other devices until sync succeeds.`);
+    }
   };
 
   const assetOptions = assets.map(a => ({ value: a.id, label: `${a.name} (${a.type})` }));
@@ -272,7 +278,12 @@ export const RiskCenterPage: React.FC = () => {
               </div>
             </div>
 
-            <Button size="lg" onClick={handleCompleteAssessment}>
+            <Button
+              size="lg"
+              onClick={handleCompleteAssessment}
+              disabled={!canPerform('asset:edit')}
+              title={!canPerform('asset:edit') ? 'Your governance role does not permit updating an asset’s risk profile.' : undefined}
+            >
               Apply & Update Asset Risk Profile
             </Button>
           </div>
@@ -280,11 +291,11 @@ export const RiskCenterPage: React.FC = () => {
 
         {/* Wizard Controls */}
         <div className="flex items-center justify-between pt-6 border-t border-[var(--border-color)]">
-          <Button variant="ghost" disabled={step === 1} onClick={() => setStep(s => s - 1)}>
+          <Button variant="ghost" disabled={step === 1} onClick={() => setStep(s => Math.max(1, s - 1))}>
             ← Previous Step
           </Button>
           {step < 6 && (
-            <Button onClick={() => setStep(s => s + 1)}>
+            <Button onClick={() => setStep(s => Math.min(6, s + 1))}>
               Next Step →
             </Button>
           )}

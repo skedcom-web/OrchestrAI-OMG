@@ -4,9 +4,15 @@ import { Button } from '../components/ui/Button';
 import { Select } from '../components/ui/Select';
 import { Input } from '../components/ui/Input';
 import { getAssets, getOverrides, recordOverride } from '../services/storageService';
+import { useAuth } from '../contexts/AuthContext';
 import type { OverrideRecord } from '../types';
 
 export const OverrideCenterPage: React.FC = () => {
+  // Q1 Stabilization — Phase 2/4: dedicated ActionKey (override:record), scoped to
+  // Super Admin/Governance Admin/Risk Officer — tighter than the generic !isReadOnly
+  // fallback, since this is a safety-critical control.
+  const { canPerform } = useAuth();
+  const canOverride = canPerform('override:record');
   const [assets] = useState(() => getAssets());
   const [records, setRecords] = useState<OverrideRecord[]>(() => getOverrides());
   const [selectedAssetId, setSelectedAssetId] = useState<string>(assets[0]?.id || '');
@@ -68,7 +74,12 @@ export const OverrideCenterPage: React.FC = () => {
             placeholder="e.g. Human Supervisor approved transaction override after manual customer call..."
           />
 
-          <Button type="submit" className="w-full">
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={!canOverride}
+            title={!canOverride ? 'Your governance role does not permit recording a human override.' : undefined}
+          >
             Log Human Override Record
           </Button>
         </form>
@@ -80,7 +91,12 @@ export const OverrideCenterPage: React.FC = () => {
           Human Override Execution History ({records.length})
         </h3>
 
-        {records.map(rec => (
+        {records.length === 0 ? (
+          <Card className="!p-8 text-center text-[var(--text-muted)]">
+            No human override events recorded.
+          </Card>
+        ) : (
+        records.map(rec => (
           <Card key={rec.id} className="!p-4 border-[var(--border-color)] flex flex-col gap-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -98,7 +114,8 @@ export const OverrideCenterPage: React.FC = () => {
               Requested By: {rec.requestedBy} | Approved By: {rec.approvedBy}
             </span>
           </Card>
-        ))}
+        ))
+        )}
       </div>
     </div>
   );
