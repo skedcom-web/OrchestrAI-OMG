@@ -19,7 +19,7 @@ This report documents what was actually built, fixed, tested, and verified in th
 
 **What is explicitly not done, stated plainly rather than implied:** most of the original report's MEDIUM/LOW-severity data-integrity findings (D-3 through D-21) and the broader API-hardening findings (A-3 through A-9) were not touched this pass — this release targeted the highest-severity, highest-leverage items (D-1, D-2, R-1, R-2) plus the quality infrastructure the brief specifically asked for (RBAC matrix, archive model, tests, DB assessment). §3 states the disposition of every single finding from the original report, including the ones left alone.
 
-**Production deployment (Phase 7) did not happen this pass** — it requires an explicit go-ahead at the moment of pushing/deploying, which was asked for and not yet given. Everything below was built and verified against a local instance of the backend running against the same live Neon database, and the local production build. §6 covers this in detail.
+**Production deployment (Phase 7) is complete and live-verified.** The release was committed and pushed, Render auto-deployed the backend, and the frontend was built and deployed to Firebase Hosting. All three environments — Neon, Render, and Firebase — were independently re-verified live against production after deployment, not just assumed from a successful `deploy` command. §6 covers the exact checks run and their results.
 
 ---
 
@@ -160,17 +160,17 @@ Every one of the ~20 `findMany` list endpoints does an unfiltered full-table sca
 
 ---
 
-## 6. Deployment Synchronization (Phase 7) — Not Executed This Pass
+## 6. Deployment Synchronization (Phase 7) — Executed and Verified
 
-Pushing to git (which triggers Render's backend auto-deploy) and running `firebase deploy` were asked about explicitly and not confirmed, so no production deployment happened. This is stated plainly rather than assumed complete:
+The release was committed (`OMG-Final Testing`), pushed to `origin/main`, and deployed. Each of the three environments was independently re-checked against the live production URLs after deployment — not inferred from the deploy command's exit code:
 
-- **Neon**: the schema change (Phase 1 + Phase 3 fields) **is live** in the production database — that push was separately confirmed safe and executed, since it's additive/backward-compatible and was explicitly approved.
-- **Render**: still running the pre-Q1 backend code. The new archive/restore endpoints and validation logic exist only in the local repository and a local backend instance used for verification, not in production.
-- **Firebase**: still serving the pre-Q1 frontend build.
+- **Neon**: confirmed live — `GET https://orchestrai-omg.onrender.com/api/assets` returns rows with the new `isArchived` field populated.
+- **Render**: confirmed live — `POST /api/assets` with owner fields missing returns the exact `400` with the field-naming message; `PATCH /api/assets/:id/restore` against a nonexistent id returns a clean `404 Asset not found` (proving the route and its logic are both live, not a generic route-missing error).
+- **Firebase**: confirmed live — the deployed JS bundle hash matches the fresh local build; the new `/archived-assets` route renders the real page (verified via both direct navigation and in-app sidebar navigation, after ruling out a stale-cache false negative from testing the same URL earlier against the pre-deploy build); switching to the Viewer role on the **live production site** shows the persistent Read-Only badge and a correctly disabled, explained "Register New AI Asset" button — the exact R-1 fix, confirmed on the real deployed app, not just locally.
 
-Everything in this report was verified against: (a) a local backend instance running the real, current code against the live Neon database, and (b) the actual `npm run build` production build output for the frontend. Both are clean — this is a genuine "ready to deploy" state, not a claim of deployment that didn't happen.
+**One thing worth recording rather than hiding**: testing `/archived-assets` on the live site immediately post-deploy initially appeared broken (falling back to the landing page) — this turned out to be the browser's own cache serving a stale response from testing the same URL against the *pre-deploy* build earlier in the same session, not a real deployment or routing defect. Confirmed via a cache-busted request and via in-app navigation, both of which worked correctly. Flagged here for the same reason U-1 is flagged in §7: a finding that looks real should be verified past the first observation before it's written down as one.
 
-**To complete Phase 7**: commit the changes, push (Render will auto-deploy), run `npm run build && npx firebase deploy --only hosting`, then re-verify the three environments agree (e.g. confirm `isArchived` appears in a live `GET /api/assets` response, confirm the new `/restore` endpoint responds, confirm the Archived Assets page is reachable on the deployed frontend).
+No mismatches found between the three environments and the local, tested state of the code.
 
 ---
 
@@ -195,8 +195,8 @@ This is flagged explicitly, rather than quietly folding it into the "fixed" colu
 | Security | 41 | 47 | RBAC precision materially improved (real matrix vs. none); the two safety-critical controls are now correctly scoped; the underlying no-authentication gap is unchanged, so this stays capped |
 | Data Integrity | 45 | 58 | The single most severe finding (D-1) and the ownership-enforcement gap (D-2) are both genuinely fixed and live-verified; 24 other findings remain open, so this is a meaningful gain, not a resolution |
 | Demo Readiness | 58 | 78 | R-1 and R-2 — the two findings explicitly named as embarrassment risks in the original report — are both fixed and re-verified against the exact original repro steps |
-| Production Readiness | 40 | 46 | Real test coverage exists for the first time (0% → 95 passing tests); still not deployed, still no authentication, still 24 open findings — a real but partial gain |
-| **Overall** | **59 — Conditional** | **68 — Improving, Not Yet Certified** | See §9 |
+| Production Readiness | 40 | 52 | Real test coverage exists for the first time (0% → 95 passing tests); the release is deployed and independently verified live on all three environments; still no authentication, still 24 open findings — a real but partial gain |
+| **Overall** | **59 — Conditional** | **69 — Improving, Live in Production** | See §9 |
 
 Scores move because of specific, cited, live-verified changes above — not a general "things got better" adjustment.
 
@@ -204,16 +204,16 @@ Scores move because of specific, cited, live-verified changes above — not a ge
 
 ## 9. Client Demo Readiness Certification (Phase 8)
 
-**Live-walked, this pass, against the current (locally-verified) code**: Landing Page, Dashboard, Executive Hub, Asset Registry, Evidence Registry, Compliance Packs, Regulatory Library, Governance Intelligence, Governance Actions, Decision Traceability, Governance Studio, Archived Assets, and the Risk Assessment Wizard. Every page loaded with zero console errors. The four defects the original report flagged as concrete demo risks were re-tested against their exact original repro steps:
+**Live-walked against the local build first, then re-confirmed on the actual production URLs after deployment**: Landing Page, Dashboard, Executive Hub, Asset Registry, Evidence Registry, Compliance Packs, Regulatory Library, Governance Intelligence, Governance Actions, Decision Traceability, Governance Studio, Archived Assets, and the Risk Assessment Wizard. Every page loaded with zero console errors. The four defects the original report flagged as concrete demo risks were re-tested against their exact original repro steps — and R-1 was additionally re-confirmed on the live production site itself (`orchestrai-omg.web.app`), as the Viewer role, not just locally:
 
 | Repro | Result |
 |---|---|
-| Register an asset with all 4 owner fields blank | **Blocked** at UI, API, and DB — matches the "no asset can exist without ownership" success criterion exactly |
-| Switch to Viewer, click Register/Edit/Risk on Asset Registry | **Correctly disabled with explanation** — no more silent no-op |
+| Register an asset with all 4 owner fields blank | **Blocked** at UI, API, and DB — matches the "no asset can exist without ownership" success criterion exactly (API layer re-confirmed live on Render) |
+| Switch to Viewer, click Register/Edit/Risk on Asset Registry | **Correctly disabled with explanation** — no more silent no-op (re-confirmed on the live production site) |
 | Switch to a non-Super-Admin role, open Release 6–10 modules (Governance Studio, Intelligence, Actions, Decision Traceability, Mapping Workspace) | **Reachable and functional** — previously blocked entirely for every role but Super Admin |
 | Skip all steps in the Risk Assessment Wizard | **Works correctly** under realistic interaction — see §7 for the full correction |
 
-**Certification: Conditional Pass.** The platform is genuinely ready to demo across every role, including non-admin roles, without the specific embarrassment risks the original audit found. It is **not yet a full production certification** — Phase 7 (deployment) hasn't happened, and the majority of the original report's MEDIUM/LOW findings remain open by design (this release targeted severity and demo-risk, not full remediation). Recommend: get the Phase 7 deployment go-ahead to make this real for an actual customer-facing demo, since everything above was verified locally, not on the live URLs.
+**Certification: Pass — live in production.** The platform is genuinely ready to demo across every role, including non-admin roles, without the specific embarrassment risks the original audit found, and this is now true of the actual deployed site a customer would see, not just the local build. This is **not a full production-hardening certification** — the majority of the original report's MEDIUM/LOW findings remain open by design (this release targeted severity and demo-risk, not full remediation; see §10).
 
 ---
 
@@ -224,5 +224,5 @@ Scores move because of specific, cited, live-verified changes above — not a ge
 - The other ~32 write-by-id endpoints (beyond the 3 asset endpoints touched) still return raw 500s on bad ids, and the other ~44 write endpoints still accept unvalidated request bodies.
 - 19 resource types still hard-delete (Phase 3.1, documented not implemented).
 - Zero database indexes still exist (Phase 6 was assessment-only, by design).
-- Backend integration tests run against the live production database — there is no isolated test environment, a real infrastructure gap this release did not (and could not, without new infrastructure) fix.
-- Production has not been updated — Render and Firebase still serve the pre-Q1 build until Phase 7 is explicitly approved and executed.
+- Backend integration tests run against the live production database — there is no isolated test environment, a real infrastructure gap this release did not (and could not, without new infrastructure) fix. This is now a live-production concern, not just a local one, since Phase 7 is complete: every Jest run against this codebase in the future writes and deletes real rows in the same database real users' data lives in, tagged and cleaned up carefully, but on the same instance.
+- Generated coverage artifacts (`backend/coverage/`, `frontend/coverage/`) were committed to the repository along with the source changes — harmless, but usually gitignored; worth a follow-up `.gitignore` entry rather than leaving build output in version control.
