@@ -214,7 +214,7 @@ export const FindingsPage: React.FC = () => {
               value={newFinding.severity}
               onChange={e => setNewFinding({ ...newFinding, severity: e.target.value as FindingSeverity })}
               options={[
-                { value: 'Critical', label: 'Critical — Immediate Gatekeeper Blocker' },
+                { value: 'Critical', label: 'Critical — Requires Immediate Governance Review' },
                 { value: 'High', label: 'High — Risk Mitigation Required' },
                 { value: 'Medium', label: 'Medium — Moderate Impact' },
                 { value: 'Low', label: 'Low — Advisory / Optimization' },

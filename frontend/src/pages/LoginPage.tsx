@@ -56,30 +56,24 @@ export const LoginPage: React.FC = () => {
           {/* Core Headline & Mission */}
           <div className="my-8 flex flex-col gap-4 relative z-10">
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight text-white">
-              Govern AI with Confidence
+              Everyone Talks AI Governance.<br />We Make It Operational.
             </h1>
             <p className="text-base text-white/95 font-semibold">
-              From AI idea to AI approval — and beyond.
+              Ownership. Risk. Approvals. Evidence. Accountability.
             </p>
-            <ul className="flex flex-col gap-1.5 max-w-lg">
-              {[
-                'Know what AI exists.',
-                'Assign accountability.',
-                'Maintain governance continuity.',
-                'Capture supporting evidence.',
-                'Measure governance readiness.',
-                'Identify governance gaps.',
-                'Prepare for audits.',
-                'Assess compliance obligations.',
-                'Understand compliance coverage.',
-                'Identify compliance gaps.',
-              ].map(line => (
-                <li key={line} className="flex items-start gap-2.5">
-                  <span className="mt-[7px] w-1.5 h-1.5 rounded-full bg-cyan-300 shrink-0" aria-hidden />
-                  <span className="text-sm text-blue-100/95 leading-relaxed">{line}</span>
-                </li>
-              ))}
-            </ul>
+            <p className="text-sm text-blue-100/90 font-medium">
+              Connected across the entire AI lifecycle.
+            </p>
+
+            {/* vNext — Prevention-First positioning statement */}
+            <div className="p-4 rounded-xl bg-white/10 backdrop-blur-md border border-white/20">
+              <p className="text-sm font-bold text-white leading-snug">
+                Prevent governance failures before they become business consequences.
+              </p>
+              <p className="text-[11px] text-blue-100/90 mt-1.5 leading-relaxed">
+                Identify gaps early. Strengthen accountability. Preserve evidence. Enable informed decisions.
+              </p>
+            </div>
 
             <div className="flex flex-wrap items-center gap-2.5 pt-1">
               <button
@@ -114,7 +108,7 @@ export const LoginPage: React.FC = () => {
                   DECISION ENGINE
                 </span>
                 <p className="text-2xl font-black text-white mt-0.5">GO / NO GO</p>
-                <span className="text-[10px] text-emerald-300 font-semibold">Gatekeeper Enforced</span>
+                <span className="text-[10px] text-emerald-300 font-semibold">Human-Decided, Governance-Informed</span>
               </div>
             </div>
 

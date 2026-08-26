@@ -660,19 +660,19 @@ export const PERSONAS: { role: string; icon: string; need: string; startAt: stri
 /* ================ Section 7 — platform capabilities ===================== */
 
 export const CAPABILITIES: { label: string; icon: string; path: string; blurb: string }[] = [
-  { label: 'AI Registry', icon: '🗂️', path: '/assets', blurb: 'One inventory, nine asset types' },
+  { label: 'AI Registry', icon: '🗂️', path: '/assets', blurb: 'Prevent unmanaged AI from entering production' },
   { label: 'Risk Management', icon: '⚡', path: '/risk', blurb: 'Four-tier classification' },
   { label: 'Validation', icon: '🧪', path: '/validation', blurb: 'Six independent disciplines' },
-  { label: 'Evidence Management', icon: '📄', path: '/evidence', blurb: 'Ten deliverable types' },
+  { label: 'Evidence Management', icon: '📄', path: '/evidence', blurb: 'Preserve the evidence you will need before regulators ask for it' },
   { label: 'Decision Workbench', icon: '⚖️', path: '/decision-workbench-v4', blurb: 'GO / Conditional / NO GO' },
   { label: 'Human Oversight', icon: '✋', path: '/override-center', blurb: 'Override and kill switch' },
-  { label: 'Monitoring', icon: '📡', path: '/governance-monitoring', blurb: 'Continuous health scoring' },
+  { label: 'Monitoring', icon: '📡', path: '/governance-monitoring', blurb: 'Identify governance gaps before they become business risks' },
   { label: 'Governance Continuity', icon: '🔁', path: '/change-requests', blurb: 'Change-driven reassessment' },
   { label: 'Audit & Reporting', icon: '📜', path: '/audit-logs', blurb: 'Append-only trail' },
   { label: 'Lifecycle Management', icon: '🔄', path: '/asset-lifecycle', blurb: 'Registration to retirement' },
   { label: 'Compliance Pack Framework', icon: '🧩', path: '/compliance-packs', blurb: 'Pack, requirement, control, coverage' },
   { label: 'Regulatory Knowledge Engine', icon: '🗺️', path: '/mapping-workspace', blurb: 'Source, requirement, obligation, evidence' },
-  { label: 'Governance Intelligence', icon: '🧠', path: '/governance-intelligence', blurb: 'Policy → condition → finding → outcome' },
+  { label: 'Governance Intelligence', icon: '🧠', path: '/governance-intelligence', blurb: 'Stop high-risk AI from bypassing governance controls' },
   { label: 'Governance Actions', icon: '🛠️', path: '/governance-actions', blurb: 'Accept, reject or defer — human-governed' },
   { label: 'Decision Traceability', icon: '🧭', path: '/decision-traceability', blurb: 'Reconstruct any decision end-to-end' },
   { label: 'Governance Intelligence Studio', icon: '🎛️', path: '/governance-studio', blurb: 'Configure governance logic without code changes' },
@@ -815,7 +815,11 @@ export const REGULATORY_COMPLIANCE_PACKS: string[] = [
 ];
 
 export const EXECUTIVE_MESSAGE_STATEMENT =
-  'The OMG platform baseline is complete. Future work focuses on customer onboarding, governance transformation engagements, industry accelerators, compliance packs, and production deployments without requiring major architectural redesign.';
+  'Executives do not buy governance — they buy protection from regulatory exposure, uncontrolled AI usage, missing accountability, poor decisions, missing evidence, audit failures, and reputational damage. The OMG platform baseline is complete. Future work focuses on customer onboarding, governance transformation engagements, industry accelerators, compliance packs, and production deployments without requiring major architectural redesign.';
 
 export const FINAL_DECLARATION_TITLE = 'OMG Core Platform Version 1.0 Complete';
 export const FINAL_DECLARATION_STATEMENT = 'Built Once. Configured Together. Governed Continuously.';
+
+/** vNext — Prevention-First Blueprint's Final Positioning Statement. */
+export const PREVENTION_POSITIONING_STATEMENT =
+  'OrchestrAI OMG helps organizations identify governance gaps, strengthen accountability, preserve evidence, and make informed decisions before governance weaknesses become business consequences.';

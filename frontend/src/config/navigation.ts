@@ -100,6 +100,15 @@ export const NAV_DOMAINS: NavDomain[] = [
         keywords: ['scorecard', 'health index', 'readiness', 'score'],
       },
       {
+        path: '/governance-readiness',
+        label: 'Governance Readiness Dashboard',
+        icon: '🛡️',
+        description:
+          'Ownership, Risk, Controls, Evidence, Reviews and Governance Decision — identify gaps before they reach a decision review.',
+        keywords: ['readiness', 'prevention', 'controls', 'gaps', 'score'],
+        badge: 'vNext',
+      },
+      {
         path: '/executive-heatmaps',
         label: 'Executive Heatmaps',
         icon: '🔥',

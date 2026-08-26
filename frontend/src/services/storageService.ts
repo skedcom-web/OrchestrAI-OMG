@@ -3095,6 +3095,26 @@ export function getAllGovernanceGaps() {
   return getAssets().flatMap(a => getGovernanceGapsForAsset(a.id));
 }
 
+/**
+ * vNext — Prevention-First: per-asset lookup helpers for the Governance
+ * Readiness Score. Deliberately NOT a full score wrapper here — computing
+ * the "Controls Defined" pillar needs `getPoliciesForAsset` from
+ * policyService.ts, which itself imports from this file; adding that import
+ * here would create a circular dependency. Callers (GovernanceReadinessDashboardPage,
+ * DecisionWorkbenchPageV4) import policyService directly and call
+ * computeGovernanceReadinessScore themselves — see governanceReadinessScore.ts.
+ */
+export function getGovernanceReadinessInputs(assetId: string) {
+  const asset = getAssetById(assetId);
+  if (!asset) return null;
+  return {
+    asset,
+    evidence: getEvidenceRecordsForAsset(assetId),
+    reviews: getScheduledReviews().filter(r => r.assetId === assetId),
+    triggers: getReassessmentTriggers().filter(t => t.assetId === assetId),
+  };
+}
+
 export function getGovernanceMetrics(): GovernanceMetrics {
   const assets = getAssets();
   const validations = getValidations();

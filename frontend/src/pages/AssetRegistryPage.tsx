@@ -543,7 +543,7 @@ export const AssetRegistryPage: React.FC = () => {
                   Manage Ownership
                 </Button>
                 <Button size="sm" onClick={() => navigate(`/decision-workbench-v4?assetId=${selectedAsset.id}`)}>
-                  Decision Gatekeeper
+                  Decision Workbench
                 </Button>
               </div>
             </div>

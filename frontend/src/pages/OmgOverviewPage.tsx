@@ -16,6 +16,7 @@ import {
   EXECUTIVE_MESSAGE_STATEMENT,
   FINAL_DECLARATION_STATEMENT,
   FINAL_DECLARATION_TITLE,
+  PREVENTION_POSITIONING_STATEMENT,
   FOUNDING_PARTNERS_STATEMENT,
   FUTURE_COMPLIANCE_ACCELERATORS_STATEMENT,
   PARTNER_WITH_US_STATEMENT,
@@ -81,46 +82,37 @@ export const OmgOverviewPage: React.FC = () => {
             </div>
 
             <h1 className="text-[2.1rem] sm:text-[2.9rem] font-extrabold leading-[1.08] text-[var(--text-primary)]">
-              Govern AI with <span className="text-gradient-brand">Confidence</span>
+              Everyone Talks AI Governance.<br />We <span className="text-gradient-brand">Make It Operational.</span>
             </h1>
 
             <p className="text-[15px] font-semibold text-[var(--text-secondary)]">
-              From AI idea to AI approval — and beyond.
+              Ownership. Risk. Approvals. Evidence. Accountability.
             </p>
 
             <p className="text-[15px] font-bold text-gradient-brand">
-              Built Once. Configured Together. Governed Continuously.
+              Connected across the entire AI lifecycle.
             </p>
 
             <p className="text-[13px] font-semibold text-[var(--text-secondary)] leading-relaxed max-w-xl">
               OMG provides a configurable AI Governance Operating Platform that helps organizations govern AI assets, manage risk, demonstrate accountability, maintain traceability, and operationalize governance at scale.
             </p>
 
-            <ul className="flex flex-col gap-1.5">
-              {[
-                'Know what AI exists.',
-                'Assign accountability.',
-                'Maintain governance continuity.',
-                'Capture supporting evidence.',
-                'Measure governance readiness.',
-                'Identify governance gaps.',
-                'Prepare for audits.',
-                'Assess compliance obligations.',
-                'Understand compliance coverage.',
-                'Identify compliance gaps.',
-              ].map(line => (
-                <li key={line} className="flex items-start gap-2.5">
-                  <span
-                    className="mt-[7px] w-1.5 h-1.5 rounded-full shrink-0"
-                    style={{ background: 'var(--accent-primary)' }}
-                    aria-hidden
-                  />
-                  <span className="text-[13px] text-[var(--text-secondary)] leading-relaxed">
-                    {line}
-                  </span>
-                </li>
-              ))}
-            </ul>
+            {/* vNext — Prevention-First positioning statement */}
+            <div
+              data-noglass
+              className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)]/70 backdrop-blur-sm px-4 py-3.5 max-w-xl"
+            >
+              <p className="text-[13px] font-bold text-[var(--text-primary)] leading-snug">
+                Prevent governance failures before they become business consequences.
+              </p>
+              <p className="text-[11.5px] text-[var(--text-secondary)] mt-1.5 leading-relaxed">
+                Identify gaps early. Strengthen accountability. Preserve evidence. Enable informed decisions.
+              </p>
+            </div>
+
+            <p className="text-[13px] font-bold text-gradient-brand">
+              Built Once. Configured Together. Governed Continuously.
+            </p>
 
             <div className="flex flex-wrap items-center gap-2.5 pt-2">
               <button
@@ -637,6 +629,7 @@ export const OmgOverviewPage: React.FC = () => {
         <span className="text-[22px]" aria-hidden>🏁</span>
         <h2 className="text-[20px] sm:text-[24px] font-extrabold text-white">{FINAL_DECLARATION_TITLE}</h2>
         <p className="text-[15px] font-bold text-white/90">{FINAL_DECLARATION_STATEMENT}</p>
+        <p className="text-[13px] text-white/75 max-w-2xl leading-relaxed mt-1">{PREVENTION_POSITIONING_STATEMENT}</p>
       </section>
 
       <GuidedTour open={tourOpen} onClose={() => setTourOpen(false)} />

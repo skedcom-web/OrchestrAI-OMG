@@ -83,7 +83,7 @@ export const DashboardPage: React.FC = () => {
           title="Approved GO Decisions"
           value={metrics.decisionBreakdown['GO']}
           subtitle={`${metrics.decisionBreakdown['CONDITIONAL GO']} Conditional • ${metrics.decisionBreakdown['NO GO']} Blocked`}
-          trend="Governance Enforced"
+          trend="Human-Decided, Governance-Informed"
           trendType="positive"
           icon={<span className="text-xl">⚖️</span>}
         />
@@ -162,10 +162,10 @@ export const DashboardPage: React.FC = () => {
 
           <div className="mt-auto p-4 rounded-xl bg-[var(--accent-light)] border border-[var(--accent-border)]">
             <h4 className="text-xs font-bold text-[var(--accent-primary)] uppercase tracking-wider">
-              Governance Gatekeeper
+              Governance Readiness
             </h4>
             <p className="text-xs text-[var(--text-primary)] mt-1">
-              No admissible decision = No AI asset movement into production.
+              Readiness is tracked and surfaced before every production decision — informing human judgment, never replacing it.
             </p>
           </div>
         </Card>

@@ -2,12 +2,15 @@ import React, { useState } from 'react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Select } from '../components/ui/Select';
-import { 
-  getAssets, 
-  calculateAssetGovernanceScore, 
-  recordDecision, 
-  getEvidence
+import {
+  getAssets,
+  calculateAssetGovernanceScore,
+  recordDecision,
+  getEvidence,
+  getGovernanceReadinessInputs,
 } from '../services/storageService';
+import { getPoliciesForAsset } from '../services/policyService';
+import { computeGovernanceReadinessScore, READINESS_PILLAR_LABELS } from '../config/governanceReadinessScore';
 import { DecisionPackageModal } from '../components/common/DecisionPackageModal';
 import { useAuth } from '../contexts/AuthContext';
 import type { DecisionOutcome, DecisionReadinessChecklist } from '../types';
@@ -25,6 +28,21 @@ export const DecisionWorkbenchPageV4: React.FC = () => {
   const selectedAsset = assets.find(a => a.id === selectedAssetId) || assets[0];
   const scoreBreakdown = calculateAssetGovernanceScore(selectedAssetId);
   const evidence = getEvidence().filter(e => e.assetId === selectedAssetId);
+
+  // vNext — Prevention-First: Governance Readiness Advisory. Purely informational —
+  // never disables the form below, never gates GO/CONDITIONAL GO/NO GO. See
+  // governanceReadinessScore.ts for why policies are fetched here rather than
+  // via a storageService wrapper (avoids a circular import).
+  const readinessInputs = getGovernanceReadinessInputs(selectedAssetId);
+  const readiness = readinessInputs
+    ? computeGovernanceReadinessScore(
+        readinessInputs.asset,
+        readinessInputs.evidence,
+        readinessInputs.reviews,
+        readinessInputs.triggers,
+        getPoliciesForAsset(readinessInputs.asset)
+      )
+    : null;
 
   const [checklist, setChecklist] = useState<DecisionReadinessChecklist>({
     ownershipComplete: scoreBreakdown.ownership.passed,
@@ -45,10 +63,19 @@ export const DecisionWorkbenchPageV4: React.FC = () => {
     e.preventDefault();
     if (!selectedAssetId || !justification) return;
 
+    // vNext — Prevention-First: automatic decision traceability. Informational
+    // only — this never blocks the decision, it just records what was known
+    // about readiness at the moment the decision was made.
+    let recordedJustification = justification;
+    if (readiness && readiness.missingPillars.length > 0) {
+      const gapList = readiness.missingPillars.map(p => p.label).join(', ');
+      recordedJustification += `\n\nDecision made with Governance Readiness Score: ${readiness.overallScore}/100\nOpen Readiness Gaps: ${gapList}`;
+    }
+
     recordDecision({
       assetId: selectedAssetId,
       outcome,
-      justification,
+      justification: recordedJustification,
       checklist,
       decisionOwner: 'David Chen (Governance Admin)',
     });
@@ -140,6 +167,43 @@ export const DecisionWorkbenchPageV4: React.FC = () => {
               </span>
             </div>
           </Card>
+
+          {/* vNext — Prevention-First: Decision Acknowledgement Panel.
+              Informational only — see the block comment above readiness computation.
+              No checkbox, no justification field, no submit-button disabling. */}
+          {readiness && readiness.missingPillars.length > 0 ? (
+            <Card className="!p-4 flex flex-col gap-2 !bg-[var(--status-warning-bg)] !border-[var(--status-warning-border)]">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-black uppercase" style={{ color: 'var(--status-warning)' }}>
+                  Governance Readiness Incomplete
+                </h4>
+                <span className="tnum text-xs font-extrabold" style={{ color: 'var(--status-warning)' }}>
+                  {readiness.overallScore}/100
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {readiness.missingPillars.map(p => (
+                  <span
+                    key={p.key}
+                    title={p.message}
+                    className="text-[10px] font-bold px-2 py-1 rounded-lg border"
+                    style={{ color: 'var(--status-warning)', borderColor: 'var(--status-warning-border)', background: 'var(--bg-card)' }}
+                  >
+                    ✕ {READINESS_PILLAR_LABELS[p.key]}
+                  </span>
+                ))}
+              </div>
+              <p className="text-[11px] text-[var(--text-secondary)]">
+                Decision makers should review these gaps before proceeding.
+              </p>
+            </Card>
+          ) : readiness ? (
+            <Card className="!p-3 !bg-[var(--status-success-bg)] !border-[var(--status-success-border)]">
+              <p className="text-[11px] font-bold text-[var(--status-success)]">
+                ✓ Governance Readiness Complete — all six pillars satisfied.
+              </p>
+            </Card>
+          ) : null}
 
           {/* Evidence Summary Card */}
           <Card className="!p-4 flex flex-col gap-2">
