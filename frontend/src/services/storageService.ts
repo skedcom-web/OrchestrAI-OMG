@@ -3539,6 +3539,8 @@ export function bootstrapPersistence(options?: { force?: boolean }): Promise<voi
         outcomeRules,
         actionRules,
         governanceProfiles,
+        decisions,
+        governanceDrifts,
       ] = await Promise.all([
         apiAssetRepository.getAssets(true), // Q1 Stabilization — include archived so the local cache is complete; getAssets()/getArchivedAssets() split the view.
         apiEvidenceRepository.getEvidence(),
@@ -3559,6 +3561,8 @@ export function bootstrapPersistence(options?: { force?: boolean }): Promise<voi
         apiOutcomeRuleRepository.getRules(),
         apiActionRuleRepository.getRules(),
         apiGovernanceProfileRepository.getProfiles(),
+        apiDecisionRepository.getDecisions(),
+        apiGovernanceDriftRepository.getDrifts(),
       ]);
 
       const assetNameById = new Map(assets.map(a => [a.id, a.name]));
@@ -3641,6 +3645,14 @@ export function bootstrapPersistence(options?: { force?: boolean }): Promise<voi
       persistActionRulesCache();
       governanceProfilesCache = governanceProfiles;
       persistGovernanceProfilesCache();
+
+      // vNext — Decisions have no separate in-memory cache variable (they
+      // never did, even before vNext — recordDecision reads/writes
+      // localStorage directly each call), so sync straight to storage.
+      setItem(STORAGE_KEYS.DECISIONS, decisions);
+
+      governanceDriftsCache = governanceDrifts.map(d => ({ ...d, assetName: assetNameById.get(d.assetId) || d.assetName }));
+      persistGovernanceDriftsCache();
 
       console.info(`OMG persistence: loaded ${assets.length} assets, ${evidence.length} evidence records, ${compliancePacks.length} compliance packs, ${regulatorySources.length} regulatory sources, ${governancePolicies.length} governance policies, ${recommendedActions.length} recommended actions, ${conditionDefinitions.length} condition definitions, ${outcomeRules.length} outcome rules, ${actionRules.length} action rules, ${governanceProfiles.length} governance profiles from Neon.`);
     } catch (err) {

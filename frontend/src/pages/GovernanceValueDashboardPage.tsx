@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { KpiCard } from '../components/ui/KpiCard';
 import { SectionHeader } from '../components/ui/SectionHeader';
 import {
@@ -9,6 +9,7 @@ import {
   getGovernanceFindings,
   getDecisions,
   getGovernanceReadinessInputs,
+  bootstrapPersistence,
 } from '../services/storageService';
 import { getPoliciesForAsset, getPolicyViolations } from '../services/policyService';
 import { computeGovernanceReadinessScore } from '../config/governanceReadinessScore';
@@ -21,7 +22,16 @@ import { computePortfolioGovernanceMetrics } from '../config/governanceValueMetr
  * truth, and nothing here blocks or gates anything; it's read-only insight.
  */
 export const GovernanceValueDashboardPage: React.FC = () => {
-  const assets = useMemo(() => getAssets(), []);
+  const [assets, setAssets] = useState(() => getAssets());
+
+  // `bootstrapPersistence()` fires on module load but resolves
+  // asynchronously; a visit that lands before it completes would otherwise
+  // freeze this dashboard on incomplete data with no way to self-correct
+  // (there's no manual refresh action here, unlike the Drift Center's scan
+  // button), so refresh once the real Neon data has landed.
+  useEffect(() => {
+    bootstrapPersistence().then(() => setAssets(getAssets()));
+  }, []);
 
   const readinessScores = useMemo(
     () =>

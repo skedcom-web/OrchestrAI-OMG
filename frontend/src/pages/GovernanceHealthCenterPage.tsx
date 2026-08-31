@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Card } from '../components/ui/Card';
 import { ScoreRing } from '../components/ui/ScoreRing';
 import { SectionHeader } from '../components/ui/SectionHeader';
@@ -12,6 +12,7 @@ import {
   getGovernanceDrifts,
   getDecisions,
   getGovernanceReadinessInputs,
+  bootstrapPersistence,
 } from '../services/storageService';
 import { getPoliciesForAsset, getPolicyViolations } from '../services/policyService';
 import { computeGovernanceReadinessScore } from '../config/governanceReadinessScore';
@@ -32,8 +33,19 @@ const TIER_TONE: Record<HealthTier, string> = {
  * Findings Resolution and Control Assurance. Advisory only.
  */
 export const GovernanceHealthCenterPage: React.FC = () => {
-  const assets = useMemo(() => getAssets(), []);
-  const allPolicyViolations = useMemo(() => getPolicyViolations(), []);
+  const [assets, setAssets] = useState(() => getAssets());
+  const [allPolicyViolations, setAllPolicyViolations] = useState(() => getPolicyViolations());
+
+  // See GovernanceValueDashboardPage.tsx for why this refresh exists —
+  // bootstrapPersistence() resolves asynchronously and a visit that lands
+  // before it completes would otherwise show a permanently incomplete
+  // health score with no way to self-correct.
+  useEffect(() => {
+    bootstrapPersistence().then(() => {
+      setAssets(getAssets());
+      setAllPolicyViolations(getPolicyViolations());
+    });
+  }, []);
 
   const { metrics, controlAssurancePassPct, driftFreePct } = useMemo(() => {
     const evidenceAll = getEvidenceRecords();

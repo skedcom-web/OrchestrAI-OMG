@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { KpiCard } from '../components/ui/KpiCard';
@@ -11,6 +11,7 @@ import {
   getGovernanceDrifts,
   openGovernanceDrift,
   resolveGovernanceDrift,
+  bootstrapPersistence,
 } from '../services/storageService';
 import { getPoliciesForAsset } from '../services/policyService';
 import { detectDrift, applyCompoundEscalation } from '../config/governanceDriftEngine';
@@ -37,12 +38,34 @@ export const GovernanceDriftCenterPage: React.FC = () => {
   const [scanning, setScanning] = useState(false);
   const [resolvingId, setResolvingId] = useState<string | null>(null);
 
-  const assets = useMemo(() => getAssets(), []);
+  const [assets, setAssets] = useState(() => getAssets());
 
+  // bootstrapPersistence() fires on module load but resolves asynchronously;
+  // a visit that lands before it completes would otherwise show whatever
+  // this browser's own prior scans happened to leave in local storage, not
+  // the shared Neon record. Refresh once real data has landed.
+  useEffect(() => {
+    bootstrapPersistence().then(() => {
+      setAssets(getAssets());
+      setDrifts(getGovernanceDrifts());
+    });
+  }, []);
+
+  /**
+   * Scanning writes to Neon (openGovernanceDrift/resolveGovernanceDrift), so
+   * unlike the read-only KPI cards above it can't run against whatever the
+   * asset cache happened to hold at mount — `bootstrapPersistence()` fires
+   * on module load but resolves asynchronously, and scanning before it
+   * lands would write against pre-bootstrap local IDs that don't exist as
+   * rows in Neon, tripping the assetId foreign key. Awaiting it here and
+   * re-reading getAssets() guarantees the scan always uses synced IDs.
+   */
   const scanForDrift = async () => {
     setScanning(true);
     try {
-      for (const asset of assets) {
+      await bootstrapPersistence();
+      const currentAssets = getAssets();
+      for (const asset of currentAssets) {
         const evidence = getEvidenceRecordsForAsset(asset.id);
         const reviews = getScheduledReviews().filter(r => r.assetId === asset.id);
         const triggers = getReassessmentTriggers().filter(t => t.assetId === asset.id);
@@ -63,6 +86,7 @@ export const GovernanceDriftCenterPage: React.FC = () => {
         }
       }
     } finally {
+      setAssets(getAssets());
       setDrifts(getGovernanceDrifts());
       setScanning(false);
     }
