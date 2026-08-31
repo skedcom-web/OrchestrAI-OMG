@@ -45,6 +45,45 @@ enum DecisionOutcome {
   PENDING
 }
 
+/// OMG vNext — Governance Intelligence. Broadens what a governance decision
+/// can represent beyond the GO/CONDITIONAL_GO/NO_GO asset gate outcome above.
+/// Optional on DecisionRecord (see there) so every pre-vNext row, which has
+/// no opinion on this axis, stays valid without a backfill.
+enum DecisionType {
+  APPROVAL
+  REJECTION
+  EXCEPTION
+  ESCALATION
+  OVERRIDE
+  RISK_ACCEPTANCE
+  POLICY_WAIVER
+}
+
+/// OMG vNext — Governance Drift Management. Categories mirror the pillars
+/// already evaluated by the frontend's readinessFoundation.ts / Governance
+/// Gates (Ownership, Risk/Control, Evidence, Review, Approval) so drift
+/// detection reasons about the same signals as readiness, just over time.
+enum DriftCategory {
+  OWNERSHIP
+  REVIEW
+  EVIDENCE
+  REASSESSMENT
+  CONTROL
+  APPROVAL
+}
+
+enum DriftSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum DriftStatus {
+  OPEN
+  RESOLVED
+}
+
 // ---------------------------------------------------------------------------
 // RELEASE 1 — Governance Authority Foundation
 // Accountability, human oversight and autonomy exposure, made explicit on
@@ -252,6 +291,7 @@ model AIAsset {
   stateTransitions      StateTransition[]
   governanceFindings    GovernanceFinding[]
   recommendedActions    RecommendedAction[]
+  governanceDrifts      GovernanceDrift[]
 
   @@map("ai_assets")
 }
@@ -304,6 +344,15 @@ model DecisionRecord {
   decisionOwner String
   justification String          @db.Text
   createdAt     DateTime        @default(now())
+
+  /// OMG vNext — Governance Intelligence, Module 2 (Decision Governance).
+  /// Additive and optional: every row created before vNext has none of these
+  /// set and remains a perfectly valid Approval/Rejection-shaped decision;
+  /// the application layer derives a display decisionType from `outcome`
+  /// when this is null rather than backfilling history.
+  decisionType     DecisionType?
+  authorityRole    String?
+  linkedEvidenceIds String[]     @default([])
 
   @@map("decision_records")
 }
@@ -1332,6 +1381,27 @@ model GovernanceProfile {
   updatedAt   DateTime @updatedAt
 
   @@map("governance_profiles")
+}
+
+/// OMG vNext — Governance Intelligence, Module 3 (Governance Drift
+/// Management). Genuinely persisted, unlike Governance Gates/Metrics/Health
+/// (computed on demand — see frontend/src/config/governanceGatesEngine.ts
+/// etc.): drift has a "time since detected" that a point-in-time snapshot
+/// can't reconstruct, so open/resolved history has to live somewhere.
+model GovernanceDrift {
+  id         String        @id @default(uuid())
+  assetId    String
+  asset      AIAsset       @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  category   DriftCategory
+  severity   DriftSeverity
+  status     DriftStatus   @default(OPEN)
+  detail     String        @db.Text
+  detectedAt DateTime      @default(now())
+  resolvedAt DateTime?
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  @@map("governance_drifts")
 }
 
 model AuditLog {

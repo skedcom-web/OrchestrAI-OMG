@@ -14,8 +14,10 @@ import {
   localCompliancePackRepository,
   localConditionDefinitionRepository,
   localControlRepository,
+  localDecisionRepository,
   localEvidenceMappingRepository,
   localEvidenceRepository,
+  localGovernanceDriftRepository,
   localGovernanceFindingRepository,
   localGovernancePolicyRepository,
   localGovernanceProfileRepository,
@@ -35,8 +37,10 @@ import {
   apiCompliancePackRepository,
   apiConditionDefinitionRepository,
   apiControlRepository,
+  apiDecisionRepository,
   apiEvidenceMappingRepository,
   apiEvidenceRepository,
+  apiGovernanceDriftRepository,
   apiGovernanceFindingRepository,
   apiGovernancePolicyRepository,
   apiGovernanceProfileRepository,
@@ -56,8 +60,10 @@ import type {
   CompliancePackRepository,
   ConditionDefinitionRepository,
   ControlRepository,
+  DecisionRepository,
   EvidenceMappingRepository,
   EvidenceRepository,
+  GovernanceDriftRepository,
   GovernanceFindingRepository,
   GovernancePolicyRepository,
   GovernanceProfileRepository,
@@ -207,5 +213,19 @@ export {
   localActionRuleRepository,
   localGovernanceProfileRepository,
 };
+
+/**
+ * OMG vNext — Governance Intelligence, Modules 2 & 3. Api-first from day
+ * one, same reasoning as every domain since Release 6 above.
+ */
+export function getDecisionRepository(): DecisionRepository {
+  return apiDecisionRepository;
+}
+
+export function getGovernanceDriftRepository(): GovernanceDriftRepository {
+  return apiGovernanceDriftRepository;
+}
+
+export { localDecisionRepository, localGovernanceDriftRepository };
 
 export * from './types';

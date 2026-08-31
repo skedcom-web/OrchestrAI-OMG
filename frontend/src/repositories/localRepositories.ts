@@ -14,9 +14,11 @@ import type {
   CompliancePackRepository,
   ConditionDefinitionRepository,
   ControlRepository,
+  DecisionRepository,
   EvidenceMappingRepository,
   EvidenceRepository,
   GovernanceData,
+  GovernanceDriftRepository,
   GovernanceFindingRepository,
   GovernancePolicyRepository,
   GovernanceProfileRepository,
@@ -34,6 +36,7 @@ import type {
 import type {
   AIAsset,
   EvidenceRecord,
+  GovernanceDrift,
   GovernanceReauthorizationRecord,
   ReassessmentTrigger,
   ScheduledReview,
@@ -321,6 +324,36 @@ export const localGovernanceProfileRepository: GovernanceProfileRepository = {
   },
   async updateProfile(id, data) {
     return storage.saveGovernanceProfile({ ...data, id });
+  },
+};
+
+/** OMG vNext — Governance Intelligence, Module 2. Append-only, matching the
+ * Api repository's contract (no update/delete — decisions are a record, not
+ * an editable document). */
+export const localDecisionRepository: DecisionRepository = {
+  async getDecisions(assetId) {
+    return assetId ? storage.getDecisionsForAsset(assetId) : storage.getDecisions();
+  },
+  async createDecision(data) {
+    return storage.recordDecision(data);
+  },
+};
+
+/** OMG vNext — Governance Intelligence, Module 3. `updateDrift` only ever
+ * needs to mark a drift Resolved in practice (the Drift Center's one write
+ * action), so it routes to `resolveGovernanceDrift` rather than a generic
+ * patch storageService doesn't otherwise need. */
+export const localGovernanceDriftRepository: GovernanceDriftRepository = {
+  async getDrifts(assetId) {
+    return assetId ? storage.getGovernanceDriftsForAsset(assetId) : storage.getGovernanceDrifts();
+  },
+  async createDrift(data) {
+    return storage.openGovernanceDrift(data as Omit<GovernanceDrift, 'id' | 'status' | 'detectedAt'>);
+  },
+  async updateDrift(id) {
+    const resolved = await storage.resolveGovernanceDrift(id);
+    if (!resolved) throw new Error(`Governance drift ${id} not found`);
+    return resolved;
   },
 };
 

@@ -96,6 +96,11 @@ import { DecisionTraceabilityPage } from './pages/DecisionTraceabilityPage';
 // Release 10 Pages — Governance Intelligence Studio (Customer Configuration Edition)
 import { GovernanceIntelligenceStudioPage } from './pages/GovernanceIntelligenceStudioPage';
 
+// OMG vNext Pages — Governance Intelligence (Value, Drift, Health)
+import { GovernanceValueDashboardPage } from './pages/GovernanceValueDashboardPage';
+import { GovernanceDriftCenterPage } from './pages/GovernanceDriftCenterPage';
+import { GovernanceHealthCenterPage } from './pages/GovernanceHealthCenterPage';
+
 /** Every governed route declared once, guarded by the same RBAC boundary. */
 const GOVERNED_ROUTES: { path: string; element: React.ReactNode }[] = [
   // Command surfaces — OMG Overview is the landing page, then the operational view.
@@ -109,6 +114,11 @@ const GOVERNED_ROUTES: { path: string; element: React.ReactNode }[] = [
   { path: '/executive-heatmaps', element: <ExecutiveHeatmapsPage /> },
   { path: '/governance-insights', element: <GovernanceInsightsPage /> },
   { path: '/board-reporting', element: <BoardReportingPage /> },
+
+  // Domain — Executive Governance, OMG vNext — Governance Intelligence
+  { path: '/governance-value', element: <GovernanceValueDashboardPage /> },
+  { path: '/governance-drift', element: <GovernanceDriftCenterPage /> },
+  { path: '/governance-health', element: <GovernanceHealthCenterPage /> },
 
   // Domain — Policy Governance (Phase 9)
   { path: '/policy-management', element: <PolicyRegistryPage /> },

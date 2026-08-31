@@ -11,6 +11,9 @@ import type {
   AssetType,
   CompliancePackStatus,
   DecisionOutcome,
+  DecisionType,
+  DriftCategory,
+  DriftStatus,
   EvidenceRecordStatus,
   EvidenceRecordType,
   FindingSeverity,
@@ -221,6 +224,29 @@ const GOVERNANCE_OUTCOME_STATUS: Record<GovernanceOutcomeStatus, string> = {
   'Escalation Recommended': 'ESCALATION_RECOMMENDED',
 };
 
+/** OMG vNext — Governance Intelligence, Module 2. */
+const DECISION_TYPE: Record<DecisionType, string> = {
+  'Approval': 'APPROVAL',
+  'Rejection': 'REJECTION',
+  'Exception': 'EXCEPTION',
+  'Escalation': 'ESCALATION',
+  'Override': 'OVERRIDE',
+  'Risk Acceptance': 'RISK_ACCEPTANCE',
+  'Policy Waiver': 'POLICY_WAIVER',
+};
+
+/** OMG vNext — Governance Intelligence, Module 3. */
+const DRIFT_CATEGORY: Record<DriftCategory, string> = {
+  'Ownership': 'OWNERSHIP',
+  'Review': 'REVIEW',
+  'Evidence': 'EVIDENCE',
+  'Reassessment': 'REASSESSMENT',
+  'Control': 'CONTROL',
+  'Approval': 'APPROVAL',
+};
+
+const DRIFT_STATUS: Record<DriftStatus, string> = { 'Open': 'OPEN', 'Resolved': 'RESOLVED' };
+
 export const enumMaps = {
   assetType: { toBackend: toBackend(ASSET_TYPE), toFrontend: toFrontend(ASSET_TYPE) },
   riskLevel: { toBackend: toBackend(RISK_LEVEL), toFrontend: toFrontend(RISK_LEVEL) },
@@ -253,4 +279,7 @@ export const enumMaps = {
   recommendedActionStatus: { toBackend: toBackend(RECOMMENDED_ACTION_STATUS), toFrontend: toFrontend(RECOMMENDED_ACTION_STATUS) },
   actionRuleTriggerType: { toBackend: toBackend(ACTION_RULE_TRIGGER_TYPE), toFrontend: toFrontend(ACTION_RULE_TRIGGER_TYPE) },
   governanceOutcomeStatus: { toBackend: toBackend(GOVERNANCE_OUTCOME_STATUS), toFrontend: toFrontend(GOVERNANCE_OUTCOME_STATUS) },
+  decisionType: { toBackend: toBackend(DECISION_TYPE), toFrontend: toFrontend(DECISION_TYPE) },
+  driftCategory: { toBackend: toBackend(DRIFT_CATEGORY), toFrontend: toFrontend(DRIFT_CATEGORY) },
+  driftStatus: { toBackend: toBackend(DRIFT_STATUS), toFrontend: toFrontend(DRIFT_STATUS) },
 };

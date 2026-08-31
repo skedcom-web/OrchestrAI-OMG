@@ -853,6 +853,67 @@ export class AppController {
     });
   }
 
+  // --- OMG vNEXT — GOVERNANCE INTELLIGENCE, MODULE 2: DECISION GOVERNANCE ---
+  // Extends the pre-existing DecisionRecord model/table (Release 4 baseline).
+  // No new decision entity — see decisionType/authorityRole/linkedEvidenceIds
+  // on the Prisma model. First-ever API surface for this table: prior to
+  // vNext, decisions only ever reached local storage in Demo Mode.
+  @Get('decisions')
+  @Roles(
+    'SUPER_ADMIN',
+    'GOVERNANCE_ADMIN',
+    'RISK_OFFICER',
+    'BUSINESS_OWNER',
+    'VALIDATOR',
+    'AUDITOR',
+    'VIEWER',
+  )
+  async getDecisions(@Query('assetId') assetId?: string) {
+    return this.prisma.decisionRecord.findMany({
+      where: assetId ? { assetId } : undefined,
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  @Post('decisions')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER')
+  async createDecision(@Body() body: any) {
+    return this.prisma.decisionRecord.create({ data: body });
+  }
+
+  // --- OMG vNEXT — GOVERNANCE INTELLIGENCE, MODULE 3: GOVERNANCE DRIFT ---
+  // The only new persisted entity this module introduces (Metrics/Gates/
+  // Health are computed on demand from data already served by the endpoints
+  // above and are deliberately NOT given their own tables or routes).
+  @Get('governance-drift')
+  @Roles(
+    'SUPER_ADMIN',
+    'GOVERNANCE_ADMIN',
+    'RISK_OFFICER',
+    'BUSINESS_OWNER',
+    'VALIDATOR',
+    'AUDITOR',
+    'VIEWER',
+  )
+  async getGovernanceDrift(@Query('assetId') assetId?: string) {
+    return this.prisma.governanceDrift.findMany({
+      where: assetId ? { assetId } : undefined,
+      orderBy: { detectedAt: 'desc' },
+    });
+  }
+
+  @Post('governance-drift')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER')
+  async createGovernanceDrift(@Body() body: any) {
+    return this.prisma.governanceDrift.create({ data: body });
+  }
+
+  @Patch('governance-drift/:id')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER')
+  async updateGovernanceDrift(@Param('id') id: string, @Body() body: any) {
+    return this.prisma.governanceDrift.update({ where: { id }, data: body });
+  }
+
   // --- USERS ENDPOINTS ---
   // The user directory is administrative data; restricted to administrators.
   @Get('users')

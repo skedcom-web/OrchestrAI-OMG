@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Select } from '../components/ui/Select';
@@ -7,13 +7,31 @@ import {
   calculateAssetGovernanceScore,
   recordDecision,
   getEvidence,
+  getEvidenceRecordsForAsset,
   getGovernanceReadinessInputs,
 } from '../services/storageService';
-import { getPoliciesForAsset } from '../services/policyService';
+import { getPoliciesForAsset, getPolicyViolations } from '../services/policyService';
 import { computeGovernanceReadinessScore, READINESS_PILLAR_LABELS } from '../config/governanceReadinessScore';
+import { computeGovernanceGates, GATE_LABELS, type GateStatus } from '../config/governanceGatesEngine';
 import { DecisionPackageModal } from '../components/common/DecisionPackageModal';
 import { useAuth } from '../contexts/AuthContext';
-import type { DecisionOutcome, DecisionReadinessChecklist } from '../types';
+import type { DecisionOutcome, DecisionReadinessChecklist, DecisionType } from '../types';
+
+const DECISION_TYPE_OPTIONS: DecisionType[] = [
+  'Approval',
+  'Rejection',
+  'Exception',
+  'Escalation',
+  'Override',
+  'Risk Acceptance',
+  'Policy Waiver',
+];
+
+const GATE_STATUS_TONE: Record<GateStatus, string> = {
+  PASS: 'var(--status-success)',
+  PENDING: 'var(--status-warning)',
+  FAIL: 'var(--status-danger)',
+};
 
 export const DecisionWorkbenchPageV4: React.FC = () => {
   // Q1 Stabilization — Phase 2: recording a GO/CONDITIONAL GO/NO GO decision has no dedicated
@@ -25,9 +43,33 @@ export const DecisionWorkbenchPageV4: React.FC = () => {
   const [justification, setJustification] = useState<string>('');
   const [isPackageOpen, setIsPackageOpen] = useState(false);
 
+  // vNext — Governance Intelligence, Module 2: Decision Governance. Auto-syncs
+  // to a sensible default whenever the GO/CONDITIONAL GO/NO GO outcome
+  // changes, but the dropdown still lets the decision-maker pick Escalation,
+  // Override, Risk Acceptance or Policy Waiver for cases that don't map 1:1.
+  const [decisionType, setDecisionType] = useState<DecisionType>('Approval');
+  const [authorityRole, setAuthorityRole] = useState<string>('');
+  const [linkedEvidenceIds, setLinkedEvidenceIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    setDecisionType(outcome === 'NO GO' ? 'Rejection' : outcome === 'CONDITIONAL GO' ? 'Exception' : 'Approval');
+  }, [outcome]);
+
   const selectedAsset = assets.find(a => a.id === selectedAssetId) || assets[0];
   const scoreBreakdown = calculateAssetGovernanceScore(selectedAssetId);
   const evidence = getEvidence().filter(e => e.assetId === selectedAssetId);
+
+  useEffect(() => {
+    setLinkedEvidenceIds([]);
+  }, [selectedAssetId]);
+
+  // vNext — Governance Intelligence, Module 4: Governance Gates. Advisory
+  // only — see governanceGatesEngine.ts. Never disables the form below.
+  const assetPolicies = selectedAsset ? getPoliciesForAsset(selectedAsset) : [];
+  const assetPolicyViolations = getPolicyViolations().filter(v => v.assetId === selectedAssetId);
+  const gatesResult = selectedAsset
+    ? computeGovernanceGates(selectedAsset, getEvidenceRecordsForAsset(selectedAssetId), assetPolicies, assetPolicyViolations)
+    : null;
 
   // vNext — Prevention-First: Governance Readiness Advisory. Purely informational —
   // never disables the form below, never gates GO/CONDITIONAL GO/NO GO. See
@@ -78,10 +120,19 @@ export const DecisionWorkbenchPageV4: React.FC = () => {
       justification: recordedJustification,
       checklist,
       decisionOwner: 'David Chen (Governance Admin)',
+      decisionType,
+      authorityRole: authorityRole.trim() || undefined,
+      linkedEvidenceIds,
     });
     setAssets(getAssets());
     alert(`Governance Decision '${outcome}' logged successfully for ${selectedAsset.name}!`);
     setJustification('');
+    setAuthorityRole('');
+    setLinkedEvidenceIds([]);
+  };
+
+  const toggleLinkedEvidence = (evidenceId: string) => {
+    setLinkedEvidenceIds(prev => (prev.includes(evidenceId) ? prev.filter(id => id !== evidenceId) : [...prev, evidenceId]));
   };
 
   return (
@@ -205,6 +256,33 @@ export const DecisionWorkbenchPageV4: React.FC = () => {
             </Card>
           ) : null}
 
+          {/* vNext — Governance Intelligence, Module 4: Governance Gates.
+              Advisory only — PASS/PENDING/FAIL are informational, never
+              disable the decision form below. */}
+          {gatesResult && (
+            <Card className="!p-4 flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-bold text-[var(--text-primary)] uppercase">Governance Gates</h4>
+                <span
+                  className="text-[10px] font-black uppercase px-2 py-0.5 rounded"
+                  style={{
+                    color: gatesResult.readiness === 'Ready for Deployment' ? 'var(--status-success)' : gatesResult.readiness === 'Partially Ready' ? 'var(--status-warning)' : 'var(--status-danger)',
+                  }}
+                >
+                  {gatesResult.readiness}
+                </span>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                {Object.values(gatesResult.gates).map(g => (
+                  <div key={g.key} title={g.detail} className="flex items-center justify-between text-[11px]">
+                    <span className="text-[var(--text-secondary)]">{GATE_LABELS[g.key]}</span>
+                    <span className="font-black" style={{ color: GATE_STATUS_TONE[g.status] }}>{g.status}</span>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
+
           {/* Evidence Summary Card */}
           <Card className="!p-4 flex flex-col gap-2">
             <h4 className="text-xs font-bold text-[var(--text-primary)] uppercase">
@@ -252,6 +330,48 @@ export const DecisionWorkbenchPageV4: React.FC = () => {
                 </button>
               ))}
             </div>
+
+            {/* vNext — Governance Intelligence, Module 2: Decision Governance.
+                Broadens the decision beyond GO/CONDITIONAL GO/NO GO with a
+                type classification, the authority recording it, and the
+                evidence it relied on. Additive to the existing form below. */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Select
+                label="Decision Type"
+                value={decisionType}
+                onChange={e => setDecisionType(e.target.value as DecisionType)}
+                options={DECISION_TYPE_OPTIONS.map(t => ({ value: t, label: t }))}
+              />
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-bold text-[var(--text-secondary)]">Authority Role</label>
+                <input
+                  type="text"
+                  value={authorityRole}
+                  onChange={e => setAuthorityRole(e.target.value)}
+                  placeholder="e.g. Governance Sponsor"
+                  className="w-full px-3 py-2 rounded-xl bg-[var(--bg-input)] border border-[var(--border-color)] text-sm text-[var(--text-primary)] focus:outline-none"
+                />
+              </div>
+            </div>
+
+            {evidence.length > 0 && (
+              <div className="flex flex-col gap-2 p-4 rounded-xl bg-[var(--bg-badge)] border border-[var(--border-color)]">
+                <span className="text-xs font-bold text-[var(--text-primary)] uppercase mb-1">
+                  Linked Evidence ({linkedEvidenceIds.length} of {evidence.length})
+                </span>
+                {evidence.map(e => (
+                  <label key={e.id} className="flex items-center gap-2 text-xs text-[var(--text-secondary)] cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={linkedEvidenceIds.includes(e.id)}
+                      onChange={() => toggleLinkedEvidence(e.id)}
+                      className="rounded accent-[var(--accent-primary)]"
+                    />
+                    <span className={linkedEvidenceIds.includes(e.id) ? 'text-[var(--text-primary)] font-medium' : ''}>{e.deliverableType}</span>
+                  </label>
+                ))}
+              </div>
+            )}
 
             {/* 8-Point Checklist */}
             <div className="flex flex-col gap-2 p-4 rounded-xl bg-[var(--bg-badge)] border border-[var(--border-color)]">

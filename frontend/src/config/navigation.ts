@@ -131,6 +131,33 @@ export const NAV_DOMAINS: NavDomain[] = [
           'Executive Governance Report and Audit Readiness Report generated from the live record.',
         keywords: ['board', 'regulator', 'report', 'pack', 'audit readiness'],
       },
+      {
+        path: '/governance-value',
+        label: 'Governance Value Dashboard',
+        icon: '📊',
+        description:
+          'Governance effectiveness, measured — readiness, evidence coverage, review and reassessment compliance, findings resolution, SLA and approval cycle time.',
+        keywords: ['value', 'metrics', 'kpi', 'effectiveness', 'board-friendly'],
+        badge: 'vNext',
+      },
+      {
+        path: '/governance-drift',
+        label: 'Governance Drift Center',
+        icon: '📉',
+        description:
+          'Detects degradation of governance process effectiveness over time — ownership, review, evidence, reassessment, control and approval drift.',
+        keywords: ['drift', 'degradation', 'ownership drift', 'review drift', 'evidence drift'],
+        badge: 'vNext',
+      },
+      {
+        path: '/governance-health',
+        label: 'Governance Health Center',
+        icon: '💚',
+        description:
+          'One executive governance health indicator, combining readiness, drift, evidence, reviews, reassessment, findings and control assurance.',
+        keywords: ['health', 'health index', 'executive indicator'],
+        badge: 'vNext',
+      },
     ],
   },
   {

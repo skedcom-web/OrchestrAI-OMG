@@ -676,6 +676,9 @@ export const CAPABILITIES: { label: string; icon: string; path: string; blurb: s
   { label: 'Governance Actions', icon: '🛠️', path: '/governance-actions', blurb: 'Accept, reject or defer — human-governed' },
   { label: 'Decision Traceability', icon: '🧭', path: '/decision-traceability', blurb: 'Reconstruct any decision end-to-end' },
   { label: 'Governance Intelligence Studio', icon: '🎛️', path: '/governance-studio', blurb: 'Configure governance logic without code changes' },
+  { label: 'Governance Value Dashboard', icon: '📊', path: '/governance-value', blurb: 'Governance effectiveness, measured — the board-friendly view' },
+  { label: 'Governance Drift Center', icon: '📉', path: '/governance-drift', blurb: 'Detect governance process degradation before it compounds' },
+  { label: 'Governance Health Center', icon: '💚', path: '/governance-health', blurb: 'One executive indicator for governance health, advisory only' },
 ];
 
 /* ======= Section 8.5 — sales positioning: platform vs. customer packs === */

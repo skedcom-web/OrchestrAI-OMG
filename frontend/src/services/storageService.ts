@@ -51,7 +51,8 @@ import type {
   ConditionDefinition,
   OutcomeRule,
   ActionRule,
-  GovernanceProfile
+  GovernanceProfile,
+  GovernanceDrift
 } from '../types';
 import {
   INITIAL_ASSETS,
@@ -128,6 +129,8 @@ import {
   apiOutcomeRuleRepository,
   apiActionRuleRepository,
   apiGovernanceProfileRepository,
+  apiDecisionRepository,
+  apiGovernanceDriftRepository,
 } from '../repositories/apiRepositories';
 
 /**
@@ -187,6 +190,7 @@ const STORAGE_KEYS = {
   OUTCOME_RULES: 'omg_outcome_rules_v10',
   ACTION_RULES: 'omg_action_rules_v10',
   GOVERNANCE_PROFILES: 'omg_governance_profiles_v10',
+  GOVERNANCE_DRIFTS: 'omg_governance_drifts_vnext',
 };
 
 function getItem<T>(key: string, defaultData: T): T {
@@ -715,6 +719,25 @@ export function saveFinding(findingData: Partial<Finding>): Finding {
 }
 
 // --- DECISION GATEKEEPER & PACKAGE SERVICE ---
+
+/** vNext — Governance Intelligence, Module 2. Read access for decision
+ * history; the table has existed since Release 1 but had no getter until now. */
+export function getDecisions(): DecisionRecord[] {
+  return getItem<DecisionRecord[]>(STORAGE_KEYS.DECISIONS, []);
+}
+
+export function getDecisionsForAsset(assetId: string): DecisionRecord[] {
+  return getDecisions().filter(d => d.assetId === assetId);
+}
+
+/**
+ * vNext — decisionType/authorityRole/linkedEvidenceIds are additive and
+ * optional (see DecisionRecord in types/index.ts); callers that don't pass
+ * them get the same behaviour as before. Local write stays synchronous (no
+ * existing call site awaits this), the Neon sync — new with vNext, this
+ * table was local-only before — runs fire-and-forget after, same pattern
+ * `saveAsset`'s callers already rely on elsewhere in this function.
+ */
 export function recordDecision(recordData: Partial<DecisionRecord>): DecisionRecord {
   const decisions = getItem<DecisionRecord[]>(STORAGE_KEYS.DECISIONS, []);
   const now = new Date().toISOString().split('T')[0];
@@ -737,10 +760,16 @@ export function recordDecision(recordData: Partial<DecisionRecord>): DecisionRec
     decisionDate: now,
     justification: recordData.justification || '',
     conditions: recordData.conditions || [],
+    decisionType: recordData.decisionType,
+    authorityRole: recordData.authorityRole,
+    linkedEvidenceIds: recordData.linkedEvidenceIds || [],
   };
 
   const updated = [newRecord, ...decisions];
   setItem(STORAGE_KEYS.DECISIONS, updated);
+
+  const { id: _localId, decisionDate: _dd, conditions: _c, ...payload } = newRecord;
+  fireAndForget(apiDecisionRepository.createDecision(payload), `decision record for asset ${newRecord.assetId}`);
 
   if (recordData.assetId) {
     const asset = getAssetById(recordData.assetId);
@@ -2614,6 +2643,55 @@ export async function deleteGovernanceFinding(id: string): Promise<void> {
   persistGovernanceFindingsCache();
 
   await apiGovernanceFindingRepository.deleteFinding(id);
+}
+
+// --- OMG vNEXT — GOVERNANCE INTELLIGENCE, MODULE 3: GOVERNANCE DRIFT ---
+// Same cache-then-sync pattern as Governance Findings above. Drift records
+// are opened/resolved by governanceDriftEngine.ts's reconciliation pass, not
+// hand-authored, but the storage layer itself doesn't need to know that.
+
+let governanceDriftsCache: GovernanceDrift[] = getItem<GovernanceDrift[]>(STORAGE_KEYS.GOVERNANCE_DRIFTS, []);
+
+function persistGovernanceDriftsCache() { setItem(STORAGE_KEYS.GOVERNANCE_DRIFTS, governanceDriftsCache); }
+
+export function getGovernanceDrifts(): GovernanceDrift[] {
+  return governanceDriftsCache;
+}
+
+export function getGovernanceDriftsForAsset(assetId: string): GovernanceDrift[] {
+  return governanceDriftsCache.filter(d => d.assetId === assetId);
+}
+
+export async function openGovernanceDrift(data: Omit<GovernanceDrift, 'id' | 'status' | 'detectedAt'>): Promise<GovernanceDrift> {
+  const now = new Date().toISOString().split('T')[0];
+  const draft: GovernanceDrift = { ...data, id: `local-drift-${Date.now()}-${data.category}`, status: 'Open', detectedAt: now };
+
+  governanceDriftsCache = [draft, ...governanceDriftsCache];
+  persistGovernanceDriftsCache();
+  addAuditLog('usr-2', 'David Chen', 'GOVERNANCE_ADMIN', 'GOVERNANCE_DRIFT_DETECTED', 'Asset', draft.assetId, draft.assetName, `${draft.severity} ${draft.category} drift detected: ${draft.detail}`);
+
+  const { id: _draftId, ...payload } = draft;
+  const created = { ...(await apiGovernanceDriftRepository.createDrift(payload)), assetName: draft.assetName };
+  governanceDriftsCache = governanceDriftsCache.map(d => (d.id === draft.id ? created : d));
+  persistGovernanceDriftsCache();
+  return created;
+}
+
+export async function resolveGovernanceDrift(id: string): Promise<GovernanceDrift | undefined> {
+  const idx = governanceDriftsCache.findIndex(d => d.id === id);
+  if (idx === -1) return undefined;
+
+  const now = new Date().toISOString().split('T')[0];
+  const updated: GovernanceDrift = { ...governanceDriftsCache[idx], status: 'Resolved', resolvedAt: now };
+  governanceDriftsCache = [...governanceDriftsCache];
+  governanceDriftsCache[idx] = updated;
+  persistGovernanceDriftsCache();
+
+  const saved = await apiGovernanceDriftRepository.updateDrift(updated.id, { status: 'Resolved', resolvedAt: updated.resolvedAt });
+  const reconciled = { ...saved, assetName: updated.assetName };
+  const i2 = governanceDriftsCache.findIndex(d => d.id === updated.id);
+  if (i2 !== -1) { governanceDriftsCache = [...governanceDriftsCache]; governanceDriftsCache[i2] = reconciled; persistGovernanceDriftsCache(); }
+  return reconciled;
 }
 
 /** Objective 2 — Condition Engine, computed live. Filtered through Release 10's Condition Designer (condition types disabled in the Studio are never raised). */

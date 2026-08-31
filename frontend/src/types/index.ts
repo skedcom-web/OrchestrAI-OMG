@@ -73,6 +73,20 @@ export interface DecisionReadinessChecklist {
   killSwitchDefined: boolean;
 }
 
+/**
+ * OMG vNext — Governance Intelligence, Module 2. Broadens what a decision can
+ * represent beyond the GO/CONDITIONAL GO/NO GO asset gate outcome above.
+ * Optional and additive on DecisionRecord — see the field there.
+ */
+export type DecisionType =
+  | 'Approval'
+  | 'Rejection'
+  | 'Exception'
+  | 'Escalation'
+  | 'Override'
+  | 'Risk Acceptance'
+  | 'Policy Waiver';
+
 export interface DecisionRecord {
   id: string;
   assetId: string;
@@ -82,6 +96,10 @@ export interface DecisionRecord {
   decisionDate: string;
   justification: string;
   conditions?: string[];
+  /** vNext — optional; older records have none and derive a display type from `outcome`. */
+  decisionType?: DecisionType;
+  authorityRole?: string;
+  linkedEvidenceIds?: string[];
 }
 
 export type OperationalStatus = 'Planned' | 'Active' | 'Suspended' | 'Under Review' | 'Retired';
@@ -181,6 +199,28 @@ export interface ReassessmentTrigger {
   owner: string;
   status: ReassessmentTriggerStatus;
   comments: string;
+}
+
+/**
+ * OMG vNext — Governance Intelligence, Module 3 (Governance Drift
+ * Management). Categories mirror the pillars readinessFoundation.ts and the
+ * Governance Gates already evaluate — drift adds severity and a time
+ * dimension on top of the same signals, it doesn't introduce new ones.
+ */
+export type DriftCategory = 'Ownership' | 'Review' | 'Evidence' | 'Reassessment' | 'Control' | 'Approval';
+export type DriftSeverity = 'Low' | 'Medium' | 'High' | 'Critical';
+export type DriftStatus = 'Open' | 'Resolved';
+
+export interface GovernanceDrift {
+  id: string;
+  assetId: string;
+  assetName: string;
+  category: DriftCategory;
+  severity: DriftSeverity;
+  status: DriftStatus;
+  detail: string;
+  detectedAt: string;
+  resolvedAt?: string;
 }
 
 /** Capability 5 — Governance Reauthorization Record. */

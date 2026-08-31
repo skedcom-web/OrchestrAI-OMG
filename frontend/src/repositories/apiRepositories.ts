@@ -17,9 +17,11 @@ import type {
   CompliancePackRepository,
   ConditionDefinitionRepository,
   ControlRepository,
+  DecisionRepository,
   EvidenceMappingRepository,
   EvidenceRepository,
   GovernanceData,
+  GovernanceDriftRepository,
   GovernanceFindingRepository,
   GovernancePolicyRepository,
   GovernanceProfileRepository,
@@ -40,7 +42,9 @@ import type {
   CompliancePack,
   ComplianceRequirement,
   ConditionDefinition,
+  DecisionRecord,
   EvidenceMapping,
+  GovernanceDrift,
   GovernanceFinding,
   GovernancePolicy,
   GovernanceProfile,
@@ -826,6 +830,88 @@ export const apiGovernanceProfileRepository: GovernanceProfileRepository = {
   async updateProfile(id, data) {
     const row = await apiRequest<any>(`/governance-profiles/${id}`, { method: 'PATCH', body: JSON.stringify(data) });
     return governanceProfileFromBackend(row);
+  },
+};
+
+// --- OMG vNEXT — GOVERNANCE INTELLIGENCE, MODULE 2: DECISION GOVERNANCE ---
+// Extends the pre-existing DecisionRecord persistence; not a new entity.
+
+function decisionToBackend(data: Partial<DecisionRecord>) {
+  const body: Record<string, unknown> = { ...data };
+  delete body.id;
+  delete body.decisionDate;
+  delete body.conditions; // not a persisted column — informational only, same as today's local-storage behaviour
+  if (data.outcome) body.outcome = enumMaps.decisionOutcome.toBackend(data.outcome);
+  if (data.decisionType) body.decisionType = enumMaps.decisionType.toBackend(data.decisionType);
+  return body;
+}
+
+function decisionFromBackend(row: any): DecisionRecord {
+  return {
+    id: row.id,
+    assetId: row.assetId,
+    outcome: enumMaps.decisionOutcome.toFrontend(row.outcome),
+    checklist: row.checklist,
+    decisionOwner: row.decisionOwner,
+    decisionDate: String(row.createdAt).split('T')[0],
+    justification: row.justification,
+    decisionType: row.decisionType ? enumMaps.decisionType.toFrontend(row.decisionType) : undefined,
+    authorityRole: row.authorityRole || undefined,
+    linkedEvidenceIds: row.linkedEvidenceIds || [],
+  };
+}
+
+export const apiDecisionRepository: DecisionRepository = {
+  async getDecisions(assetId) {
+    const rows = await apiRequest<any[]>(`/decisions${assetId ? `?assetId=${assetId}` : ''}`);
+    return rows.map(decisionFromBackend);
+  },
+  async createDecision(data) {
+    const row = await apiRequest<any>('/decisions', { method: 'POST', body: JSON.stringify(decisionToBackend(data)) });
+    return decisionFromBackend(row);
+  },
+};
+
+// --- OMG vNEXT — GOVERNANCE INTELLIGENCE, MODULE 3: GOVERNANCE DRIFT ---
+
+function driftToBackend(data: Partial<GovernanceDrift>) {
+  const body: Record<string, unknown> = { ...data };
+  delete body.id;
+  delete body.assetName;
+  delete body.detectedAt;
+  if (data.category) body.category = enumMaps.driftCategory.toBackend(data.category);
+  if (data.severity) body.severity = enumMaps.severity.toBackend(data.severity);
+  if (data.status) body.status = enumMaps.driftStatus.toBackend(data.status);
+  if (data.resolvedAt) body.resolvedAt = new Date(data.resolvedAt).toISOString();
+  return body;
+}
+
+function driftFromBackend(row: any, assetName = ''): GovernanceDrift {
+  return {
+    id: row.id,
+    assetId: row.assetId,
+    assetName,
+    category: enumMaps.driftCategory.toFrontend(row.category),
+    severity: enumMaps.severity.toFrontend(row.severity),
+    status: enumMaps.driftStatus.toFrontend(row.status),
+    detail: row.detail,
+    detectedAt: String(row.detectedAt).split('T')[0],
+    resolvedAt: row.resolvedAt ? String(row.resolvedAt).split('T')[0] : undefined,
+  };
+}
+
+export const apiGovernanceDriftRepository: GovernanceDriftRepository = {
+  async getDrifts(assetId) {
+    const rows = await apiRequest<any[]>(`/governance-drift${assetId ? `?assetId=${assetId}` : ''}`);
+    return rows.map(r => driftFromBackend(r));
+  },
+  async createDrift(data) {
+    const row = await apiRequest<any>('/governance-drift', { method: 'POST', body: JSON.stringify(driftToBackend(data)) });
+    return driftFromBackend(row, data.assetName);
+  },
+  async updateDrift(id, data) {
+    const row = await apiRequest<any>(`/governance-drift/${id}`, { method: 'PATCH', body: JSON.stringify(driftToBackend(data)) });
+    return driftFromBackend(row, data.assetName);
   },
 };
 

@@ -14,8 +14,10 @@ import type {
   CompliancePack,
   ComplianceRequirement,
   ConditionDefinition,
+  DecisionRecord,
   EvidenceMapping,
   EvidenceRecord,
+  GovernanceDrift,
   GovernanceFinding,
   GovernancePolicy,
   GovernanceProfile,
@@ -209,4 +211,29 @@ export interface GovernanceProfileRepository {
   getProfiles(): Promise<GovernanceProfile[]>;
   createProfile(data: Partial<GovernanceProfile>): Promise<GovernanceProfile>;
   updateProfile(id: string, data: Partial<GovernanceProfile>): Promise<GovernanceProfile>;
+}
+
+/**
+ * OMG vNext — Governance Intelligence, Module 2 (Decision Governance).
+ * Extends the pre-existing DecisionRecord persistence — this is the first
+ * repository this table has had; before vNext it only ever reached
+ * localStorage (see storageService.ts's recordDecision). Api-first from
+ * day one like every domain since Release 6, no update/delete: decisions
+ * are an append-only record, matching GovernanceReauthorizationRecord.
+ */
+export interface DecisionRepository {
+  getDecisions(assetId?: string): Promise<DecisionRecord[]>;
+  createDecision(data: Partial<DecisionRecord>): Promise<DecisionRecord>;
+}
+
+/**
+ * OMG vNext — Governance Intelligence, Module 3 (Governance Drift). The one
+ * genuinely new persisted entity vNext introduces — see GovernanceDrift on
+ * the Prisma schema for why (drift has a "time since detected" a computed
+ * snapshot can't reconstruct). Api-first from day one.
+ */
+export interface GovernanceDriftRepository {
+  getDrifts(assetId?: string): Promise<GovernanceDrift[]>;
+  createDrift(data: Partial<GovernanceDrift>): Promise<GovernanceDrift>;
+  updateDrift(id: string, data: Partial<GovernanceDrift>): Promise<GovernanceDrift>;
 }
