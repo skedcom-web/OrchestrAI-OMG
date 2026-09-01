@@ -108,6 +108,13 @@ import { GovernanceMaturityPage } from './pages/GovernanceMaturityPage';
 import { GovernanceBenchmarkingPage } from './pages/GovernanceBenchmarkingPage';
 import { GovernanceOutcomesPage } from './pages/GovernanceOutcomesPage';
 
+// Release 12 Pages — Regulatory Intelligence
+import { RegulatoryApplicabilityPage } from './pages/RegulatoryApplicabilityPage';
+import { CrossFrameworkMappingPage } from './pages/CrossFrameworkMappingPage';
+import { ComplianceImpactAnalysisPage } from './pages/ComplianceImpactAnalysisPage';
+import { RegulatoryChangeReadinessPage } from './pages/RegulatoryChangeReadinessPage';
+import { AuditReadinessIntelligencePage } from './pages/AuditReadinessIntelligencePage';
+
 /** Every governed route declared once, guarded by the same RBAC boundary. */
 const GOVERNED_ROUTES: { path: string; element: React.ReactNode }[] = [
   // Command surfaces — OMG Overview is the landing page, then the operational view.
@@ -175,6 +182,11 @@ const GOVERNED_ROUTES: { path: string; element: React.ReactNode }[] = [
   { path: '/governance-actions', element: <GovernanceActionsWorkspacePage /> },
   { path: '/decision-traceability', element: <DecisionTraceabilityPage /> },
   { path: '/governance-studio', element: <GovernanceIntelligenceStudioPage /> },
+  { path: '/regulatory-applicability', element: <RegulatoryApplicabilityPage /> },
+  { path: '/cross-framework-mapping', element: <CrossFrameworkMappingPage /> },
+  { path: '/compliance-impact-analysis', element: <ComplianceImpactAnalysisPage /> },
+  { path: '/regulatory-change-readiness', element: <RegulatoryChangeReadinessPage /> },
+  { path: '/audit-readiness-intelligence', element: <AuditReadinessIntelligencePage /> },
 
   // Domain 3 — Decision Governance
   { path: '/decision-workbench-v4', element: <DecisionWorkbenchPageV4 /> },

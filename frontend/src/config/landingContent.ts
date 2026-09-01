@@ -684,6 +684,11 @@ export const CAPABILITIES: { label: string; icon: string; path: string; blurb: s
   { label: 'Governance Maturity', icon: '📶', path: '/governance-maturity', blurb: 'Reactive through Optimized, by domain' },
   { label: 'Governance Benchmarking', icon: '📐', path: '/governance-benchmarking', blurb: 'Compare against industry reference benchmarks' },
   { label: 'Governance Outcomes', icon: '🎯', path: '/governance-outcomes', blurb: 'What value governance delivered, not just activity' },
+  { label: 'Regulatory Applicability', icon: '🌐', path: '/regulatory-applicability', blurb: 'Which regulations apply to this tenant' },
+  { label: 'Cross-Framework Mapping', icon: '🔗', path: '/cross-framework-mapping', blurb: 'Controls that satisfy multiple frameworks at once' },
+  { label: 'Compliance Impact Analysis', icon: '🔁', path: '/compliance-impact-analysis', blurb: 'What changed recently, and its compliance impact' },
+  { label: 'Regulatory Change Readiness', icon: '📶', path: '/regulatory-change-readiness', blurb: 'Ready if a regulation changed tomorrow' },
+  { label: 'Audit Readiness Intelligence', icon: '📄', path: '/audit-readiness-intelligence', blurb: 'What evidence supports compliance today' },
 ];
 
 /* ======= Section 8.5 — sales positioning: platform vs. customer packs === */
