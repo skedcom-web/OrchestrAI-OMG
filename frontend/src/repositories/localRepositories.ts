@@ -19,6 +19,8 @@ import type {
   EvidenceRepository,
   GovernanceData,
   GovernanceDriftRepository,
+  GovernanceEffectivenessRepository,
+  GovernanceMaturityRepository,
   GovernanceFindingRepository,
   GovernancePolicyRepository,
   GovernanceProfileRepository,
@@ -37,6 +39,8 @@ import type {
   AIAsset,
   EvidenceRecord,
   GovernanceDrift,
+  GovernanceEffectivenessSnapshot,
+  GovernanceMaturitySnapshot,
   GovernanceReauthorizationRecord,
   ReassessmentTrigger,
   ScheduledReview,
@@ -336,6 +340,26 @@ export const localDecisionRepository: DecisionRepository = {
   },
   async createDecision(data) {
     return storage.recordDecision(data);
+  },
+};
+
+/** Release 11, Capability 1. Append-only. */
+export const localGovernanceEffectivenessRepository: GovernanceEffectivenessRepository = {
+  async getSnapshots() {
+    return storage.getGovernanceEffectivenessSnapshots();
+  },
+  async createSnapshot(data) {
+    return storage.recordGovernanceEffectivenessSnapshot(data as Omit<GovernanceEffectivenessSnapshot, 'id' | 'recordedAt'>);
+  },
+};
+
+/** Release 11, Capability 3. Append-only. */
+export const localGovernanceMaturityRepository: GovernanceMaturityRepository = {
+  async getSnapshots() {
+    return storage.getGovernanceMaturitySnapshots();
+  },
+  async createSnapshot(data) {
+    return storage.recordGovernanceMaturitySnapshot(data as Omit<GovernanceMaturitySnapshot, 'id' | 'recordedAt'>);
   },
 };
 

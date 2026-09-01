@@ -101,6 +101,13 @@ import { GovernanceValueDashboardPage } from './pages/GovernanceValueDashboardPa
 import { GovernanceDriftCenterPage } from './pages/GovernanceDriftCenterPage';
 import { GovernanceHealthCenterPage } from './pages/GovernanceHealthCenterPage';
 
+// Release 11 Pages — Governance Effectiveness & Outcomes Engine
+import { GovernanceEffectivenessPage } from './pages/GovernanceEffectivenessPage';
+import { GovernanceROIPage } from './pages/GovernanceROIPage';
+import { GovernanceMaturityPage } from './pages/GovernanceMaturityPage';
+import { GovernanceBenchmarkingPage } from './pages/GovernanceBenchmarkingPage';
+import { GovernanceOutcomesPage } from './pages/GovernanceOutcomesPage';
+
 /** Every governed route declared once, guarded by the same RBAC boundary. */
 const GOVERNED_ROUTES: { path: string; element: React.ReactNode }[] = [
   // Command surfaces — OMG Overview is the landing page, then the operational view.
@@ -119,6 +126,13 @@ const GOVERNED_ROUTES: { path: string; element: React.ReactNode }[] = [
   { path: '/governance-value', element: <GovernanceValueDashboardPage /> },
   { path: '/governance-drift', element: <GovernanceDriftCenterPage /> },
   { path: '/governance-health', element: <GovernanceHealthCenterPage /> },
+
+  // Domain — Governance Effectiveness & Outcomes Engine (Release 11)
+  { path: '/governance-effectiveness', element: <GovernanceEffectivenessPage /> },
+  { path: '/governance-roi', element: <GovernanceROIPage /> },
+  { path: '/governance-maturity', element: <GovernanceMaturityPage /> },
+  { path: '/governance-benchmarking', element: <GovernanceBenchmarkingPage /> },
+  { path: '/governance-outcomes', element: <GovernanceOutcomesPage /> },
 
   // Domain — Policy Governance (Phase 9)
   { path: '/policy-management', element: <PolicyRegistryPage /> },

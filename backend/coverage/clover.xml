@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1788157291711" clover="3.2.0">
-  <project timestamp="1788157291711" name="All files">
-    <metrics statements="288" coveredstatements="214" conditionals="64" coveredconditionals="31" methods="106" coveredmethods="54" elements="458" coveredelements="299" complexity="0" loc="288" ncloc="288" packages="3" files="7" classes="7"/>
+<coverage generated="1788244811317" clover="3.2.0">
+  <project timestamp="1788244811317" name="All files">
+    <metrics statements="296" coveredstatements="218" conditionals="64" coveredconditionals="31" methods="110" coveredmethods="54" elements="470" coveredelements="303" complexity="0" loc="296" ncloc="296" packages="3" files="7" classes="7"/>
     <package name="src">
-      <metrics statements="245" coveredstatements="174" conditionals="53" coveredconditionals="22" methods="100" coveredmethods="48"/>
+      <metrics statements="253" coveredstatements="178" conditionals="53" coveredconditionals="22" methods="104" coveredmethods="48"/>
       <file name="app.controller.ts" path="C:\Users\VT348\Documents\GitHub\OrchestrAI OMG\backend\src\app.controller.ts">
-        <metrics statements="223" coveredstatements="165" conditionals="47" coveredconditionals="22" methods="95" coveredmethods="46"/>
+        <metrics statements="231" coveredstatements="169" conditionals="47" coveredconditionals="22" methods="99" coveredmethods="46"/>
         <line num="1" count="6" type="stmt"/>
         <line num="14" count="6" type="stmt"/>
         <line num="15" count="6" type="stmt"/>
@@ -225,10 +225,18 @@
         <line num="908" count="0" type="stmt"/>
         <line num="913" count="6" type="stmt"/>
         <line num="914" count="0" type="stmt"/>
-        <line num="921" count="6" type="stmt"/>
-        <line num="922" count="0" type="stmt"/>
-        <line num="928" count="6" type="stmt"/>
-        <line num="929" count="0" type="stmt"/>
+        <line num="934" count="6" type="stmt"/>
+        <line num="935" count="0" type="stmt"/>
+        <line num="940" count="6" type="stmt"/>
+        <line num="941" count="0" type="stmt"/>
+        <line num="954" count="6" type="stmt"/>
+        <line num="955" count="0" type="stmt"/>
+        <line num="960" count="6" type="stmt"/>
+        <line num="961" count="0" type="stmt"/>
+        <line num="968" count="6" type="stmt"/>
+        <line num="969" count="0" type="stmt"/>
+        <line num="975" count="6" type="stmt"/>
+        <line num="976" count="0" type="stmt"/>
       </file>
       <file name="app.module.ts" path="C:\Users\VT348\Documents\GitHub\OrchestrAI OMG\backend\src\app.module.ts">
         <metrics statements="4" coveredstatements="4" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
@@ -268,7 +276,7 @@
         <metrics statements="3" coveredstatements="3" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
         <line num="1" count="6" type="stmt"/>
         <line num="4" count="6" type="stmt"/>
-        <line num="5" count="540" type="stmt"/>
+        <line num="5" count="564" type="stmt"/>
       </file>
       <file name="roles.guard.ts" path="C:\Users\VT348\Documents\GitHub\OrchestrAI OMG\backend\src\auth\roles.guard.ts">
         <metrics statements="23" coveredstatements="20" conditionals="10" coveredconditionals="8" methods="2" coveredmethods="2"/>

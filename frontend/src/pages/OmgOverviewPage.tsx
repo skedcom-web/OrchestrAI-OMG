@@ -13,6 +13,8 @@ import {
   DESIGN_PARTNER_INDUSTRIES,
   ENGAGEMENT_PHASES,
   ENTERPRISE_PROBLEMS,
+  EFFECTIVENESS_HERO_STATEMENT,
+  EFFECTIVENESS_POSITIONING_TAGS,
   EXECUTIVE_MESSAGE_STATEMENT,
   FINAL_DECLARATION_STATEMENT,
   FINAL_DECLARATION_TITLE,
@@ -108,6 +110,26 @@ export const OmgOverviewPage: React.FC = () => {
               <p className="text-[11.5px] text-[var(--text-secondary)] mt-1.5 leading-relaxed">
                 Identify gaps early. Strengthen accountability. Preserve evidence. Enable informed decisions.
               </p>
+            </div>
+
+            {/* Release 11 — Governance Effectiveness & Outcomes Engine positioning, additive to the hero above. */}
+            <div
+              data-noglass
+              className="rounded-xl border border-[var(--status-success)]/30 bg-[var(--bg-card)]/70 backdrop-blur-sm px-4 py-3.5 max-w-xl"
+            >
+              <p className="text-[13px] font-bold text-[var(--text-primary)] leading-snug">
+                {EFFECTIVENESS_HERO_STATEMENT}
+              </p>
+              <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                {EFFECTIVENESS_POSITIONING_TAGS.map(tag => (
+                  <span
+                    key={tag}
+                    className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[var(--status-success)]/10 text-[var(--status-success)] border border-[var(--status-success)]/25"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
             </div>
 
             <p className="text-[13px] font-bold text-gradient-brand">
@@ -374,7 +396,7 @@ export const OmgOverviewPage: React.FC = () => {
         <SectionHeader
           eyebrow="Section 7"
           title="Key Platform Capabilities"
-          subtitle="Nineteen capabilities, each a working module you can open right now."
+          subtitle="Twenty-four capabilities, each a working module you can open right now."
           icon="🧩"
         />
 

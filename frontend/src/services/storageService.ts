@@ -52,7 +52,9 @@ import type {
   OutcomeRule,
   ActionRule,
   GovernanceProfile,
-  GovernanceDrift
+  GovernanceDrift,
+  GovernanceEffectivenessSnapshot,
+  GovernanceMaturitySnapshot
 } from '../types';
 import {
   INITIAL_ASSETS,
@@ -131,6 +133,8 @@ import {
   apiGovernanceProfileRepository,
   apiDecisionRepository,
   apiGovernanceDriftRepository,
+  apiGovernanceEffectivenessRepository,
+  apiGovernanceMaturityRepository,
 } from '../repositories/apiRepositories';
 
 /**
@@ -191,6 +195,8 @@ const STORAGE_KEYS = {
   ACTION_RULES: 'omg_action_rules_v10',
   GOVERNANCE_PROFILES: 'omg_governance_profiles_v10',
   GOVERNANCE_DRIFTS: 'omg_governance_drifts_vnext',
+  GOVERNANCE_EFFECTIVENESS_SNAPSHOTS: 'omg_governance_effectiveness_snapshots_r11',
+  GOVERNANCE_MATURITY_SNAPSHOTS: 'omg_governance_maturity_snapshots_r11',
 };
 
 function getItem<T>(key: string, defaultData: T): T {
@@ -2694,6 +2700,65 @@ export async function resolveGovernanceDrift(id: string): Promise<GovernanceDrif
   return reconciled;
 }
 
+// --- RELEASE 11 — GOVERNANCE EFFECTIVENESS & OUTCOMES ENGINE ---
+// Both snapshot domains are append-only history, same cache-then-sync
+// pattern as Governance Drift above, minus the resolve step (a snapshot is
+// never "resolved" — it's a permanent historical reading).
+
+let governanceEffectivenessSnapshotsCache: GovernanceEffectivenessSnapshot[] =
+  getItem<GovernanceEffectivenessSnapshot[]>(STORAGE_KEYS.GOVERNANCE_EFFECTIVENESS_SNAPSHOTS, []);
+
+function persistGovernanceEffectivenessSnapshotsCache() {
+  setItem(STORAGE_KEYS.GOVERNANCE_EFFECTIVENESS_SNAPSHOTS, governanceEffectivenessSnapshotsCache);
+}
+
+export function getGovernanceEffectivenessSnapshots(): GovernanceEffectivenessSnapshot[] {
+  return governanceEffectivenessSnapshotsCache;
+}
+
+export async function recordGovernanceEffectivenessSnapshot(
+  data: Omit<GovernanceEffectivenessSnapshot, 'id' | 'recordedAt'>
+): Promise<GovernanceEffectivenessSnapshot> {
+  const now = new Date().toISOString().split('T')[0];
+  const draft: GovernanceEffectivenessSnapshot = { ...data, id: `local-effectiveness-${Date.now()}`, recordedAt: now };
+
+  governanceEffectivenessSnapshotsCache = [draft, ...governanceEffectivenessSnapshotsCache];
+  persistGovernanceEffectivenessSnapshotsCache();
+
+  const { id: _draftId, ...payload } = draft;
+  const created = await apiGovernanceEffectivenessRepository.createSnapshot(payload);
+  governanceEffectivenessSnapshotsCache = governanceEffectivenessSnapshotsCache.map(s => (s.id === draft.id ? created : s));
+  persistGovernanceEffectivenessSnapshotsCache();
+  return created;
+}
+
+let governanceMaturitySnapshotsCache: GovernanceMaturitySnapshot[] =
+  getItem<GovernanceMaturitySnapshot[]>(STORAGE_KEYS.GOVERNANCE_MATURITY_SNAPSHOTS, []);
+
+function persistGovernanceMaturitySnapshotsCache() {
+  setItem(STORAGE_KEYS.GOVERNANCE_MATURITY_SNAPSHOTS, governanceMaturitySnapshotsCache);
+}
+
+export function getGovernanceMaturitySnapshots(): GovernanceMaturitySnapshot[] {
+  return governanceMaturitySnapshotsCache;
+}
+
+export async function recordGovernanceMaturitySnapshot(
+  data: Omit<GovernanceMaturitySnapshot, 'id' | 'recordedAt'>
+): Promise<GovernanceMaturitySnapshot> {
+  const now = new Date().toISOString().split('T')[0];
+  const draft: GovernanceMaturitySnapshot = { ...data, id: `local-maturity-${Date.now()}-${data.domain}`, recordedAt: now };
+
+  governanceMaturitySnapshotsCache = [draft, ...governanceMaturitySnapshotsCache];
+  persistGovernanceMaturitySnapshotsCache();
+
+  const { id: _draftId, ...payload } = draft;
+  const created = await apiGovernanceMaturityRepository.createSnapshot(payload);
+  governanceMaturitySnapshotsCache = governanceMaturitySnapshotsCache.map(s => (s.id === draft.id ? created : s));
+  persistGovernanceMaturitySnapshotsCache();
+  return created;
+}
+
 /** Objective 2 — Condition Engine, computed live. Filtered through Release 10's Condition Designer (condition types disabled in the Studio are never raised). */
 export function getGovernanceConditionsForAsset(assetId: string): GovernanceCondition[] {
   const asset = assetsCache.find(a => a.id === assetId);
@@ -3541,6 +3606,8 @@ export function bootstrapPersistence(options?: { force?: boolean }): Promise<voi
         governanceProfiles,
         decisions,
         governanceDrifts,
+        governanceEffectivenessSnapshots,
+        governanceMaturitySnapshots,
       ] = await Promise.all([
         apiAssetRepository.getAssets(true), // Q1 Stabilization — include archived so the local cache is complete; getAssets()/getArchivedAssets() split the view.
         apiEvidenceRepository.getEvidence(),
@@ -3563,6 +3630,8 @@ export function bootstrapPersistence(options?: { force?: boolean }): Promise<voi
         apiGovernanceProfileRepository.getProfiles(),
         apiDecisionRepository.getDecisions(),
         apiGovernanceDriftRepository.getDrifts(),
+        apiGovernanceEffectivenessRepository.getSnapshots(),
+        apiGovernanceMaturityRepository.getSnapshots(),
       ]);
 
       const assetNameById = new Map(assets.map(a => [a.id, a.name]));
@@ -3653,6 +3722,11 @@ export function bootstrapPersistence(options?: { force?: boolean }): Promise<voi
 
       governanceDriftsCache = governanceDrifts.map(d => ({ ...d, assetName: assetNameById.get(d.assetId) || d.assetName }));
       persistGovernanceDriftsCache();
+
+      governanceEffectivenessSnapshotsCache = governanceEffectivenessSnapshots;
+      persistGovernanceEffectivenessSnapshotsCache();
+      governanceMaturitySnapshotsCache = governanceMaturitySnapshots;
+      persistGovernanceMaturitySnapshotsCache();
 
       console.info(`OMG persistence: loaded ${assets.length} assets, ${evidence.length} evidence records, ${compliancePacks.length} compliance packs, ${regulatorySources.length} regulatory sources, ${governancePolicies.length} governance policies, ${recommendedActions.length} recommended actions, ${conditionDefinitions.length} condition definitions, ${outcomeRules.length} outcome rules, ${actionRules.length} action rules, ${governanceProfiles.length} governance profiles from Neon.`);
     } catch (err) {

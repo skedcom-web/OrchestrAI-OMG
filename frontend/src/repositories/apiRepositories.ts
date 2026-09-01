@@ -22,6 +22,8 @@ import type {
   EvidenceRepository,
   GovernanceData,
   GovernanceDriftRepository,
+  GovernanceEffectivenessRepository,
+  GovernanceMaturityRepository,
   GovernanceFindingRepository,
   GovernancePolicyRepository,
   GovernanceProfileRepository,
@@ -45,6 +47,8 @@ import type {
   DecisionRecord,
   EvidenceMapping,
   GovernanceDrift,
+  GovernanceEffectivenessSnapshot,
+  GovernanceMaturitySnapshot,
   GovernanceFinding,
   GovernancePolicy,
   GovernanceProfile,
@@ -912,6 +916,49 @@ export const apiGovernanceDriftRepository: GovernanceDriftRepository = {
   async updateDrift(id, data) {
     const row = await apiRequest<any>(`/governance-drift/${id}`, { method: 'PATCH', body: JSON.stringify(driftToBackend(data)) });
     return driftFromBackend(row, data.assetName);
+  },
+};
+
+// --- RELEASE 11 — GOVERNANCE EFFECTIVENESS & OUTCOMES ENGINE ---
+
+export const apiGovernanceEffectivenessRepository: GovernanceEffectivenessRepository = {
+  async getSnapshots() {
+    return apiRequest<GovernanceEffectivenessSnapshot[]>('/governance-effectiveness-snapshots');
+  },
+  async createSnapshot(data) {
+    return apiRequest<GovernanceEffectivenessSnapshot>('/governance-effectiveness-snapshots', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+};
+
+function maturitySnapshotToBackend(data: Partial<GovernanceMaturitySnapshot>) {
+  const body: Record<string, unknown> = { ...data };
+  if (data.domain) body.domain = enumMaps.governanceMaturityDomain.toBackend(data.domain);
+  return body;
+}
+
+function maturitySnapshotFromBackend(row: any): GovernanceMaturitySnapshot {
+  return {
+    id: row.id,
+    domain: enumMaps.governanceMaturityDomain.toFrontend(row.domain),
+    level: row.level,
+    recordedAt: String(row.recordedAt).split('T')[0],
+  };
+}
+
+export const apiGovernanceMaturityRepository: GovernanceMaturityRepository = {
+  async getSnapshots() {
+    const rows = await apiRequest<any[]>('/governance-maturity-snapshots');
+    return rows.map(maturitySnapshotFromBackend);
+  },
+  async createSnapshot(data) {
+    const row = await apiRequest<any>('/governance-maturity-snapshots', {
+      method: 'POST',
+      body: JSON.stringify(maturitySnapshotToBackend(data)),
+    });
+    return maturitySnapshotFromBackend(row);
   },
 };
 

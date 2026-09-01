@@ -1404,6 +1404,47 @@ model GovernanceDrift {
   @@map("governance_drifts")
 }
 
+/// Release 11 — Governance Effectiveness & Outcomes Engine, Capability 1.
+/// Portfolio-level, not asset-scoped: "improving over time" is a statement
+/// about the governance program, not any one asset. The only reason this is
+/// persisted at all (unlike Metrics/Gates/Health, which stay compute-only)
+/// is that Trend/Previous Score/Improvement % are impossible to derive from
+/// a single point-in-time read — there is nothing to compare against without
+/// a stored prior snapshot. Recorded by an explicit action, not a cron.
+model GovernanceEffectivenessSnapshot {
+  id                        String   @id @default(uuid())
+  recordedAt                DateTime @default(now())
+  effectivenessScore        Int
+  evidenceComplianceScore   Int
+  reviewComplianceScore     Int
+  findingsReductionScore    Int
+  reassessmentTimelinessScore Int
+  policyAdherenceScore      Int
+  driftResolutionScore      Int
+
+  @@map("governance_effectiveness_snapshots")
+}
+
+/// Release 11, Capability 3. Same "needs a prior point to compare against"
+/// reasoning as the effectiveness snapshot above.
+enum GovernanceMaturityDomain {
+  GOVERNANCE_PROGRAM
+  EVIDENCE_MANAGEMENT
+  DECISION_GOVERNANCE
+  COMPLIANCE_MANAGEMENT
+  ACCOUNTABILITY
+  CONTINUOUS_ASSURANCE
+}
+
+model GovernanceMaturitySnapshot {
+  id         String                   @id @default(uuid())
+  domain     GovernanceMaturityDomain
+  level      Int
+  recordedAt DateTime                 @default(now())
+
+  @@map("governance_maturity_snapshots")
+}
+
 model AuditLog {
   id         String   @id @default(uuid())
   timestamp  DateTime @default(now())

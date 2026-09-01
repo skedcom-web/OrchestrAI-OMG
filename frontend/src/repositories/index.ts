@@ -18,6 +18,8 @@ import {
   localEvidenceMappingRepository,
   localEvidenceRepository,
   localGovernanceDriftRepository,
+  localGovernanceEffectivenessRepository,
+  localGovernanceMaturityRepository,
   localGovernanceFindingRepository,
   localGovernancePolicyRepository,
   localGovernanceProfileRepository,
@@ -41,6 +43,8 @@ import {
   apiEvidenceMappingRepository,
   apiEvidenceRepository,
   apiGovernanceDriftRepository,
+  apiGovernanceEffectivenessRepository,
+  apiGovernanceMaturityRepository,
   apiGovernanceFindingRepository,
   apiGovernancePolicyRepository,
   apiGovernanceProfileRepository,
@@ -64,6 +68,8 @@ import type {
   EvidenceMappingRepository,
   EvidenceRepository,
   GovernanceDriftRepository,
+  GovernanceEffectivenessRepository,
+  GovernanceMaturityRepository,
   GovernanceFindingRepository,
   GovernancePolicyRepository,
   GovernanceProfileRepository,
@@ -227,5 +233,16 @@ export function getGovernanceDriftRepository(): GovernanceDriftRepository {
 }
 
 export { localDecisionRepository, localGovernanceDriftRepository };
+
+/** Release 11 — Governance Effectiveness & Outcomes Engine. Api-first from day one. */
+export function getGovernanceEffectivenessRepository(): GovernanceEffectivenessRepository {
+  return apiGovernanceEffectivenessRepository;
+}
+
+export function getGovernanceMaturityRepository(): GovernanceMaturityRepository {
+  return apiGovernanceMaturityRepository;
+}
+
+export { localGovernanceEffectivenessRepository, localGovernanceMaturityRepository };
 
 export * from './types';

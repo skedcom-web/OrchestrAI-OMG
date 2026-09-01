@@ -223,6 +223,50 @@ export interface GovernanceDrift {
   resolvedAt?: string;
 }
 
+/**
+ * Release 11 — Governance Effectiveness & Outcomes Engine, Capability 1.
+ * A recorded point-in-time reading of the six effectiveness sub-factors;
+ * "Previous Score"/"Trend"/"Improvement %" are derived by comparing the two
+ * most recent snapshots, not stored themselves.
+ */
+export interface GovernanceEffectivenessSnapshot {
+  id: string;
+  recordedAt: string;
+  effectivenessScore: number;
+  evidenceComplianceScore: number;
+  reviewComplianceScore: number;
+  findingsReductionScore: number;
+  reassessmentTimelinessScore: number;
+  policyAdherenceScore: number;
+  driftResolutionScore: number;
+}
+
+/** Release 11, Capability 3. */
+export type GovernanceMaturityDomain =
+  | 'Governance Program'
+  | 'Evidence Management'
+  | 'Decision Governance'
+  | 'Compliance Management'
+  | 'Accountability'
+  | 'Continuous Assurance';
+
+export type GovernanceMaturityLevel = 1 | 2 | 3 | 4 | 5;
+
+export const MATURITY_LEVEL_LABELS: Record<GovernanceMaturityLevel, string> = {
+  1: 'Reactive',
+  2: 'Managed',
+  3: 'Defined',
+  4: 'Measured',
+  5: 'Optimized',
+};
+
+export interface GovernanceMaturitySnapshot {
+  id: string;
+  domain: GovernanceMaturityDomain;
+  level: GovernanceMaturityLevel;
+  recordedAt: string;
+}
+
 /** Capability 5 — Governance Reauthorization Record. */
 export interface GovernanceReauthorizationRecord {
   id: string;

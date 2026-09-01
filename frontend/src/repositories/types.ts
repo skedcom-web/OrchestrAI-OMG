@@ -18,6 +18,8 @@ import type {
   EvidenceMapping,
   EvidenceRecord,
   GovernanceDrift,
+  GovernanceEffectivenessSnapshot,
+  GovernanceMaturitySnapshot,
   GovernanceFinding,
   GovernancePolicy,
   GovernanceProfile,
@@ -236,4 +238,20 @@ export interface GovernanceDriftRepository {
   getDrifts(assetId?: string): Promise<GovernanceDrift[]>;
   createDrift(data: Partial<GovernanceDrift>): Promise<GovernanceDrift>;
   updateDrift(id: string, data: Partial<GovernanceDrift>): Promise<GovernanceDrift>;
+}
+
+/**
+ * Release 11, Capability 1. Append-only — a snapshot is a historical record,
+ * never edited after the fact (matches GovernanceReauthorizationRecord's
+ * no-update contract).
+ */
+export interface GovernanceEffectivenessRepository {
+  getSnapshots(): Promise<GovernanceEffectivenessSnapshot[]>;
+  createSnapshot(data: Partial<GovernanceEffectivenessSnapshot>): Promise<GovernanceEffectivenessSnapshot>;
+}
+
+/** Release 11, Capability 3. Same append-only contract. */
+export interface GovernanceMaturityRepository {
+  getSnapshots(): Promise<GovernanceMaturitySnapshot[]>;
+  createSnapshot(data: Partial<GovernanceMaturitySnapshot>): Promise<GovernanceMaturitySnapshot>;
 }

@@ -914,6 +914,53 @@ export class AppController {
     return this.prisma.governanceDrift.update({ where: { id }, data: body });
   }
 
+  // --- RELEASE 11 — GOVERNANCE EFFECTIVENESS & OUTCOMES ENGINE ---
+  // Effectiveness/Maturity are the only two persisted domains this release
+  // adds — Trend/Previous Score/Improvement % are impossible to compute
+  // without a stored prior point. ROI, Benchmarking and Outcomes are
+  // computed client-side from data these endpoints (and existing ones)
+  // already serve — no new routes for those, consistent with how Gates/
+  // Metrics/Health stayed compute-only in the prior release.
+  @Get('governance-effectiveness-snapshots')
+  @Roles(
+    'SUPER_ADMIN',
+    'GOVERNANCE_ADMIN',
+    'RISK_OFFICER',
+    'BUSINESS_OWNER',
+    'VALIDATOR',
+    'AUDITOR',
+    'VIEWER',
+  )
+  async getGovernanceEffectivenessSnapshots() {
+    return this.prisma.governanceEffectivenessSnapshot.findMany({ orderBy: { recordedAt: 'desc' } });
+  }
+
+  @Post('governance-effectiveness-snapshots')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER')
+  async createGovernanceEffectivenessSnapshot(@Body() body: any) {
+    return this.prisma.governanceEffectivenessSnapshot.create({ data: body });
+  }
+
+  @Get('governance-maturity-snapshots')
+  @Roles(
+    'SUPER_ADMIN',
+    'GOVERNANCE_ADMIN',
+    'RISK_OFFICER',
+    'BUSINESS_OWNER',
+    'VALIDATOR',
+    'AUDITOR',
+    'VIEWER',
+  )
+  async getGovernanceMaturitySnapshots() {
+    return this.prisma.governanceMaturitySnapshot.findMany({ orderBy: { recordedAt: 'desc' } });
+  }
+
+  @Post('governance-maturity-snapshots')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER')
+  async createGovernanceMaturitySnapshot(@Body() body: any) {
+    return this.prisma.governanceMaturitySnapshot.create({ data: body });
+  }
+
   // --- USERS ENDPOINTS ---
   // The user directory is administrative data; restricted to administrators.
   @Get('users')

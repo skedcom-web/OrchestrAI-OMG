@@ -15,6 +15,7 @@ import type {
   DriftCategory,
   DriftStatus,
   EvidenceRecordStatus,
+  GovernanceMaturityDomain,
   EvidenceRecordType,
   FindingSeverity,
   GovernanceClassification,
@@ -247,6 +248,16 @@ const DRIFT_CATEGORY: Record<DriftCategory, string> = {
 
 const DRIFT_STATUS: Record<DriftStatus, string> = { 'Open': 'OPEN', 'Resolved': 'RESOLVED' };
 
+/** Release 11, Capability 3. */
+const GOVERNANCE_MATURITY_DOMAIN: Record<GovernanceMaturityDomain, string> = {
+  'Governance Program': 'GOVERNANCE_PROGRAM',
+  'Evidence Management': 'EVIDENCE_MANAGEMENT',
+  'Decision Governance': 'DECISION_GOVERNANCE',
+  'Compliance Management': 'COMPLIANCE_MANAGEMENT',
+  'Accountability': 'ACCOUNTABILITY',
+  'Continuous Assurance': 'CONTINUOUS_ASSURANCE',
+};
+
 export const enumMaps = {
   assetType: { toBackend: toBackend(ASSET_TYPE), toFrontend: toFrontend(ASSET_TYPE) },
   riskLevel: { toBackend: toBackend(RISK_LEVEL), toFrontend: toFrontend(RISK_LEVEL) },
@@ -282,4 +293,5 @@ export const enumMaps = {
   decisionType: { toBackend: toBackend(DECISION_TYPE), toFrontend: toFrontend(DECISION_TYPE) },
   driftCategory: { toBackend: toBackend(DRIFT_CATEGORY), toFrontend: toFrontend(DRIFT_CATEGORY) },
   driftStatus: { toBackend: toBackend(DRIFT_STATUS), toFrontend: toFrontend(DRIFT_STATUS) },
+  governanceMaturityDomain: { toBackend: toBackend(GOVERNANCE_MATURITY_DOMAIN), toFrontend: toFrontend(GOVERNANCE_MATURITY_DOMAIN) },
 };

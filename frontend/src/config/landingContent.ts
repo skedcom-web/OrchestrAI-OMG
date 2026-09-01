@@ -679,6 +679,11 @@ export const CAPABILITIES: { label: string; icon: string; path: string; blurb: s
   { label: 'Governance Value Dashboard', icon: '📊', path: '/governance-value', blurb: 'Governance effectiveness, measured — the board-friendly view' },
   { label: 'Governance Drift Center', icon: '📉', path: '/governance-drift', blurb: 'Detect governance process degradation before it compounds' },
   { label: 'Governance Health Center', icon: '💚', path: '/governance-health', blurb: 'One executive indicator for governance health, advisory only' },
+  { label: 'Governance Effectiveness Score', icon: '🧮', path: '/governance-effectiveness', blurb: 'Is governance actually improving over time' },
+  { label: 'Governance ROI', icon: '💰', path: '/governance-roi', blurb: 'Governance activity translated into business value' },
+  { label: 'Governance Maturity', icon: '📶', path: '/governance-maturity', blurb: 'Reactive through Optimized, by domain' },
+  { label: 'Governance Benchmarking', icon: '📐', path: '/governance-benchmarking', blurb: 'Compare against industry reference benchmarks' },
+  { label: 'Governance Outcomes', icon: '🎯', path: '/governance-outcomes', blurb: 'What value governance delivered, not just activity' },
 ];
 
 /* ======= Section 8.5 — sales positioning: platform vs. customer packs === */
@@ -773,8 +778,32 @@ export const PLATFORM_JOURNEY: PlatformJourneyStep[] = [
   { step: 8, label: 'Manage Governance Actions', icon: '🛠️', path: '/governance-actions' },
   { step: 9, label: 'Reconstruct Decisions', icon: '🧭', path: '/decision-traceability' },
   { step: 10, label: 'Configure Customer Governance', icon: '🎛️', path: '/governance-studio' },
-  { step: 11, label: 'Deploy With Confidence', icon: '🤝', path: '#partner' },
+  { step: 11, label: 'Measure Effectiveness', icon: '🧮', path: '/governance-effectiveness' },
+  { step: 12, label: 'Demonstrate Outcomes', icon: '🎯', path: '/governance-outcomes' },
+  { step: 13, label: 'Continuous Improvement', icon: '📶', path: '/governance-maturity' },
+  { step: 14, label: 'Deploy With Confidence', icon: '🤝', path: '#partner' },
 ];
+
+/**
+ * Release 11 — Governance Effectiveness & Outcomes Engine. Additive to the
+ * existing hero, not a replacement: "Everyone Talks AI Governance. We Make
+ * It Operational." stays as the primary headline (see the codebase gotcha
+ * in project memory about the two independently-hardcoded hero sections);
+ * this is a new positioning statement surfaced alongside it, the same way
+ * the vNext Prevention-First box was added without touching the H1.
+ */
+export const EFFECTIVENESS_POSITIONING_TAGS: string[] = [
+  'Governance',
+  'Compliance',
+  'Traceability',
+  'Accountability',
+  'Effectiveness',
+  'Outcomes',
+  'Continuous Assurance',
+];
+
+export const EFFECTIVENESS_HERO_STATEMENT =
+  'Move Beyond Governance Documentation. Measure Governance Effectiveness, Demonstrate Outcomes, and Prove Value Through Evidence-Driven Continuous Assurance.';
 
 export const PARTNER_WITH_US_STATEMENT =
   'OMG provides the governance operating platform. We work alongside customers to configure, validate, test, and operationalize governance capabilities aligned to their regulatory, compliance, risk, and business requirements before production deployment.';
