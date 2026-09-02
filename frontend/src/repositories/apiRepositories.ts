@@ -921,6 +921,22 @@ export const apiGovernanceDriftRepository: GovernanceDriftRepository = {
 
 // --- RELEASE 11 — GOVERNANCE EFFECTIVENESS & OUTCOMES ENGINE ---
 
+/**
+ * Strips `id`/`recordedAt` before send on both snapshot repositories below —
+ * storageService.ts's recordX functions build a local-optimistic draft that
+ * includes a client-assigned `recordedAt` (a bare YYYY-MM-DD string, not a
+ * full ISO datetime), which Prisma's `DateTime` column rejects with a 500.
+ * The server's own `@default(now())` should assign it, same as every other
+ * timestamped record in this codebase (see decisionToBackend/driftToBackend
+ * above, which already strip their equivalent client-side date fields).
+ */
+function effectivenessSnapshotToBackend(data: Partial<GovernanceEffectivenessSnapshot>) {
+  const body: Record<string, unknown> = { ...data };
+  delete body.id;
+  delete body.recordedAt;
+  return body;
+}
+
 export const apiGovernanceEffectivenessRepository: GovernanceEffectivenessRepository = {
   async getSnapshots() {
     return apiRequest<GovernanceEffectivenessSnapshot[]>('/governance-effectiveness-snapshots');
@@ -928,13 +944,15 @@ export const apiGovernanceEffectivenessRepository: GovernanceEffectivenessReposi
   async createSnapshot(data) {
     return apiRequest<GovernanceEffectivenessSnapshot>('/governance-effectiveness-snapshots', {
       method: 'POST',
-      body: JSON.stringify(data),
+      body: JSON.stringify(effectivenessSnapshotToBackend(data)),
     });
   },
 };
 
 function maturitySnapshotToBackend(data: Partial<GovernanceMaturitySnapshot>) {
   const body: Record<string, unknown> = { ...data };
+  delete body.id;
+  delete body.recordedAt;
   if (data.domain) body.domain = enumMaps.governanceMaturityDomain.toBackend(data.domain);
   return body;
 }

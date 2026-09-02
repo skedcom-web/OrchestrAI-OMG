@@ -341,3 +341,25 @@ html[data-theme='glass'] option {
   background: #0B1120 !important;
   color: #FFFFFF !important;
 }
+
+/*
+ * Mobile table usability — every data table in the app (25+ pages, no
+ * shared component) wraps its <table> in a plain `.overflow-x-auto` div
+ * with the row-action buttons in the last column. On a phone viewport that
+ * column scrolls off-screen, so Edit/Risk/etc. actions become unreachable
+ * without discovering a horizontal swipe. Fixed centrally here rather than
+ * in each of the 25 page files: pin the last column so actions stay
+ * reachable regardless of scroll position, scoped to table wrappers only
+ * (`:has(> table)`) so unrelated `.overflow-x-auto` uses elsewhere are untouched.
+ */
+.overflow-x-auto:has(> table) table th:last-child,
+.overflow-x-auto:has(> table) table td:last-child {
+  position: sticky;
+  right: 0;
+  background: var(--bg-card);
+  box-shadow: -6px 0 8px -6px rgba(0, 0, 0, 0.25);
+}
+
+.overflow-x-auto:has(> table) table thead th:last-child {
+  background: var(--bg-badge, var(--bg-card));
+}

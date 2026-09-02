@@ -138,7 +138,13 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       '/executive-hub', '/governance-scorecards', '/executive-heatmaps', '/governance-insights',
       '/board-reporting', '/policy-management', '/policy-mapping', '/policy-violations',
       // Phase 10 — Governance Change Management
-      '/change-requests', '/change-impact', '/change-dashboard', '/change-history', '/governance-triggers'
+      '/change-requests', '/change-impact', '/change-dashboard', '/change-history', '/governance-triggers',
+      // OMG vNext — Governance Intelligence (Value, Drift, Health)
+      '/governance-value', '/governance-drift', '/governance-health',
+      // Release 11 — Governance Effectiveness & Outcomes Engine
+      '/governance-effectiveness', '/governance-roi', '/governance-maturity', '/governance-benchmarking', '/governance-outcomes',
+      // Release 12 — Regulatory Intelligence
+      '/regulatory-applicability', '/cross-framework-mapping', '/compliance-impact-analysis', '/regulatory-change-readiness', '/audit-readiness-intelligence'
     ],
   },
   {
@@ -171,7 +177,13 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       // gated individually by roleActionMatrix.ts, not by hiding the page.
       '/mapping-workspace', '/requirement-registry', '/obligation-library',
       '/governance-intelligence', '/governance-actions', '/decision-traceability', '/governance-studio',
-      '/archived-assets', '/governance-readiness'
+      '/archived-assets', '/governance-readiness',
+      // OMG vNext — Governance Intelligence (Value, Drift, Health)
+      '/governance-value', '/governance-drift', '/governance-health',
+      // Release 11 — Governance Effectiveness & Outcomes Engine
+      '/governance-effectiveness', '/governance-roi', '/governance-maturity', '/governance-benchmarking', '/governance-outcomes',
+      // Release 12 — Regulatory Intelligence
+      '/regulatory-applicability', '/cross-framework-mapping', '/compliance-impact-analysis', '/regulatory-change-readiness', '/audit-readiness-intelligence'
     ],
   },
   {
@@ -183,8 +195,8 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
     description: 'Risk Governance • Monitor governance alerts, risk health & corrective remediation tasks.',
     icon: '⚡',
     allowedNav: [
-      '/', '/dashboard', '/assets', '/risk', '/evidence', '/evidence-registry', '/review-workbench', '/findings', 
-      '/decision-intelligence', '/governance-blockers', '/decision-dashboard',
+      '/', '/dashboard', '/assets', '/risk', '/evidence', '/evidence-registry', '/review-workbench', '/findings',
+      '/decision-intelligence', '/governance-blockers', '/decision-workbench-v4', '/decision-dashboard',
       '/compliance-center', '/compliance-packs', '/regulatory-library', '/compliance-findings', '/compliance-dashboard',
       '/operations-center', '/kill-switch', '/override-center', '/incidents', '/operations-dashboard', '/governance-timeline',
       '/governance-monitoring', '/governance-alerts', '/review-calendar', '/corrective-actions', '/governance-trends', '/audit-logs',
@@ -198,7 +210,13 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       // Q1 Stabilization — see note on Governance Admin above.
       '/mapping-workspace', '/requirement-registry', '/obligation-library',
       '/governance-intelligence', '/governance-actions', '/decision-traceability', '/governance-studio',
-      '/archived-assets', '/governance-readiness'
+      '/archived-assets', '/governance-readiness',
+      // OMG vNext — Governance Intelligence (Value, Drift, Health)
+      '/governance-value', '/governance-drift', '/governance-health',
+      // Release 11 — Governance Effectiveness & Outcomes Engine
+      '/governance-effectiveness', '/governance-roi', '/governance-maturity', '/governance-benchmarking', '/governance-outcomes',
+      // Release 12 — Regulatory Intelligence
+      '/regulatory-applicability', '/cross-framework-mapping', '/compliance-impact-analysis', '/regulatory-change-readiness', '/audit-readiness-intelligence'
     ],
   },
   {
@@ -222,7 +240,13 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       // Q1 Stabilization — see note on Governance Admin above.
       '/mapping-workspace', '/requirement-registry', '/obligation-library',
       '/governance-intelligence', '/governance-actions', '/decision-traceability', '/governance-studio',
-      '/archived-assets', '/governance-readiness'
+      '/archived-assets', '/governance-readiness',
+      // OMG vNext — Governance Intelligence (Value, Drift, Health)
+      '/governance-value', '/governance-drift', '/governance-health',
+      // Release 11 — Governance Effectiveness & Outcomes Engine
+      '/governance-effectiveness', '/governance-roi', '/governance-maturity', '/governance-benchmarking', '/governance-outcomes',
+      // Release 12 — Regulatory Intelligence
+      '/regulatory-applicability', '/cross-framework-mapping', '/compliance-impact-analysis', '/regulatory-change-readiness', '/audit-readiness-intelligence'
     ],
   },
   {
@@ -246,7 +270,13 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       // Q1 Stabilization — see note on Governance Admin above.
       '/mapping-workspace', '/requirement-registry', '/obligation-library',
       '/governance-intelligence', '/governance-actions', '/decision-traceability', '/governance-studio',
-      '/archived-assets', '/governance-readiness'
+      '/archived-assets', '/governance-readiness',
+      // OMG vNext — Governance Intelligence (Value, Drift, Health)
+      '/governance-value', '/governance-drift', '/governance-health',
+      // Release 11 — Governance Effectiveness & Outcomes Engine
+      '/governance-effectiveness', '/governance-roi', '/governance-maturity', '/governance-benchmarking', '/governance-outcomes',
+      // Release 12 — Regulatory Intelligence
+      '/regulatory-applicability', '/cross-framework-mapping', '/compliance-impact-analysis', '/regulatory-change-readiness', '/audit-readiness-intelligence'
     ],
   },
   {
@@ -258,7 +288,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
     description: 'Independent Auditor • Read-only governance health, alert logs, review calendar & trends.',
     icon: '📜',
     allowedNav: [
-      '/', '/dashboard', '/assets', '/evidence', '/evidence-registry', '/findings', '/decision-dashboard',
+      '/', '/dashboard', '/assets', '/evidence', '/evidence-registry', '/findings', '/decision-workbench-v4', '/decision-dashboard',
       '/compliance-center', '/compliance-packs', '/regulatory-library', '/compliance-findings', '/compliance-dashboard',
       '/operations-center', '/kill-switch', '/override-center', '/incidents', '/operations-dashboard', '/retirement', '/governance-timeline',
       '/governance-monitoring', '/governance-alerts', '/review-calendar', '/corrective-actions', '/governance-trends', '/audit-logs',
@@ -272,7 +302,13 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       // Q1 Stabilization — see note on Governance Admin above.
       '/mapping-workspace', '/requirement-registry', '/obligation-library',
       '/governance-intelligence', '/governance-actions', '/decision-traceability', '/governance-studio',
-      '/archived-assets', '/governance-readiness'
+      '/archived-assets', '/governance-readiness',
+      // OMG vNext — Governance Intelligence (Value, Drift, Health)
+      '/governance-value', '/governance-drift', '/governance-health',
+      // Release 11 — Governance Effectiveness & Outcomes Engine
+      '/governance-effectiveness', '/governance-roi', '/governance-maturity', '/governance-benchmarking', '/governance-outcomes',
+      // Release 12 — Regulatory Intelligence
+      '/regulatory-applicability', '/cross-framework-mapping', '/compliance-impact-analysis', '/regulatory-change-readiness', '/audit-readiness-intelligence'
     ],
   },
   {
@@ -294,7 +330,13 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       // Q1 Stabilization — see note on Governance Admin above.
       '/mapping-workspace', '/requirement-registry', '/obligation-library',
       '/governance-intelligence', '/governance-actions', '/decision-traceability', '/governance-studio',
-      '/archived-assets', '/governance-readiness'
+      '/archived-assets', '/governance-readiness',
+      // OMG vNext — Governance Intelligence (Value, Drift, Health)
+      '/governance-value', '/governance-drift', '/governance-health',
+      // Release 11 — Governance Effectiveness & Outcomes Engine
+      '/governance-effectiveness', '/governance-roi', '/governance-maturity', '/governance-benchmarking', '/governance-outcomes',
+      // Release 12 — Regulatory Intelligence
+      '/regulatory-applicability', '/cross-framework-mapping', '/compliance-impact-analysis', '/regulatory-change-readiness', '/audit-readiness-intelligence'
     ],
   },
 ];
