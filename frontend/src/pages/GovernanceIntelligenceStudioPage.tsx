@@ -229,7 +229,7 @@ export const GovernanceIntelligenceStudioPage: React.FC = () => {
           <div className="p-5 border-b border-[var(--border-color)] flex items-center justify-between gap-3 flex-wrap">
             <div>
               <h3 className="text-lg font-bold text-[var(--text-primary)]">Policy Designer</h3>
-              <p className="text-xs text-[var(--text-secondary)] mt-0.5">Policies already live as data since Release 7 — the Policy Registry is the Studio's Policy Designer. Full create/edit lives in the Governance Intelligence Workspace.</p>
+              <p className="text-xs text-[var(--text-secondary)] mt-0.5">Policies already live as data — the Policy Registry is the Studio's Policy Designer. Full create/edit lives in the Governance Intelligence Workspace.</p>
             </div>
             <Link to="/governance-intelligence"><Button size="sm">Open Policy Registry</Button></Link>
           </div>

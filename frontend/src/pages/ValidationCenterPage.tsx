@@ -58,7 +58,7 @@ export const ValidationCenterPage: React.FC = () => {
         <div>
           <h1 className="text-3xl font-extrabold text-[var(--text-primary)]">Validation Center</h1>
           <p className="text-sm text-[var(--text-secondary)] mt-1">
-            Phase 3 Command Center • Can this AI asset prove it is ready for deployment?
+            Command Center • Can this AI asset prove it is ready for deployment?
           </p>
         </div>
         <Button
@@ -176,7 +176,7 @@ export const ValidationCenterPage: React.FC = () => {
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           title="Execute Validation Review"
-          subtitle="Phase 3 Proof-Based Governance Assessment"
+          subtitle="Proof-Based Governance Assessment"
           maxWidth="md"
         >
           <form onSubmit={handleSave} className="flex flex-col gap-4 py-2">

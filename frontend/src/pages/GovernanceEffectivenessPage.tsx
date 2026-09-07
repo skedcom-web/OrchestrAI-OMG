@@ -127,7 +127,7 @@ export const GovernanceEffectivenessPage: React.FC = () => {
         </div>
       </section>
 
-      <SectionHeader eyebrow="Release 11" title="Contributing Factors" subtitle="Six equally-weighted sub-factors, each reused from an existing computation." icon="🧮" />
+      <SectionHeader eyebrow="Score Breakdown" title="Contributing Factors" subtitle="Six equally-weighted sub-factors, each reused from an existing computation." icon="🧮" />
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {Object.entries(SUB_FACTOR_LABELS).map(([key, label]) => (
           <KpiCard key={key} label={label} value={`${(result as any)[key]}%`} icon="📈" tone="info" progress={(result as any)[key]} />

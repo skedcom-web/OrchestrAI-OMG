@@ -139,7 +139,7 @@ export const VarianceAnalysisPage: React.FC = () => {
       )}
 
       <SectionHeader
-        eyebrow="GACF Phase 2"
+        eyebrow="GACF"
         title="Assessment Confidence Index"
         subtitle="How sure assessors were, not just what they scored — from the optional Confidence Scoring on each assessment."
         icon="🧭"

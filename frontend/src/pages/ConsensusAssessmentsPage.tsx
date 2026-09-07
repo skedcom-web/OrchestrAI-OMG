@@ -231,7 +231,7 @@ export const ConsensusAssessmentsPage: React.FC = () => {
       )}
 
       <section className="flex flex-col gap-4">
-        <SectionHeader eyebrow="GACF Phase 2" title="Consensus Rounds" subtitle="Most recent first." icon="🗂️" />
+        <SectionHeader eyebrow="GACF" title="Consensus Rounds" subtitle="Most recent first." icon="🗂️" />
         {rounds.length === 0 ? (
           <Card className="!p-8 text-center">
             <p className="text-sm text-[var(--text-secondary)]">No consensus rounds opened yet.</p>

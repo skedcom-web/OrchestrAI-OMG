@@ -130,7 +130,7 @@ export const GovernanceScorecardsPage: React.FC = () => {
       {/* The five scorecards */}
       <section className="flex flex-col gap-4">
         <SectionHeader
-          eyebrow="Workstream 2"
+          eyebrow="Scorecard Summary"
           title="The Five Governance Scorecards"
           subtitle="Every figure links to the module where it can be acted on."
           icon="🗂️"

@@ -201,6 +201,85 @@ export const OmgOverviewPage: React.FC = () => {
         </div>
       </section>
 
+      {/* ============== GOVERNANCE SNAPSHOT — executive-first landing, additive to the hero above ============== */}
+      <section className="rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] p-5 sm:p-6 flex flex-col gap-4">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div>
+            <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[var(--accent-primary)]">
+              Governance Snapshot
+            </p>
+            <h2 className="text-[18px] font-extrabold text-[var(--text-primary)] mt-0.5">
+              What needs your attention right now
+            </h2>
+          </div>
+          <button
+            onClick={() => navigate('/command-center')}
+            className="text-[11px] font-bold text-[var(--accent-primary)] hover:underline cursor-pointer whitespace-nowrap"
+          >
+            Open full Command Center →
+          </button>
+        </div>
+
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {[
+            {
+              q: 'What exists',
+              value: metrics.totalAssets,
+              label: 'AI assets under governance',
+              tone: 'var(--accent-primary)',
+              path: '/assets',
+            },
+            {
+              q: 'What is risky',
+              value: metrics.riskBreakdown.High + metrics.riskBreakdown.Critical,
+              label: 'High & critical risk assets',
+              tone: 'var(--status-danger)',
+              path: '/risk',
+            },
+            {
+              q: 'What needs attention',
+              value: metrics.attentionRequiredAssetsCount + metrics.openFindingsCount + metrics.openComplianceGapsCount,
+              label: 'Open findings, gaps & flagged assets',
+              tone: 'var(--status-warning)',
+              path: '/governance-alerts',
+            },
+            {
+              q: 'What is pending',
+              value: metrics.decisionBreakdown.PENDING + metrics.upcomingReviewsCount,
+              label: 'Decisions & reviews awaiting action',
+              tone: 'var(--status-info)',
+              path: '/decision-dashboard',
+            },
+          ].map(tile => (
+            <button
+              key={tile.q}
+              onClick={() => navigate(tile.path)}
+              data-noglass
+              className="text-left rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-sunken)] p-4 hover:border-[var(--accent-border)] hover:-translate-y-0.5 transition-all cursor-pointer"
+            >
+              <p className="text-[9.5px] font-extrabold uppercase tracking-[0.1em] text-[var(--text-muted)]">
+                {tile.q}
+              </p>
+              <p
+                className="tnum text-[1.7rem] font-extrabold leading-none mt-1.5"
+                style={{ color: tile.tone }}
+              >
+                {tile.value}
+              </p>
+              <p className="text-[10.5px] font-semibold text-[var(--text-muted)] mt-1.5 leading-tight">
+                {tile.label}
+              </p>
+            </button>
+          ))}
+        </div>
+
+        <p className="text-[11px] text-[var(--text-muted)] leading-relaxed">
+          OMG governs the full lifecycle of enterprise AI — ownership, risk, approvals, evidence and
+          accountability, connected end to end. This snapshot answers what exists, what's risky,
+          what needs attention and what's pending; everything below explains why, and how.
+        </p>
+      </section>
+
       {/* ============== SECTION: CORE PLATFORM STATUS ============== */}
       <section
         data-noglass

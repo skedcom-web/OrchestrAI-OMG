@@ -20,7 +20,7 @@ export const GovernanceMonitoringPage: React.FC = () => {
       <div>
         <h1 className="text-3xl font-extrabold text-[var(--text-primary)]">Governance Monitoring Center</h1>
         <p className="text-sm text-[var(--text-secondary)] mt-1">
-          Phase 7 Continuous Oversight • Is the AI system still operating within approved governance boundaries?
+          Continuous Oversight • Is the AI system still operating within approved governance boundaries?
         </p>
       </div>
 

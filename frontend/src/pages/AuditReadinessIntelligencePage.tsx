@@ -66,7 +66,7 @@ export const AuditReadinessIntelligencePage: React.FC = () => {
         <KpiCard label="Regulatory Source Coverage" value={`${result.sourceCoveragePct}%`} icon="🌐" tone="info" progress={result.sourceCoveragePct} />
       </div>
 
-      <SectionHeader eyebrow="Release 12" title="Top Evidence Gaps" subtitle="Missing or expired evidence across every active framework." icon="📄" />
+      <SectionHeader eyebrow="Evidence Analysis" title="Top Evidence Gaps" subtitle="Missing or expired evidence across every active framework." icon="📄" />
       <div className="flex flex-col gap-2">
         {result.topEvidenceGaps.map((g, i) => (
           <Card key={i} className="!p-3.5 flex items-center gap-3">

@@ -25,7 +25,7 @@ export const ComplianceCenterPage: React.FC = () => {
         <div>
           <h1 className="text-3xl font-extrabold text-[var(--text-primary)]">Compliance Center</h1>
           <p className="text-sm text-[var(--text-secondary)] mt-1">
-            Phase 5 Command Center • Can we prove governance compliance against RBI & Enterprise Standards?
+            Command Center • Can we prove governance compliance against RBI & Enterprise Standards?
           </p>
         </div>
       </div>

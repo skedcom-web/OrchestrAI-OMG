@@ -96,7 +96,7 @@ export const GovernanceInsightsPage: React.FC = () => {
       {/* Trends */}
       <section className="flex flex-col gap-4">
         <SectionHeader
-          eyebrow="Workstream 7"
+          eyebrow="Historical Trends"
           title="Governance Trends"
           subtitle="Risk, approvals, policy violations, reviews and overall health across six months."
           icon="📈"

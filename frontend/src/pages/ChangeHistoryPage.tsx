@@ -210,7 +210,7 @@ export const ChangeHistoryPage: React.FC = () => {
         <KpiCard
           label="Lifecycle Stages"
           value={GOVERNANCE_LIFECYCLE.length}
-          caption="Phase 10 enhanced lifecycle"
+          caption="Full governance lifecycle"
           icon="🛤️"
           tone="neutral"
         />
@@ -219,9 +219,9 @@ export const ChangeHistoryPage: React.FC = () => {
       {/* WS7 — the enhanced lifecycle */}
       <section className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-5 flex flex-col gap-4">
         <SectionHeader
-          eyebrow="Workstream 7"
+          eyebrow="Lifecycle Tracking"
           title="Governance State Machine"
-          subtitle="The Phase 10 lifecycle. A change drives an asset out of monitoring and back through reassessment to reapproval."
+          subtitle="The full lifecycle. A change drives an asset out of monitoring and back through reassessment to reapproval."
           icon="🔀"
         />
 
@@ -308,7 +308,7 @@ export const ChangeHistoryPage: React.FC = () => {
       {view === 'history' && (
         <section className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-5 flex flex-col gap-4">
           <SectionHeader
-            eyebrow="Workstream 8"
+            eyebrow="Immutable Record"
             title="Change History &amp; Audit Trail"
             subtitle="Immutable. Entries are appended, never edited or removed."
             icon="📜"
@@ -372,7 +372,7 @@ export const ChangeHistoryPage: React.FC = () => {
       {view === 'transitions' && (
         <section className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-5 flex flex-col gap-4">
           <SectionHeader
-            eyebrow="Workstream 7"
+            eyebrow="Transition History"
             title="State Transition Log"
             subtitle="Every governance state movement, with the change that caused it."
             icon="🔀"

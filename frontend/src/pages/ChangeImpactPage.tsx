@@ -124,7 +124,7 @@ export const ChangeImpactPage: React.FC = () => {
       {/* Magnitude distribution */}
       <section className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-5 flex flex-col gap-4">
         <SectionHeader
-          eyebrow="Workstream 4"
+          eyebrow="Impact Scoring"
           title="Reassessment Rules Engine"
           subtitle="Impact score determines magnitude, and magnitude determines who must reapprove."
           icon="⚙️"
@@ -186,7 +186,7 @@ export const ChangeImpactPage: React.FC = () => {
       {/* Impact area profile */}
       <section className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-5 flex flex-col gap-4">
         <SectionHeader
-          eyebrow="Workstream 3"
+          eyebrow="Impact Analysis"
           title="Governance Impact Profile"
           subtitle="Which governance dimensions changes are actually disturbing."
           icon="🔬"

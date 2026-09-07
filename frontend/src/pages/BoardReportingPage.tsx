@@ -163,7 +163,7 @@ export const BoardReportingPage: React.FC = () => {
               />
               <div className="flex-1 min-w-0">
                 <p className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-[var(--accent-primary)]">
-                  Workstream 8 · Executive Governance Report
+                  Board Briefing · Executive Governance Report
                 </p>
                 <h2 className="text-xl font-extrabold text-[var(--text-primary)] mt-1.5">
                   Enterprise AI Governance Position
@@ -288,7 +288,7 @@ export const BoardReportingPage: React.FC = () => {
               />
               <div className="flex-1 min-w-0">
                 <p className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-[var(--accent-primary)]">
-                  Workstream 8 · Audit Readiness Report
+                  Board Briefing · Audit Readiness Report
                 </p>
                 <h2 className="text-xl font-extrabold text-[var(--text-primary)] mt-1.5">
                   Can We Prove Governance Was Applied?

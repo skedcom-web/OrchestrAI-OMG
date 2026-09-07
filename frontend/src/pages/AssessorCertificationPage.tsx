@@ -159,7 +159,7 @@ export const AssessorCertificationPage: React.FC = () => {
       )}
 
       <section className="flex flex-col gap-4">
-        <SectionHeader eyebrow="GACF Phase 2" title="Certification History" subtitle="Most recent attempt first." icon="🗂️" />
+        <SectionHeader eyebrow="GACF" title="Certification History" subtitle="Most recent attempt first." icon="🗂️" />
         {certifications.length === 0 ? (
           <Card className="!p-8 text-center">
             <p className="text-sm text-[var(--text-secondary)]">No certification attempts recorded yet.</p>

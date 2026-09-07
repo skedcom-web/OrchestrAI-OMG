@@ -61,6 +61,8 @@ import { RbacAdministrationPage } from './pages/RbacAdministrationPage';
 import { TenantSettingsPage } from './pages/TenantSettingsPage';
 import { OmgOverviewPage } from './pages/OmgOverviewPage';
 import { FutureModulePage } from './pages/FutureModulePage';
+import { ReleaseNotesPage } from './pages/ReleaseNotesPage';
+import { FUTURE_MODULES } from './config/navigation';
 
 // Phase 9 Pages — Executive Governance Hub & Policy Governance
 import { ExecutiveGovernanceHubPage } from './pages/ExecutiveGovernanceHubPage';
@@ -236,17 +238,15 @@ const GOVERNED_ROUTES: { path: string; element: React.ReactNode }[] = [
   { path: '/users', element: <UserManagementPage /> },
   { path: '/rbac', element: <RbacAdministrationPage /> },
   { path: '/tenant-settings', element: <TenantSettingsPage /> },
+  { path: '/release-notes', element: <ReleaseNotesPage /> },
 ];
 
 /**
- * Phase 8G — future modules are routed now so navigation, deep links and RBAC
- * keys are stable before the capabilities themselves land.
+ * Future governance domains are routed now so navigation, deep links and RBAC
+ * keys are stable before the capabilities themselves land — derived directly
+ * from FUTURE_MODULES so a new roadmap entry never needs a second edit here.
  */
-const FUTURE_ROUTES = [
-  '/regulatory-compliance-center',
-  '/ai-control-library',
-  '/enterprise-reporting',
-];
+const FUTURE_ROUTES = FUTURE_MODULES.map(m => m.path);
 
 export const App: React.FC = () => {
   return (

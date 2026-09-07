@@ -104,7 +104,7 @@ export const GovernanceReviewPackageModal: React.FC<GovernanceReviewPackageModal
 
         {/* Action Buttons */}
         <div className="flex items-center justify-between pt-4 border-t border-[var(--border-color)]">
-          <span className="text-[10px] text-[var(--text-muted)]">Review Package Generated: {now} | ODF Phase 7 Standard</span>
+          <span className="text-[10px] text-[var(--text-muted)]">Review Package Generated: {now} | ODF Standard</span>
           <div className="flex items-center gap-3">
             <Button variant="ghost" onClick={onClose}>Close</Button>
             <Button onClick={handlePrint} icon={<span>🖨️</span>}>Print / Export PDF Health Report</Button>

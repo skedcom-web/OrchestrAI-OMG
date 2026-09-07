@@ -18,8 +18,9 @@ interface ExperienceContextType {
   setMode: (mode: ExperienceMode) => void;
   toggleMode: () => void;
   isExecutive: boolean;
-  /** Sidebar group open/closed state, persisted per domain. */
-  collapsedDomains: string[];
+  /** Accordion: at most one workspace open at a time, persisted across sessions. Null = none open. */
+  openDomainId: string | null;
+  setOpenDomainId: (domainId: string | null) => void;
   toggleDomain: (domainId: string) => void;
   sidebarCollapsed: boolean;
   setSidebarCollapsed: (collapsed: boolean) => void;
@@ -45,8 +46,8 @@ export const ExperienceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     return saved === 'executive' || saved === 'governance' ? saved : 'governance';
   });
 
-  const [collapsedDomains, setCollapsedDomains] = useState<string[]>(() =>
-    readStored<string[]>('omg_collapsed_domains', [])
+  const [openDomainId, setOpenDomainIdState] = useState<string | null>(() =>
+    readStored<string | null>('omg_open_domain', null)
   );
 
   const [sidebarCollapsed, setSidebarCollapsedState] = useState<boolean>(() =>
@@ -64,12 +65,15 @@ export const ExperienceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     setMode(mode === 'executive' ? 'governance' : 'executive');
   }, [mode, setMode]);
 
+  const setOpenDomainId = useCallback((domainId: string | null) => {
+    setOpenDomainIdState(domainId);
+    localStorage.setItem('omg_open_domain', JSON.stringify(domainId));
+  }, []);
+
   const toggleDomain = useCallback((domainId: string) => {
-    setCollapsedDomains(prev => {
-      const next = prev.includes(domainId)
-        ? prev.filter(id => id !== domainId)
-        : [...prev, domainId];
-      localStorage.setItem('omg_collapsed_domains', JSON.stringify(next));
+    setOpenDomainIdState(prev => {
+      const next = prev === domainId ? null : domainId;
+      localStorage.setItem('omg_open_domain', JSON.stringify(next));
       return next;
     });
   }, []);
@@ -89,7 +93,8 @@ export const ExperienceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       setMode,
       toggleMode,
       isExecutive: mode === 'executive',
-      collapsedDomains,
+      openDomainId,
+      setOpenDomainId,
       toggleDomain,
       sidebarCollapsed,
       setSidebarCollapsed,
@@ -100,7 +105,8 @@ export const ExperienceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       mode,
       setMode,
       toggleMode,
-      collapsedDomains,
+      openDomainId,
+      setOpenDomainId,
       toggleDomain,
       sidebarCollapsed,
       setSidebarCollapsed,

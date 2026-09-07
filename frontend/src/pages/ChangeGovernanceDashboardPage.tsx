@@ -121,7 +121,7 @@ export const ChangeGovernanceDashboardPage: React.FC = () => {
       {/* Pipeline */}
       <section className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-5 flex flex-col gap-4">
         <SectionHeader
-          eyebrow="Workstream 6"
+          eyebrow="Decision Velocity"
           title="Change Pipeline"
           subtitle={`Mean time from submission to decision: ${metrics.averageDecisionDays} days.`}
           icon="📊"
@@ -170,7 +170,7 @@ export const ChangeGovernanceDashboardPage: React.FC = () => {
       {/* WS10 — trends */}
       <section className="flex flex-col gap-4">
         <SectionHeader
-          eyebrow="Workstream 10"
+          eyebrow="Trend Analysis"
           title="Change Risk Trends"
           subtitle="Whether change activity and change severity are rising or settling."
           icon="📈"
@@ -290,7 +290,7 @@ export const ChangeGovernanceDashboardPage: React.FC = () => {
       {/* WS10 — pending reapprovals */}
       <section className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-5 flex flex-col gap-4">
         <SectionHeader
-          eyebrow="Workstream 10"
+          eyebrow="Reapproval Status"
           title="Pending Reapprovals"
           subtitle="Assets whose approved state is provisional until a change clears governance."
           icon="🔓"

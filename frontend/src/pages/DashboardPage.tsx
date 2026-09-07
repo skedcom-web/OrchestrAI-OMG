@@ -233,7 +233,7 @@ export const DashboardPage: React.FC = () => {
         <Card className="lg:col-span-2 flex flex-col gap-4">
           <div>
             <h3 className="text-lg font-bold text-[var(--text-primary)]">Assets by Governance State</h3>
-            <p className="text-xs text-[var(--text-secondary)]">Whether each asset's authorization remains valid — Release 2 continuity model</p>
+            <p className="text-xs text-[var(--text-secondary)]">Whether each asset's authorization remains valid — under the governance continuity model</p>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {GOVERNANCE_STATES.map(s => {

@@ -46,7 +46,7 @@ export const GovernanceROIPage: React.FC = () => {
         </p>
       </div>
 
-      <SectionHeader eyebrow="Release 11" title="Operational Savings" subtitle="Hours governance activity saves versus a manual process." icon="⏱️" />
+      <SectionHeader eyebrow="Time Savings" title="Operational Savings" subtitle="Hours governance activity saves versus a manual process." icon="⏱️" />
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard label="Audit Preparation Hours Saved" value={roi.operationalSavings.auditPreparationHoursSaved} icon="📋" tone="info" />
         <KpiCard label="Evidence Collection Hours Saved" value={roi.operationalSavings.evidenceCollectionHoursSaved} icon="📄" tone="info" />
@@ -54,7 +54,7 @@ export const GovernanceROIPage: React.FC = () => {
         <KpiCard label="Compliance Reporting Automation" value={`${roi.operationalSavings.complianceReportingAutomationSavingsHours}h`} icon="🧩" tone="info" />
       </div>
 
-      <SectionHeader eyebrow="Release 11" title="Risk Avoidance" subtitle="Exposure and exceptions governance activity has closed off." icon="🛡️" />
+      <SectionHeader eyebrow="Exposure Reduction" title="Risk Avoidance" subtitle="Exposure and exceptions governance activity has closed off." icon="🛡️" />
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <KpiCard
           label="Potential Regulatory Exposure Avoided"

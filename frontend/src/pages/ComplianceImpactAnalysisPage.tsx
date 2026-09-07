@@ -46,7 +46,7 @@ export const ComplianceImpactAnalysisPage: React.FC = () => {
         <KpiCard label="High / Critical Impact" value={criticalOrHigh} icon="🚨" tone={criticalOrHigh > 0 ? 'danger' : 'success'} />
       </div>
 
-      <SectionHeader eyebrow="Release 12" title="Impacted Changes" subtitle="Most recent first." icon="🔁" />
+      <SectionHeader eyebrow="Change Impact" title="Impacted Changes" subtitle="Most recent first." icon="🔁" />
       <div className="flex flex-col gap-3">
         {results.map(r => (
           <Card key={r.change.id} className="!p-4 flex flex-col sm:flex-row sm:items-center gap-4">

@@ -109,7 +109,7 @@ export const GovernanceTriggersPage: React.FC = () => {
       {/* Rule configuration */}
       <section className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-5 flex flex-col gap-4">
         <SectionHeader
-          eyebrow="Workstream 9"
+          eyebrow="Rule Configuration"
           title="Trigger Rules"
           subtitle="Condition in, governance action out. Disable a rule and it stops arming immediately."
           icon="⚙️"

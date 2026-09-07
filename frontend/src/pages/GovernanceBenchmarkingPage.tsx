@@ -66,7 +66,7 @@ export const GovernanceBenchmarkingPage: React.FC = () => {
         </p>
       </div>
 
-      <SectionHeader eyebrow="Release 11" title="Gap Analysis" subtitle="Positive means ahead of benchmark; negative means behind." icon="📐" />
+      <SectionHeader eyebrow="Benchmark Comparison" title="Gap Analysis" subtitle="Positive means ahead of benchmark; negative means behind." icon="📐" />
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {benchmarks.map(b => (
           <Card key={b.industry} className="!p-5 flex flex-col gap-3">

@@ -37,7 +37,7 @@ export const RegulatoryApplicabilityPage: React.FC = () => {
         <KpiCard label="Out of Scope" value={notApplicable.length} caption="Not applicable to the active profile" icon="⭕" tone="neutral" />
       </div>
 
-      <SectionHeader eyebrow="Release 12" title="Regulatory Sources" subtitle="Applicability, computed against the active Governance Profile." icon="🌐" />
+      <SectionHeader eyebrow="Applicability Analysis" title="Regulatory Sources" subtitle="Applicability, computed against the active Governance Profile." icon="🌐" />
       <div className="flex flex-col gap-3">
         {results.map(r => (
           <Card key={r.source.id} className="!p-4 flex items-center gap-4">

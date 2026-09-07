@@ -34,7 +34,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
 
           {located?.domain && (
             <span className="hidden sm:inline text-[10px] font-extrabold uppercase tracking-[0.12em] text-[var(--text-muted)]">
-              {located.domain.icon} {located.domain.question}
+              {located.domain.icon} {located.domain.label}
             </span>
           )}
 

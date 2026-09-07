@@ -217,7 +217,7 @@ export const ChangeRequestCenterPage: React.FC = () => {
       {/* WS2 — classification */}
       <section className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-5 flex flex-col gap-4">
         <SectionHeader
-          eyebrow="Workstream 2"
+          eyebrow="Risk Categorization"
           title="Change Classification"
           subtitle="Every change is classified. The category sets the baseline governance weight."
           icon="🏷️"
@@ -271,7 +271,7 @@ export const ChangeRequestCenterPage: React.FC = () => {
       {/* Change register */}
       <section className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-5 flex flex-col gap-4">
         <SectionHeader
-          eyebrow="Workstream 1"
+          eyebrow="Request Log"
           title="Change Register"
           subtitle={`${filtered.length} of ${changes.length} change requests shown.`}
           icon="📋"
@@ -563,7 +563,7 @@ export const ChangeRequestCenterPage: React.FC = () => {
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <p className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-[var(--accent-primary)]">
-                    Workstream 3
+                    Impact Assessment
                   </p>
                   <h4 className="text-[14px] font-bold text-[var(--text-primary)]">
                     Change Impact Analysis
@@ -626,7 +626,7 @@ export const ChangeRequestCenterPage: React.FC = () => {
               }}
             >
               <p className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-[var(--text-muted)]">
-                Workstream 4 · Reassessment Rules Engine
+                Reassessment Rules Engine
               </p>
               <p className="text-[14px] font-bold mt-1.5" style={{ color: REASSESSMENT_TONE[previewRule.requirement] }}>
                 {previewRule.magnitude} change → {previewRule.requirement}
@@ -643,7 +643,7 @@ export const ChangeRequestCenterPage: React.FC = () => {
             <div className="flex flex-col gap-2.5">
               <div>
                 <p className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-[var(--accent-primary)]">
-                  Workstream 5
+                  Approval Workflow
                 </p>
                 <h4 className="text-[14px] font-bold text-[var(--text-primary)]">
                   Approval Routing

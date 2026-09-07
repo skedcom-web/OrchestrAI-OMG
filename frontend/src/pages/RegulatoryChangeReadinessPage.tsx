@@ -63,7 +63,7 @@ export const RegulatoryChangeReadinessPage: React.FC = () => {
         <KpiCard label="Not Ready" value={notReadyCount} icon="🚨" tone={notReadyCount > 0 ? 'danger' : 'success'} />
       </div>
 
-      <SectionHeader eyebrow="Release 12" title="Readiness Ranking" subtitle="Weakest coverage first." icon="📶" />
+      <SectionHeader eyebrow="Coverage Analysis" title="Readiness Ranking" subtitle="Weakest coverage first." icon="📶" />
       <div className="flex flex-col gap-3">
         {results.map(r => (
           <Card key={r.source.id} className="!p-4 flex flex-col sm:flex-row sm:items-center gap-4">

@@ -23,7 +23,7 @@ export const OperationsCenterPage: React.FC = () => {
       <div>
         <h1 className="text-3xl font-extrabold text-[var(--text-primary)]">Operations Command Center</h1>
         <p className="text-sm text-[var(--text-secondary)] mt-1">
-          Phase 6 Production Runtime Oversight • Can we safely operate, suspend, and control AI systems?
+          Production Runtime Oversight • Can we safely operate, suspend, and control AI systems?
         </p>
       </div>
 

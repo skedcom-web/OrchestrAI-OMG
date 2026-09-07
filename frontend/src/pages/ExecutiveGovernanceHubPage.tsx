@@ -140,7 +140,7 @@ export const ExecutiveGovernanceHubPage: React.FC = () => {
               className="inline-flex items-center gap-2 w-fit px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-[0.12em] bg-[var(--accent-light)] text-[var(--accent-primary)] border border-[var(--accent-border)]"
             >
               <span className="status-pulse" />
-              Phase 9 · Executive AI Governance Command Center
+              Executive AI Governance Command Center
             </span>
 
             <div>
@@ -242,7 +242,7 @@ export const ExecutiveGovernanceHubPage: React.FC = () => {
       {(shows('estate') || shows('summary') || shows('portfolio')) && (
         <section className="flex flex-col gap-4">
           <SectionHeader
-            eyebrow="Workstream 1"
+            eyebrow="Enterprise Overview"
             title="AI Estate Summary"
             subtitle="Every form of artificial intelligence the enterprise is accountable for."
             icon="🧭"
@@ -310,7 +310,7 @@ export const ExecutiveGovernanceHubPage: React.FC = () => {
       {(shows('estate') || shows('summary') || shows('portfolio')) && (
         <section className="flex flex-col gap-4">
           <SectionHeader
-            eyebrow="Release 1"
+            eyebrow="Ownership & Oversight"
             title="Accountability, Oversight & Autonomy"
             subtitle="Who owns this AI, how humans supervise it, and how much it acts on its own."
             icon="🧑‍⚖️"
@@ -371,7 +371,7 @@ export const ExecutiveGovernanceHubPage: React.FC = () => {
       {(shows('estate') || shows('summary') || shows('portfolio')) && (
         <section className="flex flex-col gap-4">
           <SectionHeader
-            eyebrow="Release 2"
+            eyebrow="Authorization Status"
             title="Governance Continuity Overview"
             subtitle="Whether approved AI assets remain validly authorized over time."
             icon="🔁"
@@ -437,7 +437,7 @@ export const ExecutiveGovernanceHubPage: React.FC = () => {
       {(shows('estate') || shows('summary') || shows('portfolio')) && (
         <section className="flex flex-col gap-4">
           <SectionHeader
-            eyebrow="Release 3"
+            eyebrow="Evidence Health"
             title="Evidence Overview"
             subtitle="Ownership summary and evidence health snapshot — plain counts, no scoring."
             icon="🗃️"
@@ -482,7 +482,7 @@ export const ExecutiveGovernanceHubPage: React.FC = () => {
       {(shows('estate') || shows('summary') || shows('portfolio')) && (
         <section className="flex flex-col gap-4">
           <SectionHeader
-            eyebrow="Release 4"
+            eyebrow="Governance Readiness"
             title="Readiness Overview"
             subtitle="Is governance complete and ready? Ready / Partially Ready / Not Ready — no scores."
             icon="✅"
@@ -525,7 +525,7 @@ export const ExecutiveGovernanceHubPage: React.FC = () => {
       {(shows('estate') || shows('summary') || shows('portfolio') || shows('policy-compliance')) && (
         <section className="flex flex-col gap-4">
           <SectionHeader
-            eyebrow="Release 5"
+            eyebrow="Compliance Coverage"
             title="Compliance Readiness Overview"
             subtitle="The universal Compliance Pack Framework — Covered / Partially Covered / Not Covered / Not Applicable, no scores."
             icon="🧩"
@@ -578,7 +578,7 @@ export const ExecutiveGovernanceHubPage: React.FC = () => {
       {(shows('estate') || shows('summary') || shows('portfolio') || shows('policy-compliance')) && (
         <section className="flex flex-col gap-4">
           <SectionHeader
-            eyebrow="Release 6"
+            eyebrow="Regulatory Knowledge"
             title="Regulatory Knowledge Engine Readiness"
             subtitle="The Universal Regulatory Knowledge & Obligation Engine — Source → Requirement → Obligation → Control → Evidence, no scores."
             icon="🗺️"
@@ -635,7 +635,7 @@ export const ExecutiveGovernanceHubPage: React.FC = () => {
       {(shows('estate') || shows('summary') || shows('portfolio') || shows('policy-compliance')) && (
         <section className="flex flex-col gap-4">
           <SectionHeader
-            eyebrow="Release 7"
+            eyebrow="Policy Intelligence"
             title="Governance Intelligence Overview"
             subtitle="Policy → Condition → Violation → Finding → Outcome, every outcome explainable. Recommendations only — no scoring, no automatic state changes."
             icon="🧠"
@@ -678,7 +678,7 @@ export const ExecutiveGovernanceHubPage: React.FC = () => {
       {(shows('estate') || shows('summary') || shows('portfolio') || shows('policy-compliance')) && (
         <section className="flex flex-col gap-4">
           <SectionHeader
-            eyebrow="Release 8"
+            eyebrow="Recommended Actions"
             title="Governance Actions Overview"
             subtitle="Outcome → Recommended Action, with a human Accept / Reject / Defer decision layer. Recommendation-driven, not automation-driven."
             icon="🛠️"
@@ -721,7 +721,7 @@ export const ExecutiveGovernanceHubPage: React.FC = () => {
       {(shows('estate') || shows('summary') || shows('portfolio') || shows('policy-compliance')) && (
         <section className="flex flex-col gap-4">
           <SectionHeader
-            eyebrow="Release 9"
+            eyebrow="Decision Traceability"
             title="Governance Traceability Overview"
             subtitle="Condition → Policy → Violation → Finding → Outcome → Recommended Action → Human Decision — every decision reconstructable end-to-end."
             icon="🧭"
@@ -865,7 +865,7 @@ export const ExecutiveGovernanceHubPage: React.FC = () => {
       {(shows('alerts') || shows('summary') || shows('violations')) && (
         <section className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-5 flex flex-col gap-4">
           <SectionHeader
-            eyebrow="Workstream 1"
+            eyebrow="Risk Alerts"
             title="Executive Alerts"
             subtitle="Critical risks, ownership gaps, policy violations and expired reviews."
             icon="🚨"
@@ -1010,7 +1010,7 @@ export const ExecutiveGovernanceHubPage: React.FC = () => {
       {shows('policy-compliance') && (
         <section className="flex flex-col gap-4">
           <SectionHeader
-            eyebrow="Workstream 3"
+            eyebrow="Policy Adherence"
             title="Policy Compliance Position"
             subtitle="The rules that bind enterprise AI, and how well they hold."
             icon="📕"
@@ -1064,7 +1064,7 @@ export const ExecutiveGovernanceHubPage: React.FC = () => {
       {(shows('scorecards') || shows('delivery') || shows('regulatory-readiness')) && (
         <section className="flex flex-col gap-4">
           <SectionHeader
-            eyebrow="Workstream 2"
+            eyebrow="Governance Metrics"
             title="Governance Scorecards"
             subtitle="Ownership, risk, validation, evidence and decision readiness at a glance."
             icon="🗂️"
@@ -1095,7 +1095,7 @@ export const ExecutiveGovernanceHubPage: React.FC = () => {
       {shows('trends') && (
         <section className="flex flex-col gap-4">
           <SectionHeader
-            eyebrow="Workstream 7"
+            eyebrow="Trend Direction"
             title="Governance Trends"
             subtitle="Direction of travel over the last six months."
             icon="📈"
@@ -1126,7 +1126,7 @@ export const ExecutiveGovernanceHubPage: React.FC = () => {
       {(shows('insights') || shows('reviews')) && (
         <section className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-5 flex flex-col gap-4">
           <SectionHeader
-            eyebrow="Workstream 7"
+            eyebrow="Actionable Insights"
             title="Executive Insights"
             subtitle="The shortest path from posture to action."
             icon="💡"
@@ -1177,7 +1177,7 @@ export const ExecutiveGovernanceHubPage: React.FC = () => {
       {shows('regulatory-readiness') && (
         <section className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-5 flex flex-col gap-4">
           <SectionHeader
-            eyebrow="Workstream 8"
+            eyebrow="Proof of Governance"
             title="Regulatory Readiness"
             subtitle="Whether the enterprise can prove governance was applied."
             icon="📜"

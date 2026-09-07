@@ -224,6 +224,51 @@
   }
 }
 
+/* Collapsible desktop sidebar rail. Width alone does not reliably re-resolve
+   on a flex item once flex-shrink/basis has been established, so the
+   collapsed state is driven through the `flex` shorthand directly. */
+@media (min-width: 1024px) {
+  .sidebar-rail {
+    flex: 0 0 17.5rem;
+    width: 17.5rem;
+    transition: flex-basis var(--dur-slow) var(--ease-out-quint),
+                width var(--dur-slow) var(--ease-out-quint);
+  }
+  .sidebar-rail[data-collapsed='true'] {
+    flex: 0 0 4.5rem;
+    width: 4.5rem;
+  }
+}
+
+/* Hover/focus flyout tooltip for collapsed rail icons. */
+.rail-tip {
+  position: absolute;
+  left: calc(100% + 0.625rem);
+  top: 50%;
+  transform: translateY(-50%) translateX(-4px);
+  white-space: nowrap;
+  padding: 0.35rem 0.65rem;
+  border-radius: var(--radius-md, 0.5rem);
+  background: var(--bg-tooltip, var(--bg-card));
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-lg);
+  font-size: 11px;
+  font-weight: 600;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity var(--dur-fast) var(--ease-out-quint),
+              transform var(--dur-fast) var(--ease-out-quint);
+  z-index: 50;
+}
+.rail-item:hover .rail-tip,
+.rail-item:focus-visible .rail-tip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(-50%) translateX(0);
+}
+
 /* ==========================================================================
    3. NAVIGATION PRIMITIVES
    ========================================================================== */

@@ -191,7 +191,7 @@ export const CommandCenterPage: React.FC = () => {
       {/* ================= EXECUTIVE KPI CARDS ================================== */}
       <section className="flex flex-col gap-4">
         <SectionHeader
-          eyebrow="Phase 8B"
+          eyebrow="Governance Overview"
           title="Executive Governance Indicators"
           subtitle="The eight measures that determine whether enterprise AI is under control."
           icon="◎"
@@ -275,7 +275,7 @@ export const CommandCenterPage: React.FC = () => {
       {/* ================= GOVERNANCE JOURNEY (8C) ============================== */}
       <section className="flex flex-col gap-4">
         <SectionHeader
-          eyebrow="Phase 8C"
+          eyebrow="Lifecycle Stages"
           title="Governance Journey"
           subtitle="Every AI asset travels the same eight-stage path from registration to continuous monitoring."
           icon="🛤️"
@@ -408,7 +408,7 @@ export const CommandCenterPage: React.FC = () => {
       {/* ================= AI PORTFOLIO SUMMARY (8F) ============================ */}
       <section className="flex flex-col gap-4">
         <SectionHeader
-          eyebrow="Phase 8F"
+          eyebrow="Portfolio Composition"
           title="AI Portfolio Summary"
           subtitle="What kinds of artificial intelligence the enterprise actually runs."
           icon="🧭"
@@ -428,9 +428,9 @@ export const CommandCenterPage: React.FC = () => {
       {!isExecutive && (
         <section className="flex flex-col gap-4">
           <SectionHeader
-            eyebrow="Phase 8A"
-            title="Governance Domains"
-            subtitle="OMG is organised around six governance questions, not a list of features."
+            eyebrow="Workspace Navigation"
+            title="Governance Workspaces"
+            subtitle="OMG is organised around ten business-capability workspaces, not a list of features."
             icon="🗺️"
           />
 

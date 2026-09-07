@@ -3,11 +3,11 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { FUTURE_MODULES } from '../config/navigation';
 
 /**
- * Phase 8G — Future module architecture preparation.
+ * Future governance architecture preparation.
  *
- * Routes, navigation entries and RBAC keys exist now so later phases can land
- * without re-architecting navigation. No functional implementation is intended
- * at this stage.
+ * Routes, navigation entries and RBAC keys exist now so these capabilities can
+ * land without re-architecting navigation. No functional implementation is
+ * intended at this stage.
  */
 export const FutureModulePage: React.FC = () => {
   const location = useLocation();
@@ -42,7 +42,7 @@ export const FutureModulePage: React.FC = () => {
             data-noglass
             className="inline-flex items-center gap-2 w-fit px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-[0.12em] bg-[var(--bg-badge)] border border-[var(--border-color)] text-[var(--text-secondary)]"
           >
-            Architected in Phase 8 · Delivered in {module.phase}
+            On the Governance Roadmap
           </span>
 
           <div className="flex items-center gap-3">
@@ -60,8 +60,8 @@ export const FutureModulePage: React.FC = () => {
 
           <p className="text-[12.5px] text-[var(--text-muted)] leading-relaxed">
             The navigation slot, route and role-based access key for this module are already
-            registered in the governance architecture. When {module.phase} lands, the capability
-            appears here without any change to how OMG is navigated or authorised.
+            registered in the governance architecture. When this capability ships, it appears
+            here without any change to how OMG is navigated or authorised.
           </p>
         </div>
       </section>
@@ -70,7 +70,7 @@ export const FutureModulePage: React.FC = () => {
         <div>
           <h2 className="text-base font-bold text-[var(--text-primary)]">Planned Capabilities</h2>
           <p className="text-[12px] text-[var(--text-secondary)] mt-1">
-            Scope committed for {module.phase}.
+            Scope committed for this workspace.
           </p>
         </div>
 
@@ -115,7 +115,7 @@ export const FutureModulePage: React.FC = () => {
                   {other.icon} {other.label}
                 </span>
                 <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-[var(--bg-badge)] border border-[var(--border-subtle)] text-[var(--text-muted)]">
-                  {other.phase}
+                  Planned
                 </span>
               </div>
               <p className="text-[11px] text-[var(--text-muted)] mt-1.5 leading-relaxed">

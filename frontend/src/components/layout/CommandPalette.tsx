@@ -25,9 +25,12 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ open, onClose })
       .map(entry => {
         const { module } = entry;
         const label = module.label.toLowerCase();
+        const path = module.path.toLowerCase();
         let score = 0;
         if (label.startsWith(q)) score += 100;
         else if (label.includes(q)) score += 60;
+        if (path === q || path === `/${q}`) score += 90;
+        else if (path.includes(q.replace(/\s+/g, '-'))) score += 35;
         if (module.description.toLowerCase().includes(q)) score += 20;
         if ((module.keywords || []).some(k => k.includes(q))) score += 40;
         if (entry.domainLabel.toLowerCase().includes(q)) score += 15;

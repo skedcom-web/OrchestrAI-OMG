@@ -117,7 +117,7 @@ export const GovernanceMaturityPage: React.FC = () => {
         ))}
       </div>
 
-      <SectionHeader eyebrow="Release 11" title="Improvement Recommendations" subtitle="The lowest-scoring domain first." icon="💡" />
+      <SectionHeader eyebrow="Improvement Priorities" title="Improvement Recommendations" subtitle="The lowest-scoring domain first." icon="💡" />
       <Card className="!p-5 flex flex-col gap-2">
         {(() => {
           const weakest = [...results].sort((a, b) => a.level - b.level)[0];

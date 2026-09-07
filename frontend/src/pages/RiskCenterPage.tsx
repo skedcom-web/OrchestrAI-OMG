@@ -87,7 +87,7 @@ export const RiskCenterPage: React.FC = () => {
       <div>
         <h1 className="text-3xl font-extrabold text-[var(--text-primary)]">Risk Center Assessment Wizard</h1>
         <p className="text-sm text-[var(--text-secondary)] mt-1">
-          Phase 2 Guided 6-Step Model & Asset Risk Classification Engine
+          Guided 6-Step Model & Asset Risk Classification Engine
         </p>
       </div>
 

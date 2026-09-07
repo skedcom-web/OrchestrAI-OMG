@@ -20,7 +20,7 @@ export const DecisionIntelligencePage: React.FC = () => {
       <div>
         <h1 className="text-3xl font-extrabold text-[var(--text-primary)]">Decision Intelligence Center</h1>
         <p className="text-sm text-[var(--text-secondary)] mt-1">
-          Phase 4 Executive Decision Authority • Can this AI asset move forward today?
+          Executive Decision Authority • Can this AI asset move forward today?
         </p>
       </div>
 

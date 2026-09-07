@@ -85,7 +85,6 @@ export const TenantSettingsPage: React.FC = () => {
   const tenantFacts = [
     { label: 'Tenant', value: 'Enterprise Banking' },
     { label: 'Governance Framework', value: 'ODF v1 · RBI Aligned' },
-    { label: 'Platform Phase', value: 'Phase 8 — Governance OS' },
     { label: 'Governed Assets', value: String(metrics.totalAssets) },
     { label: 'Governance Domains', value: String(NAV_DOMAINS.length) },
     { label: 'Audit Retention', value: 'Immutable · Day 1' },
@@ -359,8 +358,8 @@ export const TenantSettingsPage: React.FC = () => {
         </div>
 
         <p className="text-[11px] text-[var(--text-muted)] leading-relaxed">
-          Thresholds are fixed for this tenant in Phase 8. Configurable per-tenant policy thresholds
-          arrive with Policy Management in Phase 10.
+          Thresholds are fixed for this tenant today. Configurable per-tenant policy thresholds
+          are on the governance roadmap, alongside full Policy Management.
         </p>
       </section>
 
@@ -368,7 +367,7 @@ export const TenantSettingsPage: React.FC = () => {
       <section className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-5 flex flex-col gap-4">
         <SectionHeader
           title="Platform Roadmap"
-          subtitle="Modules architected in Phase 8 and delivered in subsequent phases."
+          subtitle="Governance architecture already registered in the platform, ahead of full delivery."
           icon="🧭"
         />
 

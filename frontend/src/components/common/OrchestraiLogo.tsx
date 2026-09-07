@@ -3,9 +3,11 @@ import React from 'react';
 interface LogoProps {
   size?: 'sm' | 'md' | 'lg';
   showTagline?: boolean;
+  /** Render only the orbital-node mark, no wordmark — for icon-only surfaces like a collapsed sidebar rail. */
+  iconOnly?: boolean;
 }
 
-export const OrchestraiLogo: React.FC<LogoProps> = ({ size = 'md', showTagline = true }) => {
+export const OrchestraiLogo: React.FC<LogoProps> = ({ size = 'md', showTagline = true, iconOnly = false }) => {
   const dimensions = {
     sm: { icon: 28, text: 'text-lg', tagline: 'text-[9px]' },
     md: { icon: 36, text: 'text-xl', tagline: 'text-[10px]' },
@@ -13,7 +15,7 @@ export const OrchestraiLogo: React.FC<LogoProps> = ({ size = 'md', showTagline =
   }[size];
 
   return (
-    <div className="flex items-center gap-3 select-none">
+    <div className={`flex items-center select-none ${iconOnly ? '' : 'gap-3'}`}>
       {/* SVG Icon matching OrchestrAI orbital nodes design */}
       <div className="relative flex items-center justify-center shrink-0">
         <svg
@@ -78,6 +80,7 @@ export const OrchestraiLogo: React.FC<LogoProps> = ({ size = 'md', showTagline =
       </div>
 
       {/* Brand Text */}
+      {!iconOnly && (
       <div className="flex flex-col">
         <div className="flex items-center gap-2">
           <span className={`font-bold tracking-tight ${dimensions.text}`} style={{ color: 'var(--text-primary)' }}>
@@ -93,6 +96,7 @@ export const OrchestraiLogo: React.FC<LogoProps> = ({ size = 'md', showTagline =
           </span>
         )}
       </div>
+      )}
     </div>
   );
 };

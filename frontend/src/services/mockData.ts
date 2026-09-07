@@ -133,7 +133,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       '/governance-monitoring', '/governance-alerts', '/review-calendar', '/corrective-actions', '/governance-trends',
       '/users', '/audit-logs',
       // Phase 8 — Governance Operating System
-      '/asset-lifecycle', '/rbac', '/tenant-settings', '/command-center',
+      '/asset-lifecycle', '/rbac', '/tenant-settings', '/release-notes', '/command-center',
       // Phase 9 — Executive Governance & Policy Governance
       '/executive-hub', '/governance-scorecards', '/executive-heatmaps', '/governance-insights',
       '/board-reporting', '/policy-management', '/policy-mapping', '/policy-violations',
@@ -167,7 +167,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       '/governance-monitoring', '/governance-alerts', '/review-calendar', '/corrective-actions', '/governance-trends',
       '/audit-logs',
       // Phase 8 — Governance Operating System
-      '/asset-lifecycle', '/tenant-settings', '/command-center',
+      '/asset-lifecycle', '/tenant-settings', '/release-notes', '/command-center',
       // Phase 9 — Executive Governance & Policy Governance
       '/executive-hub', '/governance-scorecards', '/executive-heatmaps', '/governance-insights',
       '/board-reporting', '/policy-management', '/policy-mapping', '/policy-violations',

@@ -32,7 +32,7 @@ export const GovernanceOutcomesPage: React.FC = () => {
         </p>
       </div>
 
-      <SectionHeader eyebrow="Release 11" title="Executive View" subtitle="Outcomes achieved, not tasks performed." icon="🎯" />
+      <SectionHeader eyebrow="Outcomes Summary" title="Executive View" subtitle="Outcomes achieved, not tasks performed." icon="🎯" />
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <KpiCard label="Governance Risks Prevented" value={outcomes.governanceRisksPrevented} icon="🛡️" tone="success" />
         <KpiCard label="Governance Drift Events Resolved" value={outcomes.governanceDriftEventsResolved} icon="📉" tone="success" />

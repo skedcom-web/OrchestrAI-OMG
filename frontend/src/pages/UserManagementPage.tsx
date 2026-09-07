@@ -69,7 +69,7 @@ export const UserManagementPage: React.FC = () => {
         <div>
           <h1 className="text-3xl font-extrabold text-[var(--text-primary)]">User Management & RBAC Directory</h1>
           <p className="text-sm text-[var(--text-secondary)] mt-1">
-            Phase 2.5 Governance Identity Layer • 7 Standardized Governance Roles
+            Governance Identity Layer • 7 Standardized Governance Roles
           </p>
         </div>
         <Button
@@ -179,7 +179,7 @@ export const UserManagementPage: React.FC = () => {
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           title={editingUser.id ? 'Edit Governance User Role' : 'Create Governance User'}
-          subtitle="Phase 2.5 Role-Based Access Control Setup"
+          subtitle="Role-Based Access Control Setup"
           maxWidth="md"
         >
           <form onSubmit={handleSave} className="flex flex-col gap-4 py-2">

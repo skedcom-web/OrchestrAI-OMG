@@ -62,7 +62,7 @@ export const CrossFrameworkMappingPage: React.FC = () => {
         tone="success"
       />
 
-      <SectionHeader eyebrow="Release 12" title="Reuse Detail" subtitle="Each record, and every framework it satisfies." icon="🧩" />
+      <SectionHeader eyebrow="Control Reuse" title="Reuse Detail" subtitle="Each record, and every framework it satisfies." icon="🧩" />
       <div className="flex flex-col gap-3">
         {results.map(r => (
           <Card key={r.evidenceId} className="!p-4 flex flex-col gap-2">
