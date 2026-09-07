@@ -140,7 +140,7 @@ export const DecisionPackageModal: React.FC<DecisionPackageModalProps> = ({
 
         {/* Action Buttons */}
         <div className="flex items-center justify-between pt-4 border-t border-[var(--border-color)]">
-          <span className="text-[10px] text-[var(--text-muted)]">Package Generated: {now} | ODF Blueprint v1.0</span>
+          <span className="text-[10px] text-[var(--text-muted)]">Package Generated: {now} | ODF-Aligned Governance Package</span>
           <div className="flex items-center gap-3">
             <Button variant="ghost" onClick={onClose}>Close</Button>
             <Button onClick={handlePrint} icon={<span>🖨️</span>}>Print / Export PDF Briefing</Button>

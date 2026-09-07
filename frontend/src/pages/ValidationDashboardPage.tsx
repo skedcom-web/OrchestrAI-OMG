@@ -45,7 +45,7 @@ export const ValidationDashboardPage: React.FC = () => {
         <MetricCard
           title="Governance Evidence Count"
           value={metrics.totalEvidenceCount}
-          subtitle="Aligned with ODF Blueprint v1"
+          subtitle="Aligned with ODF v1.0"
           icon="📄"
         />
       </div>

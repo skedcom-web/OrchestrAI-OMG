@@ -73,7 +73,7 @@ export const EvidenceCenterPage: React.FC = () => {
         <div>
           <h1 className="text-3xl font-extrabold text-[var(--text-primary)]">Evidence Center</h1>
           <p className="text-sm text-[var(--text-secondary)] mt-1">
-            Central Repository for Governance Evidence • Aligned with OrchestrAI Governance Blueprint v1
+            Central Repository for Governance Evidence • Aligned with the OMG Governance Standard (ODF v1.0)
           </p>
         </div>
         <Button
