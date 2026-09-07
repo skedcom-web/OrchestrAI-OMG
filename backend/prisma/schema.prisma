@@ -292,6 +292,8 @@ model AIAsset {
   governanceFindings    GovernanceFinding[]
   recommendedActions    RecommendedAction[]
   governanceDrifts      GovernanceDrift[]
+  governanceAssessmentRecords GovernanceAssessmentRecord[]
+  consensusAssessments        ConsensusAssessment[]
 
   @@map("ai_assets")
 }
@@ -1443,6 +1445,155 @@ model GovernanceMaturitySnapshot {
   recordedAt DateTime                 @default(now())
 
   @@map("governance_maturity_snapshots")
+}
+
+/// Governance Assessment Calibration & Consistency Framework (GACF).
+/// Initiative 2 — Standardized Scoring Categories. Ten generic governance
+/// categories every assessment is scored against, regardless of which
+/// playbook (Effectiveness/Maturity/ROI/Benchmarking/Regulatory Readiness)
+/// the assessment belongs to — the standardization itself is what reduces
+/// assessor-to-assessor variance, per the blueprint's own stated objective.
+enum GovernanceAssessmentCategory {
+  OWNERSHIP
+  ACCOUNTABILITY
+  RISK_MANAGEMENT
+  CONTROLS
+  MONITORING
+  EVIDENCE_MANAGEMENT
+  AUDITABILITY
+  ESCALATION
+  CHANGE_GOVERNANCE
+  REGULATORY_ALIGNMENT
+}
+
+/// Initiative 1 — which playbook this assessment was conducted under.
+enum GovernanceAssessmentType {
+  EFFECTIVENESS
+  MATURITY
+  ROI
+  BENCHMARKING
+  REGULATORY_READINESS
+}
+
+/// GACF's one genuinely new persisted entity — see ARCHITECTURAL NOTE in
+/// governanceAssessmentEngine.ts for why Initiatives 1/2/3/5/6 needed no
+/// schema at all (they're static reference content) while Initiative 4
+/// (Variance & Reliability Analysis) is meaningless without real recorded
+/// assessments to compare. Each category is scored 1-5 on the SAME scale
+/// governanceMaturityEngine.ts already established (Reactive..Optimized) —
+/// one scale platform-wide, not a second one invented for this release.
+model GovernanceAssessmentRecord {
+  id             String                   @id @default(uuid())
+  assetId        String
+  asset          AIAsset                  @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  assessmentType GovernanceAssessmentType
+  assessorName   String
+  assessorRole   String
+  /// Record<GovernanceAssessmentCategory, 1|2|3|4|5>, stored as JSON rather
+  /// than ten columns since the category set is fixed platform config, not
+  /// per-tenant schema.
+  categoryScores Json
+  /// Fixed from Int — the average of ten 1-5 category scores is frequently
+  /// fractional (e.g. 3.2), and an Int column was silently truncating every
+  /// non-whole overall score to a whole number ever since Release 13
+  /// shipped, corrupting variance/consensus statistics computed from it.
+  /// Existing whole-number values remain valid under Float.
+  overallScore   Float
+  evidenceNotes  String                   @db.Text
+  createdAt      DateTime                 @default(now())
+
+  /// GACF Phase 2, Initiative 2 — set only when this individual score was
+  /// submitted as one participant's contribution to a ConsensusAssessment
+  /// round. Null for every ordinary solo assessment (the overwhelming
+  /// majority) — fully backward compatible, no existing record needs this.
+  consensusAssessmentId String?
+  consensusAssessment   ConsensusAssessment? @relation(fields: [consensusAssessmentId], references: [id], onDelete: SetNull)
+
+  /// GACF Phase 2, Initiative 3 — a solo assessment has at most one linked
+  /// confidence rating. Modeled as its own table (per the blueprint's data
+  /// model) rather than columns here, so existing records/reports are
+  /// untouched when confidence is absent.
+  confidenceAssessment ConfidenceAssessment?
+
+  @@map("governance_assessment_records")
+}
+
+/// GACF Phase 2, Initiative 1 — Assessor Certification. A calibration
+/// accuracy score against the existing Calibration Library's benchmark
+/// scenarios (see governanceAssessorCertificationEngine.ts for the
+/// methodology). One row per certification attempt; the most recent row for
+/// an assessor is their current status. Nothing here gates or blocks any
+/// workflow — purely informational, consistent with every other
+/// advisory-only scoring surface in this codebase.
+enum AssessorCertificationStatus {
+  CERTIFIED_ASSESSOR
+  PROVISIONALLY_CERTIFIED
+  NEEDS_RECALIBRATION
+}
+
+model AssessorCertification {
+  id                  String                       @id @default(uuid())
+  assessorName        String
+  assessorRole        String
+  certificationStatus AssessorCertificationStatus
+  calibrationAccuracy Int
+  scenariosAttempted  Int
+  certificationDate   DateTime                     @default(now())
+  expiryDate          DateTime
+
+  @@map("assessor_certifications")
+}
+
+/// GACF Phase 2, Initiative 2 — Multi-Assessor Consensus Assessment. The
+/// round itself; each participant's individual score is a normal
+/// GovernanceAssessmentRecord tagged with this round's id (see the back-
+/// relation above) — this table only holds the round's own state plus the
+/// aggregate stats computed once the round closes.
+enum ConsensusAssessmentStatus {
+  OPEN
+  CLOSED
+}
+
+model ConsensusAssessment {
+  id             String                     @id @default(uuid())
+  assetId        String
+  asset          AIAsset                    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  assessmentType GovernanceAssessmentType
+  initiatedBy    String
+  /// [{ name, role, submitted }] — OMG has no standalone user-account
+  /// directory beyond the 7 governance personas, so participants are
+  /// recorded by name/role rather than a foreign key.
+  participants   Json
+  status         ConsensusAssessmentStatus @default(OPEN)
+  consensusScore Float?
+  varianceScore  Float?
+  createdAt      DateTime                   @default(now())
+  closedAt       DateTime?
+
+  submittedScores GovernanceAssessmentRecord[]
+
+  @@map("consensus_assessments")
+}
+
+/// GACF Phase 2, Initiative 3 — Confidence Scoring. Kept as its own table
+/// (per the blueprint's data model) rather than columns on
+/// GovernanceAssessmentRecord, so it is purely additive — every assessment
+/// recorded before this shipped simply has no row here.
+enum ConfidenceLevel {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+model ConfidenceAssessment {
+  id                 String                     @id @default(uuid())
+  assessmentRecordId String                     @unique
+  assessmentRecord   GovernanceAssessmentRecord @relation(fields: [assessmentRecordId], references: [id], onDelete: Cascade)
+  confidenceLevel    ConfidenceLevel
+  confidenceReason   String                     @db.Text
+  createdAt          DateTime                   @default(now())
+
+  @@map("confidence_assessments")
 }
 
 model AuditLog {

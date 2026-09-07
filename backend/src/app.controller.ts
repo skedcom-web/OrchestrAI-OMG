@@ -961,6 +961,133 @@ export class AppController {
     return this.prisma.governanceMaturitySnapshot.create({ data: body });
   }
 
+  // --- GOVERNANCE ASSESSMENT CALIBRATION & CONSISTENCY FRAMEWORK (GACF) ---
+  // The only new persisted entity across all six GACF initiatives — see the
+  // schema comment on GovernanceAssessmentRecord. Playbooks/Scoring
+  // Templates/Calibration Library/Prompt Library/Academy are static
+  // reference content shipped as frontend config, not database rows.
+  @Get('governance-assessment-records')
+  @Roles(
+    'SUPER_ADMIN',
+    'GOVERNANCE_ADMIN',
+    'RISK_OFFICER',
+    'BUSINESS_OWNER',
+    'VALIDATOR',
+    'AUDITOR',
+    'VIEWER',
+  )
+  async getGovernanceAssessmentRecords(@Query('assetId') assetId?: string) {
+    return this.prisma.governanceAssessmentRecord.findMany({
+      where: assetId ? { assetId } : undefined,
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  @Post('governance-assessment-records')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'VALIDATOR')
+  async createGovernanceAssessmentRecord(@Body() body: any) {
+    return this.prisma.governanceAssessmentRecord.create({ data: body });
+  }
+
+  // --- GACF PHASE 2 ("Release 13 Extension") — Assessor Certification ---
+  // Certification attempts against the existing Calibration Library's
+  // benchmark scenarios. Read is platform-wide (same as the base assessment
+  // records); attempting certification is limited to the roles who record
+  // real assessments plus Auditor, per the blueprint's RBAC list for this
+  // capability.
+  @Get('assessor-certifications')
+  @Roles(
+    'SUPER_ADMIN',
+    'GOVERNANCE_ADMIN',
+    'RISK_OFFICER',
+    'BUSINESS_OWNER',
+    'VALIDATOR',
+    'AUDITOR',
+    'VIEWER',
+  )
+  async getAssessorCertifications() {
+    return this.prisma.assessorCertification.findMany({ orderBy: { certificationDate: 'desc' } });
+  }
+
+  @Post('assessor-certifications')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'VALIDATOR', 'AUDITOR')
+  async createAssessorCertification(@Body() body: any) {
+    return this.prisma.assessorCertification.create({ data: body });
+  }
+
+  // --- GACF PHASE 2 — Multi-Assessor Consensus Assessment ---
+  // A round is OPEN while participants submit independently (each submission
+  // is a normal governance-assessment-records POST tagged with the round's
+  // id), then CLOSED once every participant has submitted or an admin closes
+  // it early, at which point aggregate stats are computed and frozen here.
+  @Get('consensus-assessments')
+  @Roles(
+    'SUPER_ADMIN',
+    'GOVERNANCE_ADMIN',
+    'RISK_OFFICER',
+    'BUSINESS_OWNER',
+    'VALIDATOR',
+    'AUDITOR',
+    'VIEWER',
+  )
+  async getConsensusAssessments() {
+    return this.prisma.consensusAssessment.findMany({
+      include: { submittedScores: true },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  @Post('consensus-assessments')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'VALIDATOR')
+  async createConsensusAssessment(@Body() body: any) {
+    return this.prisma.consensusAssessment.create({ data: body });
+  }
+
+  // Marks one participant's independent submission, persisting the
+  // updated participants JSON — called on every submission, closing or
+  // not, so "who has submitted" survives a reload rather than living only
+  // in the submitting browser's local cache until the round happens to close.
+  @Patch('consensus-assessments/:id/participants')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'VALIDATOR')
+  async updateConsensusParticipants(@Param('id') id: string, @Body() body: { participants: unknown }) {
+    return this.prisma.consensusAssessment.update({
+      where: { id },
+      data: { participants: body.participants as any },
+    });
+  }
+
+  @Patch('consensus-assessments/:id/close')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'VALIDATOR')
+  async closeConsensusAssessment(@Param('id') id: string, @Body() body: { consensusScore: number; varianceScore: number }) {
+    return this.prisma.consensusAssessment.update({
+      where: { id },
+      data: { status: 'CLOSED', closedAt: new Date(), consensusScore: body.consensusScore, varianceScore: body.varianceScore },
+    });
+  }
+
+  // --- GACF PHASE 2 — Confidence Scoring ---
+  // One row per governance-assessment-record, linked 1:1. Additive only —
+  // absent entirely for every assessment recorded before this shipped.
+  @Get('confidence-assessments')
+  @Roles(
+    'SUPER_ADMIN',
+    'GOVERNANCE_ADMIN',
+    'RISK_OFFICER',
+    'BUSINESS_OWNER',
+    'VALIDATOR',
+    'AUDITOR',
+    'VIEWER',
+  )
+  async getConfidenceAssessments() {
+    return this.prisma.confidenceAssessment.findMany({ orderBy: { createdAt: 'desc' } });
+  }
+
+  @Post('confidence-assessments')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'VALIDATOR')
+  async createConfidenceAssessment(@Body() body: any) {
+    return this.prisma.confidenceAssessment.create({ data: body });
+  }
+
   // --- USERS ENDPOINTS ---
   // The user directory is administrative data; restricted to administrators.
   @Get('users')

@@ -267,6 +267,124 @@ export interface GovernanceMaturitySnapshot {
   recordedAt: string;
 }
 
+/**
+ * Governance Assessment Calibration & Consistency Framework (GACF).
+ * Ten standardized categories every assessment is scored against — the
+ * standardization is the point (reduces assessor-to-assessor variance),
+ * not a per-playbook rubric. Reuses GovernanceMaturityLevel's existing 1-5
+ * Reactive..Optimized scale rather than inventing a second one.
+ */
+export type GovernanceAssessmentCategory =
+  | 'Ownership'
+  | 'Accountability'
+  | 'Risk Management'
+  | 'Controls'
+  | 'Monitoring'
+  | 'Evidence Management'
+  | 'Auditability'
+  | 'Escalation'
+  | 'Change Governance'
+  | 'Regulatory Alignment';
+
+export const GOVERNANCE_ASSESSMENT_CATEGORIES: GovernanceAssessmentCategory[] = [
+  'Ownership',
+  'Accountability',
+  'Risk Management',
+  'Controls',
+  'Monitoring',
+  'Evidence Management',
+  'Auditability',
+  'Escalation',
+  'Change Governance',
+  'Regulatory Alignment',
+];
+
+export type GovernanceAssessmentType = 'Effectiveness' | 'Maturity' | 'ROI' | 'Benchmarking' | 'Regulatory Readiness';
+
+export type GovernanceAssessmentCategoryScores = Partial<Record<GovernanceAssessmentCategory, GovernanceMaturityLevel>>;
+
+/** The one genuinely new persisted entity GACF introduces — see the schema
+ * comment on the backend model for why. Append-only, like every other
+ * assessment/decision record in this codebase. */
+export interface GovernanceAssessmentRecord {
+  id: string;
+  assetId: string;
+  assetName: string;
+  assessmentType: GovernanceAssessmentType;
+  assessorName: string;
+  assessorRole: string;
+  categoryScores: GovernanceAssessmentCategoryScores;
+  overallScore: number;
+  evidenceNotes: string;
+  createdAt: string;
+  /** GACF Phase 2, Initiative 2 — set when this score was one participant's
+   * independent contribution to a ConsensusAssessment round. Undefined for
+   * every ordinary solo assessment. */
+  consensusAssessmentId?: string;
+}
+
+/**
+ * GACF Phase 2 ("Release 13 Extension") — Assessment Consistency & Decision
+ * Quality. Four enhancements on top of the Release 13 GACF foundation
+ * above: Assessor Certification, Multi-Assessor Consensus, Confidence
+ * Scoring, and a Benchmark Recommendation Engine. All additive — nothing
+ * here changes an existing GovernanceAssessmentRecord field or behavior.
+ */
+
+/** Initiative 1 — Assessor Certification. Calibration accuracy is measured
+ * against the existing Calibration Library's benchmark scenarios (see
+ * governanceAssessorCertificationEngine.ts), never against a live asset. */
+export type AssessorCertificationStatus = 'Certified Assessor' | 'Provisionally Certified' | 'Needs Recalibration';
+
+export interface AssessorCertification {
+  id: string;
+  assessorName: string;
+  assessorRole: string;
+  certificationStatus: AssessorCertificationStatus;
+  calibrationAccuracy: number; // 0-100
+  scenariosAttempted: number;
+  certificationDate: string;
+  expiryDate: string;
+}
+
+/** Initiative 2 — Multi-Assessor Consensus Assessment. Individual scores are
+ * ordinary GovernanceAssessmentRecord rows tagged with this round's id;
+ * this entity holds only the round's own state and, once closed, the
+ * aggregate stats. */
+export type ConsensusAssessmentStatus = 'Open' | 'Closed';
+
+export interface ConsensusParticipant {
+  name: string;
+  role: string;
+  submitted: boolean;
+}
+
+export interface ConsensusAssessment {
+  id: string;
+  assetId: string;
+  assetName: string;
+  assessmentType: GovernanceAssessmentType;
+  initiatedBy: string;
+  participants: ConsensusParticipant[];
+  status: ConsensusAssessmentStatus;
+  consensusScore?: number;
+  varianceScore?: number;
+  createdAt: string;
+  closedAt?: string;
+}
+
+/** Initiative 3 — Confidence Scoring. A separate, optional 1:1 record so
+ * every assessment recorded before this shipped is untouched. */
+export type ConfidenceLevel = 'High' | 'Medium' | 'Low';
+
+export interface ConfidenceAssessment {
+  id: string;
+  assessmentRecordId: string;
+  confidenceLevel: ConfidenceLevel;
+  confidenceReason: string;
+  createdAt: string;
+}
+
 /** Capability 5 — Governance Reauthorization Record. */
 export interface GovernanceReauthorizationRecord {
   id: string;

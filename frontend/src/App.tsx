@@ -115,6 +115,16 @@ import { ComplianceImpactAnalysisPage } from './pages/ComplianceImpactAnalysisPa
 import { RegulatoryChangeReadinessPage } from './pages/RegulatoryChangeReadinessPage';
 import { AuditReadinessIntelligencePage } from './pages/AuditReadinessIntelligencePage';
 
+// GACF Pages — Governance Assessment Calibration & Consistency Framework
+import { AssessmentCenterPage } from './pages/AssessmentCenterPage';
+import { AssessmentPlaybooksPage } from './pages/AssessmentPlaybooksPage';
+import { CalibrationLibraryPage } from './pages/CalibrationLibraryPage';
+import { VarianceAnalysisPage } from './pages/VarianceAnalysisPage';
+import { AssessmentAcademyPage } from './pages/AssessmentAcademyPage';
+import { AssessorCertificationPage } from './pages/AssessorCertificationPage';
+import { ConsensusAssessmentsPage } from './pages/ConsensusAssessmentsPage';
+import { BenchmarkRecommendationsPage } from './pages/BenchmarkRecommendationsPage';
+
 /** Every governed route declared once, guarded by the same RBAC boundary. */
 const GOVERNED_ROUTES: { path: string; element: React.ReactNode }[] = [
   // Command surfaces — OMG Overview is the landing page, then the operational view.
@@ -187,6 +197,18 @@ const GOVERNED_ROUTES: { path: string; element: React.ReactNode }[] = [
   { path: '/compliance-impact-analysis', element: <ComplianceImpactAnalysisPage /> },
   { path: '/regulatory-change-readiness', element: <RegulatoryChangeReadinessPage /> },
   { path: '/audit-readiness-intelligence', element: <AuditReadinessIntelligencePage /> },
+
+  // Domain — Governance Assessment Calibration & Consistency Framework (GACF)
+  { path: '/assessment-center', element: <AssessmentCenterPage /> },
+  { path: '/assessment-playbooks', element: <AssessmentPlaybooksPage /> },
+  { path: '/calibration-library', element: <CalibrationLibraryPage /> },
+  { path: '/variance-analysis', element: <VarianceAnalysisPage /> },
+  { path: '/assessment-academy', element: <AssessmentAcademyPage /> },
+
+  // GACF Phase 2 ("Release 13 Extension") — Assessment Consistency & Decision Quality
+  { path: '/assessor-certification', element: <AssessorCertificationPage /> },
+  { path: '/consensus-assessments', element: <ConsensusAssessmentsPage /> },
+  { path: '/benchmark-recommendations', element: <BenchmarkRecommendationsPage /> },
 
   // Domain 3 — Decision Governance
   { path: '/decision-workbench-v4', element: <DecisionWorkbenchPageV4 /> },

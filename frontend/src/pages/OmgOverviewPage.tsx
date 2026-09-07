@@ -396,7 +396,7 @@ export const OmgOverviewPage: React.FC = () => {
         <SectionHeader
           eyebrow="Section 7"
           title="Key Platform Capabilities"
-          subtitle="Twenty-nine capabilities, each a working module you can open right now."
+          subtitle="Thirty-seven capabilities, each a working module you can open right now."
           icon="🧩"
         />
 

@@ -8,13 +8,18 @@
  */
 
 import type {
+  AssessorCertificationStatus,
   AssetType,
   CompliancePackStatus,
+  ConfidenceLevel,
+  ConsensusAssessmentStatus,
   DecisionOutcome,
   DecisionType,
   DriftCategory,
   DriftStatus,
   EvidenceRecordStatus,
+  GovernanceAssessmentCategory,
+  GovernanceAssessmentType,
   GovernanceMaturityDomain,
   EvidenceRecordType,
   FindingSeverity,
@@ -258,6 +263,46 @@ const GOVERNANCE_MATURITY_DOMAIN: Record<GovernanceMaturityDomain, string> = {
   'Continuous Assurance': 'CONTINUOUS_ASSURANCE',
 };
 
+/** Governance Assessment Calibration & Consistency Framework (GACF). */
+const GOVERNANCE_ASSESSMENT_CATEGORY: Record<GovernanceAssessmentCategory, string> = {
+  'Ownership': 'OWNERSHIP',
+  'Accountability': 'ACCOUNTABILITY',
+  'Risk Management': 'RISK_MANAGEMENT',
+  'Controls': 'CONTROLS',
+  'Monitoring': 'MONITORING',
+  'Evidence Management': 'EVIDENCE_MANAGEMENT',
+  'Auditability': 'AUDITABILITY',
+  'Escalation': 'ESCALATION',
+  'Change Governance': 'CHANGE_GOVERNANCE',
+  'Regulatory Alignment': 'REGULATORY_ALIGNMENT',
+};
+
+const GOVERNANCE_ASSESSMENT_TYPE: Record<GovernanceAssessmentType, string> = {
+  'Effectiveness': 'EFFECTIVENESS',
+  'Maturity': 'MATURITY',
+  'ROI': 'ROI',
+  'Benchmarking': 'BENCHMARKING',
+  'Regulatory Readiness': 'REGULATORY_READINESS',
+};
+
+/** GACF Phase 2 ("Release 13 Extension"). */
+const ASSESSOR_CERTIFICATION_STATUS: Record<AssessorCertificationStatus, string> = {
+  'Certified Assessor': 'CERTIFIED_ASSESSOR',
+  'Provisionally Certified': 'PROVISIONALLY_CERTIFIED',
+  'Needs Recalibration': 'NEEDS_RECALIBRATION',
+};
+
+const CONSENSUS_ASSESSMENT_STATUS: Record<ConsensusAssessmentStatus, string> = {
+  'Open': 'OPEN',
+  'Closed': 'CLOSED',
+};
+
+const CONFIDENCE_LEVEL: Record<ConfidenceLevel, string> = {
+  'High': 'HIGH',
+  'Medium': 'MEDIUM',
+  'Low': 'LOW',
+};
+
 export const enumMaps = {
   assetType: { toBackend: toBackend(ASSET_TYPE), toFrontend: toFrontend(ASSET_TYPE) },
   riskLevel: { toBackend: toBackend(RISK_LEVEL), toFrontend: toFrontend(RISK_LEVEL) },
@@ -294,4 +339,9 @@ export const enumMaps = {
   driftCategory: { toBackend: toBackend(DRIFT_CATEGORY), toFrontend: toFrontend(DRIFT_CATEGORY) },
   driftStatus: { toBackend: toBackend(DRIFT_STATUS), toFrontend: toFrontend(DRIFT_STATUS) },
   governanceMaturityDomain: { toBackend: toBackend(GOVERNANCE_MATURITY_DOMAIN), toFrontend: toFrontend(GOVERNANCE_MATURITY_DOMAIN) },
+  governanceAssessmentCategory: { toBackend: toBackend(GOVERNANCE_ASSESSMENT_CATEGORY), toFrontend: toFrontend(GOVERNANCE_ASSESSMENT_CATEGORY) },
+  governanceAssessmentType: { toBackend: toBackend(GOVERNANCE_ASSESSMENT_TYPE), toFrontend: toFrontend(GOVERNANCE_ASSESSMENT_TYPE) },
+  assessorCertificationStatus: { toBackend: toBackend(ASSESSOR_CERTIFICATION_STATUS), toFrontend: toFrontend(ASSESSOR_CERTIFICATION_STATUS) },
+  consensusAssessmentStatus: { toBackend: toBackend(CONSENSUS_ASSESSMENT_STATUS), toFrontend: toFrontend(CONSENSUS_ASSESSMENT_STATUS) },
+  confidenceLevel: { toBackend: toBackend(CONFIDENCE_LEVEL), toFrontend: toFrontend(CONFIDENCE_LEVEL) },
 };

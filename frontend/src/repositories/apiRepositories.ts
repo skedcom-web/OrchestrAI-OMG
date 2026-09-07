@@ -13,13 +13,17 @@ import { fromBackendEvidence, toBackendEvidence } from './evidenceMapper';
 import { enumMaps } from './enumMaps';
 import type {
   ActionRuleRepository,
+  AssessorCertificationRepository,
   AssetRepository,
   CompliancePackRepository,
   ConditionDefinitionRepository,
+  ConfidenceAssessmentRepository,
+  ConsensusAssessmentRepository,
   ControlRepository,
   DecisionRepository,
   EvidenceMappingRepository,
   EvidenceRepository,
+  GovernanceAssessmentRepository,
   GovernanceData,
   GovernanceDriftRepository,
   GovernanceEffectivenessRepository,
@@ -41,11 +45,17 @@ import type {
 import type {
   ActionRule,
   AIAsset,
+  AssessorCertification,
   CompliancePack,
   ComplianceRequirement,
   ConditionDefinition,
+  ConfidenceAssessment,
+  ConsensusAssessment,
   DecisionRecord,
   EvidenceMapping,
+  GovernanceAssessmentCategory,
+  GovernanceAssessmentCategoryScores,
+  GovernanceAssessmentRecord,
   GovernanceDrift,
   GovernanceEffectivenessSnapshot,
   GovernanceMaturitySnapshot,
@@ -177,12 +187,28 @@ function reviewFromBackend(row: any, assetName = ''): ScheduledReview {
   };
 }
 
+/** Each of these three endpoints has its own, narrower @Roles list than "every
+ * role" (e.g. reassessment-triggers excludes VALIDATOR/BUSINESS_OWNER/VIEWER).
+ * A plain Promise.all would let one 403 reject the whole bundle — which,
+ * bubbling up into bootstrapPersistence's own Promise.all, silently failed
+ * ALL Neon sync (every domain, not just this one) for those roles on every
+ * load. Settling each independently means a role-restricted 403 here only
+ * empties this one field, not the entire platform's data. */
+async function fetchOrEmpty<T>(path: string): Promise<T[]> {
+  try {
+    return await apiRequest<T[]>(path);
+  } catch (err) {
+    console.warn(`OMG persistence: ${path} was not reachable for the current role — that field will be empty this session.`, err);
+    return [];
+  }
+}
+
 export const apiGovernanceRepository: GovernanceRepository = {
   async getGovernanceData(): Promise<GovernanceData> {
     const [triggers, reauthorizations, reviews] = await Promise.all([
-      apiRequest<any[]>('/reassessment-triggers'),
-      apiRequest<any[]>('/reauthorization-records'),
-      apiRequest<any[]>('/monitoring/reviews'),
+      fetchOrEmpty<any>('/reassessment-triggers'),
+      fetchOrEmpty<any>('/reauthorization-records'),
+      fetchOrEmpty<any>('/monitoring/reviews'),
     ]);
     return {
       triggers: triggers.map(r => triggerFromBackend(r)),
@@ -977,6 +1003,179 @@ export const apiGovernanceMaturityRepository: GovernanceMaturityRepository = {
       body: JSON.stringify(maturitySnapshotToBackend(data)),
     });
     return maturitySnapshotFromBackend(row);
+  },
+};
+
+// --- GOVERNANCE ASSESSMENT CALIBRATION & CONSISTENCY FRAMEWORK (GACF) ---
+
+/** categoryScores is keyed by category, not a flat field — needs its own
+ * key-by-key enum translation, unlike every other mapper above. */
+function assessmentCategoryScoresToBackend(scores: GovernanceAssessmentCategoryScores): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const [category, level] of Object.entries(scores)) {
+    if (level === undefined) continue;
+    out[enumMaps.governanceAssessmentCategory.toBackend(category as GovernanceAssessmentCategory)] = level;
+  }
+  return out;
+}
+
+function assessmentCategoryScoresFromBackend(scores: Record<string, number>): GovernanceAssessmentCategoryScores {
+  const out: GovernanceAssessmentCategoryScores = {};
+  for (const [category, level] of Object.entries(scores || {})) {
+    out[enumMaps.governanceAssessmentCategory.toFrontend(category)] = level as 1 | 2 | 3 | 4 | 5;
+  }
+  return out;
+}
+
+function assessmentRecordToBackend(data: Partial<GovernanceAssessmentRecord>) {
+  const body: Record<string, unknown> = { ...data };
+  delete body.id;
+  delete body.assetName;
+  delete body.createdAt;
+  if (data.assessmentType) body.assessmentType = enumMaps.governanceAssessmentType.toBackend(data.assessmentType);
+  if (data.categoryScores) body.categoryScores = assessmentCategoryScoresToBackend(data.categoryScores);
+  return body;
+}
+
+function assessmentRecordFromBackend(row: any, assetName = ''): GovernanceAssessmentRecord {
+  return {
+    id: row.id,
+    assetId: row.assetId,
+    assetName,
+    assessmentType: enumMaps.governanceAssessmentType.toFrontend(row.assessmentType),
+    assessorName: row.assessorName,
+    assessorRole: row.assessorRole,
+    categoryScores: assessmentCategoryScoresFromBackend(row.categoryScores),
+    overallScore: row.overallScore,
+    evidenceNotes: row.evidenceNotes,
+    createdAt: String(row.createdAt).split('T')[0],
+    consensusAssessmentId: row.consensusAssessmentId ?? undefined,
+  };
+}
+
+export const apiGovernanceAssessmentRepository: GovernanceAssessmentRepository = {
+  async getRecords(assetId) {
+    const rows = await apiRequest<any[]>(`/governance-assessment-records${assetId ? `?assetId=${assetId}` : ''}`);
+    return rows.map(r => assessmentRecordFromBackend(r));
+  },
+  async createRecord(data) {
+    const row = await apiRequest<any>('/governance-assessment-records', {
+      method: 'POST',
+      body: JSON.stringify(assessmentRecordToBackend(data)),
+    });
+    return assessmentRecordFromBackend(row, data.assetName);
+  },
+};
+
+// --- GACF PHASE 2 ("Release 13 Extension") — Assessor Certification ---
+
+function certificationFromBackend(row: any): AssessorCertification {
+  return {
+    id: row.id,
+    assessorName: row.assessorName,
+    assessorRole: row.assessorRole,
+    certificationStatus: enumMaps.assessorCertificationStatus.toFrontend(row.certificationStatus),
+    calibrationAccuracy: row.calibrationAccuracy,
+    scenariosAttempted: row.scenariosAttempted,
+    certificationDate: String(row.certificationDate).split('T')[0],
+    expiryDate: String(row.expiryDate).split('T')[0],
+  };
+}
+
+export const apiAssessorCertificationRepository: AssessorCertificationRepository = {
+  async getCertifications() {
+    const rows = await apiRequest<any[]>('/assessor-certifications');
+    return rows.map(certificationFromBackend);
+  },
+  async createCertification(data) {
+    const body: Record<string, unknown> = { ...data };
+    delete body.id;
+    delete body.certificationDate;
+    if (data.certificationStatus) body.certificationStatus = enumMaps.assessorCertificationStatus.toBackend(data.certificationStatus);
+    // expiryDate has no server-side default (unlike createdAt/certificationDate
+    // above) — it must come from the client, but as a bare "YYYY-MM-DD" string
+    // Prisma's DateTime column rejects it ("premature end of input"). Expand
+    // to a full ISO-8601 instant before sending, same fix as the Release 11
+    // snapshot-write 500 this codebase already hit once.
+    if (data.expiryDate) body.expiryDate = new Date(data.expiryDate).toISOString();
+    const row = await apiRequest<any>('/assessor-certifications', { method: 'POST', body: JSON.stringify(body) });
+    return certificationFromBackend(row);
+  },
+};
+
+// --- GACF PHASE 2 — Multi-Assessor Consensus Assessment ---
+
+function consensusRoundFromBackend(row: any, assetName = ''): ConsensusAssessment {
+  return {
+    id: row.id,
+    assetId: row.assetId,
+    assetName,
+    assessmentType: enumMaps.governanceAssessmentType.toFrontend(row.assessmentType),
+    initiatedBy: row.initiatedBy,
+    participants: row.participants || [],
+    status: enumMaps.consensusAssessmentStatus.toFrontend(row.status),
+    consensusScore: row.consensusScore ?? undefined,
+    varianceScore: row.varianceScore ?? undefined,
+    createdAt: String(row.createdAt).split('T')[0],
+    closedAt: row.closedAt ? String(row.closedAt).split('T')[0] : undefined,
+  };
+}
+
+export const apiConsensusAssessmentRepository: ConsensusAssessmentRepository = {
+  async getRounds() {
+    const rows = await apiRequest<any[]>('/consensus-assessments');
+    return rows.map(r => consensusRoundFromBackend(r, r.asset?.name));
+  },
+  async createRound(data) {
+    const body: Record<string, unknown> = { ...data };
+    delete body.id;
+    delete body.assetName;
+    delete body.status;
+    delete body.createdAt;
+    if (data.assessmentType) body.assessmentType = enumMaps.governanceAssessmentType.toBackend(data.assessmentType);
+    const row = await apiRequest<any>('/consensus-assessments', { method: 'POST', body: JSON.stringify(body) });
+    return consensusRoundFromBackend(row, data.assetName);
+  },
+  async updateParticipants(id, participants) {
+    const row = await apiRequest<any>(`/consensus-assessments/${id}/participants`, {
+      method: 'PATCH',
+      body: JSON.stringify({ participants }),
+    });
+    return consensusRoundFromBackend(row);
+  },
+  async closeRound(id, consensusScore, varianceScore) {
+    const row = await apiRequest<any>(`/consensus-assessments/${id}/close`, {
+      method: 'PATCH',
+      body: JSON.stringify({ consensusScore, varianceScore }),
+    });
+    return consensusRoundFromBackend(row);
+  },
+};
+
+// --- GACF PHASE 2 — Confidence Scoring ---
+
+function confidenceFromBackend(row: any): ConfidenceAssessment {
+  return {
+    id: row.id,
+    assessmentRecordId: row.assessmentRecordId,
+    confidenceLevel: enumMaps.confidenceLevel.toFrontend(row.confidenceLevel),
+    confidenceReason: row.confidenceReason,
+    createdAt: String(row.createdAt).split('T')[0],
+  };
+}
+
+export const apiConfidenceAssessmentRepository: ConfidenceAssessmentRepository = {
+  async getConfidenceAssessments() {
+    const rows = await apiRequest<any[]>('/confidence-assessments');
+    return rows.map(confidenceFromBackend);
+  },
+  async createConfidenceAssessment(data) {
+    const body: Record<string, unknown> = { ...data };
+    delete body.id;
+    delete body.createdAt;
+    if (data.confidenceLevel) body.confidenceLevel = enumMaps.confidenceLevel.toBackend(data.confidenceLevel);
+    const row = await apiRequest<any>('/confidence-assessments', { method: 'POST', body: JSON.stringify(body) });
+    return confidenceFromBackend(row);
   },
 };
 

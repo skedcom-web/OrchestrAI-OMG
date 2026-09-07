@@ -10,13 +10,17 @@
 
 import {
   localActionRuleRepository,
+  localAssessorCertificationRepository,
   localAssetRepository,
   localCompliancePackRepository,
   localConditionDefinitionRepository,
+  localConfidenceAssessmentRepository,
+  localConsensusAssessmentRepository,
   localControlRepository,
   localDecisionRepository,
   localEvidenceMappingRepository,
   localEvidenceRepository,
+  localGovernanceAssessmentRepository,
   localGovernanceDriftRepository,
   localGovernanceEffectivenessRepository,
   localGovernanceMaturityRepository,
@@ -35,13 +39,17 @@ import {
 } from './localRepositories';
 import {
   apiActionRuleRepository,
+  apiAssessorCertificationRepository,
   apiAssetRepository,
   apiCompliancePackRepository,
   apiConditionDefinitionRepository,
+  apiConfidenceAssessmentRepository,
+  apiConsensusAssessmentRepository,
   apiControlRepository,
   apiDecisionRepository,
   apiEvidenceMappingRepository,
   apiEvidenceRepository,
+  apiGovernanceAssessmentRepository,
   apiGovernanceDriftRepository,
   apiGovernanceEffectivenessRepository,
   apiGovernanceMaturityRepository,
@@ -60,13 +68,17 @@ import {
 } from './apiRepositories';
 import type {
   ActionRuleRepository,
+  AssessorCertificationRepository,
   AssetRepository,
   CompliancePackRepository,
   ConditionDefinitionRepository,
+  ConfidenceAssessmentRepository,
+  ConsensusAssessmentRepository,
   ControlRepository,
   DecisionRepository,
   EvidenceMappingRepository,
   EvidenceRepository,
+  GovernanceAssessmentRepository,
   GovernanceDriftRepository,
   GovernanceEffectivenessRepository,
   GovernanceMaturityRepository,
@@ -244,5 +256,31 @@ export function getGovernanceMaturityRepository(): GovernanceMaturityRepository 
 }
 
 export { localGovernanceEffectivenessRepository, localGovernanceMaturityRepository };
+
+/** GACF — Governance Assessment Calibration & Consistency Framework. Api-first from day one. */
+export function getGovernanceAssessmentRepository(): GovernanceAssessmentRepository {
+  return apiGovernanceAssessmentRepository;
+}
+
+export { localGovernanceAssessmentRepository };
+
+/** GACF Phase 2 ("Release 13 Extension"). Api-first from day one, same reasoning as every domain above. */
+export function getAssessorCertificationRepository(): AssessorCertificationRepository {
+  return apiAssessorCertificationRepository;
+}
+
+export function getConsensusAssessmentRepository(): ConsensusAssessmentRepository {
+  return apiConsensusAssessmentRepository;
+}
+
+export function getConfidenceAssessmentRepository(): ConfidenceAssessmentRepository {
+  return apiConfidenceAssessmentRepository;
+}
+
+export {
+  localAssessorCertificationRepository,
+  localConsensusAssessmentRepository,
+  localConfidenceAssessmentRepository,
+};
 
 export * from './types';

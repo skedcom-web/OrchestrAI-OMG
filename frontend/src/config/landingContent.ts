@@ -689,6 +689,14 @@ export const CAPABILITIES: { label: string; icon: string; path: string; blurb: s
   { label: 'Compliance Impact Analysis', icon: '🔁', path: '/compliance-impact-analysis', blurb: 'What changed recently, and its compliance impact' },
   { label: 'Regulatory Change Readiness', icon: '📶', path: '/regulatory-change-readiness', blurb: 'Ready if a regulation changed tomorrow' },
   { label: 'Audit Readiness Intelligence', icon: '📄', path: '/audit-readiness-intelligence', blurb: 'What evidence supports compliance today' },
+  { label: 'Assessment Center', icon: '📝', path: '/assessment-center', blurb: 'Record a standardized governance assessment' },
+  { label: 'Assessment Playbooks', icon: '📖', path: '/assessment-playbooks', blurb: 'Structured guidance for every assessment type' },
+  { label: 'Calibration Library', icon: '📚', path: '/calibration-library', blurb: 'Scoring rubric and worked reference examples' },
+  { label: 'Variance Analysis', icon: '📊', path: '/variance-analysis', blurb: 'Observed dispersion in recorded assessment scores' },
+  { label: 'Assessment Academy', icon: '🎓', path: '/assessment-academy', blurb: 'Guidance on consistent, well-evidenced assessment' },
+  { label: 'Assessor Certification', icon: '🏅', path: '/assessor-certification', blurb: 'Calibration accuracy against benchmark scenarios' },
+  { label: 'Multi-Assessor Consensus', icon: '👥', path: '/consensus-assessments', blurb: 'Independent scoring, hidden until the round closes' },
+  { label: 'Benchmark Recommendations', icon: '🧭', path: '/benchmark-recommendations', blurb: 'Guided playbooks, examples and scoring ranges' },
 ];
 
 /* ======= Section 8.5 — sales positioning: platform vs. customer packs === */
@@ -786,7 +794,13 @@ export const PLATFORM_JOURNEY: PlatformJourneyStep[] = [
   { step: 11, label: 'Measure Effectiveness', icon: '🧮', path: '/governance-effectiveness' },
   { step: 12, label: 'Demonstrate Outcomes', icon: '🎯', path: '/governance-outcomes' },
   { step: 13, label: 'Continuous Improvement', icon: '📶', path: '/governance-maturity' },
-  { step: 14, label: 'Deploy With Confidence', icon: '🤝', path: '#partner' },
+  { step: 14, label: 'Calibrate Assessments', icon: '📝', path: '/assessment-center' },
+  { step: 15, label: 'Standardize Scoring', icon: '📚', path: '/calibration-library' },
+  { step: 16, label: 'Analyze Variance', icon: '📊', path: '/variance-analysis' },
+  { step: 17, label: 'Certify Assessors', icon: '🏅', path: '/assessor-certification' },
+  { step: 18, label: 'Build Consensus', icon: '👥', path: '/consensus-assessments' },
+  { step: 19, label: 'Recommend Benchmarks', icon: '🧭', path: '/benchmark-recommendations' },
+  { step: 20, label: 'Deploy With Confidence', icon: '🤝', path: '#partner' },
 ];
 
 /**

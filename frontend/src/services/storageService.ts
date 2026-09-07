@@ -54,7 +54,11 @@ import type {
   GovernanceProfile,
   GovernanceDrift,
   GovernanceEffectivenessSnapshot,
-  GovernanceMaturitySnapshot
+  GovernanceMaturitySnapshot,
+  GovernanceAssessmentRecord,
+  AssessorCertification,
+  ConsensusAssessment,
+  ConfidenceAssessment
 } from '../types';
 import {
   INITIAL_ASSETS,
@@ -135,6 +139,10 @@ import {
   apiGovernanceDriftRepository,
   apiGovernanceEffectivenessRepository,
   apiGovernanceMaturityRepository,
+  apiGovernanceAssessmentRepository,
+  apiAssessorCertificationRepository,
+  apiConsensusAssessmentRepository,
+  apiConfidenceAssessmentRepository,
 } from '../repositories/apiRepositories';
 
 /**
@@ -197,6 +205,10 @@ const STORAGE_KEYS = {
   GOVERNANCE_DRIFTS: 'omg_governance_drifts_vnext',
   GOVERNANCE_EFFECTIVENESS_SNAPSHOTS: 'omg_governance_effectiveness_snapshots_r11',
   GOVERNANCE_MATURITY_SNAPSHOTS: 'omg_governance_maturity_snapshots_r11',
+  GOVERNANCE_ASSESSMENT_RECORDS: 'omg_governance_assessment_records_gacf',
+  ASSESSOR_CERTIFICATIONS: 'omg_assessor_certifications_gacf2',
+  CONSENSUS_ASSESSMENTS: 'omg_consensus_assessments_gacf2',
+  CONFIDENCE_ASSESSMENTS: 'omg_confidence_assessments_gacf2',
 };
 
 function getItem<T>(key: string, defaultData: T): T {
@@ -2759,6 +2771,249 @@ export async function recordGovernanceMaturitySnapshot(
   return created;
 }
 
+// --- GOVERNANCE ASSESSMENT CALIBRATION & CONSISTENCY FRAMEWORK (GACF) ---
+// Same cache-then-sync, append-only pattern as every snapshot/decision
+// domain above. The one persisted entity across all six GACF initiatives —
+// Playbooks/Scoring Templates/Calibration Library/Prompt Library/Academy
+// are static config, not stored records.
+
+let governanceAssessmentRecordsCache: GovernanceAssessmentRecord[] =
+  getItem<GovernanceAssessmentRecord[]>(STORAGE_KEYS.GOVERNANCE_ASSESSMENT_RECORDS, []);
+
+function persistGovernanceAssessmentRecordsCache() {
+  setItem(STORAGE_KEYS.GOVERNANCE_ASSESSMENT_RECORDS, governanceAssessmentRecordsCache);
+}
+
+export function getGovernanceAssessmentRecords(): GovernanceAssessmentRecord[] {
+  return governanceAssessmentRecordsCache;
+}
+
+export function getGovernanceAssessmentRecordsForAsset(assetId: string): GovernanceAssessmentRecord[] {
+  return governanceAssessmentRecordsCache.filter(r => r.assetId === assetId);
+}
+
+export async function recordGovernanceAssessment(
+  data: Omit<GovernanceAssessmentRecord, 'id' | 'assetName' | 'createdAt'>
+): Promise<GovernanceAssessmentRecord> {
+  const asset = assetsCache.find(a => a.id === data.assetId);
+  const now = new Date().toISOString().split('T')[0];
+  const draft: GovernanceAssessmentRecord = {
+    ...data,
+    id: `local-assessment-${Date.now()}`,
+    assetName: asset?.name || 'AI Asset',
+    createdAt: now,
+  };
+
+  governanceAssessmentRecordsCache = [draft, ...governanceAssessmentRecordsCache];
+  persistGovernanceAssessmentRecordsCache();
+  addAuditLog(
+    'usr-2',
+    draft.assessorName,
+    draft.assessorRole,
+    'GOVERNANCE_ASSESSMENT_RECORDED',
+    'Asset',
+    draft.assetId,
+    draft.assetName,
+    `${draft.assessmentType} assessment recorded for ${draft.assetName}: overall score ${draft.overallScore}/5.`
+  );
+
+  const { id: _draftId, ...payload } = draft;
+  const created = { ...(await apiGovernanceAssessmentRepository.createRecord(payload)), assetName: draft.assetName };
+  governanceAssessmentRecordsCache = governanceAssessmentRecordsCache.map(r => (r.id === draft.id ? created : r));
+  persistGovernanceAssessmentRecordsCache();
+  return created;
+}
+
+// --- GACF PHASE 2 ("Release 13 Extension") — Assessor Certification ---
+// Same cache-then-sync, append-only pattern as GovernanceAssessmentRecord
+// above. One row per certification attempt; the most recent row for a given
+// assessor is their current status.
+
+let assessorCertificationsCache: AssessorCertification[] =
+  getItem<AssessorCertification[]>(STORAGE_KEYS.ASSESSOR_CERTIFICATIONS, []);
+
+function persistAssessorCertificationsCache() {
+  setItem(STORAGE_KEYS.ASSESSOR_CERTIFICATIONS, assessorCertificationsCache);
+}
+
+export function getAssessorCertifications(): AssessorCertification[] {
+  return assessorCertificationsCache;
+}
+
+/** Most recent certification attempt per assessor — their current standing. */
+export function getLatestCertificationByAssessor(): Map<string, AssessorCertification> {
+  const byAssessor = new Map<string, AssessorCertification>();
+  for (const c of assessorCertificationsCache) {
+    const key = `${c.assessorName}::${c.assessorRole}`;
+    const existing = byAssessor.get(key);
+    if (!existing || new Date(c.certificationDate) > new Date(existing.certificationDate)) byAssessor.set(key, c);
+  }
+  return byAssessor;
+}
+
+export async function recordAssessorCertification(
+  data: Omit<AssessorCertification, 'id' | 'certificationDate'>
+): Promise<AssessorCertification> {
+  const now = new Date().toISOString().split('T')[0];
+  const draft: AssessorCertification = { ...data, id: `local-certification-${Date.now()}`, certificationDate: now };
+
+  assessorCertificationsCache = [draft, ...assessorCertificationsCache];
+  persistAssessorCertificationsCache();
+  addAuditLog(
+    'usr-2',
+    draft.assessorName,
+    draft.assessorRole,
+    'ASSESSOR_CERTIFICATION_ATTEMPTED',
+    'Asset',
+    'n/a',
+    draft.assessorName,
+    `Assessor certification attempt: ${draft.calibrationAccuracy}% calibration accuracy across ${draft.scenariosAttempted} benchmark scenario(s) — result: ${draft.certificationStatus}.`
+  );
+
+  const { id: _draftId, ...payload } = draft;
+  const created = await apiAssessorCertificationRepository.createCertification(payload);
+  assessorCertificationsCache = assessorCertificationsCache.map(c => (c.id === draft.id ? created : c));
+  persistAssessorCertificationsCache();
+  return created;
+}
+
+// --- GACF PHASE 2 — Multi-Assessor Consensus Assessment ---
+// The round's own state; each participant's individual score is a normal
+// GovernanceAssessmentRecord tagged with consensusAssessmentId (see
+// recordGovernanceAssessment above, unchanged) — scores stay out of this
+// cache entirely, and out of view of other participants, until the round
+// closes and the aggregate below is computed.
+
+let consensusAssessmentsCache: ConsensusAssessment[] =
+  getItem<ConsensusAssessment[]>(STORAGE_KEYS.CONSENSUS_ASSESSMENTS, []);
+
+function persistConsensusAssessmentsCache() {
+  setItem(STORAGE_KEYS.CONSENSUS_ASSESSMENTS, consensusAssessmentsCache);
+}
+
+export function getConsensusAssessments(): ConsensusAssessment[] {
+  return consensusAssessmentsCache;
+}
+
+export async function startConsensusAssessment(
+  data: Omit<ConsensusAssessment, 'id' | 'assetName' | 'status' | 'createdAt' | 'participants'> & { participants: { name: string; role: string }[] }
+): Promise<ConsensusAssessment> {
+  const asset = assetsCache.find(a => a.id === data.assetId);
+  const now = new Date().toISOString().split('T')[0];
+  const draft: ConsensusAssessment = {
+    ...data,
+    id: `local-consensus-${Date.now()}`,
+    assetName: asset?.name || 'AI Asset',
+    status: 'Open',
+    participants: data.participants.map(p => ({ ...p, submitted: false })),
+    createdAt: now,
+  };
+
+  consensusAssessmentsCache = [draft, ...consensusAssessmentsCache];
+  persistConsensusAssessmentsCache();
+  addAuditLog(
+    'usr-2',
+    draft.initiatedBy,
+    'GOVERNANCE_ADMIN',
+    'CONSENSUS_ASSESSMENT_OPENED',
+    'Asset',
+    draft.assetId,
+    draft.assetName,
+    `Consensus assessment round opened for ${draft.assetName} (${draft.assessmentType}) with ${draft.participants.length} invited assessor(s).`
+  );
+
+  const { id: _draftId, assetName: _assetName, status: _status, ...payload } = draft;
+  const created = { ...(await apiConsensusAssessmentRepository.createRound(payload)), assetName: draft.assetName, participants: draft.participants };
+  consensusAssessmentsCache = consensusAssessmentsCache.map(c => (c.id === draft.id ? created : c));
+  persistConsensusAssessmentsCache();
+  return created;
+}
+
+/** Marks a participant's independent submission and, once every invited
+ * participant has submitted, closes the round and computes the aggregate.
+ * Individual scores themselves live in governanceAssessmentRecordsCache,
+ * tagged with `consensusAssessmentId` — this only tracks who has submitted
+ * and reads those scores back at close time to compute stats. */
+export async function submitConsensusParticipantScore(roundId: string, participantName: string): Promise<ConsensusAssessment> {
+  const round = consensusAssessmentsCache.find(r => r.id === roundId);
+  if (!round) throw new Error('Consensus assessment round not found.');
+
+  const updatedParticipants = round.participants.map(p => (p.name === participantName ? { ...p, submitted: true } : p));
+  let updatedRound: ConsensusAssessment = { ...round, participants: updatedParticipants };
+  consensusAssessmentsCache = consensusAssessmentsCache.map(r => (r.id === roundId ? updatedRound : r));
+  persistConsensusAssessmentsCache();
+
+  // Persist "who has submitted" immediately — not just at close — so it
+  // survives a reload instead of living only in this browser's cache until
+  // the round happens to close.
+  await apiConsensusAssessmentRepository.updateParticipants(roundId, updatedParticipants);
+
+  const allSubmitted = updatedParticipants.length > 0 && updatedParticipants.every(p => p.submitted);
+  if (allSubmitted && updatedRound.status === 'Open') {
+    const scores = governanceAssessmentRecordsCache
+      .filter(r => r.consensusAssessmentId === roundId)
+      .map(r => r.overallScore);
+    if (scores.length > 0) {
+      const mean = scores.reduce((s, v) => s + v, 0) / scores.length;
+      const variance = scores.reduce((s, v) => s + (v - mean) ** 2, 0) / scores.length;
+      const consensusScore = Math.round(mean * 100) / 100;
+      const varianceScore = Math.round(Math.sqrt(variance) * 100) / 100;
+
+      const closed = await apiConsensusAssessmentRepository.closeRound(roundId, consensusScore, varianceScore);
+      updatedRound = { ...updatedRound, ...closed, assetName: updatedRound.assetName, participants: updatedParticipants };
+      consensusAssessmentsCache = consensusAssessmentsCache.map(r => (r.id === roundId ? updatedRound : r));
+      persistConsensusAssessmentsCache();
+      addAuditLog(
+        'usr-2',
+        updatedRound.initiatedBy,
+        'GOVERNANCE_ADMIN',
+        'CONSENSUS_ASSESSMENT_CLOSED',
+        'Asset',
+        updatedRound.assetId,
+        updatedRound.assetName,
+        `Consensus assessment round closed for ${updatedRound.assetName}: consensus score ${consensusScore}, variance (σ) ${varianceScore} across ${scores.length} independent submission(s).`
+      );
+    }
+  }
+
+  return updatedRound;
+}
+
+// --- GACF PHASE 2 — Confidence Scoring ---
+// One optional row per GovernanceAssessmentRecord. Additive only — every
+// assessment recorded before this shipped simply has no row here.
+
+let confidenceAssessmentsCache: ConfidenceAssessment[] =
+  getItem<ConfidenceAssessment[]>(STORAGE_KEYS.CONFIDENCE_ASSESSMENTS, []);
+
+function persistConfidenceAssessmentsCache() {
+  setItem(STORAGE_KEYS.CONFIDENCE_ASSESSMENTS, confidenceAssessmentsCache);
+}
+
+export function getConfidenceAssessments(): ConfidenceAssessment[] {
+  return confidenceAssessmentsCache;
+}
+
+export function getConfidenceForAssessmentRecord(assessmentRecordId: string): ConfidenceAssessment | undefined {
+  return confidenceAssessmentsCache.find(c => c.assessmentRecordId === assessmentRecordId);
+}
+
+export async function recordConfidenceAssessment(
+  data: Omit<ConfidenceAssessment, 'id' | 'createdAt'>
+): Promise<ConfidenceAssessment> {
+  const now = new Date().toISOString().split('T')[0];
+  const draft: ConfidenceAssessment = { ...data, id: `local-confidence-${Date.now()}`, createdAt: now };
+
+  confidenceAssessmentsCache = [draft, ...confidenceAssessmentsCache];
+  persistConfidenceAssessmentsCache();
+
+  const { id: _draftId, ...payload } = draft;
+  const created = await apiConfidenceAssessmentRepository.createConfidenceAssessment(payload);
+  confidenceAssessmentsCache = confidenceAssessmentsCache.map(c => (c.id === draft.id ? created : c));
+  persistConfidenceAssessmentsCache();
+  return created;
+}
+
 /** Objective 2 — Condition Engine, computed live. Filtered through Release 10's Condition Designer (condition types disabled in the Studio are never raised). */
 export function getGovernanceConditionsForAsset(assetId: string): GovernanceCondition[] {
   const asset = assetsCache.find(a => a.id === assetId);
@@ -3570,6 +3825,26 @@ export function getGovernanceMetrics(): GovernanceMetrics {
 let bootstrapPromise: Promise<void> | null = null;
 
 /**
+ * Isolates one domain's fetch failure from every other domain's. Several
+ * read endpoints below carry a narrower @Roles list than "every role" (e.g.
+ * reassessment-triggers excludes VALIDATOR/BUSINESS_OWNER/VIEWER) — a plain
+ * Promise.all lets a single 403 reject the ENTIRE bootstrap, silently
+ * leaving those roles on stale/empty data for every domain, not just the
+ * restricted one. Falling back to that domain's current cache (already
+ * seeded from localStorage) preserves the documented "keep cached/local
+ * data on failure" behavior, just scoped correctly per-domain instead of
+ * platform-wide.
+ */
+async function safeSync<T>(promise: Promise<T>, fallback: T): Promise<T> {
+  try {
+    return await promise;
+  } catch (err) {
+    console.warn('OMG persistence: one domain was not reachable for the current role — using cached/fallback data for it only, everything else still syncs.', err);
+    return fallback;
+  }
+}
+
+/**
  * Replaces the read caches above with live Neon data. Runs once at module
  * load (see the call at the bottom of this file) so pages that read
  * getAssets()/getEvidenceRecords()/etc. synchronously see real System-of-
@@ -3608,30 +3883,38 @@ export function bootstrapPersistence(options?: { force?: boolean }): Promise<voi
         governanceDrifts,
         governanceEffectivenessSnapshots,
         governanceMaturitySnapshots,
+        governanceAssessmentRecords,
+        assessorCertifications,
+        consensusAssessments,
+        confidenceAssessments,
       ] = await Promise.all([
-        apiAssetRepository.getAssets(true), // Q1 Stabilization — include archived so the local cache is complete; getAssets()/getArchivedAssets() split the view.
-        apiEvidenceRepository.getEvidence(),
-        apiGovernanceRepository.getGovernanceData(),
-        apiCompliancePackRepository.getCompliancePacks(),
-        apiRequirementRepository.getRequirements(),
-        apiControlRepository.getControls(),
-        apiEvidenceMappingRepository.getMappings(),
-        apiRegulatorySourceRepository.getSources(),
-        apiRegulatoryRequirementRepository.getRequirements(),
-        apiObligationRepository.getObligations(),
-        apiObligationControlRepository.getControls(),
-        apiObligationEvidenceMappingRepository.getMappings(),
-        apiGovernancePolicyRepository.getPolicies(),
-        apiGovernanceFindingRepository.getFindings(),
-        apiRecommendedActionRepository.getActions(),
-        apiConditionDefinitionRepository.getDefinitions(),
-        apiOutcomeRuleRepository.getRules(),
-        apiActionRuleRepository.getRules(),
-        apiGovernanceProfileRepository.getProfiles(),
-        apiDecisionRepository.getDecisions(),
-        apiGovernanceDriftRepository.getDrifts(),
-        apiGovernanceEffectivenessRepository.getSnapshots(),
-        apiGovernanceMaturityRepository.getSnapshots(),
+        safeSync(apiAssetRepository.getAssets(true), assetsCache), // Q1 Stabilization — include archived so the local cache is complete; getAssets()/getArchivedAssets() split the view.
+        safeSync(apiEvidenceRepository.getEvidence(), evidenceCache),
+        safeSync(apiGovernanceRepository.getGovernanceData(), { triggers: triggersCache, reauthorizations: reauthorizationsCache, reviews: reviewsCache }),
+        safeSync(apiCompliancePackRepository.getCompliancePacks(), compliancePacksCache),
+        safeSync(apiRequirementRepository.getRequirements(), requirementsCache),
+        safeSync(apiControlRepository.getControls(), packControlsCache),
+        safeSync(apiEvidenceMappingRepository.getMappings(), evidenceMappingsCache),
+        safeSync(apiRegulatorySourceRepository.getSources(), regulatorySourcesCache),
+        safeSync(apiRegulatoryRequirementRepository.getRequirements(), regulatoryRequirementsCache),
+        safeSync(apiObligationRepository.getObligations(), obligationsCache),
+        safeSync(apiObligationControlRepository.getControls(), obligationControlsCache),
+        safeSync(apiObligationEvidenceMappingRepository.getMappings(), obligationEvidenceMappingsCache),
+        safeSync(apiGovernancePolicyRepository.getPolicies(), governancePoliciesCache),
+        safeSync(apiGovernanceFindingRepository.getFindings(), governanceFindingsCache),
+        safeSync(apiRecommendedActionRepository.getActions(), recommendedActionsCache),
+        safeSync(apiConditionDefinitionRepository.getDefinitions(), conditionDefinitionsCache),
+        safeSync(apiOutcomeRuleRepository.getRules(), outcomeRulesCache),
+        safeSync(apiActionRuleRepository.getRules(), actionRulesCache),
+        safeSync(apiGovernanceProfileRepository.getProfiles(), governanceProfilesCache),
+        safeSync(apiDecisionRepository.getDecisions(), getItem<any[]>(STORAGE_KEYS.DECISIONS, [])),
+        safeSync(apiGovernanceDriftRepository.getDrifts(), governanceDriftsCache),
+        safeSync(apiGovernanceEffectivenessRepository.getSnapshots(), governanceEffectivenessSnapshotsCache),
+        safeSync(apiGovernanceMaturityRepository.getSnapshots(), governanceMaturitySnapshotsCache),
+        safeSync(apiGovernanceAssessmentRepository.getRecords(), governanceAssessmentRecordsCache),
+        safeSync(apiAssessorCertificationRepository.getCertifications(), assessorCertificationsCache),
+        safeSync(apiConsensusAssessmentRepository.getRounds(), consensusAssessmentsCache),
+        safeSync(apiConfidenceAssessmentRepository.getConfidenceAssessments(), confidenceAssessmentsCache),
       ]);
 
       const assetNameById = new Map(assets.map(a => [a.id, a.name]));
@@ -3727,6 +4010,16 @@ export function bootstrapPersistence(options?: { force?: boolean }): Promise<voi
       persistGovernanceEffectivenessSnapshotsCache();
       governanceMaturitySnapshotsCache = governanceMaturitySnapshots;
       persistGovernanceMaturitySnapshotsCache();
+
+      governanceAssessmentRecordsCache = governanceAssessmentRecords.map(r => ({ ...r, assetName: assetNameById.get(r.assetId) || r.assetName }));
+      persistGovernanceAssessmentRecordsCache();
+
+      assessorCertificationsCache = assessorCertifications;
+      persistAssessorCertificationsCache();
+      consensusAssessmentsCache = consensusAssessments.map(c => ({ ...c, assetName: assetNameById.get(c.assetId) || c.assetName }));
+      persistConsensusAssessmentsCache();
+      confidenceAssessmentsCache = confidenceAssessments;
+      persistConfidenceAssessmentsCache();
 
       console.info(`OMG persistence: loaded ${assets.length} assets, ${evidence.length} evidence records, ${compliancePacks.length} compliance packs, ${regulatorySources.length} regulatory sources, ${governancePolicies.length} governance policies, ${recommendedActions.length} recommended actions, ${conditionDefinitions.length} condition definitions, ${outcomeRules.length} outcome rules, ${actionRules.length} action rules, ${governanceProfiles.length} governance profiles from Neon.`);
     } catch (err) {

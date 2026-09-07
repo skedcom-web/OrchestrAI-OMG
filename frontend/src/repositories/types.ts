@@ -11,13 +11,17 @@
 import type {
   ActionRule,
   AIAsset,
+  AssessorCertification,
   CompliancePack,
   ComplianceRequirement,
   ConditionDefinition,
+  ConfidenceAssessment,
+  ConsensusAssessment,
   DecisionRecord,
   EvidenceMapping,
   EvidenceRecord,
   GovernanceDrift,
+  GovernanceAssessmentRecord,
   GovernanceEffectivenessSnapshot,
   GovernanceMaturitySnapshot,
   GovernanceFinding,
@@ -254,4 +258,36 @@ export interface GovernanceEffectivenessRepository {
 export interface GovernanceMaturityRepository {
   getSnapshots(): Promise<GovernanceMaturitySnapshot[]>;
   createSnapshot(data: Partial<GovernanceMaturitySnapshot>): Promise<GovernanceMaturitySnapshot>;
+}
+
+/**
+ * GACF — the one persisted entity across all six initiatives. Append-only:
+ * an assessment is a historical record, never edited after the fact.
+ */
+export interface GovernanceAssessmentRepository {
+  getRecords(assetId?: string): Promise<GovernanceAssessmentRecord[]>;
+  createRecord(data: Partial<GovernanceAssessmentRecord>): Promise<GovernanceAssessmentRecord>;
+}
+
+/** GACF Phase 2 ("Release 13 Extension"). Certification attempts, append-only. */
+export interface AssessorCertificationRepository {
+  getCertifications(): Promise<AssessorCertification[]>;
+  createCertification(data: Partial<AssessorCertification>): Promise<AssessorCertification>;
+}
+
+/** GACF Phase 2 — a round's own state plus its aggregate stats once closed. */
+export interface ConsensusAssessmentRepository {
+  getRounds(): Promise<ConsensusAssessment[]>;
+  createRound(data: Partial<ConsensusAssessment>): Promise<ConsensusAssessment>;
+  /** Persists the "who has submitted" state — called on every participant
+   * submission, not just at close, so it survives a reload rather than
+   * living only in the submitting browser's local cache. */
+  updateParticipants(id: string, participants: ConsensusAssessment['participants']): Promise<ConsensusAssessment>;
+  closeRound(id: string, consensusScore: number, varianceScore: number): Promise<ConsensusAssessment>;
+}
+
+/** GACF Phase 2 — one optional row per governance-assessment-record. */
+export interface ConfidenceAssessmentRepository {
+  getConfidenceAssessments(): Promise<ConfidenceAssessment[]>;
+  createConfidenceAssessment(data: Partial<ConfidenceAssessment>): Promise<ConfidenceAssessment>;
 }

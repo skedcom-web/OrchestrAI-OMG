@@ -10,13 +10,17 @@
 import * as storage from '../services/storageService';
 import type {
   ActionRuleRepository,
+  AssessorCertificationRepository,
   AssetRepository,
   CompliancePackRepository,
   ConditionDefinitionRepository,
+  ConfidenceAssessmentRepository,
+  ConsensusAssessmentRepository,
   ControlRepository,
   DecisionRepository,
   EvidenceMappingRepository,
   EvidenceRepository,
+  GovernanceAssessmentRepository,
   GovernanceData,
   GovernanceDriftRepository,
   GovernanceEffectivenessRepository,
@@ -37,7 +41,11 @@ import type {
 } from './types';
 import type {
   AIAsset,
+  AssessorCertification,
+  ConfidenceAssessment,
+  ConsensusAssessment,
   EvidenceRecord,
+  GovernanceAssessmentRecord,
   GovernanceDrift,
   GovernanceEffectivenessSnapshot,
   GovernanceMaturitySnapshot,
@@ -360,6 +368,56 @@ export const localGovernanceMaturityRepository: GovernanceMaturityRepository = {
   },
   async createSnapshot(data) {
     return storage.recordGovernanceMaturitySnapshot(data as Omit<GovernanceMaturitySnapshot, 'id' | 'recordedAt'>);
+  },
+};
+
+/** GACF — the one persisted entity across all six initiatives. Append-only. */
+export const localGovernanceAssessmentRepository: GovernanceAssessmentRepository = {
+  async getRecords(assetId) {
+    return assetId ? storage.getGovernanceAssessmentRecordsForAsset(assetId) : storage.getGovernanceAssessmentRecords();
+  },
+  async createRecord(data) {
+    return storage.recordGovernanceAssessment(data as Omit<GovernanceAssessmentRecord, 'id' | 'assetName' | 'createdAt'>);
+  },
+};
+
+/** GACF Phase 2 ("Release 13 Extension"). Certification attempts, append-only. */
+export const localAssessorCertificationRepository: AssessorCertificationRepository = {
+  async getCertifications() {
+    return storage.getAssessorCertifications();
+  },
+  async createCertification(data) {
+    return storage.recordAssessorCertification(data as Omit<AssessorCertification, 'id' | 'certificationDate'>);
+  },
+};
+
+/** GACF Phase 2 — a round's own state plus its aggregate stats once closed. */
+export const localConsensusAssessmentRepository: ConsensusAssessmentRepository = {
+  async getRounds() {
+    return storage.getConsensusAssessments();
+  },
+  async createRound(data) {
+    return storage.startConsensusAssessment(
+      data as Omit<ConsensusAssessment, 'id' | 'assetName' | 'status' | 'createdAt' | 'participants'> & { participants: { name: string; role: string }[] }
+    );
+  },
+  async updateParticipants(id) {
+    const round = storage.getConsensusAssessments().find(r => r.id === id);
+    if (!round) throw new Error('Consensus assessment round not found.');
+    return round;
+  },
+  async closeRound() {
+    throw new Error('Consensus rounds close automatically once every participant submits — see submitConsensusParticipantScore.');
+  },
+};
+
+/** GACF Phase 2 — one optional row per governance-assessment-record. */
+export const localConfidenceAssessmentRepository: ConfidenceAssessmentRepository = {
+  async getConfidenceAssessments() {
+    return storage.getConfidenceAssessments();
+  },
+  async createConfidenceAssessment(data) {
+    return storage.recordConfidenceAssessment(data as Omit<ConfidenceAssessment, 'id' | 'createdAt'>);
   },
 };
 
