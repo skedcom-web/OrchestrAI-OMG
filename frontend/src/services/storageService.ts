@@ -2469,6 +2469,30 @@ export async function archiveTool(id: string, archivedBy?: string, archiveReason
   await apiToolRepository.archiveTool(id, archivedBy, archiveReason);
 }
 
+export async function restoreTool(id: string): Promise<void> {
+  const target = toolsCache.find(t => t.id === id);
+  if (!target) return;
+  toolsCache = toolsCache.map(t => (t.id === id ? { ...t, isArchived: false, archivedAt: undefined, archivedBy: undefined, archiveReason: undefined } : t));
+  persistToolsCache();
+  await apiToolRepository.restoreTool(id);
+}
+
+export async function recordToolDecision(id: string, outcome: DecisionOutcome, justification: string, decisionOwner: string): Promise<Tool> {
+  const idx = toolsCache.findIndex(t => t.id === id);
+  if (idx === -1) throw new Error(`Tool ${id} not found`);
+  const now = new Date().toISOString();
+  const updated: Tool = { ...toolsCache[idx], decisionOutcome: outcome, decisionJustification: justification, decisionOwner, decisionDate: now, updatedAt: now };
+  toolsCache = [...toolsCache];
+  toolsCache[idx] = updated;
+  persistToolsCache();
+  addAuditLog('usr-2', decisionOwner, 'GOVERNANCE_ADMIN', 'TOOL_DECISION_RECORDED', 'Tool', id, updated.name, `Recorded ${outcome} decision for tool ${updated.name}: ${justification}`);
+
+  const saved = await apiToolRepository.recordToolDecision(id, outcome, justification, decisionOwner);
+  const i2 = toolsCache.findIndex(t => t.id === id);
+  if (i2 !== -1) { toolsCache = [...toolsCache]; toolsCache[i2] = saved; persistToolsCache(); }
+  return saved;
+}
+
 export async function saveAgentToolGrant(assetId: string, toolId: string, grantedBy: string, grantNotes?: string): Promise<AgentToolGrant> {
   const asset = assetsCache.find(a => a.id === assetId);
   const tool = toolsCache.find(t => t.id === toolId);

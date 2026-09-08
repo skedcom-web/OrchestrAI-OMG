@@ -217,6 +217,12 @@ export const localToolRepository: ToolRepository = {
   async archiveTool(id, archivedBy, archiveReason) {
     await storage.archiveTool(id, archivedBy, archiveReason);
   },
+  async restoreTool(id) {
+    await storage.restoreTool(id);
+  },
+  async recordToolDecision(id, outcome, justification, decisionOwner) {
+    return storage.recordToolDecision(id, outcome, justification, decisionOwner);
+  },
 };
 
 export const localAgentToolGrantRepository: AgentToolGrantRepository = {

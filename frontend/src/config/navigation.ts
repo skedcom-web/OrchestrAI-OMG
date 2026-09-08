@@ -371,6 +371,14 @@ export const NAV_DOMAINS: NavDomain[] = [
           { path: '/governance-triggers', label: 'Governance Triggers', icon: '🔔', description: 'Rules that convert change conditions into governance work automatically.', keywords: ['trigger', 'automation', 'escalation', 'rule'] },
         ],
       },
+      {
+        label: 'Tools',
+        modules: [
+          { path: '/tool-registry', label: 'Tool Registry', icon: '🧰', description: 'Every tool and external capability an AI agent can call — classified, owned and risk-tiered.', keywords: ['tool', 'registry', 'function calling', 'capability'] },
+          { path: '/tool-approvals', label: 'Tool Approvals & Risk', icon: '⚖️', description: 'Risk tiering and GO / Conditional GO / No Go decisions for governed tools.', keywords: ['tool risk', 'tool approval', 'tool decision'] },
+          { path: '/tool-monitoring', label: 'Tool Call Monitoring', icon: '📶', description: 'Which agents are granted which tools, and where tool-access risk concentrates.', keywords: ['tool monitoring', 'tool usage', 'tool grants'] },
+        ],
+      },
     ],
   }),
 
@@ -438,20 +446,8 @@ export interface FutureModule extends NavModule {
 }
 
 export const FUTURE_MODULES: FutureModule[] = [
-  // R13 Model Governance, R14 Knowledge Governance, R15 Prompt Governance
-  // and R16 Agent Governance shipped as real workspaces (AI Inventory &
-  // Registry → Models / Knowledge / Prompts / Agents, above) — no longer
-  // roadmap placeholders. Tool Governance's data model shipped with R16 too
-  // (see the Release Dependency Map); its registry/lifecycle/risk screens
-  // are still the R17 placeholder below.
-  {
-    path: '/tool-governance',
-    label: 'Tool Governance',
-    icon: '🧰',
-    phase: 'Planned',
-    description: 'Governance over the tools and functions an AI system is permitted to call.',
-    capabilities: ['Tool registry', 'Call authorization', 'Tool-use audit trail'],
-  },
+  // R13 Model, R14 Knowledge, R15 Prompt, R16 Agent and R17 Tool Governance
+  // all shipped as real workspaces above — no longer roadmap placeholders.
   {
     path: '/ai-control-library',
     label: 'Control Governance',

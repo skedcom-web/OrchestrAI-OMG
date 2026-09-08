@@ -69,6 +69,9 @@ import { PromptApprovalsPage } from './pages/PromptApprovalsPage';
 import { PromptEvidencePage } from './pages/PromptEvidencePage';
 import { AgentAccountabilityPage } from './pages/AgentAccountabilityPage';
 import { AgentMonitoringPage } from './pages/AgentMonitoringPage';
+import { ToolRegistryPage } from './pages/ToolRegistryPage';
+import { ToolApprovalsPage } from './pages/ToolApprovalsPage';
+import { ToolMonitoringPage } from './pages/ToolMonitoringPage';
 import { RbacAdministrationPage } from './pages/RbacAdministrationPage';
 import { TenantSettingsPage } from './pages/TenantSettingsPage';
 import { OmgOverviewPage } from './pages/OmgOverviewPage';
@@ -204,6 +207,11 @@ const GOVERNED_ROUTES: { path: string; element: React.ReactNode }[] = [
   // R16 — Agent Governance
   { path: '/agent-accountability', element: <AgentAccountabilityPage /> },
   { path: '/agent-monitoring', element: <AgentMonitoringPage /> },
+
+  // R17 — Tool Governance
+  { path: '/tool-registry', element: <ToolRegistryPage /> },
+  { path: '/tool-approvals', element: <ToolApprovalsPage /> },
+  { path: '/tool-monitoring', element: <ToolMonitoringPage /> },
 
   // Domain 2 — Risk & Compliance
   { path: '/risk', element: <RiskCenterPage /> },

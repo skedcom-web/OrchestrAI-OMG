@@ -716,6 +716,16 @@ export const apiToolRepository: ToolRepository = {
   async archiveTool(id, archivedBy, archiveReason) {
     await apiRequest<void>(`/tools/${id}`, { method: 'DELETE', body: JSON.stringify({ archivedBy, archiveReason }) });
   },
+  async restoreTool(id) {
+    await apiRequest<void>(`/tools/${id}/restore`, { method: 'PATCH' });
+  },
+  async recordToolDecision(id, outcome, justification, decisionOwner) {
+    const row = await apiRequest<any>(`/tools/${id}/decision`, {
+      method: 'POST',
+      body: JSON.stringify({ outcome: enumMaps.decisionOutcome.toBackend(outcome), justification, decisionOwner }),
+    });
+    return toolFromBackend(row);
+  },
 };
 
 export const apiAgentToolGrantRepository: AgentToolGrantRepository = {

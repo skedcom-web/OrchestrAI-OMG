@@ -144,6 +144,8 @@ export interface ToolRepository {
   createTool(data: Partial<Tool>): Promise<Tool>;
   updateTool(id: string, data: Partial<Tool>): Promise<Tool>;
   archiveTool(id: string, archivedBy?: string, archiveReason?: string): Promise<void>;
+  restoreTool(id: string): Promise<void>;
+  recordToolDecision(id: string, outcome: DecisionOutcome, justification: string, decisionOwner: string): Promise<Tool>;
 }
 
 /** R16 — Agent Governance. The authorization boundary between an agent and a tool. */

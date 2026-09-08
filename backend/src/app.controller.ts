@@ -679,6 +679,41 @@ export class AppController {
     return { archived: true, id, record };
   }
 
+  @Patch('tools/:id/restore')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async restoreTool(@Param('id') id: string) {
+    const existing = await this.prisma.tool.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundException(`Tool ${id} not found`);
+    const record = await this.prisma.tool.update({
+      where: { id },
+      data: { isArchived: false, archivedAt: null, archivedBy: null, archiveReason: null },
+    });
+    return { restored: true, id, record };
+  }
+
+  /** R17 — Tool Governance. Same GO / Conditional GO / No Go vocabulary as every other domain. */
+  @Post('tools/:id/decision')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER')
+  async recordToolDecision(
+    @Param('id') id: string,
+    @Body() body: { outcome: string; justification: string; decisionOwner: string },
+  ) {
+    const existing = await this.prisma.tool.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundException(`Tool ${id} not found`);
+    if (!body.justification || !body.decisionOwner) {
+      throw new BadRequestException('A tool decision requires a justification and a named decision owner.');
+    }
+    return this.prisma.tool.update({
+      where: { id },
+      data: {
+        decisionOutcome: body.outcome as any,
+        decisionJustification: body.justification,
+        decisionOwner: body.decisionOwner,
+        decisionDate: new Date(),
+      },
+    });
+  }
+
   /** Which agents (AIAsset) are authorized to call which tools. */
   @Get('agent-tool-grants')
   @Roles(

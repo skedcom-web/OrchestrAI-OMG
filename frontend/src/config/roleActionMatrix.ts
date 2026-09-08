@@ -39,6 +39,7 @@ export type ActionKey =
   | 'tool:create'
   | 'tool:edit'
   | 'tool:archive'
+  | 'tool:decide'
   | 'agentToolGrant:create'
   | 'agentToolGrant:delete'
   | 'evidenceRecord:create'
@@ -139,6 +140,7 @@ export const ROLE_ACTION_MATRIX: Record<ActionKey, UserRole[]> = {
   'tool:create': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
   'tool:edit': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
   'tool:archive': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
+  'tool:decide': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER'],
   'agentToolGrant:create': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
   'agentToolGrant:delete': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
 

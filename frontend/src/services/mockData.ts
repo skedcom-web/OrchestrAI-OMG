@@ -129,7 +129,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
     description: 'Platform Owner • Full system access, user management, platform settings & continuous monitoring oversight.',
     icon: '👑',
     allowedNav: [
-      '/', '/dashboard', '/assets', '/models', '/model-lifecycle', '/model-risk', '/model-analytics', '/knowledge-registry', '/knowledge-quality', '/knowledge-traceability', '/prompt-library', '/prompt-approvals', '/prompt-evidence', '/agent-accountability', '/agent-monitoring', '/ownership', '/risk', 
+      '/', '/dashboard', '/assets', '/models', '/model-lifecycle', '/model-risk', '/model-analytics', '/knowledge-registry', '/knowledge-quality', '/knowledge-traceability', '/prompt-library', '/prompt-approvals', '/prompt-evidence', '/agent-accountability', '/agent-monitoring', '/tool-registry', '/tool-approvals', '/tool-monitoring', '/ownership', '/risk', 
       '/validation', '/evidence', '/evidence-registry', '/review-workbench', '/findings', '/validation-dashboard', 
       '/decision-intelligence', '/governance-blockers', '/decision-workbench-v4', '/decision-dashboard',
       '/compliance-center', '/compliance-packs', '/regulatory-library', '/compliance-assessment', '/compliance-findings', '/compliance-dashboard',
@@ -163,7 +163,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
     description: 'Program Manager • Manage AI Assets, Review Calendar, Alerts & Governance Health Engine.',
     icon: '🛡️',
     allowedNav: [
-      '/', '/dashboard', '/assets', '/models', '/model-lifecycle', '/model-risk', '/model-analytics', '/knowledge-registry', '/knowledge-quality', '/knowledge-traceability', '/prompt-library', '/prompt-approvals', '/prompt-evidence', '/agent-accountability', '/agent-monitoring', '/ownership', '/risk', 
+      '/', '/dashboard', '/assets', '/models', '/model-lifecycle', '/model-risk', '/model-analytics', '/knowledge-registry', '/knowledge-quality', '/knowledge-traceability', '/prompt-library', '/prompt-approvals', '/prompt-evidence', '/agent-accountability', '/agent-monitoring', '/tool-registry', '/tool-approvals', '/tool-monitoring', '/ownership', '/risk', 
       '/validation', '/evidence', '/evidence-registry', '/review-workbench', '/findings', '/validation-dashboard', 
       '/decision-intelligence', '/governance-blockers', '/decision-workbench-v4', '/decision-dashboard',
       '/compliance-center', '/compliance-packs', '/regulatory-library', '/compliance-assessment', '/compliance-findings', '/compliance-dashboard',
@@ -205,7 +205,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
     description: 'Risk Governance • Monitor governance alerts, risk health & corrective remediation tasks.',
     icon: '⚡',
     allowedNav: [
-      '/', '/dashboard', '/assets', '/models', '/model-lifecycle', '/model-risk', '/model-analytics', '/knowledge-registry', '/knowledge-quality', '/knowledge-traceability', '/prompt-library', '/prompt-approvals', '/prompt-evidence', '/agent-accountability', '/agent-monitoring', '/risk', '/evidence', '/evidence-registry', '/review-workbench', '/findings',
+      '/', '/dashboard', '/assets', '/models', '/model-lifecycle', '/model-risk', '/model-analytics', '/knowledge-registry', '/knowledge-quality', '/knowledge-traceability', '/prompt-library', '/prompt-approvals', '/prompt-evidence', '/agent-accountability', '/agent-monitoring', '/tool-registry', '/tool-approvals', '/tool-monitoring', '/risk', '/evidence', '/evidence-registry', '/review-workbench', '/findings',
       '/decision-intelligence', '/governance-blockers', '/decision-workbench-v4', '/decision-dashboard',
       '/compliance-center', '/compliance-packs', '/regulatory-library', '/compliance-findings', '/compliance-dashboard',
       '/operations-center', '/kill-switch', '/override-center', '/incidents', '/operations-dashboard', '/governance-timeline',
@@ -241,7 +241,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
     description: 'Business Accountability • Track asset governance health, assigned corrective actions & scheduled reviews.',
     icon: '💼',
     allowedNav: [
-      '/', '/dashboard', '/assets', '/models', '/model-lifecycle', '/model-risk', '/model-analytics', '/knowledge-registry', '/knowledge-quality', '/knowledge-traceability', '/prompt-library', '/prompt-approvals', '/prompt-evidence', '/agent-accountability', '/agent-monitoring', '/ownership', '/evidence', '/evidence-registry', '/decision-intelligence', 
+      '/', '/dashboard', '/assets', '/models', '/model-lifecycle', '/model-risk', '/model-analytics', '/knowledge-registry', '/knowledge-quality', '/knowledge-traceability', '/prompt-library', '/prompt-approvals', '/prompt-evidence', '/agent-accountability', '/agent-monitoring', '/tool-registry', '/tool-approvals', '/tool-monitoring', '/ownership', '/evidence', '/evidence-registry', '/decision-intelligence', 
       '/compliance-center', '/compliance-packs', '/operations-center', '/kill-switch', '/incidents', '/governance-timeline',
       '/governance-monitoring', '/review-calendar', '/corrective-actions',
       // Phase 8 — Governance Operating System
@@ -274,7 +274,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
     description: 'Validation Officer • Model validation reviews, validation health & corrective action verification.',
     icon: '🧪',
     allowedNav: [
-      '/', '/dashboard', '/assets', '/models', '/model-lifecycle', '/model-risk', '/model-analytics', '/knowledge-registry', '/knowledge-quality', '/knowledge-traceability', '/prompt-library', '/prompt-approvals', '/prompt-evidence', '/agent-accountability', '/agent-monitoring', '/validation', '/evidence', '/evidence-registry', '/review-workbench', '/findings', 
+      '/', '/dashboard', '/assets', '/models', '/model-lifecycle', '/model-risk', '/model-analytics', '/knowledge-registry', '/knowledge-quality', '/knowledge-traceability', '/prompt-library', '/prompt-approvals', '/prompt-evidence', '/agent-accountability', '/agent-monitoring', '/tool-registry', '/tool-approvals', '/tool-monitoring', '/validation', '/evidence', '/evidence-registry', '/review-workbench', '/findings', 
       '/validation-dashboard', '/decision-intelligence', '/compliance-assessment', '/incidents', '/governance-timeline',
       '/governance-monitoring', '/corrective-actions',
       // Phase 8 — Governance Operating System
@@ -307,7 +307,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
     description: 'Independent Auditor • Read-only governance health, alert logs, review calendar & trends.',
     icon: '📜',
     allowedNav: [
-      '/', '/dashboard', '/assets', '/models', '/model-lifecycle', '/model-risk', '/model-analytics', '/knowledge-registry', '/knowledge-quality', '/knowledge-traceability', '/prompt-library', '/prompt-approvals', '/prompt-evidence', '/agent-accountability', '/agent-monitoring', '/evidence', '/evidence-registry', '/findings', '/decision-workbench-v4', '/decision-dashboard',
+      '/', '/dashboard', '/assets', '/models', '/model-lifecycle', '/model-risk', '/model-analytics', '/knowledge-registry', '/knowledge-quality', '/knowledge-traceability', '/prompt-library', '/prompt-approvals', '/prompt-evidence', '/agent-accountability', '/agent-monitoring', '/tool-registry', '/tool-approvals', '/tool-monitoring', '/evidence', '/evidence-registry', '/findings', '/decision-workbench-v4', '/decision-dashboard',
       '/compliance-center', '/compliance-packs', '/regulatory-library', '/compliance-findings', '/compliance-dashboard',
       '/operations-center', '/kill-switch', '/override-center', '/incidents', '/operations-dashboard', '/retirement', '/governance-timeline',
       '/governance-monitoring', '/governance-alerts', '/review-calendar', '/corrective-actions', '/governance-trends', '/audit-logs',
@@ -342,7 +342,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
     description: 'Executive Viewer • Governance Trends Dashboard & portfolio health score visibility.',
     icon: '👁️',
     allowedNav: [
-      '/', '/dashboard', '/assets', '/models', '/model-lifecycle', '/model-risk', '/model-analytics', '/knowledge-registry', '/knowledge-quality', '/knowledge-traceability', '/prompt-library', '/prompt-approvals', '/prompt-evidence', '/agent-accountability', '/agent-monitoring', '/validation-dashboard', '/decision-dashboard', '/compliance-dashboard', '/operations-dashboard', '/governance-trends',
+      '/', '/dashboard', '/assets', '/models', '/model-lifecycle', '/model-risk', '/model-analytics', '/knowledge-registry', '/knowledge-quality', '/knowledge-traceability', '/prompt-library', '/prompt-approvals', '/prompt-evidence', '/agent-accountability', '/agent-monitoring', '/tool-registry', '/tool-approvals', '/tool-monitoring', '/validation-dashboard', '/decision-dashboard', '/compliance-dashboard', '/operations-dashboard', '/governance-trends',
       // Phase 8 — Governance Operating System
       '/asset-lifecycle', '/command-center',
       // Phase 9 — Executive Governance (board observer, read-only surfaces)
