@@ -171,6 +171,14 @@ export const NAV_DOMAINS: NavDomain[] = [
           { path: '/knowledge-traceability', label: 'Knowledge Traceability', icon: '🔗', description: 'Which assets retrieve from which knowledge sources across the portfolio.', keywords: ['knowledge traceability', 'knowledge usage', 'rag lineage'] },
         ],
       },
+      {
+        label: 'Prompts',
+        modules: [
+          { path: '/prompt-library', label: 'Prompt Library', icon: '💬', description: 'Every governed prompt template, versioned — every edit is a new version, prior versions retained.', keywords: ['prompt', 'template', 'library', 'version history'] },
+          { path: '/prompt-approvals', label: 'Prompt Approvals & Risk', icon: '⚖️', description: 'Risk tiering and GO / Conditional GO / No Go decisions for governed prompts.', keywords: ['prompt risk', 'prompt approval', 'prompt decision'] },
+          { path: '/prompt-evidence', label: 'Prompt Evidence', icon: '🧾', description: 'Injection-control review, test transcripts and sign-off for every prompt version.', keywords: ['prompt evidence', 'injection control', 'red team', 'review sign-off'] },
+        ],
+      },
     ],
   }),
 
@@ -423,17 +431,9 @@ export interface FutureModule extends NavModule {
 }
 
 export const FUTURE_MODULES: FutureModule[] = [
-  // R13 Model Governance and R14 Knowledge Governance shipped as real
-  // workspaces (AI Inventory & Registry → Models / Knowledge, above) — no
-  // longer roadmap placeholders.
-  {
-    path: '/prompt-governance',
-    label: 'Prompt Governance',
-    icon: '💬',
-    phase: 'Planned',
-    description: 'Prompt libraries, prompt-injection controls, prompt versioning and approval.',
-    capabilities: ['Prompt library & versioning', 'Prompt-injection controls', 'Prompt approval workflow'],
-  },
+  // R13 Model Governance, R14 Knowledge Governance and R15 Prompt Governance
+  // shipped as real workspaces (AI Inventory & Registry → Models / Knowledge
+  // / Prompts, above) — no longer roadmap placeholders.
   {
     path: '/agent-governance',
     label: 'Agent Governance',

@@ -52,6 +52,7 @@ import type {
   ModelType,
   KnowledgeSourceType,
   ReadinessStatus,
+  PromptReviewStatus,
 } from '../types';
 
 function toBackend<T extends string>(map: Record<T, string>) {
@@ -95,6 +96,11 @@ const KNOWLEDGE_SOURCE_TYPE: Record<KnowledgeSourceType, string> = {
 
 const QUALITY_CONTROL_STATUS: Record<ReadinessStatus, string> = {
   'Ready': 'READY', 'Partially Ready': 'PARTIALLY_READY', 'Not Ready': 'NOT_READY',
+};
+
+/** R15 — Prompt Governance. */
+const PROMPT_REVIEW_STATUS: Record<PromptReviewStatus, string> = {
+  'Not Reviewed': 'NOT_REVIEWED', 'Reviewed — Pass': 'REVIEWED_PASS', 'Reviewed — Flagged': 'REVIEWED_FLAGGED',
 };
 
 const GOVERNANCE_STATUS: Record<GovernanceStatus, string> = {
@@ -334,6 +340,7 @@ export const enumMaps = {
   modelType: { toBackend: toBackend(MODEL_TYPE), toFrontend: toFrontend(MODEL_TYPE) },
   knowledgeSourceType: { toBackend: toBackend(KNOWLEDGE_SOURCE_TYPE), toFrontend: toFrontend(KNOWLEDGE_SOURCE_TYPE) },
   qualityControlStatus: { toBackend: toBackend(QUALITY_CONTROL_STATUS), toFrontend: toFrontend(QUALITY_CONTROL_STATUS) },
+  promptReviewStatus: { toBackend: toBackend(PROMPT_REVIEW_STATUS), toFrontend: toFrontend(PROMPT_REVIEW_STATUS) },
   governanceStatus: { toBackend: toBackend(GOVERNANCE_STATUS), toFrontend: toFrontend(GOVERNANCE_STATUS) },
   decisionOutcome: { toBackend: toBackend(DECISION_OUTCOME), toFrontend: toFrontend(DECISION_OUTCOME) },
   oversightType: { toBackend: toBackend(OVERSIGHT_TYPE), toFrontend: toFrontend(OVERSIGHT_TYPE) },

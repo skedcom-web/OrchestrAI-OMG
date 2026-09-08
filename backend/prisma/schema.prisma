@@ -306,6 +306,87 @@ model AssetKnowledgeUsage {
 }
 
 // ---------------------------------------------------------------------------
+// R15 — PROMPT GOVERNANCE (Architecture Package, Blueprint 4)
+// Every edit is a new version, prior versions retained — modeled as a child
+// table rather than mutating a single row. Injection-control review lives on
+// the version (a new version can reintroduce a vulnerability a prior
+// version didn't have), refining the architecture package's original
+// Prompt-level field into a per-version one during implementation.
+// ---------------------------------------------------------------------------
+
+enum PromptReviewStatus {
+  NOT_REVIEWED
+  REVIEWED_PASS
+  REVIEWED_FLAGGED
+}
+
+model Prompt {
+  id             String         @id @default(uuid())
+  name           String
+  description    String         @db.Text
+  riskLevel      RiskLevel      @default(MEDIUM)
+  lifecycleStage LifecycleStage @default(REGISTER)
+
+  accountableOwner String
+  promptOwner      String
+  riskOwner        String?
+
+  decisionOutcome       DecisionOutcome @default(PENDING)
+  decisionJustification String?         @db.Text
+  decisionOwner         String?
+  decisionDate          DateTime?
+
+  isArchived    Boolean   @default(false)
+  archivedAt    DateTime?
+  archivedBy    String?
+  archiveReason String?   @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  versions    PromptVersion[]
+  assetUsages AssetPromptUsage[]
+
+  @@map("prompts")
+}
+
+/// Immutable version history — an edit creates a new row, never overwrites one.
+model PromptVersion {
+  id            String @id @default(uuid())
+  promptId      String
+  prompt        Prompt @relation(fields: [promptId], references: [id], onDelete: Cascade)
+  versionNumber Int
+  templateBody  String @db.Text
+  changeNotes   String? @db.Text
+
+  // Evidence / injection-control review for this specific version.
+  reviewStatus      PromptReviewStatus @default(NOT_REVIEWED)
+  testTranscriptRef String?            @db.Text
+  reviewedBy        String?
+  reviewNotes       String?            @db.Text
+  reviewedAt        DateTime?
+
+  createdAt DateTime @default(now())
+  createdBy String
+
+  @@unique([promptId, versionNumber])
+  @@map("prompt_versions")
+}
+
+/// Many-to-many: which AI assets currently run which prompt.
+model AssetPromptUsage {
+  id        String   @id @default(uuid())
+  assetId   String
+  asset     AIAsset  @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  promptId  String
+  prompt    Prompt   @relation(fields: [promptId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([assetId, promptId])
+  @@map("asset_prompt_usages")
+}
+
+// ---------------------------------------------------------------------------
 // RELEASE 3 — Evidence Foundation
 // Evidence as a first-class, universal governance object: registry,
 // ownership, traceability, lifecycle and expiry. No scoring, no automation.
@@ -450,6 +531,7 @@ model AIAsset {
   consensusAssessments        ConsensusAssessment[]
   modelUsages                 AssetModelUsage[]
   knowledgeUsages             AssetKnowledgeUsage[]
+  promptUsages                AssetPromptUsage[]
 
   @@map("ai_assets")
 }

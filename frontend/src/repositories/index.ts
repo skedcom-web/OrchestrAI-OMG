@@ -31,6 +31,7 @@ import {
   localKnowledgeAssetRepository,
   localModelRepository,
   localObligationControlRepository,
+  localPromptRepository,
   localObligationEvidenceMappingRepository,
   localObligationRepository,
   localOutcomeRuleRepository,
@@ -62,6 +63,7 @@ import {
   apiKnowledgeAssetRepository,
   apiModelRepository,
   apiObligationControlRepository,
+  apiPromptRepository,
   apiObligationEvidenceMappingRepository,
   apiObligationRepository,
   apiOutcomeRuleRepository,
@@ -93,6 +95,7 @@ import type {
   KnowledgeAssetRepository,
   ModelRepository,
   ObligationControlRepository,
+  PromptRepository,
   ObligationEvidenceMappingRepository,
   ObligationRepository,
   OutcomeRuleRepository,
@@ -143,6 +146,13 @@ export function getKnowledgeAssetRepository(): KnowledgeAssetRepository {
 }
 
 export { localKnowledgeAssetRepository };
+
+/** R15 — Prompt Governance. Same Api-first rationale as Model/Knowledge Governance above. */
+export function getPromptRepository(): PromptRepository {
+  return apiPromptRepository;
+}
+
+export { localPromptRepository };
 
 /**
  * Release 5.1 — Compliance Persistence Alignment. Api is the default for

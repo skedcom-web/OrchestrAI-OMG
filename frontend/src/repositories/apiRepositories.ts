@@ -36,6 +36,7 @@ import type {
   KnowledgeAssetRepository,
   ModelRepository,
   ObligationControlRepository,
+  PromptRepository,
   ObligationEvidenceMappingRepository,
   ObligationRepository,
   OutcomeRuleRepository,
@@ -50,6 +51,7 @@ import type {
   AssessorCertification,
   AssetKnowledgeUsage,
   AssetModelUsage,
+  AssetPromptUsage,
   CompliancePack,
   ComplianceRequirement,
   ConditionDefinition,
@@ -70,6 +72,8 @@ import type {
   KnowledgeAsset,
   Model,
   Obligation,
+  Prompt,
+  PromptVersion,
   ObligationControl,
   ObligationEvidenceMapping,
   OutcomeRule,
@@ -523,6 +527,124 @@ export const apiKnowledgeAssetRepository: KnowledgeAssetRepository = {
   },
   async deleteUsage(id) {
     await apiRequest<void>(`/asset-knowledge-usages/${id}`, { method: 'DELETE' });
+  },
+};
+
+// --- R15: PROMPT GOVERNANCE ---
+
+function promptVersionFromBackend(row: any): PromptVersion {
+  return {
+    id: row.id,
+    promptId: row.promptId,
+    versionNumber: row.versionNumber,
+    templateBody: row.templateBody,
+    changeNotes: row.changeNotes ?? undefined,
+    reviewStatus: enumMaps.promptReviewStatus.toFrontend(row.reviewStatus),
+    testTranscriptRef: row.testTranscriptRef ?? undefined,
+    reviewedBy: row.reviewedBy ?? undefined,
+    reviewNotes: row.reviewNotes ?? undefined,
+    reviewedAt: row.reviewedAt ?? undefined,
+    createdAt: row.createdAt,
+    createdBy: row.createdBy,
+  };
+}
+
+function promptToBackend(data: Partial<Prompt>) {
+  const body: Record<string, unknown> = { ...data };
+  delete body.versions;
+  delete body.usedByAssetIds;
+  delete body.usedByAssetNames;
+  if (data.riskLevel) body.riskLevel = enumMaps.riskLevel.toBackend(data.riskLevel);
+  if (data.lifecycleStage) body.lifecycleStage = enumMaps.lifecycleStage.toBackend(data.lifecycleStage);
+  if (data.decisionOutcome) body.decisionOutcome = enumMaps.decisionOutcome.toBackend(data.decisionOutcome);
+  return body;
+}
+
+function promptFromBackend(row: any): Prompt {
+  const usages = Array.isArray(row.assetUsages) ? row.assetUsages : [];
+  const versions = Array.isArray(row.versions) ? row.versions.map(promptVersionFromBackend) : [];
+  return {
+    id: row.id,
+    name: row.name,
+    description: row.description,
+    riskLevel: enumMaps.riskLevel.toFrontend(row.riskLevel),
+    lifecycleStage: enumMaps.lifecycleStage.toFrontend(row.lifecycleStage),
+    accountableOwner: row.accountableOwner,
+    promptOwner: row.promptOwner,
+    riskOwner: row.riskOwner ?? undefined,
+    decisionOutcome: enumMaps.decisionOutcome.toFrontend(row.decisionOutcome),
+    decisionJustification: row.decisionJustification ?? undefined,
+    decisionOwner: row.decisionOwner ?? undefined,
+    decisionDate: row.decisionDate ?? undefined,
+    isArchived: !!row.isArchived,
+    archivedAt: row.archivedAt ?? undefined,
+    archivedBy: row.archivedBy ?? undefined,
+    archiveReason: row.archiveReason ?? undefined,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+    versions,
+    usedByAssetIds: usages.map((u: any) => u.assetId),
+    usedByAssetNames: usages.map((u: any) => u.asset?.name).filter(Boolean),
+  };
+}
+
+function promptUsageFromBackend(row: any): AssetPromptUsage {
+  return {
+    id: row.id,
+    assetId: row.assetId,
+    assetName: row.asset?.name,
+    promptId: row.promptId,
+    promptName: row.prompt?.name,
+    createdAt: row.createdAt,
+  };
+}
+
+export const apiPromptRepository: PromptRepository = {
+  async getPrompts(includeArchived) {
+    const rows = await apiRequest<any[]>(`/prompts${includeArchived ? '?includeArchived=true' : ''}`);
+    return rows.map(promptFromBackend);
+  },
+  async createPrompt(data) {
+    const row = await apiRequest<any>('/prompts', { method: 'POST', body: JSON.stringify(promptToBackend(data)) });
+    return promptFromBackend(row);
+  },
+  async updatePrompt(id, data) {
+    const row = await apiRequest<any>(`/prompts/${id}`, { method: 'PATCH', body: JSON.stringify(promptToBackend(data)) });
+    return promptFromBackend(row);
+  },
+  async archivePrompt(id, archivedBy, archiveReason) {
+    await apiRequest<void>(`/prompts/${id}`, { method: 'DELETE', body: JSON.stringify({ archivedBy, archiveReason }) });
+  },
+  async restorePrompt(id) {
+    await apiRequest<void>(`/prompts/${id}/restore`, { method: 'PATCH' });
+  },
+  async recordPromptDecision(id, outcome, justification, decisionOwner) {
+    const row = await apiRequest<any>(`/prompts/${id}/decision`, {
+      method: 'POST',
+      body: JSON.stringify({ outcome: enumMaps.decisionOutcome.toBackend(outcome), justification, decisionOwner }),
+    });
+    return promptFromBackend(row);
+  },
+  async createVersion(promptId, templateBody, createdBy, changeNotes) {
+    const row = await apiRequest<any>(`/prompts/${promptId}/versions`, {
+      method: 'POST',
+      body: JSON.stringify({ templateBody, createdBy, changeNotes }),
+    });
+    return promptVersionFromBackend(row);
+  },
+  async reviewVersion(versionId, reviewStatus, reviewedBy, reviewNotes, testTranscriptRef) {
+    const row = await apiRequest<any>(`/prompt-versions/${versionId}/review`, {
+      method: 'PATCH',
+      body: JSON.stringify({ reviewStatus: enumMaps.promptReviewStatus.toBackend(reviewStatus), reviewedBy, reviewNotes, testTranscriptRef }),
+    });
+    return promptVersionFromBackend(row);
+  },
+  async createUsage(assetId, promptId) {
+    const row = await apiRequest<any>('/asset-prompt-usages', { method: 'POST', body: JSON.stringify({ assetId, promptId }) });
+    return promptUsageFromBackend(row);
+  },
+  async deleteUsage(id) {
+    await apiRequest<void>(`/asset-prompt-usages/${id}`, { method: 'DELETE' });
   },
 };
 

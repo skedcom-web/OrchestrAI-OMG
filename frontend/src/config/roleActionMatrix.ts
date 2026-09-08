@@ -28,6 +28,14 @@ export type ActionKey =
   | 'knowledgeAsset:decide'
   | 'assetKnowledgeUsage:create'
   | 'assetKnowledgeUsage:delete'
+  | 'prompt:create'
+  | 'prompt:edit'
+  | 'prompt:archive'
+  | 'prompt:decide'
+  | 'promptVersion:create'
+  | 'promptVersion:review'
+  | 'assetPromptUsage:create'
+  | 'assetPromptUsage:delete'
   | 'evidenceRecord:create'
   | 'evidenceRecord:edit'
   | 'evidenceRecord:delete'
@@ -113,6 +121,15 @@ export const ROLE_ACTION_MATRIX: Record<ActionKey, UserRole[]> = {
   'knowledgeAsset:decide': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER'],
   'assetKnowledgeUsage:create': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
   'assetKnowledgeUsage:delete': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
+
+  'prompt:create': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
+  'prompt:edit': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
+  'prompt:archive': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
+  'prompt:decide': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER'],
+  'promptVersion:create': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
+  'promptVersion:review': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER'],
+  'assetPromptUsage:create': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
+  'assetPromptUsage:delete': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
 
   'evidenceRecord:create': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER'],
   'evidenceRecord:edit': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER'],

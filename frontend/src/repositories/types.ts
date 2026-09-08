@@ -21,8 +21,12 @@ import type {
   ConsensusAssessment,
   DecisionOutcome,
   DecisionRecord,
+  AssetPromptUsage,
   KnowledgeAsset,
   Model,
+  Prompt,
+  PromptReviewStatus,
+  PromptVersion,
   EvidenceMapping,
   EvidenceRecord,
   GovernanceDrift,
@@ -111,6 +115,20 @@ export interface KnowledgeAssetRepository {
   restoreKnowledgeAsset(id: string): Promise<void>;
   recordKnowledgeDecision(id: string, outcome: DecisionOutcome, justification: string, decisionOwner: string): Promise<KnowledgeAsset>;
   createUsage(assetId: string, knowledgeAssetId: string): Promise<AssetKnowledgeUsage>;
+  deleteUsage(id: string): Promise<void>;
+}
+
+/** R15 — Prompt Governance. */
+export interface PromptRepository {
+  getPrompts(includeArchived?: boolean): Promise<Prompt[]>;
+  createPrompt(data: Partial<Prompt> & { templateBody: string; createdBy: string }): Promise<Prompt>;
+  updatePrompt(id: string, data: Partial<Prompt>): Promise<Prompt>;
+  archivePrompt(id: string, archivedBy?: string, archiveReason?: string): Promise<void>;
+  restorePrompt(id: string): Promise<void>;
+  recordPromptDecision(id: string, outcome: DecisionOutcome, justification: string, decisionOwner: string): Promise<Prompt>;
+  createVersion(promptId: string, templateBody: string, createdBy: string, changeNotes?: string): Promise<PromptVersion>;
+  reviewVersion(versionId: string, reviewStatus: PromptReviewStatus, reviewedBy: string, reviewNotes?: string, testTranscriptRef?: string): Promise<PromptVersion>;
+  createUsage(assetId: string, promptId: string): Promise<AssetPromptUsage>;
   deleteUsage(id: string): Promise<void>;
 }
 

@@ -33,6 +33,7 @@ import type {
   KnowledgeAssetRepository,
   ModelRepository,
   ObligationControlRepository,
+  PromptRepository,
   ObligationEvidenceMappingRepository,
   ObligationRepository,
   OutcomeRuleRepository,
@@ -165,6 +166,39 @@ export const localKnowledgeAssetRepository: KnowledgeAssetRepository = {
   },
   async deleteUsage(id) {
     await storage.deleteAssetKnowledgeUsage(id);
+  },
+};
+
+export const localPromptRepository: PromptRepository = {
+  async getPrompts(includeArchived) {
+    return storage.getPrompts(includeArchived);
+  },
+  async createPrompt(data) {
+    return storage.savePrompt(data);
+  },
+  async updatePrompt(id, data) {
+    return storage.savePrompt({ ...data, id });
+  },
+  async archivePrompt(id, archivedBy, archiveReason) {
+    await storage.archivePrompt(id, archivedBy, archiveReason);
+  },
+  async restorePrompt(id) {
+    await storage.restorePrompt(id);
+  },
+  async recordPromptDecision(id, outcome, justification, decisionOwner) {
+    return storage.recordPromptDecision(id, outcome, justification, decisionOwner);
+  },
+  async createVersion(promptId, templateBody, createdBy, changeNotes) {
+    return storage.createPromptVersion(promptId, templateBody, createdBy, changeNotes);
+  },
+  async reviewVersion(versionId, reviewStatus, reviewedBy, reviewNotes, testTranscriptRef) {
+    return storage.reviewPromptVersion(versionId, reviewStatus, reviewedBy, reviewNotes, testTranscriptRef);
+  },
+  async createUsage(assetId, promptId) {
+    return storage.saveAssetPromptUsage(assetId, promptId);
+  },
+  async deleteUsage(id) {
+    await storage.deleteAssetPromptUsage(id);
   },
 };
 

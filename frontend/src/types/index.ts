@@ -167,6 +167,63 @@ export interface AssetKnowledgeUsage {
   createdAt: string;
 }
 
+/** R15 — Prompt Governance. */
+export type PromptReviewStatus = 'Not Reviewed' | 'Reviewed — Pass' | 'Reviewed — Flagged';
+
+export interface PromptVersion {
+  id: string;
+  promptId: string;
+  versionNumber: number;
+  templateBody: string;
+  changeNotes?: string;
+  reviewStatus: PromptReviewStatus;
+  testTranscriptRef?: string;
+  reviewedBy?: string;
+  reviewNotes?: string;
+  reviewedAt?: string;
+  createdAt: string;
+  createdBy: string;
+}
+
+export interface Prompt {
+  id: string;
+  name: string;
+  description: string;
+  riskLevel: RiskLevel;
+  lifecycleStage: LifecycleStage;
+
+  accountableOwner: string;
+  promptOwner: string;
+  riskOwner?: string;
+
+  decisionOutcome: DecisionOutcome;
+  decisionJustification?: string;
+  decisionOwner?: string;
+  decisionDate?: string;
+
+  isArchived: boolean;
+  archivedAt?: string;
+  archivedBy?: string;
+  archiveReason?: string;
+
+  createdAt: string;
+  updatedAt: string;
+
+  versions: PromptVersion[];
+  usedByAssetIds: string[];
+  usedByAssetNames: string[];
+}
+
+/** Many-to-many join — which AI assets currently run which prompt. */
+export interface AssetPromptUsage {
+  id: string;
+  assetId: string;
+  assetName?: string;
+  promptId: string;
+  promptName?: string;
+  createdAt: string;
+}
+
 export interface DecisionReadinessChecklist {
   ownershipComplete: boolean;
   riskAssessmentComplete: boolean;
@@ -1026,7 +1083,7 @@ export interface AuditLog {
   userName: string;
   userRole: string;
   action: string;
-  entityType: 'Asset' | 'User' | 'Ownership' | 'Risk' | 'Decision' | 'Validation' | 'Evidence' | 'Finding' | 'DecisionPackage' | 'ComplianceAssessment' | 'CompliancePackage' | 'KillSwitch' | 'Override' | 'Incident' | 'Retirement' | 'ScheduledReview' | 'CorrectiveAction' | 'GovernanceReviewPackage' | 'Policy' | 'PolicyMapping' | 'PolicyViolation' | 'ExecutiveReport' | 'ChangeRequest' | 'StateTransition' | 'ReassessmentTrigger' | 'GovernanceReauthorizationRecord' | 'EvidenceRecord' | 'Model' | 'KnowledgeAsset';
+  entityType: 'Asset' | 'User' | 'Ownership' | 'Risk' | 'Decision' | 'Validation' | 'Evidence' | 'Finding' | 'DecisionPackage' | 'ComplianceAssessment' | 'CompliancePackage' | 'KillSwitch' | 'Override' | 'Incident' | 'Retirement' | 'ScheduledReview' | 'CorrectiveAction' | 'GovernanceReviewPackage' | 'Policy' | 'PolicyMapping' | 'PolicyViolation' | 'ExecutiveReport' | 'ChangeRequest' | 'StateTransition' | 'ReassessmentTrigger' | 'GovernanceReauthorizationRecord' | 'EvidenceRecord' | 'Model' | 'KnowledgeAsset' | 'Prompt';
   entityId: string;
   entityName: string;
   details: string;

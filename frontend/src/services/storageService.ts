@@ -37,6 +37,10 @@ import type {
   AssetModelUsage,
   KnowledgeAsset,
   AssetKnowledgeUsage,
+  Prompt,
+  PromptVersion,
+  PromptReviewStatus,
+  AssetPromptUsage,
   CompliancePack,
   ComplianceRequirement,
   PackControl,
@@ -85,6 +89,7 @@ import {
   INITIAL_EVIDENCE_RECORDS,
   INITIAL_MODELS,
   INITIAL_KNOWLEDGE_ASSETS,
+  INITIAL_PROMPTS,
   INITIAL_COMPLIANCE_PACKS,
   INITIAL_COMPLIANCE_REQUIREMENTS,
   INITIAL_PACK_CONTROLS,
@@ -123,7 +128,7 @@ import {
 import { generateActionDrafts } from '../config/governanceActionsEngine';
 import { buildDecisionTrace } from '../config/decisionTraceabilityEngine';
 import type { DecisionTrace } from '../config/decisionTraceabilityEngine';
-import { apiAssetRepository, apiEvidenceRepository, apiGovernanceRepository, apiModelRepository, apiKnowledgeAssetRepository } from '../repositories/apiRepositories';
+import { apiAssetRepository, apiEvidenceRepository, apiGovernanceRepository, apiModelRepository, apiKnowledgeAssetRepository, apiPromptRepository } from '../repositories/apiRepositories';
 import {
   apiCompliancePackRepository,
   apiControlRepository,
@@ -196,6 +201,8 @@ const STORAGE_KEYS = {
   ASSET_MODEL_USAGES: 'omg_asset_model_usages_v13',
   KNOWLEDGE_ASSETS: 'omg_knowledge_assets_v14',
   ASSET_KNOWLEDGE_USAGES: 'omg_asset_knowledge_usages_v14',
+  PROMPTS: 'omg_prompts_v15',
+  ASSET_PROMPT_USAGES: 'omg_asset_prompt_usages_v15',
   COMPLIANCE_PACKS: 'omg_compliance_packs_v7',
   COMPLIANCE_REQUIREMENTS: 'omg_compliance_requirements_v7',
   PACK_CONTROLS: 'omg_pack_controls_v7',
@@ -2187,6 +2194,204 @@ export async function deleteAssetKnowledgeUsage(id: string): Promise<void> {
   await apiKnowledgeAssetRepository.deleteUsage(id);
 }
 
+// --- R15 — PROMPT GOVERNANCE: API-FIRST, NEON-BACKED ---
+// Same cache-then-network pattern as Model/Knowledge Governance above. Every
+// edit is a new PromptVersion row (immutable history), never an overwrite.
+
+let promptsCache: Prompt[] = getItem<Prompt[]>(STORAGE_KEYS.PROMPTS, INITIAL_PROMPTS);
+let assetPromptUsagesCache: AssetPromptUsage[] = getItem<AssetPromptUsage[]>(STORAGE_KEYS.ASSET_PROMPT_USAGES, []);
+
+function persistPromptsCache() { setItem(STORAGE_KEYS.PROMPTS, promptsCache); }
+function persistAssetPromptUsagesCache() { setItem(STORAGE_KEYS.ASSET_PROMPT_USAGES, assetPromptUsagesCache); }
+
+export function getPrompts(includeArchived = false): Prompt[] {
+  return includeArchived ? promptsCache : promptsCache.filter(p => !p.isArchived);
+}
+
+export function getAssetPromptUsages(): AssetPromptUsage[] {
+  return assetPromptUsagesCache;
+}
+
+export async function savePrompt(data: Partial<Prompt> & { templateBody?: string; createdBy?: string }): Promise<Prompt> {
+  if (data.id) {
+    const idx = promptsCache.findIndex(p => p.id === data.id);
+    if (idx !== -1) {
+      const { templateBody, createdBy, ...governanceFields } = data;
+      const updated: Prompt = { ...promptsCache[idx], ...governanceFields, updatedAt: new Date().toISOString() };
+      promptsCache = [...promptsCache];
+      promptsCache[idx] = updated;
+      persistPromptsCache();
+
+      addAuditLog('usr-2', updated.promptOwner, 'GOVERNANCE_ADMIN', 'PROMPT_UPDATED', 'Prompt', updated.id, updated.name, `Updated prompt ${updated.name}`);
+
+      const saved = await apiPromptRepository.updatePrompt(updated.id, updated);
+      const i2 = promptsCache.findIndex(p => p.id === updated.id);
+      if (i2 !== -1) { promptsCache = [...promptsCache]; promptsCache[i2] = { ...saved, versions: promptsCache[i2].versions }; persistPromptsCache(); }
+      return promptsCache[i2 !== -1 ? i2 : idx];
+    }
+  }
+
+  const now = new Date().toISOString();
+  const templateBody = data.templateBody || '';
+  const createdBy = data.createdBy || data.promptOwner || '';
+  const draft: Prompt = {
+    id: data.id || `prompt-${Date.now().toString().slice(-6)}`,
+    name: data.name || 'New Prompt',
+    description: data.description || '',
+    riskLevel: data.riskLevel || 'Medium',
+    lifecycleStage: data.lifecycleStage || 'Register',
+    accountableOwner: data.accountableOwner || '',
+    promptOwner: data.promptOwner || '',
+    riskOwner: data.riskOwner,
+    decisionOutcome: data.decisionOutcome || 'PENDING',
+    decisionJustification: data.decisionJustification,
+    decisionOwner: data.decisionOwner,
+    decisionDate: data.decisionDate,
+    isArchived: false,
+    createdAt: now,
+    updatedAt: now,
+    versions: [{
+      id: `version-${Date.now().toString().slice(-6)}`,
+      promptId: data.id || '',
+      versionNumber: 1,
+      templateBody,
+      changeNotes: 'Initial version',
+      reviewStatus: 'Not Reviewed',
+      createdAt: now,
+      createdBy,
+    }],
+    usedByAssetIds: [],
+    usedByAssetNames: [],
+  };
+
+  promptsCache = [draft, ...promptsCache];
+  persistPromptsCache();
+  addAuditLog('usr-2', draft.promptOwner, 'GOVERNANCE_ADMIN', 'PROMPT_CREATED', 'Prompt', draft.id, draft.name, `Registered prompt ${draft.name}`);
+
+  const created = await apiPromptRepository.createPrompt({ ...draft, templateBody, createdBy });
+  promptsCache = promptsCache.map(p => (p.id === draft.id ? created : p));
+  persistPromptsCache();
+  return created;
+}
+
+export async function archivePrompt(id: string, archivedBy?: string, archiveReason?: string): Promise<void> {
+  const target = promptsCache.find(p => p.id === id);
+  if (!target) return;
+  promptsCache = promptsCache.map(p => (p.id === id ? { ...p, isArchived: true, archivedAt: new Date().toISOString(), archivedBy, archiveReason } : p));
+  persistPromptsCache();
+  addAuditLog('usr-1', archivedBy || 'Sarah Jenkins', 'SUPER_ADMIN', 'PROMPT_ARCHIVED', 'Prompt', id, target.name, `Archived prompt ${target.name}${archiveReason ? `: ${archiveReason}` : ''}`);
+  await apiPromptRepository.archivePrompt(id, archivedBy, archiveReason);
+}
+
+export async function restorePrompt(id: string): Promise<void> {
+  const target = promptsCache.find(p => p.id === id);
+  if (!target) return;
+  promptsCache = promptsCache.map(p => (p.id === id ? { ...p, isArchived: false, archivedAt: undefined, archivedBy: undefined, archiveReason: undefined } : p));
+  persistPromptsCache();
+  await apiPromptRepository.restorePrompt(id);
+}
+
+export async function recordPromptDecision(id: string, outcome: DecisionOutcome, justification: string, decisionOwner: string): Promise<Prompt> {
+  const idx = promptsCache.findIndex(p => p.id === id);
+  if (idx === -1) throw new Error(`Prompt ${id} not found`);
+  const now = new Date().toISOString();
+  const updated: Prompt = { ...promptsCache[idx], decisionOutcome: outcome, decisionJustification: justification, decisionOwner, decisionDate: now, updatedAt: now };
+  promptsCache = [...promptsCache];
+  promptsCache[idx] = updated;
+  persistPromptsCache();
+  addAuditLog('usr-2', decisionOwner, 'GOVERNANCE_ADMIN', 'PROMPT_DECISION_RECORDED', 'Prompt', id, updated.name, `Recorded ${outcome} decision for prompt ${updated.name}: ${justification}`);
+
+  const saved = await apiPromptRepository.recordPromptDecision(id, outcome, justification, decisionOwner);
+  const i2 = promptsCache.findIndex(p => p.id === id);
+  if (i2 !== -1) { promptsCache = [...promptsCache]; promptsCache[i2] = { ...saved, versions: promptsCache[i2].versions }; persistPromptsCache(); }
+  return promptsCache[i2 !== -1 ? i2 : idx];
+}
+
+export async function createPromptVersion(promptId: string, templateBody: string, createdBy: string, changeNotes?: string): Promise<PromptVersion> {
+  const idx = promptsCache.findIndex(p => p.id === promptId);
+  if (idx === -1) throw new Error(`Prompt ${promptId} not found`);
+  const nextVersion = Math.max(0, ...promptsCache[idx].versions.map(v => v.versionNumber)) + 1;
+  const draft: PromptVersion = {
+    id: `version-${Date.now().toString().slice(-6)}`,
+    promptId,
+    versionNumber: nextVersion,
+    templateBody,
+    changeNotes,
+    reviewStatus: 'Not Reviewed',
+    createdAt: new Date().toISOString(),
+    createdBy,
+  };
+  promptsCache = [...promptsCache];
+  promptsCache[idx] = { ...promptsCache[idx], versions: [draft, ...promptsCache[idx].versions] };
+  persistPromptsCache();
+  addAuditLog('usr-2', createdBy, 'GOVERNANCE_ADMIN', 'PROMPT_UPDATED', 'Prompt', promptId, promptsCache[idx].name, `Created version ${nextVersion} of prompt ${promptsCache[idx].name}`);
+
+  const created = await apiPromptRepository.createVersion(promptId, templateBody, createdBy, changeNotes);
+  const i2 = promptsCache.findIndex(p => p.id === promptId);
+  if (i2 !== -1) {
+    promptsCache = [...promptsCache];
+    promptsCache[i2] = { ...promptsCache[i2], versions: promptsCache[i2].versions.map(v => (v.id === draft.id ? created : v)) };
+    persistPromptsCache();
+  }
+  return created;
+}
+
+export async function reviewPromptVersion(versionId: string, reviewStatus: PromptReviewStatus, reviewedBy: string, reviewNotes?: string, testTranscriptRef?: string): Promise<PromptVersion> {
+  const promptIdx = promptsCache.findIndex(p => p.versions.some(v => v.id === versionId));
+  if (promptIdx === -1) throw new Error(`Prompt version ${versionId} not found`);
+  const now = new Date().toISOString();
+  promptsCache = [...promptsCache];
+  promptsCache[promptIdx] = {
+    ...promptsCache[promptIdx],
+    versions: promptsCache[promptIdx].versions.map(v => (v.id === versionId ? { ...v, reviewStatus, reviewedBy, reviewNotes, testTranscriptRef, reviewedAt: now } : v)),
+  };
+  persistPromptsCache();
+  addAuditLog('usr-2', reviewedBy, 'GOVERNANCE_ADMIN', 'PROMPT_UPDATED', 'Prompt', promptsCache[promptIdx].id, promptsCache[promptIdx].name, `Recorded ${reviewStatus} review on a version of prompt ${promptsCache[promptIdx].name}`);
+
+  const saved = await apiPromptRepository.reviewVersion(versionId, reviewStatus, reviewedBy, reviewNotes, testTranscriptRef);
+  const i2 = promptsCache.findIndex(p => p.versions.some(v => v.id === versionId));
+  if (i2 !== -1) {
+    promptsCache = [...promptsCache];
+    promptsCache[i2] = { ...promptsCache[i2], versions: promptsCache[i2].versions.map(v => (v.id === versionId ? saved : v)) };
+    persistPromptsCache();
+  }
+  return saved;
+}
+
+export async function saveAssetPromptUsage(assetId: string, promptId: string): Promise<AssetPromptUsage> {
+  const asset = assetsCache.find(a => a.id === assetId);
+  const prompt = promptsCache.find(p => p.id === promptId);
+  const draft: AssetPromptUsage = {
+    id: `pusage-${Date.now().toString().slice(-6)}`,
+    assetId,
+    assetName: asset?.name,
+    promptId,
+    promptName: prompt?.name,
+    createdAt: new Date().toISOString(),
+  };
+  assetPromptUsagesCache = [draft, ...assetPromptUsagesCache];
+  persistAssetPromptUsagesCache();
+  if (prompt) {
+    promptsCache = promptsCache.map(p => (p.id === promptId ? { ...p, usedByAssetIds: [...p.usedByAssetIds, assetId], usedByAssetNames: asset ? [...p.usedByAssetNames, asset.name] : p.usedByAssetNames } : p));
+    persistPromptsCache();
+  }
+
+  const created = await apiPromptRepository.createUsage(assetId, promptId);
+  assetPromptUsagesCache = assetPromptUsagesCache.map(u => (u.id === draft.id ? created : u));
+  persistAssetPromptUsagesCache();
+  return created;
+}
+
+export async function deleteAssetPromptUsage(id: string): Promise<void> {
+  const target = assetPromptUsagesCache.find(u => u.id === id);
+  if (!target) return;
+  assetPromptUsagesCache = assetPromptUsagesCache.filter(u => u.id !== id);
+  persistAssetPromptUsagesCache();
+  promptsCache = promptsCache.map(p => (p.id === target.promptId ? { ...p, usedByAssetIds: p.usedByAssetIds.filter(a => a !== target.assetId), usedByAssetNames: p.usedByAssetNames.filter(n => n !== target.assetName) } : p));
+  persistPromptsCache();
+  await apiPromptRepository.deleteUsage(id);
+}
+
 // --- RELEASE 5.1 — COMPLIANCE PACK FRAMEWORK: API-FIRST, NEON-BACKED ---
 // Release 5 shipped this domain on local storage deliberately ("framework
 // before regulation"). Release 5.1 aligns it with the Release 4.1 platform
@@ -4156,6 +4361,7 @@ export function bootstrapPersistence(options?: { force?: boolean }): Promise<voi
         governance,
         models,
         knowledgeAssets,
+        prompts,
         compliancePacks,
         requirements,
         packControls,
@@ -4186,6 +4392,7 @@ export function bootstrapPersistence(options?: { force?: boolean }): Promise<voi
         safeSync(apiGovernanceRepository.getGovernanceData(), { triggers: triggersCache, reauthorizations: reauthorizationsCache, reviews: reviewsCache }),
         safeSync(apiModelRepository.getModels(true), modelsCache),
         safeSync(apiKnowledgeAssetRepository.getKnowledgeAssets(true), knowledgeAssetsCache),
+        safeSync(apiPromptRepository.getPrompts(true), promptsCache),
         safeSync(apiCompliancePackRepository.getCompliancePacks(), compliancePacksCache),
         safeSync(apiRequirementRepository.getRequirements(), requirementsCache),
         safeSync(apiControlRepository.getControls(), packControlsCache),
@@ -4234,6 +4441,9 @@ export function bootstrapPersistence(options?: { force?: boolean }): Promise<voi
 
       knowledgeAssetsCache = knowledgeAssets;
       persistKnowledgeAssetsCache();
+
+      promptsCache = prompts;
+      persistPromptsCache();
 
       const packNameById = new Map(compliancePacks.map(p => [p.id, p.name]));
       requirementsCache = requirements.map(r => ({ ...r, packName: packNameById.get(r.packId) || r.packName }));

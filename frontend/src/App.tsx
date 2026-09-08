@@ -64,6 +64,9 @@ import { ModelAnalyticsPage } from './pages/ModelAnalyticsPage';
 import { KnowledgeRegistryPage } from './pages/KnowledgeRegistryPage';
 import { KnowledgeQualityLifecyclePage } from './pages/KnowledgeQualityLifecyclePage';
 import { KnowledgeTraceabilityPage } from './pages/KnowledgeTraceabilityPage';
+import { PromptLibraryPage } from './pages/PromptLibraryPage';
+import { PromptApprovalsPage } from './pages/PromptApprovalsPage';
+import { PromptEvidencePage } from './pages/PromptEvidencePage';
 import { RbacAdministrationPage } from './pages/RbacAdministrationPage';
 import { TenantSettingsPage } from './pages/TenantSettingsPage';
 import { OmgOverviewPage } from './pages/OmgOverviewPage';
@@ -190,6 +193,11 @@ const GOVERNED_ROUTES: { path: string; element: React.ReactNode }[] = [
   { path: '/knowledge-registry', element: <KnowledgeRegistryPage /> },
   { path: '/knowledge-quality', element: <KnowledgeQualityLifecyclePage /> },
   { path: '/knowledge-traceability', element: <KnowledgeTraceabilityPage /> },
+
+  // R15 — Prompt Governance
+  { path: '/prompt-library', element: <PromptLibraryPage /> },
+  { path: '/prompt-approvals', element: <PromptApprovalsPage /> },
+  { path: '/prompt-evidence', element: <PromptEvidencePage /> },
 
   // Domain 2 — Risk & Compliance
   { path: '/risk', element: <RiskCenterPage /> },

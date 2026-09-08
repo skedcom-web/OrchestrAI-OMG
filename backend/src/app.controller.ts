@@ -426,6 +426,195 @@ export class AppController {
     return { deleted: true, id };
   }
 
+  // --- R15: PROMPT GOVERNANCE ENDPOINTS ---
+  @Get('prompts')
+  @Roles(
+    'SUPER_ADMIN',
+    'GOVERNANCE_ADMIN',
+    'RISK_OFFICER',
+    'BUSINESS_OWNER',
+    'VALIDATOR',
+    'AUDITOR',
+    'VIEWER',
+  )
+  async getPrompts(@Query('includeArchived') includeArchived?: string) {
+    return this.prisma.prompt.findMany({
+      where: includeArchived === 'true' ? undefined : { isArchived: false },
+      include: {
+        versions: { orderBy: { versionNumber: 'desc' } },
+        assetUsages: { include: { asset: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  @Get('prompts/:id')
+  @Roles(
+    'SUPER_ADMIN',
+    'GOVERNANCE_ADMIN',
+    'RISK_OFFICER',
+    'BUSINESS_OWNER',
+    'VALIDATOR',
+    'AUDITOR',
+    'VIEWER',
+  )
+  async getPrompt(@Param('id') id: string) {
+    const record = await this.prisma.prompt.findUnique({
+      where: { id },
+      include: {
+        versions: { orderBy: { versionNumber: 'desc' } },
+        assetUsages: { include: { asset: true } },
+      },
+    });
+    if (!record) throw new NotFoundException(`Prompt ${id} not found`);
+    return record;
+  }
+
+  /** Creates the prompt plus its version 1 in one call — a prompt cannot exist without an initial template. */
+  @Post('prompts')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async createPrompt(@Body() body: any) {
+    if (!body.accountableOwner || !body.promptOwner) {
+      throw new BadRequestException('Prompts require a named Accountable Owner and Prompt Owner before they can be saved.');
+    }
+    if (!body.templateBody) {
+      throw new BadRequestException('A prompt cannot be registered without an initial template body.');
+    }
+    const { templateBody, changeNotes, createdBy, ...promptData } = body;
+    return this.prisma.prompt.create({
+      data: {
+        ...promptData,
+        versions: {
+          create: { versionNumber: 1, templateBody, changeNotes: changeNotes || 'Initial version', createdBy: createdBy || promptData.promptOwner },
+        },
+      },
+      include: { versions: true },
+    });
+  }
+
+  @Patch('prompts/:id')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async updatePrompt(@Param('id') id: string, @Body() body: any) {
+    const existing = await this.prisma.prompt.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundException(`Prompt ${id} not found`);
+    return this.prisma.prompt.update({ where: { id }, data: body });
+  }
+
+  @Delete('prompts/:id')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async archivePrompt(
+    @Param('id') id: string,
+    @Body() body: { archivedBy?: string; archiveReason?: string } = {},
+  ) {
+    const existing = await this.prisma.prompt.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundException(`Prompt ${id} not found`);
+    const record = await this.prisma.prompt.update({
+      where: { id },
+      data: {
+        isArchived: true,
+        archivedAt: new Date(),
+        archivedBy: body?.archivedBy ?? null,
+        archiveReason: body?.archiveReason ?? null,
+      },
+    });
+    return { archived: true, id, record };
+  }
+
+  @Patch('prompts/:id/restore')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async restorePrompt(@Param('id') id: string) {
+    const existing = await this.prisma.prompt.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundException(`Prompt ${id} not found`);
+    const record = await this.prisma.prompt.update({
+      where: { id },
+      data: { isArchived: false, archivedAt: null, archivedBy: null, archiveReason: null },
+    });
+    return { restored: true, id, record };
+  }
+
+  @Post('prompts/:id/decision')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER')
+  async recordPromptDecision(
+    @Param('id') id: string,
+    @Body() body: { outcome: string; justification: string; decisionOwner: string },
+  ) {
+    const existing = await this.prisma.prompt.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundException(`Prompt ${id} not found`);
+    if (!body.justification || !body.decisionOwner) {
+      throw new BadRequestException('A prompt decision requires a justification and a named decision owner.');
+    }
+    return this.prisma.prompt.update({
+      where: { id },
+      data: {
+        decisionOutcome: body.outcome as any,
+        decisionJustification: body.justification,
+        decisionOwner: body.decisionOwner,
+        decisionDate: new Date(),
+      },
+    });
+  }
+
+  /** Every edit is a new version — never overwrites prompt_versions in place. */
+  @Post('prompts/:id/versions')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async createPromptVersion(
+    @Param('id') id: string,
+    @Body() body: { templateBody: string; changeNotes?: string; createdBy: string },
+  ) {
+    const prompt = await this.prisma.prompt.findUnique({ where: { id }, include: { versions: true } });
+    if (!prompt) throw new NotFoundException(`Prompt ${id} not found`);
+    if (!body.templateBody || !body.createdBy) {
+      throw new BadRequestException('A new prompt version requires a template body and a named author.');
+    }
+    const nextVersion = Math.max(0, ...prompt.versions.map(v => v.versionNumber)) + 1;
+    return this.prisma.promptVersion.create({
+      data: {
+        promptId: id,
+        versionNumber: nextVersion,
+        templateBody: body.templateBody,
+        changeNotes: body.changeNotes,
+        createdBy: body.createdBy,
+      },
+    });
+  }
+
+  /** Injection-control / evidence review recorded against a specific version. */
+  @Patch('prompt-versions/:id/review')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER')
+  async reviewPromptVersion(
+    @Param('id') id: string,
+    @Body() body: { reviewStatus: string; reviewedBy: string; reviewNotes?: string; testTranscriptRef?: string },
+  ) {
+    const existing = await this.prisma.promptVersion.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundException(`Prompt version ${id} not found`);
+    if (!body.reviewedBy) {
+      throw new BadRequestException('A prompt version review requires a named reviewer.');
+    }
+    return this.prisma.promptVersion.update({
+      where: { id },
+      data: {
+        reviewStatus: body.reviewStatus as any,
+        reviewedBy: body.reviewedBy,
+        reviewNotes: body.reviewNotes,
+        testTranscriptRef: body.testTranscriptRef,
+        reviewedAt: new Date(),
+      },
+    });
+  }
+
+  @Post('asset-prompt-usages')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async createAssetPromptUsage(@Body() body: { assetId: string; promptId: string }) {
+    return this.prisma.assetPromptUsage.create({ data: body });
+  }
+
+  @Delete('asset-prompt-usages/:id')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async deleteAssetPromptUsage(@Param('id') id: string) {
+    await this.prisma.assetPromptUsage.delete({ where: { id } });
+    return { deleted: true, id };
+  }
+
   // --- RELEASE 4: EVIDENCE REPOSITORY ENDPOINTS ---
   @Get('evidence-records')
   @Roles(
