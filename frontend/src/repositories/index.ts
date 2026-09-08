@@ -30,6 +30,8 @@ import {
   localGovernanceProfileRepository,
   localGovernanceRepository,
   localGovernanceControlRepository,
+  localCertificationProgramRepository,
+  localCertificationRecordRepository,
   localKnowledgeAssetRepository,
   localModelRepository,
   localObligationControlRepository,
@@ -65,6 +67,8 @@ import {
   apiGovernanceProfileRepository,
   apiGovernanceRepository,
   apiGovernanceControlRepository,
+  apiCertificationProgramRepository,
+  apiCertificationRecordRepository,
   apiKnowledgeAssetRepository,
   apiModelRepository,
   apiObligationControlRepository,
@@ -100,6 +104,8 @@ import type {
   GovernanceProfileRepository,
   GovernanceRepository,
   GovernanceControlRepository,
+  CertificationProgramRepository,
+  CertificationRecordRepository,
   KnowledgeAssetRepository,
   ModelRepository,
   ObligationControlRepository,
@@ -183,6 +189,19 @@ export function getGovernanceControlRepository(): GovernanceControlRepository {
 }
 
 export { localGovernanceControlRepository };
+
+/** R20 — Certification Governance. */
+export function getCertificationProgramRepository(): CertificationProgramRepository {
+  return apiCertificationProgramRepository;
+}
+
+export { localCertificationProgramRepository };
+
+export function getCertificationRecordRepository(): CertificationRecordRepository {
+  return apiCertificationRecordRepository;
+}
+
+export { localCertificationRecordRepository };
 
 /**
  * Release 5.1 — Compliance Persistence Alignment. Api is the default for

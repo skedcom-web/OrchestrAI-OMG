@@ -26,6 +26,9 @@ import type {
   ControlAttachment,
   ControlTestResult,
   ControlTestOutcome,
+  CertificationProgram,
+  CertificationRecord,
+  CertificationEvidence,
   AssetPromptUsage,
   KnowledgeAsset,
   Model,
@@ -193,6 +196,23 @@ export interface GovernanceControlRepository {
   createAttachment(controlId: string, entityType: string, entityId: string, entityName: string, attachedBy: string): Promise<ControlAttachment>;
   deleteAttachment(id: string): Promise<void>;
   recordTestResult(attachmentId: string, tester: string, outcome: ControlTestOutcome, findings?: string, evidenceRef?: string): Promise<ControlTestResult>;
+}
+
+/** R20 — Certification Governance. */
+export interface CertificationProgramRepository {
+  getPrograms(includeArchived?: boolean): Promise<CertificationProgram[]>;
+  createProgram(data: Partial<CertificationProgram>): Promise<CertificationProgram>;
+  updateProgram(id: string, data: Partial<CertificationProgram>): Promise<CertificationProgram>;
+  archiveProgram(id: string, archivedBy?: string, archiveReason?: string): Promise<void>;
+  restoreProgram(id: string): Promise<void>;
+}
+
+export interface CertificationRecordRepository {
+  getRecords(): Promise<CertificationRecord[]>;
+  issueRecord(programId: string, entityType: string, entityId: string, entityName: string, issuedBy: string): Promise<CertificationRecord>;
+  renewRecord(id: string, renewedBy: string, renewalNotes?: string): Promise<CertificationRecord>;
+  revokeRecord(id: string, revokedBy: string, revocationReason: string): Promise<CertificationRecord>;
+  addEvidence(recordId: string, title: string, description: string, submittedBy: string, evidenceRef?: string): Promise<CertificationEvidence>;
 }
 
 export interface EvidenceMappingRepository {

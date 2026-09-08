@@ -35,6 +35,8 @@ import type {
   GovernanceRecordKind,
   GovernanceRepository,
   GovernanceControlRepository,
+  CertificationProgramRepository,
+  CertificationRecordRepository,
   KnowledgeAssetRepository,
   ModelRepository,
   ObligationControlRepository,
@@ -76,6 +78,9 @@ import type {
   GovernanceControl,
   ControlAttachment,
   ControlTestResult,
+  CertificationProgram,
+  CertificationRecord,
+  CertificationEvidence,
   KnowledgeAsset,
   Model,
   Obligation,
@@ -839,6 +844,117 @@ export const apiGovernanceControlRepository: GovernanceControlRepository = {
       body: JSON.stringify({ tester, outcome, findings, evidenceRef }),
     });
     return controlTestResultFromBackend(row);
+  },
+};
+
+// --- R20: CERTIFICATION GOVERNANCE (CertificationProgram / CertificationRecord / CertificationEvidence) ---
+// CertificationStatus values already match the backend's UPPER_SNAKE_CASE enum verbatim.
+
+function certificationEvidenceFromBackend(row: any): CertificationEvidence {
+  return {
+    id: row.id,
+    recordId: row.recordId,
+    title: row.title,
+    description: row.description,
+    evidenceRef: row.evidenceRef ?? undefined,
+    submittedBy: row.submittedBy,
+    submittedAt: row.submittedAt,
+  };
+}
+
+function certificationProgramFromBackend(row: any): CertificationProgram {
+  return {
+    id: row.id,
+    name: row.name,
+    criteria: row.criteria,
+    description: row.description,
+    validityPeriodDays: row.validityPeriodDays,
+    isArchived: !!row.isArchived,
+    archivedAt: row.archivedAt ?? undefined,
+    archivedBy: row.archivedBy ?? undefined,
+    archiveReason: row.archiveReason ?? undefined,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  };
+}
+
+function certificationRecordFromBackend(row: any): CertificationRecord {
+  return {
+    id: row.id,
+    programId: row.programId,
+    program: row.program ? certificationProgramFromBackend(row.program) : undefined,
+    entityType: row.entityType,
+    entityId: row.entityId,
+    entityName: row.entityName,
+    status: row.status,
+    issuedAt: row.issuedAt,
+    issuedBy: row.issuedBy,
+    expiresAt: row.expiresAt,
+    renewedAt: row.renewedAt ?? undefined,
+    renewedBy: row.renewedBy ?? undefined,
+    renewalNotes: row.renewalNotes ?? undefined,
+    revokedAt: row.revokedAt ?? undefined,
+    revokedBy: row.revokedBy ?? undefined,
+    revocationReason: row.revocationReason ?? undefined,
+    evidence: Array.isArray(row.evidence) ? row.evidence.map(certificationEvidenceFromBackend) : undefined,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  };
+}
+
+export const apiCertificationProgramRepository: CertificationProgramRepository = {
+  async getPrograms(includeArchived) {
+    const rows = await apiRequest<any[]>(`/certification-programs${includeArchived ? '?includeArchived=true' : ''}`);
+    return rows.map(certificationProgramFromBackend);
+  },
+  async createProgram(data) {
+    const row = await apiRequest<any>('/certification-programs', { method: 'POST', body: JSON.stringify(data) });
+    return certificationProgramFromBackend(row);
+  },
+  async updateProgram(id, data) {
+    const row = await apiRequest<any>(`/certification-programs/${id}`, { method: 'PATCH', body: JSON.stringify(data) });
+    return certificationProgramFromBackend(row);
+  },
+  async archiveProgram(id, archivedBy, archiveReason) {
+    await apiRequest<void>(`/certification-programs/${id}`, { method: 'DELETE', body: JSON.stringify({ archivedBy, archiveReason }) });
+  },
+  async restoreProgram(id) {
+    await apiRequest<void>(`/certification-programs/${id}/restore`, { method: 'PATCH' });
+  },
+};
+
+export const apiCertificationRecordRepository: CertificationRecordRepository = {
+  async getRecords() {
+    const rows = await apiRequest<any[]>('/certification-records');
+    return rows.map(certificationRecordFromBackend);
+  },
+  async issueRecord(programId, entityType, entityId, entityName, issuedBy) {
+    const row = await apiRequest<any>('/certification-records', {
+      method: 'POST',
+      body: JSON.stringify({ programId, entityType, entityId, entityName, issuedBy }),
+    });
+    return certificationRecordFromBackend(row);
+  },
+  async renewRecord(id, renewedBy, renewalNotes) {
+    const row = await apiRequest<any>(`/certification-records/${id}/renew`, {
+      method: 'POST',
+      body: JSON.stringify({ renewedBy, renewalNotes }),
+    });
+    return certificationRecordFromBackend(row);
+  },
+  async revokeRecord(id, revokedBy, revocationReason) {
+    const row = await apiRequest<any>(`/certification-records/${id}/revoke`, {
+      method: 'POST',
+      body: JSON.stringify({ revokedBy, revocationReason }),
+    });
+    return certificationRecordFromBackend(row);
+  },
+  async addEvidence(recordId, title, description, submittedBy, evidenceRef) {
+    const row = await apiRequest<any>(`/certification-records/${recordId}/evidence`, {
+      method: 'POST',
+      body: JSON.stringify({ title, description, submittedBy, evidenceRef }),
+    });
+    return certificationEvidenceFromBackend(row);
   },
 };
 

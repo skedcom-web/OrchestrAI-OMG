@@ -48,6 +48,13 @@ export type ActionKey =
   | 'controlAttachment:create'
   | 'controlAttachment:delete'
   | 'controlTestResult:create'
+  | 'certificationProgram:create'
+  | 'certificationProgram:edit'
+  | 'certificationProgram:archive'
+  | 'certificationRecord:issue'
+  | 'certificationRecord:renew'
+  | 'certificationRecord:revoke'
+  | 'certificationEvidence:create'
   | 'evidenceRecord:create'
   | 'evidenceRecord:edit'
   | 'evidenceRecord:delete'
@@ -156,6 +163,14 @@ export const ROLE_ACTION_MATRIX: Record<ActionKey, UserRole[]> = {
   'controlAttachment:create': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
   'controlAttachment:delete': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
   'controlTestResult:create': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER'],
+
+  'certificationProgram:create': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
+  'certificationProgram:edit': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
+  'certificationProgram:archive': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
+  'certificationRecord:issue': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
+  'certificationRecord:renew': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
+  'certificationRecord:revoke': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER'],
+  'certificationEvidence:create': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER', 'VALIDATOR'],
 
   'evidenceRecord:create': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER'],
   'evidenceRecord:edit': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER'],

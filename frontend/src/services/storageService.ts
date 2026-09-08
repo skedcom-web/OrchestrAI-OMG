@@ -48,6 +48,9 @@ import type {
   ControlTestResult,
   ControlEffectivenessRating,
   ControlTestOutcome,
+  CertificationProgram,
+  CertificationRecord,
+  CertificationEvidence,
   CompliancePack,
   ComplianceRequirement,
   PackControl,
@@ -99,6 +102,8 @@ import {
   INITIAL_PROMPTS,
   INITIAL_TOOLS,
   INITIAL_GOVERNANCE_CONTROLS,
+  INITIAL_CERTIFICATION_PROGRAMS,
+  INITIAL_CERTIFICATION_RECORDS,
   INITIAL_COMPLIANCE_PACKS,
   INITIAL_COMPLIANCE_REQUIREMENTS,
   INITIAL_PACK_CONTROLS,
@@ -137,7 +142,7 @@ import {
 import { generateActionDrafts } from '../config/governanceActionsEngine';
 import { buildDecisionTrace } from '../config/decisionTraceabilityEngine';
 import type { DecisionTrace } from '../config/decisionTraceabilityEngine';
-import { apiAssetRepository, apiEvidenceRepository, apiGovernanceRepository, apiModelRepository, apiKnowledgeAssetRepository, apiPromptRepository, apiToolRepository, apiAgentToolGrantRepository, apiGovernanceControlRepository } from '../repositories/apiRepositories';
+import { apiAssetRepository, apiEvidenceRepository, apiGovernanceRepository, apiModelRepository, apiKnowledgeAssetRepository, apiPromptRepository, apiToolRepository, apiAgentToolGrantRepository, apiGovernanceControlRepository, apiCertificationProgramRepository, apiCertificationRecordRepository } from '../repositories/apiRepositories';
 import {
   apiCompliancePackRepository,
   apiControlRepository,
@@ -216,6 +221,8 @@ const STORAGE_KEYS = {
   AGENT_TOOL_GRANTS: 'omg_agent_tool_grants_v16',
   GOVERNANCE_CONTROLS: 'omg_governance_controls_v18',
   CONTROL_ATTACHMENTS: 'omg_control_attachments_v18',
+  CERTIFICATION_PROGRAMS: 'omg_certification_programs_v20',
+  CERTIFICATION_RECORDS: 'omg_certification_records_v20',
   COMPLIANCE_PACKS: 'omg_compliance_packs_v7',
   COMPLIANCE_REQUIREMENTS: 'omg_compliance_requirements_v7',
   PACK_CONTROLS: 'omg_pack_controls_v7',
@@ -2682,6 +2689,169 @@ export async function recordControlTestResult(attachmentId: string, tester: stri
   return saved;
 }
 
+// --- R20 — CERTIFICATION GOVERNANCE: API-FIRST, NEON-BACKED ---
+// CertificationEvidence is a dedicated child table nested under its record,
+// same nesting pattern as GovernanceControl -> ControlAttachment above,
+// rather than a reuse of the shared Evidence Registry (see schema comment).
+
+let certificationProgramsCache: CertificationProgram[] = getItem<CertificationProgram[]>(STORAGE_KEYS.CERTIFICATION_PROGRAMS, INITIAL_CERTIFICATION_PROGRAMS);
+let certificationRecordsCache: CertificationRecord[] = getItem<CertificationRecord[]>(STORAGE_KEYS.CERTIFICATION_RECORDS, INITIAL_CERTIFICATION_RECORDS);
+
+function persistCertificationProgramsCache() { setItem(STORAGE_KEYS.CERTIFICATION_PROGRAMS, certificationProgramsCache); }
+function persistCertificationRecordsCache() { setItem(STORAGE_KEYS.CERTIFICATION_RECORDS, certificationRecordsCache); }
+
+export function getCertificationPrograms(includeArchived = false): CertificationProgram[] {
+  return includeArchived ? certificationProgramsCache : certificationProgramsCache.filter(p => !p.isArchived);
+}
+
+export function getCertificationRecords(): CertificationRecord[] {
+  return certificationRecordsCache;
+}
+
+export async function saveCertificationProgram(data: Partial<CertificationProgram>): Promise<CertificationProgram> {
+  if (data.id) {
+    const idx = certificationProgramsCache.findIndex(p => p.id === data.id);
+    if (idx !== -1) {
+      const updated: CertificationProgram = { ...certificationProgramsCache[idx], ...data, updatedAt: new Date().toISOString() };
+      certificationProgramsCache = [...certificationProgramsCache];
+      certificationProgramsCache[idx] = updated;
+      persistCertificationProgramsCache();
+      addAuditLog('usr-2', 'Sarah Jenkins', 'GOVERNANCE_ADMIN', 'CERTIFICATION_PROGRAM_UPDATED', 'CertificationProgram', updated.id, updated.name, `Updated certification program ${updated.name}`);
+      const saved = await apiCertificationProgramRepository.updateProgram(updated.id, updated);
+      const i2 = certificationProgramsCache.findIndex(p => p.id === updated.id);
+      if (i2 !== -1) { certificationProgramsCache = [...certificationProgramsCache]; certificationProgramsCache[i2] = saved; persistCertificationProgramsCache(); }
+      return saved;
+    }
+  }
+
+  const now = new Date().toISOString();
+  const draft: CertificationProgram = {
+    id: data.id || `cprog-${Date.now().toString().slice(-6)}`,
+    name: data.name || 'New Certification Program',
+    criteria: data.criteria || '',
+    description: data.description || '',
+    validityPeriodDays: data.validityPeriodDays || 365,
+    isArchived: false,
+    createdAt: now,
+    updatedAt: now,
+  };
+  certificationProgramsCache = [draft, ...certificationProgramsCache];
+  persistCertificationProgramsCache();
+  addAuditLog('usr-2', 'Sarah Jenkins', 'GOVERNANCE_ADMIN', 'CERTIFICATION_PROGRAM_CREATED', 'CertificationProgram', draft.id, draft.name, `Created certification program ${draft.name}`);
+  const created = await apiCertificationProgramRepository.createProgram(draft);
+  certificationProgramsCache = certificationProgramsCache.map(p => (p.id === draft.id ? created : p));
+  persistCertificationProgramsCache();
+  return created;
+}
+
+export async function archiveCertificationProgram(id: string, archivedBy?: string, archiveReason?: string): Promise<void> {
+  const target = certificationProgramsCache.find(p => p.id === id);
+  if (!target) return;
+  certificationProgramsCache = certificationProgramsCache.map(p => (p.id === id ? { ...p, isArchived: true, archivedAt: new Date().toISOString(), archivedBy, archiveReason } : p));
+  persistCertificationProgramsCache();
+  addAuditLog('usr-1', archivedBy || 'Sarah Jenkins', 'SUPER_ADMIN', 'CERTIFICATION_PROGRAM_ARCHIVED', 'CertificationProgram', id, target.name, `Archived certification program ${target.name}${archiveReason ? `: ${archiveReason}` : ''}`);
+  await apiCertificationProgramRepository.archiveProgram(id, archivedBy, archiveReason);
+}
+
+export async function restoreCertificationProgram(id: string): Promise<void> {
+  const target = certificationProgramsCache.find(p => p.id === id);
+  if (!target) return;
+  certificationProgramsCache = certificationProgramsCache.map(p => (p.id === id ? { ...p, isArchived: false, archivedAt: undefined, archivedBy: undefined, archiveReason: undefined } : p));
+  persistCertificationProgramsCache();
+  await apiCertificationProgramRepository.restoreProgram(id);
+}
+
+export async function issueCertificationRecord(programId: string, entityType: string, entityId: string, entityName: string, issuedBy: string): Promise<CertificationRecord> {
+  const program = certificationProgramsCache.find(p => p.id === programId);
+  if (!program) throw new Error(`Certification program ${programId} not found`);
+  const issuedAt = new Date();
+  const expiresAt = new Date(issuedAt.getTime() + program.validityPeriodDays * 24 * 60 * 60 * 1000);
+  const draft: CertificationRecord = {
+    id: `crec-${Date.now().toString().slice(-6)}`,
+    programId,
+    program,
+    entityType: entityType as CertificationRecord['entityType'],
+    entityId,
+    entityName,
+    status: 'ACTIVE',
+    issuedAt: issuedAt.toISOString(),
+    issuedBy,
+    expiresAt: expiresAt.toISOString(),
+    evidence: [],
+    createdAt: issuedAt.toISOString(),
+    updatedAt: issuedAt.toISOString(),
+  };
+  certificationRecordsCache = [draft, ...certificationRecordsCache];
+  persistCertificationRecordsCache();
+  addAuditLog('usr-2', issuedBy, 'GOVERNANCE_ADMIN', 'CERTIFICATION_RECORD_ISSUED', 'CertificationRecord', draft.id, `${program.name} → ${entityName}`, `Issued certification "${program.name}" to ${entityType} ${entityName}`);
+
+  const created = await apiCertificationRecordRepository.issueRecord(programId, entityType, entityId, entityName, issuedBy);
+  certificationRecordsCache = certificationRecordsCache.map(r => (r.id === draft.id ? { ...created, program } : r));
+  persistCertificationRecordsCache();
+  return created;
+}
+
+export async function renewCertificationRecord(id: string, renewedBy: string, renewalNotes?: string): Promise<CertificationRecord> {
+  const idx = certificationRecordsCache.findIndex(r => r.id === id);
+  if (idx === -1) throw new Error(`Certification record ${id} not found`);
+  const existing = certificationRecordsCache[idx];
+  const program = existing.program || certificationProgramsCache.find(p => p.id === existing.programId);
+  const renewedAt = new Date();
+  const expiresAt = new Date(renewedAt.getTime() + (program?.validityPeriodDays || 365) * 24 * 60 * 60 * 1000);
+  const updated: CertificationRecord = { ...existing, status: 'ACTIVE', renewedAt: renewedAt.toISOString(), renewedBy, renewalNotes, expiresAt: expiresAt.toISOString(), updatedAt: renewedAt.toISOString() };
+  certificationRecordsCache = [...certificationRecordsCache];
+  certificationRecordsCache[idx] = updated;
+  persistCertificationRecordsCache();
+  addAuditLog('usr-2', renewedBy, 'GOVERNANCE_ADMIN', 'CERTIFICATION_RECORD_RENEWED', 'CertificationRecord', id, updated.entityName, `Renewed certification for ${updated.entityName}`);
+
+  const saved = await apiCertificationRecordRepository.renewRecord(id, renewedBy, renewalNotes);
+  const i2 = certificationRecordsCache.findIndex(r => r.id === id);
+  if (i2 !== -1) { certificationRecordsCache = [...certificationRecordsCache]; certificationRecordsCache[i2] = { ...saved, program: certificationRecordsCache[i2].program, evidence: certificationRecordsCache[i2].evidence }; persistCertificationRecordsCache(); }
+  return certificationRecordsCache[i2 !== -1 ? i2 : idx];
+}
+
+export async function revokeCertificationRecord(id: string, revokedBy: string, revocationReason: string): Promise<CertificationRecord> {
+  const idx = certificationRecordsCache.findIndex(r => r.id === id);
+  if (idx === -1) throw new Error(`Certification record ${id} not found`);
+  const updated: CertificationRecord = { ...certificationRecordsCache[idx], status: 'REVOKED', revokedAt: new Date().toISOString(), revokedBy, revocationReason, updatedAt: new Date().toISOString() };
+  certificationRecordsCache = [...certificationRecordsCache];
+  certificationRecordsCache[idx] = updated;
+  persistCertificationRecordsCache();
+  addAuditLog('usr-1', revokedBy, 'SUPER_ADMIN', 'CERTIFICATION_RECORD_REVOKED', 'CertificationRecord', id, updated.entityName, `Revoked certification for ${updated.entityName}: ${revocationReason}`);
+
+  const saved = await apiCertificationRecordRepository.revokeRecord(id, revokedBy, revocationReason);
+  const i2 = certificationRecordsCache.findIndex(r => r.id === id);
+  if (i2 !== -1) { certificationRecordsCache = [...certificationRecordsCache]; certificationRecordsCache[i2] = { ...saved, program: certificationRecordsCache[i2].program, evidence: certificationRecordsCache[i2].evidence }; persistCertificationRecordsCache(); }
+  return certificationRecordsCache[i2 !== -1 ? i2 : idx];
+}
+
+export async function addCertificationEvidence(recordId: string, title: string, description: string, submittedBy: string, evidenceRef?: string): Promise<CertificationEvidence> {
+  const idx = certificationRecordsCache.findIndex(r => r.id === recordId);
+  if (idx === -1) throw new Error(`Certification record ${recordId} not found`);
+  const draft: CertificationEvidence = {
+    id: `cevd-${Date.now().toString().slice(-6)}`,
+    recordId,
+    title,
+    description,
+    evidenceRef,
+    submittedBy,
+    submittedAt: new Date().toISOString(),
+  };
+  certificationRecordsCache = [...certificationRecordsCache];
+  certificationRecordsCache[idx] = { ...certificationRecordsCache[idx], evidence: [draft, ...(certificationRecordsCache[idx].evidence || [])] };
+  persistCertificationRecordsCache();
+  addAuditLog('usr-2', submittedBy, 'VALIDATOR', 'CERTIFICATION_EVIDENCE_ADDED', 'CertificationEvidence', draft.id, certificationRecordsCache[idx].entityName, `Filed certification evidence "${title}" for ${certificationRecordsCache[idx].entityName}`);
+
+  const created = await apiCertificationRecordRepository.addEvidence(recordId, title, description, submittedBy, evidenceRef);
+  const i2 = certificationRecordsCache.findIndex(r => r.id === recordId);
+  if (i2 !== -1) {
+    certificationRecordsCache = [...certificationRecordsCache];
+    certificationRecordsCache[i2] = { ...certificationRecordsCache[i2], evidence: (certificationRecordsCache[i2].evidence || []).map(e => (e.id === draft.id ? created : e)) };
+    persistCertificationRecordsCache();
+  }
+  return created;
+}
+
 // --- RELEASE 5.1 — COMPLIANCE PACK FRAMEWORK: API-FIRST, NEON-BACKED ---
 // Release 5 shipped this domain on local storage deliberately ("framework
 // before regulation"). Release 5.1 aligns it with the Release 4.1 platform
@@ -4655,6 +4825,8 @@ export function bootstrapPersistence(options?: { force?: boolean }): Promise<voi
         tools,
         agentToolGrants,
         governanceControls,
+        certificationPrograms,
+        certificationRecords,
         compliancePacks,
         requirements,
         packControls,
@@ -4689,6 +4861,8 @@ export function bootstrapPersistence(options?: { force?: boolean }): Promise<voi
         safeSync(apiToolRepository.getTools(true), toolsCache),
         safeSync(apiAgentToolGrantRepository.getGrants(), agentToolGrantsCache),
         safeSync(apiGovernanceControlRepository.getControls(true), governanceControlsCache),
+        safeSync(apiCertificationProgramRepository.getPrograms(true), certificationProgramsCache),
+        safeSync(apiCertificationRecordRepository.getRecords(), certificationRecordsCache),
         safeSync(apiCompliancePackRepository.getCompliancePacks(), compliancePacksCache),
         safeSync(apiRequirementRepository.getRequirements(), requirementsCache),
         safeSync(apiControlRepository.getControls(), packControlsCache),
@@ -4747,6 +4921,10 @@ export function bootstrapPersistence(options?: { force?: boolean }): Promise<voi
       persistAgentToolGrantsCache();
       governanceControlsCache = governanceControls;
       persistGovernanceControlsCache();
+      certificationProgramsCache = certificationPrograms;
+      persistCertificationProgramsCache();
+      certificationRecordsCache = certificationRecords;
+      persistCertificationRecordsCache();
 
       const packNameById = new Map(compliancePacks.map(p => [p.id, p.name]));
       requirementsCache = requirements.map(r => ({ ...r, packName: packNameById.get(r.packId) || r.packName }));

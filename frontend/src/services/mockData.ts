@@ -23,6 +23,8 @@ import type {
   Prompt,
   Tool,
   GovernanceControl,
+  CertificationProgram,
+  CertificationRecord,
   CompliancePack,
   ComplianceRequirement,
   PackControl,
@@ -149,7 +151,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       // Release 11 — Governance Effectiveness & Outcomes Engine
       '/governance-effectiveness', '/governance-roi', '/governance-maturity', '/governance-benchmarking', '/governance-outcomes',
       // Release 12 — Regulatory Intelligence
-      '/regulatory-applicability', '/cross-framework-mapping', '/compliance-impact-analysis', '/regulatory-change-readiness', '/audit-readiness-intelligence',
+      '/regulatory-applicability', '/cross-framework-mapping', '/compliance-impact-analysis', '/regulatory-change-readiness', '/audit-readiness-intelligence', '/lifecycle-console', '/certification-programs', '/certification-records', '/certification-evidence',
       // GACF — Governance Assessment Calibration & Consistency Framework
       '/assessment-center', '/assessment-playbooks', '/calibration-library', '/variance-analysis', '/assessment-academy',
       '/assessor-certification', '/consensus-assessments', '/benchmark-recommendations'
@@ -191,7 +193,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       // Release 11 — Governance Effectiveness & Outcomes Engine
       '/governance-effectiveness', '/governance-roi', '/governance-maturity', '/governance-benchmarking', '/governance-outcomes',
       // Release 12 — Regulatory Intelligence
-      '/regulatory-applicability', '/cross-framework-mapping', '/compliance-impact-analysis', '/regulatory-change-readiness', '/audit-readiness-intelligence',
+      '/regulatory-applicability', '/cross-framework-mapping', '/compliance-impact-analysis', '/regulatory-change-readiness', '/audit-readiness-intelligence', '/lifecycle-console', '/certification-programs', '/certification-records', '/certification-evidence',
       // GACF — Governance Assessment Calibration & Consistency Framework
       '/assessment-center', '/assessment-playbooks', '/calibration-library', '/variance-analysis', '/assessment-academy',
       '/assessor-certification', '/consensus-assessments', '/benchmark-recommendations'
@@ -227,7 +229,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       // Release 11 — Governance Effectiveness & Outcomes Engine
       '/governance-effectiveness', '/governance-roi', '/governance-maturity', '/governance-benchmarking', '/governance-outcomes',
       // Release 12 — Regulatory Intelligence
-      '/regulatory-applicability', '/cross-framework-mapping', '/compliance-impact-analysis', '/regulatory-change-readiness', '/audit-readiness-intelligence',
+      '/regulatory-applicability', '/cross-framework-mapping', '/compliance-impact-analysis', '/regulatory-change-readiness', '/audit-readiness-intelligence', '/lifecycle-console', '/certification-programs', '/certification-records', '/certification-evidence',
       // GACF — Governance Assessment Calibration & Consistency Framework
       '/assessment-center', '/assessment-playbooks', '/calibration-library', '/variance-analysis', '/assessment-academy',
       '/assessor-certification', '/consensus-assessments', '/benchmark-recommendations'
@@ -260,7 +262,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       // Release 11 — Governance Effectiveness & Outcomes Engine
       '/governance-effectiveness', '/governance-roi', '/governance-maturity', '/governance-benchmarking', '/governance-outcomes',
       // Release 12 — Regulatory Intelligence
-      '/regulatory-applicability', '/cross-framework-mapping', '/compliance-impact-analysis', '/regulatory-change-readiness', '/audit-readiness-intelligence',
+      '/regulatory-applicability', '/cross-framework-mapping', '/compliance-impact-analysis', '/regulatory-change-readiness', '/audit-readiness-intelligence', '/lifecycle-console', '/certification-programs', '/certification-records', '/certification-evidence',
       // GACF — Governance Assessment Calibration & Consistency Framework
       '/assessment-center', '/assessment-playbooks', '/calibration-library', '/variance-analysis', '/assessment-academy',
       '/assessor-certification', '/consensus-assessments', '/benchmark-recommendations'
@@ -293,7 +295,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       // Release 11 — Governance Effectiveness & Outcomes Engine
       '/governance-effectiveness', '/governance-roi', '/governance-maturity', '/governance-benchmarking', '/governance-outcomes',
       // Release 12 — Regulatory Intelligence
-      '/regulatory-applicability', '/cross-framework-mapping', '/compliance-impact-analysis', '/regulatory-change-readiness', '/audit-readiness-intelligence',
+      '/regulatory-applicability', '/cross-framework-mapping', '/compliance-impact-analysis', '/regulatory-change-readiness', '/audit-readiness-intelligence', '/lifecycle-console', '/certification-programs', '/certification-records', '/certification-evidence',
       // GACF — Governance Assessment Calibration & Consistency Framework
       '/assessment-center', '/assessment-playbooks', '/calibration-library', '/variance-analysis', '/assessment-academy',
       '/assessor-certification', '/consensus-assessments', '/benchmark-recommendations'
@@ -328,7 +330,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       // Release 11 — Governance Effectiveness & Outcomes Engine
       '/governance-effectiveness', '/governance-roi', '/governance-maturity', '/governance-benchmarking', '/governance-outcomes',
       // Release 12 — Regulatory Intelligence
-      '/regulatory-applicability', '/cross-framework-mapping', '/compliance-impact-analysis', '/regulatory-change-readiness', '/audit-readiness-intelligence',
+      '/regulatory-applicability', '/cross-framework-mapping', '/compliance-impact-analysis', '/regulatory-change-readiness', '/audit-readiness-intelligence', '/lifecycle-console', '/certification-programs', '/certification-records', '/certification-evidence',
       // GACF — Governance Assessment Calibration & Consistency Framework
       '/assessment-center', '/assessment-playbooks', '/calibration-library', '/variance-analysis', '/assessment-academy',
       '/assessor-certification', '/consensus-assessments', '/benchmark-recommendations'
@@ -359,7 +361,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       // Release 11 — Governance Effectiveness & Outcomes Engine
       '/governance-effectiveness', '/governance-roi', '/governance-maturity', '/governance-benchmarking', '/governance-outcomes',
       // Release 12 — Regulatory Intelligence
-      '/regulatory-applicability', '/cross-framework-mapping', '/compliance-impact-analysis', '/regulatory-change-readiness', '/audit-readiness-intelligence',
+      '/regulatory-applicability', '/cross-framework-mapping', '/compliance-impact-analysis', '/regulatory-change-readiness', '/audit-readiness-intelligence', '/lifecycle-console', '/certification-programs', '/certification-records', '/certification-evidence',
       // GACF — Governance Assessment Calibration & Consistency Framework
       '/assessment-center', '/assessment-playbooks', '/calibration-library', '/variance-analysis', '/assessment-academy',
       '/assessor-certification', '/consensus-assessments', '/benchmark-recommendations'
@@ -1393,6 +1395,74 @@ export const INITIAL_GOVERNANCE_CONTROLS: GovernanceControl[] = [
     ],
     createdAt: '2026-08-28',
     updatedAt: '2026-08-28',
+  },
+];
+
+/**
+ * R20 — Certification Governance. One program with active/expiring-soon/
+ * revoked records across three entity types (Asset, Model, Tool), so the
+ * cross-entity polymorphic design is visibly exercised, not just declared.
+ */
+export const INITIAL_CERTIFICATION_PROGRAMS: CertificationProgram[] = [
+  {
+    id: 'cprog-801',
+    name: 'AI Trust & Safety Certification',
+    criteria: 'Passes an independent safety and robustness assessment covering adversarial input handling, output monitoring and human-override verification.',
+    description: 'The baseline trust and safety credential issued to models, tools and agent-type assets that meet enterprise AI safety standards.',
+    validityPeriodDays: 365,
+    isArchived: false,
+    createdAt: '2026-03-01',
+    updatedAt: '2026-03-01',
+  },
+];
+
+export const INITIAL_CERTIFICATION_RECORDS: CertificationRecord[] = [
+  {
+    id: 'crec-801',
+    programId: 'cprog-801',
+    entityType: 'Model',
+    entityId: 'model-201',
+    entityName: 'GraphSentinel Fraud Embedding Model',
+    status: 'ACTIVE',
+    issuedAt: '2026-03-01',
+    issuedBy: 'Dr. Aris Thorne',
+    expiresAt: '2027-03-01',
+    evidence: [
+      { id: 'cevd-801', recordId: 'crec-801', title: 'Adversarial Robustness Test Report', description: 'Independent red-team assessment against embedding-space perturbation attacks — passed with zero critical findings. Corroborated by this model\'s existing Human-in-the-Loop Override Verification control test.', evidenceRef: 'ctres-602', submittedBy: 'Dr. Aris Thorne', submittedAt: '2026-02-25' },
+    ],
+    createdAt: '2026-03-01',
+    updatedAt: '2026-03-01',
+  },
+  {
+    id: 'crec-802',
+    programId: 'cprog-801',
+    entityType: 'Tool',
+    entityId: 'tool-503',
+    entityName: 'Account Freeze Directive API',
+    status: 'ACTIVE',
+    issuedAt: '2025-09-15',
+    issuedBy: 'Elena Rostova',
+    expiresAt: '2026-09-20',
+    evidence: [],
+    createdAt: '2025-09-15',
+    updatedAt: '2025-09-15',
+  },
+  {
+    id: 'crec-803',
+    programId: 'cprog-801',
+    entityType: 'Asset',
+    entityId: 'ast-106',
+    entityName: 'Enterprise Portfolio Multi-Agent System',
+    status: 'REVOKED',
+    issuedAt: '2026-01-10',
+    issuedBy: 'David Chen',
+    expiresAt: '2027-01-10',
+    revokedAt: '2026-08-06',
+    revokedBy: 'Sarah Jenkins',
+    revocationReason: 'Revoked following the swarm consensus loop volatility incident (inc-601) pending full re-certification after remediation.',
+    evidence: [],
+    createdAt: '2026-01-10',
+    updatedAt: '2026-08-06',
   },
 ];
 

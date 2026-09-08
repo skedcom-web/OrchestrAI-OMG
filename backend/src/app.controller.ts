@@ -922,6 +922,180 @@ export class AppController {
     return testResult;
   }
 
+  // --- R20: CERTIFICATION GOVERNANCE ENDPOINTS ---
+  @Get('certification-programs')
+  @Roles(
+    'SUPER_ADMIN',
+    'GOVERNANCE_ADMIN',
+    'RISK_OFFICER',
+    'BUSINESS_OWNER',
+    'VALIDATOR',
+    'AUDITOR',
+    'VIEWER',
+  )
+  async getCertificationPrograms(@Query('includeArchived') includeArchived?: string) {
+    return this.prisma.certificationProgram.findMany({
+      where: includeArchived === 'true' ? undefined : { isArchived: false },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  @Post('certification-programs')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async createCertificationProgram(@Body() body: any) {
+    if (!body.name || !body.criteria || !body.validityPeriodDays) {
+      throw new BadRequestException('A certification program requires a name, criteria and a validity period.');
+    }
+    return this.prisma.certificationProgram.create({ data: body });
+  }
+
+  @Patch('certification-programs/:id')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async updateCertificationProgram(@Param('id') id: string, @Body() body: any) {
+    const existing = await this.prisma.certificationProgram.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundException(`Certification program ${id} not found`);
+    return this.prisma.certificationProgram.update({ where: { id }, data: body });
+  }
+
+  @Delete('certification-programs/:id')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async archiveCertificationProgram(
+    @Param('id') id: string,
+    @Body() body: { archivedBy?: string; archiveReason?: string } = {},
+  ) {
+    const existing = await this.prisma.certificationProgram.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundException(`Certification program ${id} not found`);
+    const record = await this.prisma.certificationProgram.update({
+      where: { id },
+      data: {
+        isArchived: true,
+        archivedAt: new Date(),
+        archivedBy: body?.archivedBy ?? null,
+        archiveReason: body?.archiveReason ?? null,
+      },
+    });
+    return { archived: true, id, record };
+  }
+
+  @Patch('certification-programs/:id/restore')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async restoreCertificationProgram(@Param('id') id: string) {
+    const existing = await this.prisma.certificationProgram.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundException(`Certification program ${id} not found`);
+    const record = await this.prisma.certificationProgram.update({
+      where: { id },
+      data: { isArchived: false, archivedAt: null, archivedBy: null, archiveReason: null },
+    });
+    return { restored: true, id, record };
+  }
+
+  @Get('certification-records')
+  @Roles(
+    'SUPER_ADMIN',
+    'GOVERNANCE_ADMIN',
+    'RISK_OFFICER',
+    'BUSINESS_OWNER',
+    'VALIDATOR',
+    'AUDITOR',
+    'VIEWER',
+  )
+  async getCertificationRecords() {
+    return this.prisma.certificationRecord.findMany({
+      include: { program: true, evidence: { orderBy: { submittedAt: 'desc' } } },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  /** Issue — the "Assess -> Issue" transition. expiresAt is computed from the program's validity period. */
+  @Post('certification-records')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async issueCertificationRecord(
+    @Body() body: { programId: string; entityType: string; entityId: string; entityName: string; issuedBy: string },
+  ) {
+    if (!body.issuedBy) {
+      throw new BadRequestException('Issuing a certification requires a named issuer.');
+    }
+    const program = await this.prisma.certificationProgram.findUnique({ where: { id: body.programId } });
+    if (!program) throw new NotFoundException(`Certification program ${body.programId} not found`);
+    const issuedAt = new Date();
+    const expiresAt = new Date(issuedAt.getTime() + program.validityPeriodDays * 24 * 60 * 60 * 1000);
+    return this.prisma.certificationRecord.create({
+      data: {
+        programId: body.programId,
+        entityType: body.entityType,
+        entityId: body.entityId,
+        entityName: body.entityName,
+        issuedBy: body.issuedBy,
+        issuedAt,
+        expiresAt,
+      },
+      include: { program: true, evidence: true },
+    });
+  }
+
+  /** Renew — extends expiresAt by the program's validity period from today. A recorded human decision, not automatic. */
+  @Post('certification-records/:id/renew')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async renewCertificationRecord(
+    @Param('id') id: string,
+    @Body() body: { renewedBy: string; renewalNotes?: string },
+  ) {
+    const existing = await this.prisma.certificationRecord.findUnique({ where: { id }, include: { program: true } });
+    if (!existing) throw new NotFoundException(`Certification record ${id} not found`);
+    if (!body.renewedBy) {
+      throw new BadRequestException('Renewing a certification requires a named renewer.');
+    }
+    const renewedAt = new Date();
+    const expiresAt = new Date(renewedAt.getTime() + existing.program.validityPeriodDays * 24 * 60 * 60 * 1000);
+    return this.prisma.certificationRecord.update({
+      where: { id },
+      data: { status: 'ACTIVE', renewedAt, renewedBy: body.renewedBy, renewalNotes: body.renewalNotes, expiresAt },
+      include: { program: true, evidence: true },
+    });
+  }
+
+  /** Revoke — a recorded human decision with a required reason. Informational only; never gates the underlying entity. */
+  @Post('certification-records/:id/revoke')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER')
+  async revokeCertificationRecord(
+    @Param('id') id: string,
+    @Body() body: { revokedBy: string; revocationReason: string },
+  ) {
+    const existing = await this.prisma.certificationRecord.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundException(`Certification record ${id} not found`);
+    if (!body.revokedBy || !body.revocationReason) {
+      throw new BadRequestException('Revoking a certification requires a named revoker and a reason.');
+    }
+    return this.prisma.certificationRecord.update({
+      where: { id },
+      data: { status: 'REVOKED', revokedAt: new Date(), revokedBy: body.revokedBy, revocationReason: body.revocationReason },
+      include: { program: true, evidence: true },
+    });
+  }
+
+  /** Certification Evidence & Assessments — assessment evidence filed against a specific certification record. */
+  @Post('certification-records/:id/evidence')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER', 'VALIDATOR')
+  async addCertificationEvidence(
+    @Param('id') recordId: string,
+    @Body() body: { title: string; description: string; evidenceRef?: string; submittedBy: string },
+  ) {
+    const existing = await this.prisma.certificationRecord.findUnique({ where: { id: recordId } });
+    if (!existing) throw new NotFoundException(`Certification record ${recordId} not found`);
+    if (!body.title || !body.submittedBy) {
+      throw new BadRequestException('Certification evidence requires a title and a named submitter.');
+    }
+    return this.prisma.certificationEvidence.create({
+      data: {
+        recordId,
+        title: body.title,
+        description: body.description,
+        evidenceRef: body.evidenceRef,
+        submittedBy: body.submittedBy,
+      },
+    });
+  }
+
   // --- RELEASE 4: EVIDENCE REPOSITORY ENDPOINTS ---
   @Get('evidence-records')
   @Roles(

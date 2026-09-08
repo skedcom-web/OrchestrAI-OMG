@@ -543,6 +543,99 @@ model ControlTestResult {
 }
 
 // ---------------------------------------------------------------------------
+// R20 — CERTIFICATION GOVERNANCE (Architecture Package, Blueprint 9)
+// A certification is a credential issued against any governed entity,
+// backed by evidence, with a renewal date and a revocation path.
+//
+// CertificationRecord.entityType is polymorphic (Asset/Model/Tool) — same
+// shape as R18's ControlAttachment. "Agent" from the source blueprint
+// collapses into "Asset" here: Agent is already an AssetType on AIAsset in
+// this codebase, not a separate table, so certifying an Agent is certifying
+// an Asset whose type happens to be Agent.
+//
+// CertificationEvidence is a dedicated child table rather than a reuse of
+// the shared EvidenceRecord registry the blueprint suggests: EvidenceRecord's
+// backend schema already has the R13 Foundation's polymorphic entityType/
+// entityId columns, but the frontend EvidenceRecord type/mapper were never
+// updated to expose them and are load-bearing (required, non-polymorphic
+// assetId/assetName) across ~20 readiness/scoring engines. Retrofitting that
+// is real, worthwhile work — flagged separately — but out of scope for this
+// release; a small dedicated child table (mirroring R18's ControlTestResult)
+// avoids that blast radius while still shipping the Certification Evidence
+// screen the blueprint calls for.
+// ---------------------------------------------------------------------------
+
+enum CertificationStatus {
+  ACTIVE
+  EXPIRED
+  REVOKED
+}
+
+model CertificationProgram {
+  id                 String    @id @default(uuid())
+  name               String
+  criteria           String    @db.Text
+  description        String    @db.Text
+  validityPeriodDays Int
+
+  isArchived    Boolean   @default(false)
+  archivedAt    DateTime?
+  archivedBy    String?
+  archiveReason String?   @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  records CertificationRecord[]
+
+  @@map("certification_programs")
+}
+
+model CertificationRecord {
+  id        String               @id @default(uuid())
+  programId String
+  program   CertificationProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+
+  entityType String
+  entityId   String
+  entityName String
+
+  status CertificationStatus @default(ACTIVE)
+
+  issuedAt DateTime @default(now())
+  issuedBy String
+  expiresAt DateTime
+
+  renewedAt    DateTime?
+  renewedBy    String?
+  renewalNotes String?   @db.Text
+
+  revokedAt        DateTime?
+  revokedBy        String?
+  revocationReason String?   @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  evidence CertificationEvidence[]
+
+  @@map("certification_records")
+}
+
+model CertificationEvidence {
+  id           String              @id @default(uuid())
+  recordId     String
+  record       CertificationRecord @relation(fields: [recordId], references: [id], onDelete: Cascade)
+  title        String
+  description  String              @db.Text
+  evidenceRef  String?
+  submittedBy  String
+  submittedAt  DateTime            @default(now())
+
+  @@map("certification_evidence")
+}
+
+// ---------------------------------------------------------------------------
 // RELEASE 3 — Evidence Foundation
 // Evidence as a first-class, universal governance object: registry,
 // ownership, traceability, lifecycle and expiry. No scoring, no automation.

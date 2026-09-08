@@ -1164,6 +1164,69 @@ export interface ControlTestResult {
   testDate: string;
 }
 
+/**
+ * R20 — Certification Governance. A certification is a credential issued
+ * against any governed entity, backed by evidence, with a renewal date and
+ * a revocation path. Status is informational everywhere it's shown — it
+ * never gates whether the underlying entity can operate.
+ */
+export type CertificationStatus = 'ACTIVE' | 'EXPIRED' | 'REVOKED';
+
+export interface CertificationProgram {
+  id: string;
+  name: string;
+  criteria: string;
+  description: string;
+  validityPeriodDays: number;
+
+  isArchived: boolean;
+  archivedAt?: string;
+  archivedBy?: string;
+  archiveReason?: string;
+
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** entityType is polymorphic — Agent collapses into Asset, since Agent is already an AssetType, not a separate table. */
+export interface CertificationRecord {
+  id: string;
+  programId: string;
+  program?: CertificationProgram;
+  entityType: 'Asset' | 'Model' | 'Tool';
+  entityId: string;
+  entityName: string;
+  status: CertificationStatus;
+
+  issuedAt: string;
+  issuedBy: string;
+  expiresAt: string;
+
+  renewedAt?: string;
+  renewedBy?: string;
+  renewalNotes?: string;
+
+  revokedAt?: string;
+  revokedBy?: string;
+  revocationReason?: string;
+
+  evidence?: CertificationEvidence[];
+
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Assessment evidence filed against a specific certification record — a dedicated child table, not the shared Evidence Registry (see schema comment). */
+export interface CertificationEvidence {
+  id: string;
+  recordId: string;
+  title: string;
+  description: string;
+  evidenceRef?: string;
+  submittedBy: string;
+  submittedAt: string;
+}
+
 export interface User {
   id: string;
   name: string;
@@ -1183,7 +1246,7 @@ export interface AuditLog {
   userName: string;
   userRole: string;
   action: string;
-  entityType: 'Asset' | 'User' | 'Ownership' | 'Risk' | 'Decision' | 'Validation' | 'Evidence' | 'Finding' | 'DecisionPackage' | 'ComplianceAssessment' | 'CompliancePackage' | 'KillSwitch' | 'Override' | 'Incident' | 'Retirement' | 'ScheduledReview' | 'CorrectiveAction' | 'GovernanceReviewPackage' | 'Policy' | 'PolicyMapping' | 'PolicyViolation' | 'ExecutiveReport' | 'ChangeRequest' | 'StateTransition' | 'ReassessmentTrigger' | 'GovernanceReauthorizationRecord' | 'EvidenceRecord' | 'Model' | 'KnowledgeAsset' | 'Prompt' | 'Tool' | 'AgentToolGrant' | 'GovernanceControl' | 'ControlAttachment' | 'ControlTestResult';
+  entityType: 'Asset' | 'User' | 'Ownership' | 'Risk' | 'Decision' | 'Validation' | 'Evidence' | 'Finding' | 'DecisionPackage' | 'ComplianceAssessment' | 'CompliancePackage' | 'KillSwitch' | 'Override' | 'Incident' | 'Retirement' | 'ScheduledReview' | 'CorrectiveAction' | 'GovernanceReviewPackage' | 'Policy' | 'PolicyMapping' | 'PolicyViolation' | 'ExecutiveReport' | 'ChangeRequest' | 'StateTransition' | 'ReassessmentTrigger' | 'GovernanceReauthorizationRecord' | 'EvidenceRecord' | 'Model' | 'KnowledgeAsset' | 'Prompt' | 'Tool' | 'AgentToolGrant' | 'GovernanceControl' | 'ControlAttachment' | 'ControlTestResult' | 'CertificationProgram' | 'CertificationRecord' | 'CertificationEvidence';
   entityId: string;
   entityName: string;
   details: string;

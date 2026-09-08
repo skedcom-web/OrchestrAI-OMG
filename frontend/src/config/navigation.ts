@@ -269,6 +269,14 @@ export const NAV_DOMAINS: NavDomain[] = [
         ],
       },
       {
+        label: 'Certification',
+        modules: [
+          { path: '/certification-programs', label: 'Certification Programs', icon: '📜', description: 'Reusable certification program definitions — criteria, validity period and scope.', keywords: ['certification', 'program', 'criteria', 'credential'] },
+          { path: '/certification-records', label: 'Certification Records', icon: '🏆', description: 'Every certification issued, active, expiring or revoked, across Models, Tools and Assets.', keywords: ['certification', 'record', 'issued', 'expiring', 'revoked', 'credential'] },
+          { path: '/certification-evidence', label: 'Certification Evidence & Assessments', icon: '🧾', description: 'Assessment evidence filed in support of a certification decision.', keywords: ['certification evidence', 'assessment', 'proof'] },
+        ],
+      },
+      {
         label: 'Review',
         modules: [
           { path: '/review-workbench', label: 'Review Workbench', icon: '🧰', description: 'Reviewer working surface for validation and governance review execution.', keywords: ['reviewer', 'workbench', 'assess'] },
@@ -334,6 +342,7 @@ export const NAV_DOMAINS: NavDomain[] = [
           { path: '/governance-trends', label: 'Governance Trends', icon: '📈', description: 'Portfolio governance health trajectory and directional analytics.', keywords: ['trend', 'analytics', 'health score'] },
           { path: '/audit-logs', label: 'Audit Logs', icon: '📜', description: 'Immutable Day-1 audit trail of every governance action taken.', keywords: ['audit', 'log', 'immutable', 'trail'] },
           { path: '/audit-readiness-intelligence', label: 'Audit Readiness Intelligence', icon: '📄', description: 'What evidence supports compliance today — asset-level and framework-level readiness, combined.', keywords: ['audit readiness', 'evidence gaps', 'audit intelligence'] },
+          { path: '/lifecycle-console', label: 'Universal Lifecycle Console', icon: '🔄', description: 'Every governed Model, Knowledge source, Prompt and Tool, current lifecycle stage, in one portfolio view.', keywords: ['lifecycle', 'stage', 'register', 'operate', 'retire', 'portfolio'] },
         ],
       },
     ],
@@ -453,26 +462,11 @@ export interface FutureModule extends NavModule {
   capabilities: string[];
 }
 
-export const FUTURE_MODULES: FutureModule[] = [
-  // R13 Model, R14 Knowledge, R15 Prompt, R16 Agent, R17 Tool and R18 Control
-  // Governance all shipped as real workspaces above — no longer roadmap placeholders.
-  {
-    path: '/lifecycle-governance',
-    label: 'Lifecycle Governance',
-    icon: '🔄',
-    phase: 'Planned',
-    description: 'Deeper lifecycle automation for AI assets, extending Asset Governance with automated stage transitions.',
-    capabilities: ['Automated stage transitions', 'Lifecycle policy enforcement', 'Cross-stage evidence continuity'],
-  },
-  {
-    path: '/certification-governance',
-    label: 'Certification Governance',
-    icon: '🏅',
-    phase: 'Planned',
-    description: 'Formal, auditable certification programs for AI systems, extending Assessments & Reviews with issued credentials.',
-    capabilities: ['Certification program design', 'Credential issuance', 'Recertification scheduling'],
-  },
-];
+// R13 Model, R14 Knowledge, R15 Prompt, R16 Agent, R17 Tool, R18 Control, R19
+// Lifecycle and R20 Certification Governance all shipped as real workspaces
+// above — the full R13-R20 architecture package roadmap is now complete, so
+// this list is empty until a future package adds new planned modules.
+export const FUTURE_MODULES: FutureModule[] = [];
 
 /* --------------------------------------------------------------------------
  * Executive experience.

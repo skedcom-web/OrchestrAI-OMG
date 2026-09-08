@@ -134,6 +134,10 @@ import { CrossFrameworkMappingPage } from './pages/CrossFrameworkMappingPage';
 import { ComplianceImpactAnalysisPage } from './pages/ComplianceImpactAnalysisPage';
 import { RegulatoryChangeReadinessPage } from './pages/RegulatoryChangeReadinessPage';
 import { AuditReadinessIntelligencePage } from './pages/AuditReadinessIntelligencePage';
+import { LifecycleConsolePage } from './pages/LifecycleConsolePage';
+import { CertificationProgramsPage } from './pages/CertificationProgramsPage';
+import { CertificationRecordsPage } from './pages/CertificationRecordsPage';
+import { CertificationEvidencePage } from './pages/CertificationEvidencePage';
 
 // GACF Pages — Governance Assessment Calibration & Consistency Framework
 import { AssessmentCenterPage } from './pages/AssessmentCenterPage';
@@ -245,6 +249,10 @@ const GOVERNED_ROUTES: { path: string; element: React.ReactNode }[] = [
   { path: '/compliance-impact-analysis', element: <ComplianceImpactAnalysisPage /> },
   { path: '/regulatory-change-readiness', element: <RegulatoryChangeReadinessPage /> },
   { path: '/audit-readiness-intelligence', element: <AuditReadinessIntelligencePage /> },
+  { path: '/lifecycle-console', element: <LifecycleConsolePage /> },
+  { path: '/certification-programs', element: <CertificationProgramsPage /> },
+  { path: '/certification-records', element: <CertificationRecordsPage /> },
+  { path: '/certification-evidence', element: <CertificationEvidencePage /> },
 
   // Domain — Governance Assessment Calibration & Consistency Framework (GACF)
   { path: '/assessment-center', element: <AssessmentCenterPage /> },

@@ -32,6 +32,8 @@ import type {
   GovernanceRecordKind,
   GovernanceRepository,
   GovernanceControlRepository,
+  CertificationProgramRepository,
+  CertificationRecordRepository,
   KnowledgeAssetRepository,
   ModelRepository,
   ObligationControlRepository,
@@ -263,6 +265,43 @@ export const localGovernanceControlRepository: GovernanceControlRepository = {
   },
   async recordTestResult(attachmentId, tester, outcome, findings, evidenceRef) {
     return storage.recordControlTestResult(attachmentId, tester, outcome, findings, evidenceRef);
+  },
+};
+
+/** R20 — Certification Governance. Built for interface symmetry; not wired into the factory (Api-first, per the R13+ pattern). */
+export const localCertificationProgramRepository: CertificationProgramRepository = {
+  async getPrograms(includeArchived) {
+    return storage.getCertificationPrograms(includeArchived);
+  },
+  async createProgram(data) {
+    return storage.saveCertificationProgram(data);
+  },
+  async updateProgram(id, data) {
+    return storage.saveCertificationProgram({ ...data, id });
+  },
+  async archiveProgram(id, archivedBy, archiveReason) {
+    await storage.archiveCertificationProgram(id, archivedBy, archiveReason);
+  },
+  async restoreProgram(id) {
+    await storage.restoreCertificationProgram(id);
+  },
+};
+
+export const localCertificationRecordRepository: CertificationRecordRepository = {
+  async getRecords() {
+    return storage.getCertificationRecords();
+  },
+  async issueRecord(programId, entityType, entityId, entityName, issuedBy) {
+    return storage.issueCertificationRecord(programId, entityType, entityId, entityName, issuedBy);
+  },
+  async renewRecord(id, renewedBy, renewalNotes) {
+    return storage.renewCertificationRecord(id, renewedBy, renewalNotes);
+  },
+  async revokeRecord(id, revokedBy, revocationReason) {
+    return storage.revokeCertificationRecord(id, revokedBy, revocationReason);
+  },
+  async addEvidence(recordId, title, description, submittedBy, evidenceRef) {
+    return storage.addCertificationEvidence(recordId, title, description, submittedBy, evidenceRef);
   },
 };
 
