@@ -30,6 +30,7 @@ import type {
   GovernanceProfileRepository,
   GovernanceRecordKind,
   GovernanceRepository,
+  KnowledgeAssetRepository,
   ModelRepository,
   ObligationControlRepository,
   ObligationEvidenceMappingRepository,
@@ -137,6 +138,33 @@ export const localModelRepository: ModelRepository = {
   },
   async deleteUsage(id) {
     await storage.deleteAssetModelUsage(id);
+  },
+};
+
+export const localKnowledgeAssetRepository: KnowledgeAssetRepository = {
+  async getKnowledgeAssets(includeArchived) {
+    return storage.getKnowledgeAssets(includeArchived);
+  },
+  async createKnowledgeAsset(data) {
+    return storage.saveKnowledgeAsset(data);
+  },
+  async updateKnowledgeAsset(id, data) {
+    return storage.saveKnowledgeAsset({ ...data, id });
+  },
+  async archiveKnowledgeAsset(id, archivedBy, archiveReason) {
+    await storage.archiveKnowledgeAsset(id, archivedBy, archiveReason);
+  },
+  async restoreKnowledgeAsset(id) {
+    await storage.restoreKnowledgeAsset(id);
+  },
+  async recordKnowledgeDecision(id, outcome, justification, decisionOwner) {
+    return storage.recordKnowledgeDecision(id, outcome, justification, decisionOwner);
+  },
+  async createUsage(assetId, knowledgeAssetId) {
+    return storage.saveAssetKnowledgeUsage(assetId, knowledgeAssetId);
+  },
+  async deleteUsage(id) {
+    await storage.deleteAssetKnowledgeUsage(id);
   },
 };
 

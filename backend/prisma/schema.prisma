@@ -239,6 +239,73 @@ model AssetModelUsage {
 }
 
 // ---------------------------------------------------------------------------
+// R14 — KNOWLEDGE GOVERNANCE (Architecture Package, Blueprint 3)
+// A knowledge source is registered once and may feed many AI assets — same
+// many-to-many pattern as Model Governance, not owned 1:1 by a single asset.
+// ---------------------------------------------------------------------------
+
+enum KnowledgeSourceType {
+  DOCUMENT_STORE
+  DATABASE
+  API
+  VECTOR_INDEX
+}
+
+enum QualityControlStatus {
+  READY
+  PARTIALLY_READY
+  NOT_READY
+}
+
+model KnowledgeAsset {
+  id             String               @id @default(uuid())
+  name           String
+  sourceType     KnowledgeSourceType
+  description    String               @db.Text
+  riskLevel      RiskLevel            @default(MEDIUM)
+  lifecycleStage LifecycleStage       @default(REGISTER)
+
+  accountableOwner String
+  knowledgeOwner   String
+  riskOwner        String?
+
+  freshnessSLA         String?
+  lastRefreshedAt      DateTime?
+  qualityControlStatus QualityControlStatus @default(NOT_READY)
+  qualityNotes         String?               @db.Text
+
+  decisionOutcome       DecisionOutcome @default(PENDING)
+  decisionJustification String?         @db.Text
+  decisionOwner         String?
+  decisionDate          DateTime?
+
+  isArchived    Boolean   @default(false)
+  archivedAt    DateTime?
+  archivedBy    String?
+  archiveReason String?   @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  assetUsages AssetKnowledgeUsage[]
+
+  @@map("knowledge_assets")
+}
+
+/// Many-to-many: which AI assets currently retrieve from which knowledge sources.
+model AssetKnowledgeUsage {
+  id               String         @id @default(uuid())
+  assetId          String
+  asset            AIAsset        @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  knowledgeAssetId String
+  knowledgeAsset   KnowledgeAsset @relation(fields: [knowledgeAssetId], references: [id], onDelete: Cascade)
+  createdAt        DateTime       @default(now())
+
+  @@unique([assetId, knowledgeAssetId])
+  @@map("asset_knowledge_usages")
+}
+
+// ---------------------------------------------------------------------------
 // RELEASE 3 — Evidence Foundation
 // Evidence as a first-class, universal governance object: registry,
 // ownership, traceability, lifecycle and expiry. No scoring, no automation.
@@ -382,6 +449,7 @@ model AIAsset {
   governanceAssessmentRecords GovernanceAssessmentRecord[]
   consensusAssessments        ConsensusAssessment[]
   modelUsages                 AssetModelUsage[]
+  knowledgeUsages             AssetKnowledgeUsage[]
 
   @@map("ai_assets")
 }

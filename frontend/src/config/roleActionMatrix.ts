@@ -22,6 +22,12 @@ export type ActionKey =
   | 'model:decide'
   | 'assetModelUsage:create'
   | 'assetModelUsage:delete'
+  | 'knowledgeAsset:create'
+  | 'knowledgeAsset:edit'
+  | 'knowledgeAsset:archive'
+  | 'knowledgeAsset:decide'
+  | 'assetKnowledgeUsage:create'
+  | 'assetKnowledgeUsage:delete'
   | 'evidenceRecord:create'
   | 'evidenceRecord:edit'
   | 'evidenceRecord:delete'
@@ -100,6 +106,13 @@ export const ROLE_ACTION_MATRIX: Record<ActionKey, UserRole[]> = {
   'model:decide': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER'],
   'assetModelUsage:create': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
   'assetModelUsage:delete': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
+
+  'knowledgeAsset:create': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
+  'knowledgeAsset:edit': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
+  'knowledgeAsset:archive': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
+  'knowledgeAsset:decide': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER'],
+  'assetKnowledgeUsage:create': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
+  'assetKnowledgeUsage:delete': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
 
   'evidenceRecord:create': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER'],
   'evidenceRecord:edit': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER'],

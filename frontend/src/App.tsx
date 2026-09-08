@@ -61,6 +61,9 @@ import { ModelRegistryPage } from './pages/ModelRegistryPage';
 import { ModelLifecyclePage } from './pages/ModelLifecyclePage';
 import { ModelRiskApprovalsPage } from './pages/ModelRiskApprovalsPage';
 import { ModelAnalyticsPage } from './pages/ModelAnalyticsPage';
+import { KnowledgeRegistryPage } from './pages/KnowledgeRegistryPage';
+import { KnowledgeQualityLifecyclePage } from './pages/KnowledgeQualityLifecyclePage';
+import { KnowledgeTraceabilityPage } from './pages/KnowledgeTraceabilityPage';
 import { RbacAdministrationPage } from './pages/RbacAdministrationPage';
 import { TenantSettingsPage } from './pages/TenantSettingsPage';
 import { OmgOverviewPage } from './pages/OmgOverviewPage';
@@ -182,6 +185,11 @@ const GOVERNED_ROUTES: { path: string; element: React.ReactNode }[] = [
   { path: '/model-lifecycle', element: <ModelLifecyclePage /> },
   { path: '/model-risk', element: <ModelRiskApprovalsPage /> },
   { path: '/model-analytics', element: <ModelAnalyticsPage /> },
+
+  // R14 — Knowledge Governance
+  { path: '/knowledge-registry', element: <KnowledgeRegistryPage /> },
+  { path: '/knowledge-quality', element: <KnowledgeQualityLifecyclePage /> },
+  { path: '/knowledge-traceability', element: <KnowledgeTraceabilityPage /> },
 
   // Domain 2 — Risk & Compliance
   { path: '/risk', element: <RiskCenterPage /> },

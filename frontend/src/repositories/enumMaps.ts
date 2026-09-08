@@ -50,6 +50,8 @@ import type {
   RiskLevel,
   LifecycleStage,
   ModelType,
+  KnowledgeSourceType,
+  ReadinessStatus,
 } from '../types';
 
 function toBackend<T extends string>(map: Record<T, string>) {
@@ -84,6 +86,15 @@ const LIFECYCLE_STAGE: Record<LifecycleStage, string> = {
 /** R13 — Model Governance. */
 const MODEL_TYPE: Record<ModelType, string> = {
   'Foundation': 'FOUNDATION', 'Fine-Tuned': 'FINE_TUNED', 'Custom': 'CUSTOM', 'Third-Party': 'THIRD_PARTY',
+};
+
+/** R14 — Knowledge Governance. */
+const KNOWLEDGE_SOURCE_TYPE: Record<KnowledgeSourceType, string> = {
+  'Document Store': 'DOCUMENT_STORE', 'Database': 'DATABASE', 'API': 'API', 'Vector Index': 'VECTOR_INDEX',
+};
+
+const QUALITY_CONTROL_STATUS: Record<ReadinessStatus, string> = {
+  'Ready': 'READY', 'Partially Ready': 'PARTIALLY_READY', 'Not Ready': 'NOT_READY',
 };
 
 const GOVERNANCE_STATUS: Record<GovernanceStatus, string> = {
@@ -321,6 +332,8 @@ export const enumMaps = {
   riskLevel: { toBackend: toBackend(RISK_LEVEL), toFrontend: toFrontend(RISK_LEVEL) },
   lifecycleStage: { toBackend: toBackend(LIFECYCLE_STAGE), toFrontend: toFrontend(LIFECYCLE_STAGE) },
   modelType: { toBackend: toBackend(MODEL_TYPE), toFrontend: toFrontend(MODEL_TYPE) },
+  knowledgeSourceType: { toBackend: toBackend(KNOWLEDGE_SOURCE_TYPE), toFrontend: toFrontend(KNOWLEDGE_SOURCE_TYPE) },
+  qualityControlStatus: { toBackend: toBackend(QUALITY_CONTROL_STATUS), toFrontend: toFrontend(QUALITY_CONTROL_STATUS) },
   governanceStatus: { toBackend: toBackend(GOVERNANCE_STATUS), toFrontend: toFrontend(GOVERNANCE_STATUS) },
   decisionOutcome: { toBackend: toBackend(DECISION_OUTCOME), toFrontend: toFrontend(DECISION_OUTCOME) },
   oversightType: { toBackend: toBackend(OVERSIGHT_TYPE), toFrontend: toFrontend(OVERSIGHT_TYPE) },

@@ -163,6 +163,14 @@ export const NAV_DOMAINS: NavDomain[] = [
           { path: '/model-analytics', label: 'Model Analytics', icon: '📊', description: 'Which assets use which models, and where model risk concentrates across the portfolio.', keywords: ['model analytics', 'model usage', 'model portfolio'] },
         ],
       },
+      {
+        label: 'Knowledge',
+        modules: [
+          { path: '/knowledge-registry', label: 'Knowledge Registry', icon: '📚', description: 'Every knowledge source AI retrieves from — registered, owned and risk-tiered like any other governed entity.', keywords: ['knowledge', 'rag', 'retrieval', 'vector index', 'document store'] },
+          { path: '/knowledge-quality', label: 'Knowledge Quality & Lifecycle', icon: '🧪', description: 'Freshness, ownership and lifecycle stage for every governed knowledge source.', keywords: ['knowledge quality', 'freshness', 'staleness'] },
+          { path: '/knowledge-traceability', label: 'Knowledge Traceability', icon: '🔗', description: 'Which assets retrieve from which knowledge sources across the portfolio.', keywords: ['knowledge traceability', 'knowledge usage', 'rag lineage'] },
+        ],
+      },
     ],
   }),
 
@@ -415,16 +423,9 @@ export interface FutureModule extends NavModule {
 }
 
 export const FUTURE_MODULES: FutureModule[] = [
-  // R13 Model Governance shipped as a real workspace (AI Inventory & Registry
-  // → Models, above) — no longer a roadmap placeholder.
-  {
-    path: '/knowledge-governance',
-    label: 'Knowledge Governance',
-    icon: '📚',
-    phase: 'Planned',
-    description: 'Governance over knowledge sources feeding AI systems — retrieval provenance, source lineage, knowledge-base freshness.',
-    capabilities: ['Knowledge source registry', 'Retrieval provenance', 'Source lineage', 'Freshness monitoring'],
-  },
+  // R13 Model Governance and R14 Knowledge Governance shipped as real
+  // workspaces (AI Inventory & Registry → Models / Knowledge, above) — no
+  // longer roadmap placeholders.
   {
     path: '/prompt-governance',
     label: 'Prompt Governance',

@@ -28,6 +28,7 @@ import {
   localGovernancePolicyRepository,
   localGovernanceProfileRepository,
   localGovernanceRepository,
+  localKnowledgeAssetRepository,
   localModelRepository,
   localObligationControlRepository,
   localObligationEvidenceMappingRepository,
@@ -58,6 +59,7 @@ import {
   apiGovernancePolicyRepository,
   apiGovernanceProfileRepository,
   apiGovernanceRepository,
+  apiKnowledgeAssetRepository,
   apiModelRepository,
   apiObligationControlRepository,
   apiObligationEvidenceMappingRepository,
@@ -88,6 +90,7 @@ import type {
   GovernancePolicyRepository,
   GovernanceProfileRepository,
   GovernanceRepository,
+  KnowledgeAssetRepository,
   ModelRepository,
   ObligationControlRepository,
   ObligationEvidenceMappingRepository,
@@ -133,6 +136,13 @@ export function getModelRepository(): ModelRepository {
 }
 
 export { localModelRepository };
+
+/** R14 — Knowledge Governance. Same Api-first rationale as Model Governance above. */
+export function getKnowledgeAssetRepository(): KnowledgeAssetRepository {
+  return apiKnowledgeAssetRepository;
+}
+
+export { localKnowledgeAssetRepository };
 
 /**
  * Release 5.1 — Compliance Persistence Alignment. Api is the default for

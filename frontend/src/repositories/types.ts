@@ -12,6 +12,7 @@ import type {
   ActionRule,
   AIAsset,
   AssessorCertification,
+  AssetKnowledgeUsage,
   AssetModelUsage,
   CompliancePack,
   ComplianceRequirement,
@@ -20,6 +21,7 @@ import type {
   ConsensusAssessment,
   DecisionOutcome,
   DecisionRecord,
+  KnowledgeAsset,
   Model,
   EvidenceMapping,
   EvidenceRecord,
@@ -97,6 +99,18 @@ export interface ModelRepository {
   restoreModel(id: string): Promise<void>;
   recordModelDecision(id: string, outcome: DecisionOutcome, justification: string, decisionOwner: string): Promise<Model>;
   createUsage(assetId: string, modelId: string): Promise<AssetModelUsage>;
+  deleteUsage(id: string): Promise<void>;
+}
+
+/** R14 — Knowledge Governance. */
+export interface KnowledgeAssetRepository {
+  getKnowledgeAssets(includeArchived?: boolean): Promise<KnowledgeAsset[]>;
+  createKnowledgeAsset(data: Partial<KnowledgeAsset>): Promise<KnowledgeAsset>;
+  updateKnowledgeAsset(id: string, data: Partial<KnowledgeAsset>): Promise<KnowledgeAsset>;
+  archiveKnowledgeAsset(id: string, archivedBy?: string, archiveReason?: string): Promise<void>;
+  restoreKnowledgeAsset(id: string): Promise<void>;
+  recordKnowledgeDecision(id: string, outcome: DecisionOutcome, justification: string, decisionOwner: string): Promise<KnowledgeAsset>;
+  createUsage(assetId: string, knowledgeAssetId: string): Promise<AssetKnowledgeUsage>;
   deleteUsage(id: string): Promise<void>;
 }
 

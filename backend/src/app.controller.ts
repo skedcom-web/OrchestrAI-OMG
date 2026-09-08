@@ -304,6 +304,128 @@ export class AppController {
     return { deleted: true, id };
   }
 
+  // --- R14: KNOWLEDGE GOVERNANCE ENDPOINTS ---
+  @Get('knowledge-assets')
+  @Roles(
+    'SUPER_ADMIN',
+    'GOVERNANCE_ADMIN',
+    'RISK_OFFICER',
+    'BUSINESS_OWNER',
+    'VALIDATOR',
+    'AUDITOR',
+    'VIEWER',
+  )
+  async getKnowledgeAssets(@Query('includeArchived') includeArchived?: string) {
+    return this.prisma.knowledgeAsset.findMany({
+      where: includeArchived === 'true' ? undefined : { isArchived: false },
+      include: { assetUsages: { include: { asset: true } } },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  @Get('knowledge-assets/:id')
+  @Roles(
+    'SUPER_ADMIN',
+    'GOVERNANCE_ADMIN',
+    'RISK_OFFICER',
+    'BUSINESS_OWNER',
+    'VALIDATOR',
+    'AUDITOR',
+    'VIEWER',
+  )
+  async getKnowledgeAsset(@Param('id') id: string) {
+    const record = await this.prisma.knowledgeAsset.findUnique({
+      where: { id },
+      include: { assetUsages: { include: { asset: true } } },
+    });
+    if (!record) throw new NotFoundException(`Knowledge asset ${id} not found`);
+    return record;
+  }
+
+  @Post('knowledge-assets')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async createKnowledgeAsset(@Body() body: any) {
+    if (!body.accountableOwner || !body.knowledgeOwner) {
+      throw new BadRequestException('Knowledge sources require a named Accountable Owner and Knowledge Owner before they can be saved.');
+    }
+    return this.prisma.knowledgeAsset.create({ data: body });
+  }
+
+  @Patch('knowledge-assets/:id')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async updateKnowledgeAsset(@Param('id') id: string, @Body() body: any) {
+    const existing = await this.prisma.knowledgeAsset.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundException(`Knowledge asset ${id} not found`);
+    return this.prisma.knowledgeAsset.update({ where: { id }, data: body });
+  }
+
+  @Delete('knowledge-assets/:id')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async archiveKnowledgeAsset(
+    @Param('id') id: string,
+    @Body() body: { archivedBy?: string; archiveReason?: string } = {},
+  ) {
+    const existing = await this.prisma.knowledgeAsset.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundException(`Knowledge asset ${id} not found`);
+    const record = await this.prisma.knowledgeAsset.update({
+      where: { id },
+      data: {
+        isArchived: true,
+        archivedAt: new Date(),
+        archivedBy: body?.archivedBy ?? null,
+        archiveReason: body?.archiveReason ?? null,
+      },
+    });
+    return { archived: true, id, record };
+  }
+
+  @Patch('knowledge-assets/:id/restore')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async restoreKnowledgeAsset(@Param('id') id: string) {
+    const existing = await this.prisma.knowledgeAsset.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundException(`Knowledge asset ${id} not found`);
+    const record = await this.prisma.knowledgeAsset.update({
+      where: { id },
+      data: { isArchived: false, archivedAt: null, archivedBy: null, archiveReason: null },
+    });
+    return { restored: true, id, record };
+  }
+
+  @Post('knowledge-assets/:id/decision')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER')
+  async recordKnowledgeDecision(
+    @Param('id') id: string,
+    @Body() body: { outcome: string; justification: string; decisionOwner: string },
+  ) {
+    const existing = await this.prisma.knowledgeAsset.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundException(`Knowledge asset ${id} not found`);
+    if (!body.justification || !body.decisionOwner) {
+      throw new BadRequestException('A knowledge source decision requires a justification and a named decision owner.');
+    }
+    return this.prisma.knowledgeAsset.update({
+      where: { id },
+      data: {
+        decisionOutcome: body.outcome as any,
+        decisionJustification: body.justification,
+        decisionOwner: body.decisionOwner,
+        decisionDate: new Date(),
+      },
+    });
+  }
+
+  @Post('asset-knowledge-usages')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async createAssetKnowledgeUsage(@Body() body: { assetId: string; knowledgeAssetId: string }) {
+    return this.prisma.assetKnowledgeUsage.create({ data: body });
+  }
+
+  @Delete('asset-knowledge-usages/:id')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async deleteAssetKnowledgeUsage(@Param('id') id: string) {
+    await this.prisma.assetKnowledgeUsage.delete({ where: { id } });
+    return { deleted: true, id };
+  }
+
   // --- RELEASE 4: EVIDENCE REPOSITORY ENDPOINTS ---
   @Get('evidence-records')
   @Roles(

@@ -35,6 +35,8 @@ import type {
   EvidenceTimelineEvent,
   Model,
   AssetModelUsage,
+  KnowledgeAsset,
+  AssetKnowledgeUsage,
   CompliancePack,
   ComplianceRequirement,
   PackControl,
@@ -82,6 +84,7 @@ import {
   INITIAL_REAUTHORIZATION_RECORDS,
   INITIAL_EVIDENCE_RECORDS,
   INITIAL_MODELS,
+  INITIAL_KNOWLEDGE_ASSETS,
   INITIAL_COMPLIANCE_PACKS,
   INITIAL_COMPLIANCE_REQUIREMENTS,
   INITIAL_PACK_CONTROLS,
@@ -120,7 +123,7 @@ import {
 import { generateActionDrafts } from '../config/governanceActionsEngine';
 import { buildDecisionTrace } from '../config/decisionTraceabilityEngine';
 import type { DecisionTrace } from '../config/decisionTraceabilityEngine';
-import { apiAssetRepository, apiEvidenceRepository, apiGovernanceRepository, apiModelRepository } from '../repositories/apiRepositories';
+import { apiAssetRepository, apiEvidenceRepository, apiGovernanceRepository, apiModelRepository, apiKnowledgeAssetRepository } from '../repositories/apiRepositories';
 import {
   apiCompliancePackRepository,
   apiControlRepository,
@@ -191,6 +194,8 @@ const STORAGE_KEYS = {
   EVIDENCE_RECORDS: 'omg_evidence_records_v7',
   MODELS: 'omg_models_v13',
   ASSET_MODEL_USAGES: 'omg_asset_model_usages_v13',
+  KNOWLEDGE_ASSETS: 'omg_knowledge_assets_v14',
+  ASSET_KNOWLEDGE_USAGES: 'omg_asset_knowledge_usages_v14',
   COMPLIANCE_PACKS: 'omg_compliance_packs_v7',
   COMPLIANCE_REQUIREMENTS: 'omg_compliance_requirements_v7',
   PACK_CONTROLS: 'omg_pack_controls_v7',
@@ -2042,6 +2047,144 @@ export async function deleteAssetModelUsage(id: string): Promise<void> {
   modelsCache = modelsCache.map(m => (m.id === target.modelId ? { ...m, usedByAssetIds: m.usedByAssetIds.filter(a => a !== target.assetId), usedByAssetNames: m.usedByAssetNames.filter(n => n !== target.assetName) } : m));
   persistModelsCache();
   await apiModelRepository.deleteUsage(id);
+}
+
+// --- R14 — KNOWLEDGE GOVERNANCE: API-FIRST, NEON-BACKED ---
+// Same cache-then-network pattern as Model Governance above.
+
+let knowledgeAssetsCache: KnowledgeAsset[] = getItem<KnowledgeAsset[]>(STORAGE_KEYS.KNOWLEDGE_ASSETS, INITIAL_KNOWLEDGE_ASSETS);
+let assetKnowledgeUsagesCache: AssetKnowledgeUsage[] = getItem<AssetKnowledgeUsage[]>(STORAGE_KEYS.ASSET_KNOWLEDGE_USAGES, []);
+
+function persistKnowledgeAssetsCache() { setItem(STORAGE_KEYS.KNOWLEDGE_ASSETS, knowledgeAssetsCache); }
+function persistAssetKnowledgeUsagesCache() { setItem(STORAGE_KEYS.ASSET_KNOWLEDGE_USAGES, assetKnowledgeUsagesCache); }
+
+export function getKnowledgeAssets(includeArchived = false): KnowledgeAsset[] {
+  return includeArchived ? knowledgeAssetsCache : knowledgeAssetsCache.filter(k => !k.isArchived);
+}
+
+export function getAssetKnowledgeUsages(): AssetKnowledgeUsage[] {
+  return assetKnowledgeUsagesCache;
+}
+
+export async function saveKnowledgeAsset(data: Partial<KnowledgeAsset>): Promise<KnowledgeAsset> {
+  if (data.id) {
+    const idx = knowledgeAssetsCache.findIndex(k => k.id === data.id);
+    if (idx !== -1) {
+      const updated: KnowledgeAsset = { ...knowledgeAssetsCache[idx], ...data, updatedAt: new Date().toISOString() };
+      knowledgeAssetsCache = [...knowledgeAssetsCache];
+      knowledgeAssetsCache[idx] = updated;
+      persistKnowledgeAssetsCache();
+
+      addAuditLog('usr-2', updated.knowledgeOwner, 'GOVERNANCE_ADMIN', 'KNOWLEDGE_ASSET_UPDATED', 'KnowledgeAsset', updated.id, updated.name, `Updated knowledge source ${updated.name}`);
+
+      const saved = await apiKnowledgeAssetRepository.updateKnowledgeAsset(updated.id, updated);
+      const i2 = knowledgeAssetsCache.findIndex(k => k.id === updated.id);
+      if (i2 !== -1) { knowledgeAssetsCache = [...knowledgeAssetsCache]; knowledgeAssetsCache[i2] = saved; persistKnowledgeAssetsCache(); }
+      return saved;
+    }
+  }
+
+  const now = new Date().toISOString();
+  const draft: KnowledgeAsset = {
+    id: data.id || `knowledge-${Date.now().toString().slice(-6)}`,
+    name: data.name || 'New Knowledge Source',
+    sourceType: data.sourceType || 'Document Store',
+    description: data.description || '',
+    riskLevel: data.riskLevel || 'Medium',
+    lifecycleStage: data.lifecycleStage || 'Register',
+    accountableOwner: data.accountableOwner || '',
+    knowledgeOwner: data.knowledgeOwner || '',
+    riskOwner: data.riskOwner,
+    freshnessSLA: data.freshnessSLA,
+    lastRefreshedAt: data.lastRefreshedAt,
+    qualityControlStatus: data.qualityControlStatus || 'Not Ready',
+    qualityNotes: data.qualityNotes,
+    decisionOutcome: data.decisionOutcome || 'PENDING',
+    decisionJustification: data.decisionJustification,
+    decisionOwner: data.decisionOwner,
+    decisionDate: data.decisionDate,
+    isArchived: false,
+    createdAt: now,
+    updatedAt: now,
+    usedByAssetIds: [],
+    usedByAssetNames: [],
+  };
+
+  knowledgeAssetsCache = [draft, ...knowledgeAssetsCache];
+  persistKnowledgeAssetsCache();
+  addAuditLog('usr-2', draft.knowledgeOwner, 'GOVERNANCE_ADMIN', 'KNOWLEDGE_ASSET_CREATED', 'KnowledgeAsset', draft.id, draft.name, `Registered knowledge source ${draft.name}`);
+
+  const created = await apiKnowledgeAssetRepository.createKnowledgeAsset(draft);
+  knowledgeAssetsCache = knowledgeAssetsCache.map(k => (k.id === draft.id ? created : k));
+  persistKnowledgeAssetsCache();
+  return created;
+}
+
+export async function archiveKnowledgeAsset(id: string, archivedBy?: string, archiveReason?: string): Promise<void> {
+  const target = knowledgeAssetsCache.find(k => k.id === id);
+  if (!target) return;
+  knowledgeAssetsCache = knowledgeAssetsCache.map(k => (k.id === id ? { ...k, isArchived: true, archivedAt: new Date().toISOString(), archivedBy, archiveReason } : k));
+  persistKnowledgeAssetsCache();
+  addAuditLog('usr-1', archivedBy || 'Sarah Jenkins', 'SUPER_ADMIN', 'KNOWLEDGE_ASSET_ARCHIVED', 'KnowledgeAsset', id, target.name, `Archived knowledge source ${target.name}${archiveReason ? `: ${archiveReason}` : ''}`);
+  await apiKnowledgeAssetRepository.archiveKnowledgeAsset(id, archivedBy, archiveReason);
+}
+
+export async function restoreKnowledgeAsset(id: string): Promise<void> {
+  const target = knowledgeAssetsCache.find(k => k.id === id);
+  if (!target) return;
+  knowledgeAssetsCache = knowledgeAssetsCache.map(k => (k.id === id ? { ...k, isArchived: false, archivedAt: undefined, archivedBy: undefined, archiveReason: undefined } : k));
+  persistKnowledgeAssetsCache();
+  await apiKnowledgeAssetRepository.restoreKnowledgeAsset(id);
+}
+
+export async function recordKnowledgeDecision(id: string, outcome: DecisionOutcome, justification: string, decisionOwner: string): Promise<KnowledgeAsset> {
+  const idx = knowledgeAssetsCache.findIndex(k => k.id === id);
+  if (idx === -1) throw new Error(`Knowledge asset ${id} not found`);
+  const now = new Date().toISOString();
+  const updated: KnowledgeAsset = { ...knowledgeAssetsCache[idx], decisionOutcome: outcome, decisionJustification: justification, decisionOwner, decisionDate: now, updatedAt: now };
+  knowledgeAssetsCache = [...knowledgeAssetsCache];
+  knowledgeAssetsCache[idx] = updated;
+  persistKnowledgeAssetsCache();
+  addAuditLog('usr-2', decisionOwner, 'GOVERNANCE_ADMIN', 'KNOWLEDGE_ASSET_DECISION_RECORDED', 'KnowledgeAsset', id, updated.name, `Recorded ${outcome} decision for knowledge source ${updated.name}: ${justification}`);
+
+  const saved = await apiKnowledgeAssetRepository.recordKnowledgeDecision(id, outcome, justification, decisionOwner);
+  const i2 = knowledgeAssetsCache.findIndex(k => k.id === id);
+  if (i2 !== -1) { knowledgeAssetsCache = [...knowledgeAssetsCache]; knowledgeAssetsCache[i2] = saved; persistKnowledgeAssetsCache(); }
+  return saved;
+}
+
+export async function saveAssetKnowledgeUsage(assetId: string, knowledgeAssetId: string): Promise<AssetKnowledgeUsage> {
+  const asset = assetsCache.find(a => a.id === assetId);
+  const knowledgeAsset = knowledgeAssetsCache.find(k => k.id === knowledgeAssetId);
+  const draft: AssetKnowledgeUsage = {
+    id: `kusage-${Date.now().toString().slice(-6)}`,
+    assetId,
+    assetName: asset?.name,
+    knowledgeAssetId,
+    knowledgeAssetName: knowledgeAsset?.name,
+    createdAt: new Date().toISOString(),
+  };
+  assetKnowledgeUsagesCache = [draft, ...assetKnowledgeUsagesCache];
+  persistAssetKnowledgeUsagesCache();
+  if (knowledgeAsset) {
+    knowledgeAssetsCache = knowledgeAssetsCache.map(k => (k.id === knowledgeAssetId ? { ...k, usedByAssetIds: [...k.usedByAssetIds, assetId], usedByAssetNames: asset ? [...k.usedByAssetNames, asset.name] : k.usedByAssetNames } : k));
+    persistKnowledgeAssetsCache();
+  }
+
+  const created = await apiKnowledgeAssetRepository.createUsage(assetId, knowledgeAssetId);
+  assetKnowledgeUsagesCache = assetKnowledgeUsagesCache.map(u => (u.id === draft.id ? created : u));
+  persistAssetKnowledgeUsagesCache();
+  return created;
+}
+
+export async function deleteAssetKnowledgeUsage(id: string): Promise<void> {
+  const target = assetKnowledgeUsagesCache.find(u => u.id === id);
+  if (!target) return;
+  assetKnowledgeUsagesCache = assetKnowledgeUsagesCache.filter(u => u.id !== id);
+  persistAssetKnowledgeUsagesCache();
+  knowledgeAssetsCache = knowledgeAssetsCache.map(k => (k.id === target.knowledgeAssetId ? { ...k, usedByAssetIds: k.usedByAssetIds.filter(a => a !== target.assetId), usedByAssetNames: k.usedByAssetNames.filter(n => n !== target.assetName) } : k));
+  persistKnowledgeAssetsCache();
+  await apiKnowledgeAssetRepository.deleteUsage(id);
 }
 
 // --- RELEASE 5.1 — COMPLIANCE PACK FRAMEWORK: API-FIRST, NEON-BACKED ---
@@ -4012,6 +4155,7 @@ export function bootstrapPersistence(options?: { force?: boolean }): Promise<voi
         evidence,
         governance,
         models,
+        knowledgeAssets,
         compliancePacks,
         requirements,
         packControls,
@@ -4041,6 +4185,7 @@ export function bootstrapPersistence(options?: { force?: boolean }): Promise<voi
         safeSync(apiEvidenceRepository.getEvidence(), evidenceCache),
         safeSync(apiGovernanceRepository.getGovernanceData(), { triggers: triggersCache, reauthorizations: reauthorizationsCache, reviews: reviewsCache }),
         safeSync(apiModelRepository.getModels(true), modelsCache),
+        safeSync(apiKnowledgeAssetRepository.getKnowledgeAssets(true), knowledgeAssetsCache),
         safeSync(apiCompliancePackRepository.getCompliancePacks(), compliancePacksCache),
         safeSync(apiRequirementRepository.getRequirements(), requirementsCache),
         safeSync(apiControlRepository.getControls(), packControlsCache),
@@ -4086,6 +4231,9 @@ export function bootstrapPersistence(options?: { force?: boolean }): Promise<voi
 
       modelsCache = models;
       persistModelsCache();
+
+      knowledgeAssetsCache = knowledgeAssets;
+      persistKnowledgeAssetsCache();
 
       const packNameById = new Map(compliancePacks.map(p => [p.id, p.name]));
       requirementsCache = requirements.map(r => ({ ...r, packName: packNameById.get(r.packId) || r.packName }));

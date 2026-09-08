@@ -33,6 +33,7 @@ import type {
   GovernanceProfileRepository,
   GovernanceRecordKind,
   GovernanceRepository,
+  KnowledgeAssetRepository,
   ModelRepository,
   ObligationControlRepository,
   ObligationEvidenceMappingRepository,
@@ -47,6 +48,7 @@ import type {
   ActionRule,
   AIAsset,
   AssessorCertification,
+  AssetKnowledgeUsage,
   AssetModelUsage,
   CompliancePack,
   ComplianceRequirement,
@@ -65,6 +67,7 @@ import type {
   GovernancePolicy,
   GovernanceProfile,
   GovernanceReauthorizationRecord,
+  KnowledgeAsset,
   Model,
   Obligation,
   ObligationControl,
@@ -429,6 +432,97 @@ export const apiModelRepository: ModelRepository = {
   },
   async deleteUsage(id) {
     await apiRequest<void>(`/asset-model-usages/${id}`, { method: 'DELETE' });
+  },
+};
+
+// --- R14: KNOWLEDGE GOVERNANCE ---
+
+function knowledgeToBackend(data: Partial<KnowledgeAsset>) {
+  const body: Record<string, unknown> = { ...data };
+  delete body.usedByAssetIds;
+  delete body.usedByAssetNames;
+  if (data.riskLevel) body.riskLevel = enumMaps.riskLevel.toBackend(data.riskLevel);
+  if (data.lifecycleStage) body.lifecycleStage = enumMaps.lifecycleStage.toBackend(data.lifecycleStage);
+  if (data.sourceType) body.sourceType = enumMaps.knowledgeSourceType.toBackend(data.sourceType);
+  if (data.qualityControlStatus) body.qualityControlStatus = enumMaps.qualityControlStatus.toBackend(data.qualityControlStatus);
+  if (data.decisionOutcome) body.decisionOutcome = enumMaps.decisionOutcome.toBackend(data.decisionOutcome);
+  return body;
+}
+
+function knowledgeFromBackend(row: any): KnowledgeAsset {
+  const usages = Array.isArray(row.assetUsages) ? row.assetUsages : [];
+  return {
+    id: row.id,
+    name: row.name,
+    sourceType: enumMaps.knowledgeSourceType.toFrontend(row.sourceType),
+    description: row.description,
+    riskLevel: enumMaps.riskLevel.toFrontend(row.riskLevel),
+    lifecycleStage: enumMaps.lifecycleStage.toFrontend(row.lifecycleStage),
+    accountableOwner: row.accountableOwner,
+    knowledgeOwner: row.knowledgeOwner,
+    riskOwner: row.riskOwner ?? undefined,
+    freshnessSLA: row.freshnessSLA ?? undefined,
+    lastRefreshedAt: row.lastRefreshedAt ?? undefined,
+    qualityControlStatus: enumMaps.qualityControlStatus.toFrontend(row.qualityControlStatus),
+    qualityNotes: row.qualityNotes ?? undefined,
+    decisionOutcome: enumMaps.decisionOutcome.toFrontend(row.decisionOutcome),
+    decisionJustification: row.decisionJustification ?? undefined,
+    decisionOwner: row.decisionOwner ?? undefined,
+    decisionDate: row.decisionDate ?? undefined,
+    isArchived: !!row.isArchived,
+    archivedAt: row.archivedAt ?? undefined,
+    archivedBy: row.archivedBy ?? undefined,
+    archiveReason: row.archiveReason ?? undefined,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+    usedByAssetIds: usages.map((u: any) => u.assetId),
+    usedByAssetNames: usages.map((u: any) => u.asset?.name).filter(Boolean),
+  };
+}
+
+function knowledgeUsageFromBackend(row: any): AssetKnowledgeUsage {
+  return {
+    id: row.id,
+    assetId: row.assetId,
+    assetName: row.asset?.name,
+    knowledgeAssetId: row.knowledgeAssetId,
+    knowledgeAssetName: row.knowledgeAsset?.name,
+    createdAt: row.createdAt,
+  };
+}
+
+export const apiKnowledgeAssetRepository: KnowledgeAssetRepository = {
+  async getKnowledgeAssets(includeArchived) {
+    const rows = await apiRequest<any[]>(`/knowledge-assets${includeArchived ? '?includeArchived=true' : ''}`);
+    return rows.map(knowledgeFromBackend);
+  },
+  async createKnowledgeAsset(data) {
+    const row = await apiRequest<any>('/knowledge-assets', { method: 'POST', body: JSON.stringify(knowledgeToBackend(data)) });
+    return knowledgeFromBackend(row);
+  },
+  async updateKnowledgeAsset(id, data) {
+    const row = await apiRequest<any>(`/knowledge-assets/${id}`, { method: 'PATCH', body: JSON.stringify(knowledgeToBackend(data)) });
+    return knowledgeFromBackend(row);
+  },
+  async archiveKnowledgeAsset(id, archivedBy, archiveReason) {
+    await apiRequest<void>(`/knowledge-assets/${id}`, { method: 'DELETE', body: JSON.stringify({ archivedBy, archiveReason }) });
+  },
+  async restoreKnowledgeAsset(id) {
+    await apiRequest<void>(`/knowledge-assets/${id}/restore`, { method: 'PATCH' });
+  },
+  async recordKnowledgeDecision(id, outcome, justification, decisionOwner) {
+    const row = await apiRequest<any>(`/knowledge-assets/${id}/decision`, {
+      method: 'POST',
+      body: JSON.stringify({ outcome: enumMaps.decisionOutcome.toBackend(outcome), justification, decisionOwner }),
+    });
+    return knowledgeFromBackend(row);
+  },
+  async createUsage(assetId, knowledgeAssetId) {
+    const row = await apiRequest<any>('/asset-knowledge-usages', { method: 'POST', body: JSON.stringify({ assetId, knowledgeAssetId }) });
+    return knowledgeUsageFromBackend(row);
+  },
+  async deleteUsage(id) {
+    await apiRequest<void>(`/asset-knowledge-usages/${id}`, { method: 'DELETE' });
   },
 };
 

@@ -120,6 +120,53 @@ export interface AssetModelUsage {
   createdAt: string;
 }
 
+/** R14 — Knowledge Governance. */
+export type KnowledgeSourceType = 'Document Store' | 'Database' | 'API' | 'Vector Index';
+
+export interface KnowledgeAsset {
+  id: string;
+  name: string;
+  sourceType: KnowledgeSourceType;
+  description: string;
+  riskLevel: RiskLevel;
+  lifecycleStage: LifecycleStage;
+
+  accountableOwner: string;
+  knowledgeOwner: string;
+  riskOwner?: string;
+
+  freshnessSLA?: string;
+  lastRefreshedAt?: string;
+  qualityControlStatus: ReadinessStatus;
+  qualityNotes?: string;
+
+  decisionOutcome: DecisionOutcome;
+  decisionJustification?: string;
+  decisionOwner?: string;
+  decisionDate?: string;
+
+  isArchived: boolean;
+  archivedAt?: string;
+  archivedBy?: string;
+  archiveReason?: string;
+
+  createdAt: string;
+  updatedAt: string;
+
+  usedByAssetIds: string[];
+  usedByAssetNames: string[];
+}
+
+/** Many-to-many join — which AI assets retrieve from which knowledge sources. */
+export interface AssetKnowledgeUsage {
+  id: string;
+  assetId: string;
+  assetName?: string;
+  knowledgeAssetId: string;
+  knowledgeAssetName?: string;
+  createdAt: string;
+}
+
 export interface DecisionReadinessChecklist {
   ownershipComplete: boolean;
   riskAssessmentComplete: boolean;
@@ -979,7 +1026,7 @@ export interface AuditLog {
   userName: string;
   userRole: string;
   action: string;
-  entityType: 'Asset' | 'User' | 'Ownership' | 'Risk' | 'Decision' | 'Validation' | 'Evidence' | 'Finding' | 'DecisionPackage' | 'ComplianceAssessment' | 'CompliancePackage' | 'KillSwitch' | 'Override' | 'Incident' | 'Retirement' | 'ScheduledReview' | 'CorrectiveAction' | 'GovernanceReviewPackage' | 'Policy' | 'PolicyMapping' | 'PolicyViolation' | 'ExecutiveReport' | 'ChangeRequest' | 'StateTransition' | 'ReassessmentTrigger' | 'GovernanceReauthorizationRecord' | 'EvidenceRecord' | 'Model';
+  entityType: 'Asset' | 'User' | 'Ownership' | 'Risk' | 'Decision' | 'Validation' | 'Evidence' | 'Finding' | 'DecisionPackage' | 'ComplianceAssessment' | 'CompliancePackage' | 'KillSwitch' | 'Override' | 'Incident' | 'Retirement' | 'ScheduledReview' | 'CorrectiveAction' | 'GovernanceReviewPackage' | 'Policy' | 'PolicyMapping' | 'PolicyViolation' | 'ExecutiveReport' | 'ChangeRequest' | 'StateTransition' | 'ReassessmentTrigger' | 'GovernanceReauthorizationRecord' | 'EvidenceRecord' | 'Model' | 'KnowledgeAsset';
   entityId: string;
   entityName: string;
   details: string;
