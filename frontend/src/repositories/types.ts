@@ -21,12 +21,14 @@ import type {
   ConsensusAssessment,
   DecisionOutcome,
   DecisionRecord,
+  AgentToolGrant,
   AssetPromptUsage,
   KnowledgeAsset,
   Model,
   Prompt,
   PromptReviewStatus,
   PromptVersion,
+  Tool,
   EvidenceMapping,
   EvidenceRecord,
   GovernanceDrift,
@@ -130,6 +132,25 @@ export interface PromptRepository {
   reviewVersion(versionId: string, reviewStatus: PromptReviewStatus, reviewedBy: string, reviewNotes?: string, testTranscriptRef?: string): Promise<PromptVersion>;
   createUsage(assetId: string, promptId: string): Promise<AssetPromptUsage>;
   deleteUsage(id: string): Promise<void>;
+}
+
+/**
+ * R16/R17 — Tool's data model, brought forward from R17 (Release Dependency
+ * Map §16). Basic CRUD only in R16 — full risk/decision workflow ships with
+ * R17's own registry screens.
+ */
+export interface ToolRepository {
+  getTools(includeArchived?: boolean): Promise<Tool[]>;
+  createTool(data: Partial<Tool>): Promise<Tool>;
+  updateTool(id: string, data: Partial<Tool>): Promise<Tool>;
+  archiveTool(id: string, archivedBy?: string, archiveReason?: string): Promise<void>;
+}
+
+/** R16 — Agent Governance. The authorization boundary between an agent and a tool. */
+export interface AgentToolGrantRepository {
+  getGrants(): Promise<AgentToolGrant[]>;
+  createGrant(assetId: string, toolId: string, grantedBy: string, grantNotes?: string): Promise<AgentToolGrant>;
+  deleteGrant(id: string): Promise<void>;
 }
 
 export interface CompliancePackRepository {

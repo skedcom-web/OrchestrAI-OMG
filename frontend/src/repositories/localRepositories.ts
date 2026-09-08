@@ -10,6 +10,7 @@
 import * as storage from '../services/storageService';
 import type {
   ActionRuleRepository,
+  AgentToolGrantRepository,
   AssessorCertificationRepository,
   AssetRepository,
   CompliancePackRepository,
@@ -34,6 +35,7 @@ import type {
   ModelRepository,
   ObligationControlRepository,
   PromptRepository,
+  ToolRepository,
   ObligationEvidenceMappingRepository,
   ObligationRepository,
   OutcomeRuleRepository,
@@ -199,6 +201,33 @@ export const localPromptRepository: PromptRepository = {
   },
   async deleteUsage(id) {
     await storage.deleteAssetPromptUsage(id);
+  },
+};
+
+export const localToolRepository: ToolRepository = {
+  async getTools(includeArchived) {
+    return storage.getTools(includeArchived);
+  },
+  async createTool(data) {
+    return storage.saveTool(data);
+  },
+  async updateTool(id, data) {
+    return storage.saveTool({ ...data, id });
+  },
+  async archiveTool(id, archivedBy, archiveReason) {
+    await storage.archiveTool(id, archivedBy, archiveReason);
+  },
+};
+
+export const localAgentToolGrantRepository: AgentToolGrantRepository = {
+  async getGrants() {
+    return storage.getAgentToolGrants();
+  },
+  async createGrant(assetId, toolId, grantedBy, grantNotes) {
+    return storage.saveAgentToolGrant(assetId, toolId, grantedBy, grantNotes);
+  },
+  async deleteGrant(id) {
+    await storage.deleteAgentToolGrant(id);
   },
 };
 

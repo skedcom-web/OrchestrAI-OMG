@@ -179,6 +179,13 @@ export const NAV_DOMAINS: NavDomain[] = [
           { path: '/prompt-evidence', label: 'Prompt Evidence', icon: '🧾', description: 'Injection-control review, test transcripts and sign-off for every prompt version.', keywords: ['prompt evidence', 'injection control', 'red team', 'review sign-off'] },
         ],
       },
+      {
+        label: 'Agents',
+        modules: [
+          { path: '/agent-accountability', label: 'Agent Accountability', icon: '🕹️', description: 'Delegation scope, tool grants and human override authority for every autonomous agent.', keywords: ['agent', 'delegation', 'tool grant', 'accountability'] },
+          { path: '/agent-monitoring', label: 'Agent Monitoring', icon: '📡', description: 'Behavior signal for every autonomous agent — feeds the portfolio-wide Governance Monitoring view.', keywords: ['agent monitoring', 'behavior', 'watchlist', 'agent alert'] },
+        ],
+      },
     ],
   }),
 
@@ -431,17 +438,12 @@ export interface FutureModule extends NavModule {
 }
 
 export const FUTURE_MODULES: FutureModule[] = [
-  // R13 Model Governance, R14 Knowledge Governance and R15 Prompt Governance
-  // shipped as real workspaces (AI Inventory & Registry → Models / Knowledge
-  // / Prompts, above) — no longer roadmap placeholders.
-  {
-    path: '/agent-governance',
-    label: 'Agent Governance',
-    icon: '🤖',
-    phase: 'Planned',
-    description: 'Autonomous agent behavior boundaries, tool-use authorization and agent-to-agent delegation controls.',
-    capabilities: ['Behavior boundary definitions', 'Tool-use authorization', 'Agent-to-agent delegation controls'],
-  },
+  // R13 Model Governance, R14 Knowledge Governance, R15 Prompt Governance
+  // and R16 Agent Governance shipped as real workspaces (AI Inventory &
+  // Registry → Models / Knowledge / Prompts / Agents, above) — no longer
+  // roadmap placeholders. Tool Governance's data model shipped with R16 too
+  // (see the Release Dependency Map); its registry/lifecycle/risk screens
+  // are still the R17 placeholder below.
   {
     path: '/tool-governance',
     label: 'Tool Governance',

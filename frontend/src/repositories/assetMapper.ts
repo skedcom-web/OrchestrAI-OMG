@@ -27,6 +27,8 @@ export function toBackendAsset(data: Partial<AIAsset>): Record<string, unknown> 
   if (data.ownership !== undefined) body.ownershipJson = data.ownership;
   if (data.oversightType !== undefined) body.oversightType = enumMaps.oversightType.toBackend(data.oversightType);
   if (data.autonomyLevel !== undefined) body.autonomyLevel = data.autonomyLevel;
+  if (data.delegationScope !== undefined) body.delegationScope = data.delegationScope;
+  if (data.behaviorMonitoringStatus !== undefined) body.behaviorMonitoringStatus = enumMaps.agentBehaviorStatus.toBackend(data.behaviorMonitoringStatus);
   if (data.governanceClassification !== undefined) {
     body.governanceClassification = enumMaps.governanceClassification.toBackend(data.governanceClassification);
   }
@@ -79,6 +81,8 @@ export function fromBackendAsset(row: any): AIAsset {
       : undefined,
     oversightType: row.oversightType ? enumMaps.oversightType.toFrontend(row.oversightType) : undefined,
     autonomyLevel: row.autonomyLevel ?? undefined,
+    delegationScope: row.delegationScope ?? undefined,
+    behaviorMonitoringStatus: row.behaviorMonitoringStatus ? enumMaps.agentBehaviorStatus.toFrontend(row.behaviorMonitoringStatus) : undefined,
     governanceClassification: row.governanceClassification
       ? enumMaps.governanceClassification.toFrontend(row.governanceClassification)
       : undefined,

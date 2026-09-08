@@ -41,6 +41,8 @@ import type {
   PromptVersion,
   PromptReviewStatus,
   AssetPromptUsage,
+  Tool,
+  AgentToolGrant,
   CompliancePack,
   ComplianceRequirement,
   PackControl,
@@ -90,6 +92,7 @@ import {
   INITIAL_MODELS,
   INITIAL_KNOWLEDGE_ASSETS,
   INITIAL_PROMPTS,
+  INITIAL_TOOLS,
   INITIAL_COMPLIANCE_PACKS,
   INITIAL_COMPLIANCE_REQUIREMENTS,
   INITIAL_PACK_CONTROLS,
@@ -128,7 +131,7 @@ import {
 import { generateActionDrafts } from '../config/governanceActionsEngine';
 import { buildDecisionTrace } from '../config/decisionTraceabilityEngine';
 import type { DecisionTrace } from '../config/decisionTraceabilityEngine';
-import { apiAssetRepository, apiEvidenceRepository, apiGovernanceRepository, apiModelRepository, apiKnowledgeAssetRepository, apiPromptRepository } from '../repositories/apiRepositories';
+import { apiAssetRepository, apiEvidenceRepository, apiGovernanceRepository, apiModelRepository, apiKnowledgeAssetRepository, apiPromptRepository, apiToolRepository, apiAgentToolGrantRepository } from '../repositories/apiRepositories';
 import {
   apiCompliancePackRepository,
   apiControlRepository,
@@ -203,6 +206,8 @@ const STORAGE_KEYS = {
   ASSET_KNOWLEDGE_USAGES: 'omg_asset_knowledge_usages_v14',
   PROMPTS: 'omg_prompts_v15',
   ASSET_PROMPT_USAGES: 'omg_asset_prompt_usages_v15',
+  TOOLS: 'omg_tools_v16',
+  AGENT_TOOL_GRANTS: 'omg_agent_tool_grants_v16',
   COMPLIANCE_PACKS: 'omg_compliance_packs_v7',
   COMPLIANCE_REQUIREMENTS: 'omg_compliance_requirements_v7',
   PACK_CONTROLS: 'omg_pack_controls_v7',
@@ -2392,6 +2397,109 @@ export async function deleteAssetPromptUsage(id: string): Promise<void> {
   await apiPromptRepository.deleteUsage(id);
 }
 
+// --- R16/R17 — TOOL DATA MODEL + AGENT TOOL GRANTS: API-FIRST, NEON-BACKED ---
+// Tool's schema and basic CRUD are brought forward from R17 (Release
+// Dependency Map §16) so AgentToolGrant has a real table to reference. Full
+// risk/decision workflow UI for Tool itself ships with R17.
+
+let toolsCache: Tool[] = getItem<Tool[]>(STORAGE_KEYS.TOOLS, INITIAL_TOOLS);
+let agentToolGrantsCache: AgentToolGrant[] = getItem<AgentToolGrant[]>(STORAGE_KEYS.AGENT_TOOL_GRANTS, []);
+
+function persistToolsCache() { setItem(STORAGE_KEYS.TOOLS, toolsCache); }
+function persistAgentToolGrantsCache() { setItem(STORAGE_KEYS.AGENT_TOOL_GRANTS, agentToolGrantsCache); }
+
+export function getTools(includeArchived = false): Tool[] {
+  return includeArchived ? toolsCache : toolsCache.filter(t => !t.isArchived);
+}
+
+export function getAgentToolGrants(): AgentToolGrant[] {
+  return agentToolGrantsCache;
+}
+
+export async function saveTool(data: Partial<Tool>): Promise<Tool> {
+  if (data.id) {
+    const idx = toolsCache.findIndex(t => t.id === data.id);
+    if (idx !== -1) {
+      const updated: Tool = { ...toolsCache[idx], ...data, updatedAt: new Date().toISOString() };
+      toolsCache = [...toolsCache];
+      toolsCache[idx] = updated;
+      persistToolsCache();
+      addAuditLog('usr-2', updated.toolOwner, 'GOVERNANCE_ADMIN', 'TOOL_UPDATED', 'Tool', updated.id, updated.name, `Updated tool ${updated.name}`);
+      const saved = await apiToolRepository.updateTool(updated.id, updated);
+      const i2 = toolsCache.findIndex(t => t.id === updated.id);
+      if (i2 !== -1) { toolsCache = [...toolsCache]; toolsCache[i2] = saved; persistToolsCache(); }
+      return saved;
+    }
+  }
+
+  const now = new Date().toISOString();
+  const draft: Tool = {
+    id: data.id || `tool-${Date.now().toString().slice(-6)}`,
+    name: data.name || 'New Tool',
+    classification: data.classification || 'Read-Only',
+    description: data.description || '',
+    riskLevel: data.riskLevel || 'Medium',
+    lifecycleStage: data.lifecycleStage || 'Register',
+    accountableOwner: data.accountableOwner || '',
+    toolOwner: data.toolOwner || '',
+    riskOwner: data.riskOwner,
+    decisionOutcome: data.decisionOutcome || 'PENDING',
+    decisionJustification: data.decisionJustification,
+    decisionOwner: data.decisionOwner,
+    decisionDate: data.decisionDate,
+    isArchived: false,
+    createdAt: now,
+    updatedAt: now,
+  };
+  toolsCache = [draft, ...toolsCache];
+  persistToolsCache();
+  addAuditLog('usr-2', draft.toolOwner, 'GOVERNANCE_ADMIN', 'TOOL_CREATED', 'Tool', draft.id, draft.name, `Registered tool ${draft.name}`);
+  const created = await apiToolRepository.createTool(draft);
+  toolsCache = toolsCache.map(t => (t.id === draft.id ? created : t));
+  persistToolsCache();
+  return created;
+}
+
+export async function archiveTool(id: string, archivedBy?: string, archiveReason?: string): Promise<void> {
+  const target = toolsCache.find(t => t.id === id);
+  if (!target) return;
+  toolsCache = toolsCache.map(t => (t.id === id ? { ...t, isArchived: true, archivedAt: new Date().toISOString(), archivedBy, archiveReason } : t));
+  persistToolsCache();
+  addAuditLog('usr-1', archivedBy || 'Sarah Jenkins', 'SUPER_ADMIN', 'TOOL_ARCHIVED', 'Tool', id, target.name, `Archived tool ${target.name}${archiveReason ? `: ${archiveReason}` : ''}`);
+  await apiToolRepository.archiveTool(id, archivedBy, archiveReason);
+}
+
+export async function saveAgentToolGrant(assetId: string, toolId: string, grantedBy: string, grantNotes?: string): Promise<AgentToolGrant> {
+  const asset = assetsCache.find(a => a.id === assetId);
+  const tool = toolsCache.find(t => t.id === toolId);
+  const draft: AgentToolGrant = {
+    id: `grant-${Date.now().toString().slice(-6)}`,
+    assetId,
+    assetName: asset?.name,
+    toolId,
+    toolName: tool?.name,
+    grantedBy,
+    grantNotes,
+    createdAt: new Date().toISOString(),
+  };
+  agentToolGrantsCache = [draft, ...agentToolGrantsCache];
+  persistAgentToolGrantsCache();
+  addAuditLog('usr-2', grantedBy, 'GOVERNANCE_ADMIN', 'AGENT_TOOL_GRANT_CREATED', 'AgentToolGrant', draft.id, `${asset?.name || assetId} → ${tool?.name || toolId}`, `Granted ${asset?.name || assetId} access to tool ${tool?.name || toolId}`);
+  const created = await apiAgentToolGrantRepository.createGrant(assetId, toolId, grantedBy, grantNotes);
+  agentToolGrantsCache = agentToolGrantsCache.map(g => (g.id === draft.id ? created : g));
+  persistAgentToolGrantsCache();
+  return created;
+}
+
+export async function deleteAgentToolGrant(id: string): Promise<void> {
+  const target = agentToolGrantsCache.find(g => g.id === id);
+  if (!target) return;
+  agentToolGrantsCache = agentToolGrantsCache.filter(g => g.id !== id);
+  persistAgentToolGrantsCache();
+  addAuditLog('usr-1', 'Sarah Jenkins', 'SUPER_ADMIN', 'AGENT_TOOL_GRANT_REVOKED', 'AgentToolGrant', id, `${target.assetName || target.assetId} → ${target.toolName || target.toolId}`, `Revoked tool grant`);
+  await apiAgentToolGrantRepository.deleteGrant(id);
+}
+
 // --- RELEASE 5.1 — COMPLIANCE PACK FRAMEWORK: API-FIRST, NEON-BACKED ---
 // Release 5 shipped this domain on local storage deliberately ("framework
 // before regulation"). Release 5.1 aligns it with the Release 4.1 platform
@@ -4362,6 +4470,8 @@ export function bootstrapPersistence(options?: { force?: boolean }): Promise<voi
         models,
         knowledgeAssets,
         prompts,
+        tools,
+        agentToolGrants,
         compliancePacks,
         requirements,
         packControls,
@@ -4393,6 +4503,8 @@ export function bootstrapPersistence(options?: { force?: boolean }): Promise<voi
         safeSync(apiModelRepository.getModels(true), modelsCache),
         safeSync(apiKnowledgeAssetRepository.getKnowledgeAssets(true), knowledgeAssetsCache),
         safeSync(apiPromptRepository.getPrompts(true), promptsCache),
+        safeSync(apiToolRepository.getTools(true), toolsCache),
+        safeSync(apiAgentToolGrantRepository.getGrants(), agentToolGrantsCache),
         safeSync(apiCompliancePackRepository.getCompliancePacks(), compliancePacksCache),
         safeSync(apiRequirementRepository.getRequirements(), requirementsCache),
         safeSync(apiControlRepository.getControls(), packControlsCache),
@@ -4444,6 +4556,11 @@ export function bootstrapPersistence(options?: { force?: boolean }): Promise<voi
 
       promptsCache = prompts;
       persistPromptsCache();
+
+      toolsCache = tools;
+      persistToolsCache();
+      agentToolGrantsCache = agentToolGrants;
+      persistAgentToolGrantsCache();
 
       const packNameById = new Map(compliancePacks.map(p => [p.id, p.name]));
       requirementsCache = requirements.map(r => ({ ...r, packName: packNameById.get(r.packId) || r.packName }));

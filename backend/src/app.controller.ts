@@ -615,6 +615,104 @@ export class AppController {
     return { deleted: true, id };
   }
 
+  // --- R16: AGENT GOVERNANCE ENDPOINTS ---
+  // Note: delegationScope / behaviorMonitoringStatus are new AIAsset fields
+  // handled by the existing GET/PATCH /assets endpoints above — no new asset
+  // endpoints needed.
+
+  /**
+   * Tool's data model, brought forward from R17 per the Release Dependency
+   * Map — AgentToolGrant needs a real table to reference. Basic CRUD only;
+   * Tool's own registry/lifecycle/risk screens ship in R17.
+   */
+  @Get('tools')
+  @Roles(
+    'SUPER_ADMIN',
+    'GOVERNANCE_ADMIN',
+    'RISK_OFFICER',
+    'BUSINESS_OWNER',
+    'VALIDATOR',
+    'AUDITOR',
+    'VIEWER',
+  )
+  async getTools(@Query('includeArchived') includeArchived?: string) {
+    return this.prisma.tool.findMany({
+      where: includeArchived === 'true' ? undefined : { isArchived: false },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  @Post('tools')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async createTool(@Body() body: any) {
+    if (!body.accountableOwner || !body.toolOwner) {
+      throw new BadRequestException('Tools require a named Accountable Owner and Tool Owner before they can be saved.');
+    }
+    return this.prisma.tool.create({ data: body });
+  }
+
+  @Patch('tools/:id')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async updateTool(@Param('id') id: string, @Body() body: any) {
+    const existing = await this.prisma.tool.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundException(`Tool ${id} not found`);
+    return this.prisma.tool.update({ where: { id }, data: body });
+  }
+
+  @Delete('tools/:id')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async archiveTool(
+    @Param('id') id: string,
+    @Body() body: { archivedBy?: string; archiveReason?: string } = {},
+  ) {
+    const existing = await this.prisma.tool.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundException(`Tool ${id} not found`);
+    const record = await this.prisma.tool.update({
+      where: { id },
+      data: {
+        isArchived: true,
+        archivedAt: new Date(),
+        archivedBy: body?.archivedBy ?? null,
+        archiveReason: body?.archiveReason ?? null,
+      },
+    });
+    return { archived: true, id, record };
+  }
+
+  /** Which agents (AIAsset) are authorized to call which tools. */
+  @Get('agent-tool-grants')
+  @Roles(
+    'SUPER_ADMIN',
+    'GOVERNANCE_ADMIN',
+    'RISK_OFFICER',
+    'BUSINESS_OWNER',
+    'VALIDATOR',
+    'AUDITOR',
+    'VIEWER',
+  )
+  async getAgentToolGrants() {
+    return this.prisma.agentToolGrant.findMany({
+      include: { asset: true, tool: true },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  @Post('agent-tool-grants')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async createAgentToolGrant(@Body() body: { assetId: string; toolId: string; grantedBy: string; grantNotes?: string }) {
+    if (!body.grantedBy) {
+      throw new BadRequestException('A tool grant requires a named grantor.');
+    }
+    return this.prisma.agentToolGrant.create({ data: body, include: { asset: true, tool: true } });
+  }
+
+  @Delete('agent-tool-grants/:id')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async deleteAgentToolGrant(@Param('id') id: string) {
+    await this.prisma.agentToolGrant.delete({ where: { id } });
+    return { deleted: true, id };
+  }
+
   // --- RELEASE 4: EVIDENCE REPOSITORY ENDPOINTS ---
   @Get('evidence-records')
   @Roles(

@@ -53,6 +53,8 @@ import type {
   KnowledgeSourceType,
   ReadinessStatus,
   PromptReviewStatus,
+  AgentBehaviorStatus,
+  ToolClassification,
 } from '../types';
 
 function toBackend<T extends string>(map: Record<T, string>) {
@@ -101,6 +103,16 @@ const QUALITY_CONTROL_STATUS: Record<ReadinessStatus, string> = {
 /** R15 — Prompt Governance. */
 const PROMPT_REVIEW_STATUS: Record<PromptReviewStatus, string> = {
   'Not Reviewed': 'NOT_REVIEWED', 'Reviewed — Pass': 'REVIEWED_PASS', 'Reviewed — Flagged': 'REVIEWED_FLAGGED',
+};
+
+/** R16 — Agent Governance. */
+const AGENT_BEHAVIOR_STATUS: Record<AgentBehaviorStatus, string> = {
+  'Normal': 'NORMAL', 'Watchlist': 'WATCHLIST', 'Alert': 'ALERT',
+};
+
+/** R16/R17 — Tool Governance data model. */
+const TOOL_CLASSIFICATION: Record<ToolClassification, string> = {
+  'Read-Only': 'READ_ONLY', 'Write': 'WRITE', 'Financial': 'FINANCIAL', 'External API': 'EXTERNAL_API', 'Destructive': 'DESTRUCTIVE',
 };
 
 const GOVERNANCE_STATUS: Record<GovernanceStatus, string> = {
@@ -341,6 +353,8 @@ export const enumMaps = {
   knowledgeSourceType: { toBackend: toBackend(KNOWLEDGE_SOURCE_TYPE), toFrontend: toFrontend(KNOWLEDGE_SOURCE_TYPE) },
   qualityControlStatus: { toBackend: toBackend(QUALITY_CONTROL_STATUS), toFrontend: toFrontend(QUALITY_CONTROL_STATUS) },
   promptReviewStatus: { toBackend: toBackend(PROMPT_REVIEW_STATUS), toFrontend: toFrontend(PROMPT_REVIEW_STATUS) },
+  agentBehaviorStatus: { toBackend: toBackend(AGENT_BEHAVIOR_STATUS), toFrontend: toFrontend(AGENT_BEHAVIOR_STATUS) },
+  toolClassification: { toBackend: toBackend(TOOL_CLASSIFICATION), toFrontend: toFrontend(TOOL_CLASSIFICATION) },
   governanceStatus: { toBackend: toBackend(GOVERNANCE_STATUS), toFrontend: toFrontend(GOVERNANCE_STATUS) },
   decisionOutcome: { toBackend: toBackend(DECISION_OUTCOME), toFrontend: toFrontend(DECISION_OUTCOME) },
   oversightType: { toBackend: toBackend(OVERSIGHT_TYPE), toFrontend: toFrontend(OVERSIGHT_TYPE) },

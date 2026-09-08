@@ -67,6 +67,8 @@ import { KnowledgeTraceabilityPage } from './pages/KnowledgeTraceabilityPage';
 import { PromptLibraryPage } from './pages/PromptLibraryPage';
 import { PromptApprovalsPage } from './pages/PromptApprovalsPage';
 import { PromptEvidencePage } from './pages/PromptEvidencePage';
+import { AgentAccountabilityPage } from './pages/AgentAccountabilityPage';
+import { AgentMonitoringPage } from './pages/AgentMonitoringPage';
 import { RbacAdministrationPage } from './pages/RbacAdministrationPage';
 import { TenantSettingsPage } from './pages/TenantSettingsPage';
 import { OmgOverviewPage } from './pages/OmgOverviewPage';
@@ -198,6 +200,10 @@ const GOVERNED_ROUTES: { path: string; element: React.ReactNode }[] = [
   { path: '/prompt-library', element: <PromptLibraryPage /> },
   { path: '/prompt-approvals', element: <PromptApprovalsPage /> },
   { path: '/prompt-evidence', element: <PromptEvidencePage /> },
+
+  // R16 — Agent Governance
+  { path: '/agent-accountability', element: <AgentAccountabilityPage /> },
+  { path: '/agent-monitoring', element: <AgentMonitoringPage /> },
 
   // Domain 2 — Risk & Compliance
   { path: '/risk', element: <RiskCenterPage /> },

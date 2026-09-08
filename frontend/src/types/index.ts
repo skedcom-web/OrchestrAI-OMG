@@ -1062,6 +1062,53 @@ export interface AIAsset {
   archivedAt?: string;
   archivedBy?: string;
   archiveReason?: string;
+  /** R16 — Agent Governance. Only meaningful where type is Agent or Multi-Agent System. */
+  delegationScope?: string;
+  behaviorMonitoringStatus?: AgentBehaviorStatus;
+}
+
+/** R16 — Agent Governance. */
+export type AgentBehaviorStatus = 'Normal' | 'Watchlist' | 'Alert';
+
+/** R16/R17 — Tool's data model, brought forward from R17 per the Release Dependency Map. */
+export type ToolClassification = 'Read-Only' | 'Write' | 'Financial' | 'External API' | 'Destructive';
+
+export interface Tool {
+  id: string;
+  name: string;
+  classification: ToolClassification;
+  description: string;
+  riskLevel: RiskLevel;
+  lifecycleStage: LifecycleStage;
+
+  accountableOwner: string;
+  toolOwner: string;
+  riskOwner?: string;
+
+  decisionOutcome: DecisionOutcome;
+  decisionJustification?: string;
+  decisionOwner?: string;
+  decisionDate?: string;
+
+  isArchived: boolean;
+  archivedAt?: string;
+  archivedBy?: string;
+  archiveReason?: string;
+
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** The authorization boundary: which agents (AIAsset) may call which tools. */
+export interface AgentToolGrant {
+  id: string;
+  assetId: string;
+  assetName?: string;
+  toolId: string;
+  toolName?: string;
+  grantedBy: string;
+  grantNotes?: string;
+  createdAt: string;
 }
 
 export interface User {
@@ -1083,7 +1130,7 @@ export interface AuditLog {
   userName: string;
   userRole: string;
   action: string;
-  entityType: 'Asset' | 'User' | 'Ownership' | 'Risk' | 'Decision' | 'Validation' | 'Evidence' | 'Finding' | 'DecisionPackage' | 'ComplianceAssessment' | 'CompliancePackage' | 'KillSwitch' | 'Override' | 'Incident' | 'Retirement' | 'ScheduledReview' | 'CorrectiveAction' | 'GovernanceReviewPackage' | 'Policy' | 'PolicyMapping' | 'PolicyViolation' | 'ExecutiveReport' | 'ChangeRequest' | 'StateTransition' | 'ReassessmentTrigger' | 'GovernanceReauthorizationRecord' | 'EvidenceRecord' | 'Model' | 'KnowledgeAsset' | 'Prompt';
+  entityType: 'Asset' | 'User' | 'Ownership' | 'Risk' | 'Decision' | 'Validation' | 'Evidence' | 'Finding' | 'DecisionPackage' | 'ComplianceAssessment' | 'CompliancePackage' | 'KillSwitch' | 'Override' | 'Incident' | 'Retirement' | 'ScheduledReview' | 'CorrectiveAction' | 'GovernanceReviewPackage' | 'Policy' | 'PolicyMapping' | 'PolicyViolation' | 'ExecutiveReport' | 'ChangeRequest' | 'StateTransition' | 'ReassessmentTrigger' | 'GovernanceReauthorizationRecord' | 'EvidenceRecord' | 'Model' | 'KnowledgeAsset' | 'Prompt' | 'Tool' | 'AgentToolGrant';
   entityId: string;
   entityName: string;
   details: string;

@@ -36,6 +36,11 @@ export type ActionKey =
   | 'promptVersion:review'
   | 'assetPromptUsage:create'
   | 'assetPromptUsage:delete'
+  | 'tool:create'
+  | 'tool:edit'
+  | 'tool:archive'
+  | 'agentToolGrant:create'
+  | 'agentToolGrant:delete'
   | 'evidenceRecord:create'
   | 'evidenceRecord:edit'
   | 'evidenceRecord:delete'
@@ -130,6 +135,12 @@ export const ROLE_ACTION_MATRIX: Record<ActionKey, UserRole[]> = {
   'promptVersion:review': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER'],
   'assetPromptUsage:create': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
   'assetPromptUsage:delete': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
+
+  'tool:create': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
+  'tool:edit': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
+  'tool:archive': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
+  'agentToolGrant:create': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
+  'agentToolGrant:delete': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
 
   'evidenceRecord:create': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER'],
   'evidenceRecord:edit': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER'],

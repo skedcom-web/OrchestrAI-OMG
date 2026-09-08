@@ -21,6 +21,7 @@ import type {
   Model,
   KnowledgeAsset,
   Prompt,
+  Tool,
   CompliancePack,
   ComplianceRequirement,
   PackControl,
@@ -128,7 +129,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
     description: 'Platform Owner • Full system access, user management, platform settings & continuous monitoring oversight.',
     icon: '👑',
     allowedNav: [
-      '/', '/dashboard', '/assets', '/models', '/model-lifecycle', '/model-risk', '/model-analytics', '/knowledge-registry', '/knowledge-quality', '/knowledge-traceability', '/prompt-library', '/prompt-approvals', '/prompt-evidence', '/ownership', '/risk', 
+      '/', '/dashboard', '/assets', '/models', '/model-lifecycle', '/model-risk', '/model-analytics', '/knowledge-registry', '/knowledge-quality', '/knowledge-traceability', '/prompt-library', '/prompt-approvals', '/prompt-evidence', '/agent-accountability', '/agent-monitoring', '/ownership', '/risk', 
       '/validation', '/evidence', '/evidence-registry', '/review-workbench', '/findings', '/validation-dashboard', 
       '/decision-intelligence', '/governance-blockers', '/decision-workbench-v4', '/decision-dashboard',
       '/compliance-center', '/compliance-packs', '/regulatory-library', '/compliance-assessment', '/compliance-findings', '/compliance-dashboard',
@@ -162,7 +163,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
     description: 'Program Manager • Manage AI Assets, Review Calendar, Alerts & Governance Health Engine.',
     icon: '🛡️',
     allowedNav: [
-      '/', '/dashboard', '/assets', '/models', '/model-lifecycle', '/model-risk', '/model-analytics', '/knowledge-registry', '/knowledge-quality', '/knowledge-traceability', '/prompt-library', '/prompt-approvals', '/prompt-evidence', '/ownership', '/risk', 
+      '/', '/dashboard', '/assets', '/models', '/model-lifecycle', '/model-risk', '/model-analytics', '/knowledge-registry', '/knowledge-quality', '/knowledge-traceability', '/prompt-library', '/prompt-approvals', '/prompt-evidence', '/agent-accountability', '/agent-monitoring', '/ownership', '/risk', 
       '/validation', '/evidence', '/evidence-registry', '/review-workbench', '/findings', '/validation-dashboard', 
       '/decision-intelligence', '/governance-blockers', '/decision-workbench-v4', '/decision-dashboard',
       '/compliance-center', '/compliance-packs', '/regulatory-library', '/compliance-assessment', '/compliance-findings', '/compliance-dashboard',
@@ -204,7 +205,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
     description: 'Risk Governance • Monitor governance alerts, risk health & corrective remediation tasks.',
     icon: '⚡',
     allowedNav: [
-      '/', '/dashboard', '/assets', '/models', '/model-lifecycle', '/model-risk', '/model-analytics', '/knowledge-registry', '/knowledge-quality', '/knowledge-traceability', '/prompt-library', '/prompt-approvals', '/prompt-evidence', '/risk', '/evidence', '/evidence-registry', '/review-workbench', '/findings',
+      '/', '/dashboard', '/assets', '/models', '/model-lifecycle', '/model-risk', '/model-analytics', '/knowledge-registry', '/knowledge-quality', '/knowledge-traceability', '/prompt-library', '/prompt-approvals', '/prompt-evidence', '/agent-accountability', '/agent-monitoring', '/risk', '/evidence', '/evidence-registry', '/review-workbench', '/findings',
       '/decision-intelligence', '/governance-blockers', '/decision-workbench-v4', '/decision-dashboard',
       '/compliance-center', '/compliance-packs', '/regulatory-library', '/compliance-findings', '/compliance-dashboard',
       '/operations-center', '/kill-switch', '/override-center', '/incidents', '/operations-dashboard', '/governance-timeline',
@@ -240,7 +241,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
     description: 'Business Accountability • Track asset governance health, assigned corrective actions & scheduled reviews.',
     icon: '💼',
     allowedNav: [
-      '/', '/dashboard', '/assets', '/models', '/model-lifecycle', '/model-risk', '/model-analytics', '/knowledge-registry', '/knowledge-quality', '/knowledge-traceability', '/prompt-library', '/prompt-approvals', '/prompt-evidence', '/ownership', '/evidence', '/evidence-registry', '/decision-intelligence', 
+      '/', '/dashboard', '/assets', '/models', '/model-lifecycle', '/model-risk', '/model-analytics', '/knowledge-registry', '/knowledge-quality', '/knowledge-traceability', '/prompt-library', '/prompt-approvals', '/prompt-evidence', '/agent-accountability', '/agent-monitoring', '/ownership', '/evidence', '/evidence-registry', '/decision-intelligence', 
       '/compliance-center', '/compliance-packs', '/operations-center', '/kill-switch', '/incidents', '/governance-timeline',
       '/governance-monitoring', '/review-calendar', '/corrective-actions',
       // Phase 8 — Governance Operating System
@@ -273,7 +274,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
     description: 'Validation Officer • Model validation reviews, validation health & corrective action verification.',
     icon: '🧪',
     allowedNav: [
-      '/', '/dashboard', '/assets', '/models', '/model-lifecycle', '/model-risk', '/model-analytics', '/knowledge-registry', '/knowledge-quality', '/knowledge-traceability', '/prompt-library', '/prompt-approvals', '/prompt-evidence', '/validation', '/evidence', '/evidence-registry', '/review-workbench', '/findings', 
+      '/', '/dashboard', '/assets', '/models', '/model-lifecycle', '/model-risk', '/model-analytics', '/knowledge-registry', '/knowledge-quality', '/knowledge-traceability', '/prompt-library', '/prompt-approvals', '/prompt-evidence', '/agent-accountability', '/agent-monitoring', '/validation', '/evidence', '/evidence-registry', '/review-workbench', '/findings', 
       '/validation-dashboard', '/decision-intelligence', '/compliance-assessment', '/incidents', '/governance-timeline',
       '/governance-monitoring', '/corrective-actions',
       // Phase 8 — Governance Operating System
@@ -306,7 +307,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
     description: 'Independent Auditor • Read-only governance health, alert logs, review calendar & trends.',
     icon: '📜',
     allowedNav: [
-      '/', '/dashboard', '/assets', '/models', '/model-lifecycle', '/model-risk', '/model-analytics', '/knowledge-registry', '/knowledge-quality', '/knowledge-traceability', '/prompt-library', '/prompt-approvals', '/prompt-evidence', '/evidence', '/evidence-registry', '/findings', '/decision-workbench-v4', '/decision-dashboard',
+      '/', '/dashboard', '/assets', '/models', '/model-lifecycle', '/model-risk', '/model-analytics', '/knowledge-registry', '/knowledge-quality', '/knowledge-traceability', '/prompt-library', '/prompt-approvals', '/prompt-evidence', '/agent-accountability', '/agent-monitoring', '/evidence', '/evidence-registry', '/findings', '/decision-workbench-v4', '/decision-dashboard',
       '/compliance-center', '/compliance-packs', '/regulatory-library', '/compliance-findings', '/compliance-dashboard',
       '/operations-center', '/kill-switch', '/override-center', '/incidents', '/operations-dashboard', '/retirement', '/governance-timeline',
       '/governance-monitoring', '/governance-alerts', '/review-calendar', '/corrective-actions', '/governance-trends', '/audit-logs',
@@ -341,7 +342,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
     description: 'Executive Viewer • Governance Trends Dashboard & portfolio health score visibility.',
     icon: '👁️',
     allowedNav: [
-      '/', '/dashboard', '/assets', '/models', '/model-lifecycle', '/model-risk', '/model-analytics', '/knowledge-registry', '/knowledge-quality', '/knowledge-traceability', '/prompt-library', '/prompt-approvals', '/prompt-evidence', '/validation-dashboard', '/decision-dashboard', '/compliance-dashboard', '/operations-dashboard', '/governance-trends',
+      '/', '/dashboard', '/assets', '/models', '/model-lifecycle', '/model-risk', '/model-analytics', '/knowledge-registry', '/knowledge-quality', '/knowledge-traceability', '/prompt-library', '/prompt-approvals', '/prompt-evidence', '/agent-accountability', '/agent-monitoring', '/validation-dashboard', '/decision-dashboard', '/compliance-dashboard', '/operations-dashboard', '/governance-trends',
       // Phase 8 — Governance Operating System
       '/asset-lifecycle', '/command-center',
       // Phase 9 — Executive Governance (board observer, read-only surfaces)
@@ -417,6 +418,9 @@ export const INITIAL_ASSETS: AIAsset[] = [
     lastReviewDate: '2026-07-20',
     decisionOutcome: 'GO',
     tags: ['Real-Time', 'Autonomous', 'High-Impact'],
+    // R16 — Agent Governance
+    delegationScope: 'May read transaction and account data, and escalate cases for investigator review. May freeze an account only under an active Account Freeze Directive tool grant. May not reverse a freeze or execute financial transactions.',
+    behaviorMonitoringStatus: 'Normal',
   },
   {
     id: 'ast-102',
@@ -603,6 +607,9 @@ export const INITIAL_ASSETS: AIAsset[] = [
     updatedAt: '2026-08-04',
     decisionOutcome: 'NO GO',
     tags: ['Trading', 'Multi-Agent', 'High-Risk'],
+    // R16 — Agent Governance
+    delegationScope: 'May rebalance portfolios within the configured risk band and execute trades via the Trade Execution API up to the human sign-off threshold in the Portfolio Rebalancing Directive Prompt. May not exceed that threshold without explicit human approval.',
+    behaviorMonitoringStatus: 'Alert',
   },
 ];
 
@@ -1137,6 +1144,98 @@ export const INITIAL_PROMPTS: Prompt[] = [
     ],
     usedByAssetIds: ['ast-105'],
     usedByAssetNames: ['Mortgage Document Intelligence Workflow'],
+  },
+];
+
+// --- R16/R17 — TOOL DATA MODEL SEED DATA ---
+// Brought forward from R17 (Release Dependency Map §16) so Agent
+// Governance's tool grants have something real to reference. Spans all five
+// classifications; the Destructive-class tool carries an explicit, recorded
+// approval — the scenario every reviewer looks for first.
+export const INITIAL_TOOLS: Tool[] = [
+  {
+    id: 'tool-501',
+    name: 'Core Banking Read API',
+    classification: 'Read-Only',
+    description: 'Read-only query access to account and transaction records for investigation support.',
+    riskLevel: 'Low',
+    lifecycleStage: 'Operate',
+    accountableOwner: 'Marcus Vance',
+    toolOwner: 'Sarah Jenkins',
+    decisionOutcome: 'GO',
+    decisionJustification: 'Read-only scope confirmed; no write capability exposed.',
+    decisionOwner: 'David Chen',
+    decisionDate: '2026-01-10',
+    isArchived: false,
+    createdAt: '2025-12-01',
+    updatedAt: '2026-01-10',
+  },
+  {
+    id: 'tool-502',
+    name: 'Trade Execution API',
+    classification: 'Financial',
+    description: 'Executes buy/sell/rebalance orders against the trading platform.',
+    riskLevel: 'Critical',
+    lifecycleStage: 'Operate',
+    accountableOwner: 'David Chen',
+    toolOwner: 'Elena Rostova',
+    riskOwner: 'Elena Rostova',
+    decisionOutcome: 'CONDITIONAL GO',
+    decisionJustification: 'Approved for continued use under the sign-off thresholds enforced by the Portfolio Rebalancing Directive Prompt; tied to the same drift investigation as the underlying orchestration model.',
+    decisionOwner: 'Elena Rostova',
+    decisionDate: '2026-07-20',
+    isArchived: false,
+    createdAt: '2025-07-15',
+    updatedAt: '2026-08-05',
+  },
+  {
+    id: 'tool-503',
+    name: 'Account Freeze Directive API',
+    classification: 'Destructive',
+    description: 'Places an immediate hold on an account pending fraud investigation. Irreversible without a separate unfreeze authorization.',
+    riskLevel: 'Critical',
+    lifecycleStage: 'Operate',
+    accountableOwner: 'Marcus Vance',
+    toolOwner: 'Elena Rostova',
+    riskOwner: 'Elena Rostova',
+    decisionOutcome: 'GO',
+    decisionJustification: 'Approved for autonomous use by the Fraud Detection Sentinel Agent only, strictly for account freezes — reversal requires separate human authorization outside this tool. Reviewed and accepted by Risk given the containment value outweighs the blast radius of a single-account, reversible-by-a-human hold.',
+    decisionOwner: 'David Chen',
+    decisionDate: '2026-02-01',
+    isArchived: false,
+    createdAt: '2026-01-05',
+    updatedAt: '2026-02-01',
+  },
+  {
+    id: 'tool-504',
+    name: 'Case Escalation Write API',
+    classification: 'Write',
+    description: 'Creates an investigation case record and assigns it to a human investigator queue.',
+    riskLevel: 'Medium',
+    lifecycleStage: 'Operate',
+    accountableOwner: 'Marcus Vance',
+    toolOwner: 'Sarah Jenkins',
+    decisionOutcome: 'GO',
+    decisionJustification: 'Write scope limited to case-record creation only; no customer-facing or financial effect.',
+    decisionOwner: 'David Chen',
+    decisionDate: '2026-01-12',
+    isArchived: false,
+    createdAt: '2025-12-01',
+    updatedAt: '2026-01-12',
+  },
+  {
+    id: 'tool-505',
+    name: 'Customer Notification External API',
+    classification: 'External API',
+    description: 'Sends SMS/email notifications to customers via a third-party delivery vendor.',
+    riskLevel: 'Medium',
+    lifecycleStage: 'Assess',
+    accountableOwner: 'Marcus Vance',
+    toolOwner: 'Sarah Jenkins',
+    decisionOutcome: 'PENDING',
+    isArchived: false,
+    createdAt: '2026-08-25',
+    updatedAt: '2026-08-25',
   },
 ];
 

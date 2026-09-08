@@ -13,6 +13,7 @@ import { fromBackendEvidence, toBackendEvidence } from './evidenceMapper';
 import { enumMaps } from './enumMaps';
 import type {
   ActionRuleRepository,
+  AgentToolGrantRepository,
   AssessorCertificationRepository,
   AssetRepository,
   CompliancePackRepository,
@@ -37,6 +38,7 @@ import type {
   ModelRepository,
   ObligationControlRepository,
   PromptRepository,
+  ToolRepository,
   ObligationEvidenceMappingRepository,
   ObligationRepository,
   OutcomeRuleRepository,
@@ -49,6 +51,7 @@ import type {
   ActionRule,
   AIAsset,
   AssessorCertification,
+  AgentToolGrant,
   AssetKnowledgeUsage,
   AssetModelUsage,
   AssetPromptUsage,
@@ -74,6 +77,7 @@ import type {
   Obligation,
   Prompt,
   PromptVersion,
+  Tool,
   ObligationControl,
   ObligationEvidenceMapping,
   OutcomeRule,
@@ -645,6 +649,86 @@ export const apiPromptRepository: PromptRepository = {
   },
   async deleteUsage(id) {
     await apiRequest<void>(`/asset-prompt-usages/${id}`, { method: 'DELETE' });
+  },
+};
+
+// --- R16/R17: TOOL DATA MODEL + AGENT TOOL GRANTS ---
+
+function toolToBackend(data: Partial<Tool>) {
+  const body: Record<string, unknown> = { ...data };
+  if (data.classification) body.classification = enumMaps.toolClassification.toBackend(data.classification);
+  if (data.riskLevel) body.riskLevel = enumMaps.riskLevel.toBackend(data.riskLevel);
+  if (data.lifecycleStage) body.lifecycleStage = enumMaps.lifecycleStage.toBackend(data.lifecycleStage);
+  if (data.decisionOutcome) body.decisionOutcome = enumMaps.decisionOutcome.toBackend(data.decisionOutcome);
+  return body;
+}
+
+function toolFromBackend(row: any): Tool {
+  return {
+    id: row.id,
+    name: row.name,
+    classification: enumMaps.toolClassification.toFrontend(row.classification),
+    description: row.description,
+    riskLevel: enumMaps.riskLevel.toFrontend(row.riskLevel),
+    lifecycleStage: enumMaps.lifecycleStage.toFrontend(row.lifecycleStage),
+    accountableOwner: row.accountableOwner,
+    toolOwner: row.toolOwner,
+    riskOwner: row.riskOwner ?? undefined,
+    decisionOutcome: enumMaps.decisionOutcome.toFrontend(row.decisionOutcome),
+    decisionJustification: row.decisionJustification ?? undefined,
+    decisionOwner: row.decisionOwner ?? undefined,
+    decisionDate: row.decisionDate ?? undefined,
+    isArchived: !!row.isArchived,
+    archivedAt: row.archivedAt ?? undefined,
+    archivedBy: row.archivedBy ?? undefined,
+    archiveReason: row.archiveReason ?? undefined,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  };
+}
+
+function grantFromBackend(row: any): AgentToolGrant {
+  return {
+    id: row.id,
+    assetId: row.assetId,
+    assetName: row.asset?.name,
+    toolId: row.toolId,
+    toolName: row.tool?.name,
+    grantedBy: row.grantedBy,
+    grantNotes: row.grantNotes ?? undefined,
+    createdAt: row.createdAt,
+  };
+}
+
+export const apiToolRepository: ToolRepository = {
+  async getTools(includeArchived) {
+    const rows = await apiRequest<any[]>(`/tools${includeArchived ? '?includeArchived=true' : ''}`);
+    return rows.map(toolFromBackend);
+  },
+  async createTool(data) {
+    const row = await apiRequest<any>('/tools', { method: 'POST', body: JSON.stringify(toolToBackend(data)) });
+    return toolFromBackend(row);
+  },
+  async updateTool(id, data) {
+    const row = await apiRequest<any>(`/tools/${id}`, { method: 'PATCH', body: JSON.stringify(toolToBackend(data)) });
+    return toolFromBackend(row);
+  },
+  async archiveTool(id, archivedBy, archiveReason) {
+    await apiRequest<void>(`/tools/${id}`, { method: 'DELETE', body: JSON.stringify({ archivedBy, archiveReason }) });
+  },
+};
+
+export const apiAgentToolGrantRepository: AgentToolGrantRepository = {
+  async getGrants() {
+    const rows = await apiRequest<any[]>('/agent-tool-grants');
+    return rows.map(grantFromBackend);
+  },
+  async createGrant(assetId, toolId, grantedBy, grantNotes) {
+    const row = await apiRequest<any>('/agent-tool-grants', { method: 'POST', body: JSON.stringify({ assetId, toolId, grantedBy, grantNotes }) });
+    return grantFromBackend(row);
+  },
+  async deleteGrant(id) {
+    await apiRequest<void>(`/agent-tool-grants/${id}`, { method: 'DELETE' });
   },
 };
 

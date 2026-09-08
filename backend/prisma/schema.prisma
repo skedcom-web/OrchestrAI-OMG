@@ -387,6 +387,78 @@ model AssetPromptUsage {
 }
 
 // ---------------------------------------------------------------------------
+// R16 — AGENT GOVERNANCE (Architecture Package, Blueprint 5)
+// Agent is not a new entity — it's already an AssetType. This adds the
+// accountability/monitoring fields agents specifically need directly onto
+// AIAsset, plus AgentToolGrant, the authorization boundary between an agent
+// and a tool.
+//
+// Tool's full data model is brought forward from R17 here (per the Release
+// Dependency Map, §16 of the architecture package): AgentToolGrant.toolId
+// must reference a real table now. Only Tool's schema and basic CRUD ship in
+// this release — Tool's own registry/lifecycle/risk screens are still R17.
+// ---------------------------------------------------------------------------
+
+enum AgentBehaviorStatus {
+  NORMAL
+  WATCHLIST
+  ALERT
+}
+
+enum ToolClassification {
+  READ_ONLY
+  WRITE
+  FINANCIAL
+  EXTERNAL_API
+  DESTRUCTIVE
+}
+
+model Tool {
+  id             String              @id @default(uuid())
+  name           String
+  classification ToolClassification
+  description    String              @db.Text
+  riskLevel      RiskLevel           @default(MEDIUM)
+  lifecycleStage LifecycleStage      @default(REGISTER)
+
+  accountableOwner String
+  toolOwner        String
+  riskOwner        String?
+
+  decisionOutcome       DecisionOutcome @default(PENDING)
+  decisionJustification String?         @db.Text
+  decisionOwner         String?
+  decisionDate          DateTime?
+
+  isArchived    Boolean   @default(false)
+  archivedAt    DateTime?
+  archivedBy    String?
+  archiveReason String?   @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  agentGrants AgentToolGrant[]
+
+  @@map("tools")
+}
+
+/// The authorization boundary: which agents may call which tools.
+model AgentToolGrant {
+  id         String   @id @default(uuid())
+  assetId    String
+  asset      AIAsset  @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  toolId     String
+  tool       Tool     @relation(fields: [toolId], references: [id], onDelete: Cascade)
+  grantedBy  String
+  grantNotes String?  @db.Text
+  createdAt  DateTime @default(now())
+
+  @@unique([assetId, toolId])
+  @@map("agent_tool_grants")
+}
+
+// ---------------------------------------------------------------------------
 // RELEASE 3 — Evidence Foundation
 // Evidence as a first-class, universal governance object: registry,
 // ownership, traceability, lifecycle and expiry. No scoring, no automation.
@@ -492,6 +564,12 @@ model AIAsset {
   governanceState AssetGovernanceState? @default(DRAFT)
   nextReviewDate  DateTime?
 
+  /// R16 — Agent Governance. Only meaningful where type = AGENT or
+  /// MULTI_AGENT_SYSTEM, same optionality convention as oversightType/
+  /// autonomyLevel above — not constrained at the schema level by asset type.
+  delegationScope          String?              @db.Text
+  behaviorMonitoringStatus AgentBehaviorStatus?
+
   // Q1 Stabilization — Soft Delete / Archive Model (Phase 3).
   // Deletion is no longer destructive: an "archived" asset keeps its row (and
   // therefore every cascaded evidence/finding/decision/incident record) intact.
@@ -532,6 +610,7 @@ model AIAsset {
   modelUsages                 AssetModelUsage[]
   knowledgeUsages             AssetKnowledgeUsage[]
   promptUsages                AssetPromptUsage[]
+  toolGrants                  AgentToolGrant[]
 
   @@map("ai_assets")
 }

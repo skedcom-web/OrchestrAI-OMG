@@ -10,6 +10,7 @@
 
 import {
   localActionRuleRepository,
+  localAgentToolGrantRepository,
   localAssessorCertificationRepository,
   localAssetRepository,
   localCompliancePackRepository,
@@ -32,6 +33,7 @@ import {
   localModelRepository,
   localObligationControlRepository,
   localPromptRepository,
+  localToolRepository,
   localObligationEvidenceMappingRepository,
   localObligationRepository,
   localOutcomeRuleRepository,
@@ -42,6 +44,7 @@ import {
 } from './localRepositories';
 import {
   apiActionRuleRepository,
+  apiAgentToolGrantRepository,
   apiAssessorCertificationRepository,
   apiAssetRepository,
   apiCompliancePackRepository,
@@ -64,6 +67,7 @@ import {
   apiModelRepository,
   apiObligationControlRepository,
   apiPromptRepository,
+  apiToolRepository,
   apiObligationEvidenceMappingRepository,
   apiObligationRepository,
   apiOutcomeRuleRepository,
@@ -74,6 +78,7 @@ import {
 } from './apiRepositories';
 import type {
   ActionRuleRepository,
+  AgentToolGrantRepository,
   AssessorCertificationRepository,
   AssetRepository,
   CompliancePackRepository,
@@ -96,6 +101,7 @@ import type {
   ModelRepository,
   ObligationControlRepository,
   PromptRepository,
+  ToolRepository,
   ObligationEvidenceMappingRepository,
   ObligationRepository,
   OutcomeRuleRepository,
@@ -153,6 +159,20 @@ export function getPromptRepository(): PromptRepository {
 }
 
 export { localPromptRepository };
+
+/** R16/R17 — Tool data model. Same Api-first rationale as above. */
+export function getToolRepository(): ToolRepository {
+  return apiToolRepository;
+}
+
+export { localToolRepository };
+
+/** R16 — Agent Governance tool-grant boundary. */
+export function getAgentToolGrantRepository(): AgentToolGrantRepository {
+  return apiAgentToolGrantRepository;
+}
+
+export { localAgentToolGrantRepository };
 
 /**
  * Release 5.1 — Compliance Persistence Alignment. Api is the default for
