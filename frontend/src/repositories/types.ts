@@ -12,12 +12,15 @@ import type {
   ActionRule,
   AIAsset,
   AssessorCertification,
+  AssetModelUsage,
   CompliancePack,
   ComplianceRequirement,
   ConditionDefinition,
   ConfidenceAssessment,
   ConsensusAssessment,
+  DecisionOutcome,
   DecisionRecord,
+  Model,
   EvidenceMapping,
   EvidenceRecord,
   GovernanceDrift,
@@ -85,6 +88,18 @@ export interface GovernanceRepository {
  * it stops being the one governance module still primary-sourced from local
  * storage.
  */
+/** R13 — Model Governance. */
+export interface ModelRepository {
+  getModels(includeArchived?: boolean): Promise<Model[]>;
+  createModel(data: Partial<Model>): Promise<Model>;
+  updateModel(id: string, data: Partial<Model>): Promise<Model>;
+  archiveModel(id: string, archivedBy?: string, archiveReason?: string): Promise<void>;
+  restoreModel(id: string): Promise<void>;
+  recordModelDecision(id: string, outcome: DecisionOutcome, justification: string, decisionOwner: string): Promise<Model>;
+  createUsage(assetId: string, modelId: string): Promise<AssetModelUsage>;
+  deleteUsage(id: string): Promise<void>;
+}
+
 export interface CompliancePackRepository {
   getCompliancePacks(): Promise<CompliancePack[]>;
   createCompliancePack(data: Partial<CompliancePack>): Promise<CompliancePack>;

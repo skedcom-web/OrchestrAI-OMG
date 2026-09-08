@@ -30,6 +30,7 @@ import type {
   GovernanceProfileRepository,
   GovernanceRecordKind,
   GovernanceRepository,
+  ModelRepository,
   ObligationControlRepository,
   ObligationEvidenceMappingRepository,
   ObligationRepository,
@@ -109,6 +110,33 @@ export const localGovernanceRepository: GovernanceRepository = {
     if (kind === 'review') return storage.saveScheduledReview({ ...(data as Partial<ScheduledReview>), id });
     // Reauthorization records are immutable once decided — there is no update path.
     throw new Error('Reauthorization records cannot be updated once created.');
+  },
+};
+
+export const localModelRepository: ModelRepository = {
+  async getModels(includeArchived) {
+    return storage.getModels(includeArchived);
+  },
+  async createModel(data) {
+    return storage.saveModel(data);
+  },
+  async updateModel(id, data) {
+    return storage.saveModel({ ...data, id });
+  },
+  async archiveModel(id, archivedBy, archiveReason) {
+    await storage.archiveModel(id, archivedBy, archiveReason);
+  },
+  async restoreModel(id) {
+    await storage.restoreModel(id);
+  },
+  async recordModelDecision(id, outcome, justification, decisionOwner) {
+    return storage.recordModelDecision(id, outcome, justification, decisionOwner);
+  },
+  async createUsage(assetId, modelId) {
+    return storage.saveAssetModelUsage(assetId, modelId);
+  },
+  async deleteUsage(id) {
+    await storage.deleteAssetModelUsage(id);
   },
 };
 

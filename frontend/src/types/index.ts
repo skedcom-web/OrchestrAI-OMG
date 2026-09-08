@@ -62,6 +62,64 @@ export interface RiskAssessmentData {
 
 export type DecisionOutcome = 'GO' | 'CONDITIONAL GO' | 'NO GO' | 'PENDING';
 
+/**
+ * R13 Foundation — Unified Data Architecture. Shared lifecycle vocabulary for
+ * every governed entity introduced from R13 onward (AIAsset keeps its own
+ * AssetGovernanceState, untouched).
+ */
+export type LifecycleStage = 'Register' | 'Assess' | 'Approve' | 'Operate' | 'Monitor' | 'Reassess' | 'Retire';
+
+/** R13 — Model Governance. */
+export type ModelType = 'Foundation' | 'Fine-Tuned' | 'Custom' | 'Third-Party';
+
+export interface Model {
+  id: string;
+  name: string;
+  vendor?: string;
+  version: string;
+  modelType: ModelType;
+  description: string;
+  riskLevel: RiskLevel;
+  lifecycleStage: LifecycleStage;
+
+  accountableOwner: string;
+  modelOwner: string;
+  riskOwner?: string;
+
+  trainingDataRef?: string;
+  retrainingCadence?: string;
+  lastRetrainedAt?: string;
+  driftDetected: boolean;
+  driftNotes?: string;
+
+  decisionOutcome: DecisionOutcome;
+  decisionJustification?: string;
+  decisionOwner?: string;
+  decisionDate?: string;
+
+  isArchived: boolean;
+  archivedAt?: string;
+  archivedBy?: string;
+  archiveReason?: string;
+
+  createdAt: string;
+  updatedAt: string;
+
+  /** Assets currently using this model — populated from AssetModelUsage. */
+  usedByAssetIds: string[];
+  usedByAssetNames: string[];
+}
+
+/** Many-to-many join — which AI assets use which models. */
+export interface AssetModelUsage {
+  id: string;
+  assetId: string;
+  assetName?: string;
+  modelId: string;
+  modelName?: string;
+  createdAt: string;
+}
+
 export interface DecisionReadinessChecklist {
   ownershipComplete: boolean;
   riskAssessmentComplete: boolean;
@@ -921,7 +979,7 @@ export interface AuditLog {
   userName: string;
   userRole: string;
   action: string;
-  entityType: 'Asset' | 'User' | 'Ownership' | 'Risk' | 'Decision' | 'Validation' | 'Evidence' | 'Finding' | 'DecisionPackage' | 'ComplianceAssessment' | 'CompliancePackage' | 'KillSwitch' | 'Override' | 'Incident' | 'Retirement' | 'ScheduledReview' | 'CorrectiveAction' | 'GovernanceReviewPackage' | 'Policy' | 'PolicyMapping' | 'PolicyViolation' | 'ExecutiveReport' | 'ChangeRequest' | 'StateTransition' | 'ReassessmentTrigger' | 'GovernanceReauthorizationRecord' | 'EvidenceRecord';
+  entityType: 'Asset' | 'User' | 'Ownership' | 'Risk' | 'Decision' | 'Validation' | 'Evidence' | 'Finding' | 'DecisionPackage' | 'ComplianceAssessment' | 'CompliancePackage' | 'KillSwitch' | 'Override' | 'Incident' | 'Retirement' | 'ScheduledReview' | 'CorrectiveAction' | 'GovernanceReviewPackage' | 'Policy' | 'PolicyMapping' | 'PolicyViolation' | 'ExecutiveReport' | 'ChangeRequest' | 'StateTransition' | 'ReassessmentTrigger' | 'GovernanceReauthorizationRecord' | 'EvidenceRecord' | 'Model';
   entityId: string;
   entityName: string;
   details: string;

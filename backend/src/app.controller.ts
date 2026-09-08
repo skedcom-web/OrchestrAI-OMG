@@ -180,6 +180,130 @@ export class AppController {
     return { restored: true, id, asset };
   }
 
+  // --- R13: MODEL GOVERNANCE ENDPOINTS ---
+  @Get('models')
+  @Roles(
+    'SUPER_ADMIN',
+    'GOVERNANCE_ADMIN',
+    'RISK_OFFICER',
+    'BUSINESS_OWNER',
+    'VALIDATOR',
+    'AUDITOR',
+    'VIEWER',
+  )
+  async getModels(@Query('includeArchived') includeArchived?: string) {
+    return this.prisma.model.findMany({
+      where: includeArchived === 'true' ? undefined : { isArchived: false },
+      include: { assetUsages: { include: { asset: true } } },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  @Get('models/:id')
+  @Roles(
+    'SUPER_ADMIN',
+    'GOVERNANCE_ADMIN',
+    'RISK_OFFICER',
+    'BUSINESS_OWNER',
+    'VALIDATOR',
+    'AUDITOR',
+    'VIEWER',
+  )
+  async getModel(@Param('id') id: string) {
+    const model = await this.prisma.model.findUnique({
+      where: { id },
+      include: { assetUsages: { include: { asset: true } } },
+    });
+    if (!model) throw new NotFoundException(`Model ${id} not found`);
+    return model;
+  }
+
+  @Post('models')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async createModel(@Body() body: any) {
+    if (!body.accountableOwner || !body.modelOwner) {
+      throw new BadRequestException('Models require a named Accountable Owner and Model Owner before they can be saved.');
+    }
+    return this.prisma.model.create({ data: body });
+  }
+
+  @Patch('models/:id')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async updateModel(@Param('id') id: string, @Body() body: any) {
+    const existing = await this.prisma.model.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundException(`Model ${id} not found`);
+    return this.prisma.model.update({ where: { id }, data: body });
+  }
+
+  /** Soft delete — mirrors the Asset archive pattern, never a destructive removal. */
+  @Delete('models/:id')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async archiveModel(
+    @Param('id') id: string,
+    @Body() body: { archivedBy?: string; archiveReason?: string } = {},
+  ) {
+    const existing = await this.prisma.model.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundException(`Model ${id} not found`);
+    const model = await this.prisma.model.update({
+      where: { id },
+      data: {
+        isArchived: true,
+        archivedAt: new Date(),
+        archivedBy: body?.archivedBy ?? null,
+        archiveReason: body?.archiveReason ?? null,
+      },
+    });
+    return { archived: true, id, model };
+  }
+
+  @Patch('models/:id/restore')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async restoreModel(@Param('id') id: string) {
+    const existing = await this.prisma.model.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundException(`Model ${id} not found`);
+    const model = await this.prisma.model.update({
+      where: { id },
+      data: { isArchived: false, archivedAt: null, archivedBy: null, archiveReason: null },
+    });
+    return { restored: true, id, model };
+  }
+
+  /** Model-level decision — same GO / Conditional GO / No Go vocabulary as Decision Authority, recorded as flat state on the model rather than a DecisionRecord row (see schema comment). */
+  @Post('models/:id/decision')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER')
+  async recordModelDecision(
+    @Param('id') id: string,
+    @Body() body: { outcome: string; justification: string; decisionOwner: string },
+  ) {
+    const existing = await this.prisma.model.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundException(`Model ${id} not found`);
+    if (!body.justification || !body.decisionOwner) {
+      throw new BadRequestException('A model decision requires a justification and a named decision owner.');
+    }
+    return this.prisma.model.update({
+      where: { id },
+      data: {
+        decisionOutcome: body.outcome as any,
+        decisionJustification: body.justification,
+        decisionOwner: body.decisionOwner,
+        decisionDate: new Date(),
+      },
+    });
+  }
+
+  @Post('asset-model-usages')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async createAssetModelUsage(@Body() body: { assetId: string; modelId: string }) {
+    return this.prisma.assetModelUsage.create({ data: body });
+  }
+
+  @Delete('asset-model-usages/:id')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async deleteAssetModelUsage(@Param('id') id: string) {
+    await this.prisma.assetModelUsage.delete({ where: { id } });
+    return { deleted: true, id };
+  }
+
   // --- RELEASE 4: EVIDENCE REPOSITORY ENDPOINTS ---
   @Get('evidence-records')
   @Roles(

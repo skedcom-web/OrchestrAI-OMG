@@ -152,6 +152,93 @@ enum ReassessmentTriggerStatus {
 }
 
 // ---------------------------------------------------------------------------
+// R13 FOUNDATION — Unified Data Architecture (Architecture Package, §1 & §11)
+// One shared lifecycle vocabulary for every governed entity introduced from
+// R13 onward. AIAsset keeps its own AssetGovernanceState untouched — this is
+// additive, not a migration of existing data.
+// ---------------------------------------------------------------------------
+
+enum LifecycleStage {
+  REGISTER
+  ASSESS
+  APPROVE
+  OPERATE
+  MONITOR
+  REASSESS
+  RETIRE
+}
+
+// ---------------------------------------------------------------------------
+// R13 — MODEL GOVERNANCE (Architecture Package, Blueprint 2)
+// A model is registered once and may be used by many AI assets — related by
+// AssetModelUsage (many-to-many), not owned 1:1 by a single asset.
+// ---------------------------------------------------------------------------
+
+enum ModelType {
+  FOUNDATION
+  FINE_TUNED
+  CUSTOM
+  THIRD_PARTY
+}
+
+model Model {
+  id             String         @id @default(uuid())
+  name           String
+  vendor         String?
+  version        String         @default("1.0.0")
+  modelType      ModelType
+  description    String         @db.Text
+  riskLevel      RiskLevel      @default(MEDIUM)
+  lifecycleStage LifecycleStage @default(REGISTER)
+
+  // Ownership — mirrors AIAsset's own flat-scalar accountability fields.
+  accountableOwner String
+  modelOwner       String
+  riskOwner        String?
+
+  // Model-specific governance signals.
+  trainingDataRef   String?   @db.Text
+  retrainingCadence String?
+  lastRetrainedAt   DateTime?
+  driftDetected     Boolean   @default(false)
+  driftNotes        String?   @db.Text
+
+  // Current decision state — flat fields, same pattern as AIAsset.decisionOutcome.
+  // Deliberately not routed through DecisionRecord (which hard-FKs to AIAsset);
+  // extending that table is out of scope for this release.
+  decisionOutcome       DecisionOutcome @default(PENDING)
+  decisionJustification String?         @db.Text
+  decisionOwner         String?
+  decisionDate          DateTime?
+
+  // Soft delete — identical to AIAsset's archive pattern.
+  isArchived    Boolean   @default(false)
+  archivedAt    DateTime?
+  archivedBy    String?
+  archiveReason String?   @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  assetUsages AssetModelUsage[]
+
+  @@map("models")
+}
+
+/// Many-to-many: which AI assets currently use which models.
+model AssetModelUsage {
+  id        String   @id @default(uuid())
+  assetId   String
+  asset     AIAsset  @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  modelId   String
+  model     Model    @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([assetId, modelId])
+  @@map("asset_model_usages")
+}
+
+// ---------------------------------------------------------------------------
 // RELEASE 3 — Evidence Foundation
 // Evidence as a first-class, universal governance object: registry,
 // ownership, traceability, lifecycle and expiry. No scoring, no automation.
@@ -294,6 +381,7 @@ model AIAsset {
   governanceDrifts      GovernanceDrift[]
   governanceAssessmentRecords GovernanceAssessmentRecord[]
   consensusAssessments        ConsensusAssessment[]
+  modelUsages                 AssetModelUsage[]
 
   @@map("ai_assets")
 }
@@ -494,8 +582,12 @@ model ScheduledReview {
 
 model CorrectiveAction {
   id                String   @id @default(uuid())
-  assetId           String
-  asset             AIAsset  @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  /// R13 Foundation — optional; see EvidenceRecord's identical comment.
+  assetId           String?
+  asset             AIAsset? @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  entityType        String?
+  entityId          String?
+  entityName        String?
   title             String
   status            String   @default("Open")
   severity          String
@@ -509,8 +601,12 @@ model CorrectiveAction {
 
 model GovernanceAlert {
   id             String   @id @default(uuid())
-  assetId        String
-  asset          AIAsset  @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  /// R13 Foundation — optional; see EvidenceRecord's identical comment.
+  assetId        String?
+  asset          AIAsset? @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  entityType     String?
+  entityId       String?
+  entityName     String?
   alertType      String
   severity       String
   createdAt      DateTime @default(now())
@@ -838,8 +934,19 @@ model EvidenceRecord {
   expiryDate   DateTime?
   description  String               @db.Text
 
-  assetId String
-  asset   AIAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  /// R13 Foundation — assetId is now optional so evidence can be filed against
+  /// a non-asset governed entity (Model, Knowledge, Prompt, Tool, ...) via
+  /// entityType/entityId instead, mirroring the polymorphic shape AuditLog
+  /// already used. Every pre-Foundation row keeps its assetId untouched.
+  assetId String?
+  asset   AIAsset? @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  /// R13 Foundation — polymorphic reference for evidence filed against any
+  /// governed entity type, not just AIAsset. Nullable: unset on every row
+  /// created before this release.
+  entityType String?
+  entityId   String?
+  entityName String?
 
   // Capability 3 — Evidence Ownership
   evidenceOwner     String

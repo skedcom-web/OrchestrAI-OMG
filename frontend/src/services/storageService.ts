@@ -33,6 +33,8 @@ import type {
   GovernanceState,
   EvidenceRecord,
   EvidenceTimelineEvent,
+  Model,
+  AssetModelUsage,
   CompliancePack,
   ComplianceRequirement,
   PackControl,
@@ -79,6 +81,7 @@ import {
   INITIAL_REASSESSMENT_TRIGGERS,
   INITIAL_REAUTHORIZATION_RECORDS,
   INITIAL_EVIDENCE_RECORDS,
+  INITIAL_MODELS,
   INITIAL_COMPLIANCE_PACKS,
   INITIAL_COMPLIANCE_REQUIREMENTS,
   INITIAL_PACK_CONTROLS,
@@ -117,7 +120,7 @@ import {
 import { generateActionDrafts } from '../config/governanceActionsEngine';
 import { buildDecisionTrace } from '../config/decisionTraceabilityEngine';
 import type { DecisionTrace } from '../config/decisionTraceabilityEngine';
-import { apiAssetRepository, apiEvidenceRepository, apiGovernanceRepository } from '../repositories/apiRepositories';
+import { apiAssetRepository, apiEvidenceRepository, apiGovernanceRepository, apiModelRepository } from '../repositories/apiRepositories';
 import {
   apiCompliancePackRepository,
   apiControlRepository,
@@ -186,6 +189,8 @@ const STORAGE_KEYS = {
   REASSESSMENT_TRIGGERS: 'omg_reassessment_triggers_v7',
   REAUTHORIZATION_RECORDS: 'omg_reauthorization_records_v7',
   EVIDENCE_RECORDS: 'omg_evidence_records_v7',
+  MODELS: 'omg_models_v13',
+  ASSET_MODEL_USAGES: 'omg_asset_model_usages_v13',
   COMPLIANCE_PACKS: 'omg_compliance_packs_v7',
   COMPLIANCE_REQUIREMENTS: 'omg_compliance_requirements_v7',
   PACK_CONTROLS: 'omg_pack_controls_v7',
@@ -1894,6 +1899,149 @@ export function getEvidenceTimeline(evidenceId: string): EvidenceTimelineEvent[]
   }
 
   return timeline.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+}
+
+// --- R13 — MODEL GOVERNANCE: API-FIRST, NEON-BACKED ---
+// Same cache-then-network pattern as Compliance Packs (Release 5.1): reads
+// stay synchronous off an in-memory cache; writes are optimistic locally,
+// then Neon-first via apiModelRepository.
+
+let modelsCache: Model[] = getItem<Model[]>(STORAGE_KEYS.MODELS, INITIAL_MODELS);
+let assetModelUsagesCache: AssetModelUsage[] = getItem<AssetModelUsage[]>(STORAGE_KEYS.ASSET_MODEL_USAGES, []);
+
+function persistModelsCache() { setItem(STORAGE_KEYS.MODELS, modelsCache); }
+function persistAssetModelUsagesCache() { setItem(STORAGE_KEYS.ASSET_MODEL_USAGES, assetModelUsagesCache); }
+
+export function getModels(includeArchived = false): Model[] {
+  return includeArchived ? modelsCache : modelsCache.filter(m => !m.isArchived);
+}
+
+export function getAssetModelUsages(): AssetModelUsage[] {
+  return assetModelUsagesCache;
+}
+
+export async function saveModel(data: Partial<Model>): Promise<Model> {
+  if (data.id) {
+    const idx = modelsCache.findIndex(m => m.id === data.id);
+    if (idx !== -1) {
+      const updated: Model = { ...modelsCache[idx], ...data, updatedAt: new Date().toISOString() };
+      modelsCache = [...modelsCache];
+      modelsCache[idx] = updated;
+      persistModelsCache();
+
+      addAuditLog('usr-2', updated.modelOwner, 'GOVERNANCE_ADMIN', 'MODEL_UPDATED', 'Model', updated.id, updated.name, `Updated model ${updated.name}`);
+
+      const saved = await apiModelRepository.updateModel(updated.id, updated);
+      const i2 = modelsCache.findIndex(m => m.id === updated.id);
+      if (i2 !== -1) { modelsCache = [...modelsCache]; modelsCache[i2] = saved; persistModelsCache(); }
+      return saved;
+    }
+  }
+
+  const now = new Date().toISOString();
+  const draftModel: Model = {
+    id: data.id || `model-${Date.now().toString().slice(-6)}`,
+    name: data.name || 'New Model',
+    vendor: data.vendor,
+    version: data.version || '1.0.0',
+    modelType: data.modelType || 'Custom',
+    description: data.description || '',
+    riskLevel: data.riskLevel || 'Medium',
+    lifecycleStage: data.lifecycleStage || 'Register',
+    accountableOwner: data.accountableOwner || '',
+    modelOwner: data.modelOwner || '',
+    riskOwner: data.riskOwner,
+    trainingDataRef: data.trainingDataRef,
+    retrainingCadence: data.retrainingCadence,
+    lastRetrainedAt: data.lastRetrainedAt,
+    driftDetected: data.driftDetected ?? false,
+    driftNotes: data.driftNotes,
+    decisionOutcome: data.decisionOutcome || 'PENDING',
+    decisionJustification: data.decisionJustification,
+    decisionOwner: data.decisionOwner,
+    decisionDate: data.decisionDate,
+    isArchived: false,
+    createdAt: now,
+    updatedAt: now,
+    usedByAssetIds: [],
+    usedByAssetNames: [],
+  };
+
+  modelsCache = [draftModel, ...modelsCache];
+  persistModelsCache();
+  addAuditLog('usr-2', draftModel.modelOwner, 'GOVERNANCE_ADMIN', 'MODEL_CREATED', 'Model', draftModel.id, draftModel.name, `Registered model ${draftModel.name}`);
+
+  const created = await apiModelRepository.createModel(draftModel);
+  modelsCache = modelsCache.map(m => (m.id === draftModel.id ? created : m));
+  persistModelsCache();
+  return created;
+}
+
+export async function archiveModel(id: string, archivedBy?: string, archiveReason?: string): Promise<void> {
+  const target = modelsCache.find(m => m.id === id);
+  if (!target) return;
+  modelsCache = modelsCache.map(m => (m.id === id ? { ...m, isArchived: true, archivedAt: new Date().toISOString(), archivedBy, archiveReason } : m));
+  persistModelsCache();
+  addAuditLog('usr-1', archivedBy || 'Sarah Jenkins', 'SUPER_ADMIN', 'MODEL_ARCHIVED', 'Model', id, target.name, `Archived model ${target.name}${archiveReason ? `: ${archiveReason}` : ''}`);
+  await apiModelRepository.archiveModel(id, archivedBy, archiveReason);
+}
+
+export async function restoreModel(id: string): Promise<void> {
+  const target = modelsCache.find(m => m.id === id);
+  if (!target) return;
+  modelsCache = modelsCache.map(m => (m.id === id ? { ...m, isArchived: false, archivedAt: undefined, archivedBy: undefined, archiveReason: undefined } : m));
+  persistModelsCache();
+  await apiModelRepository.restoreModel(id);
+}
+
+export async function recordModelDecision(id: string, outcome: DecisionOutcome, justification: string, decisionOwner: string): Promise<Model> {
+  const idx = modelsCache.findIndex(m => m.id === id);
+  if (idx === -1) throw new Error(`Model ${id} not found`);
+  const now = new Date().toISOString();
+  const updated: Model = { ...modelsCache[idx], decisionOutcome: outcome, decisionJustification: justification, decisionOwner, decisionDate: now, updatedAt: now };
+  modelsCache = [...modelsCache];
+  modelsCache[idx] = updated;
+  persistModelsCache();
+  addAuditLog('usr-2', decisionOwner, 'GOVERNANCE_ADMIN', 'MODEL_DECISION_RECORDED', 'Model', id, updated.name, `Recorded ${outcome} decision for model ${updated.name}: ${justification}`);
+
+  const saved = await apiModelRepository.recordModelDecision(id, outcome, justification, decisionOwner);
+  const i2 = modelsCache.findIndex(m => m.id === id);
+  if (i2 !== -1) { modelsCache = [...modelsCache]; modelsCache[i2] = saved; persistModelsCache(); }
+  return saved;
+}
+
+export async function saveAssetModelUsage(assetId: string, modelId: string): Promise<AssetModelUsage> {
+  const asset = assetsCache.find(a => a.id === assetId);
+  const model = modelsCache.find(m => m.id === modelId);
+  const draft: AssetModelUsage = {
+    id: `usage-${Date.now().toString().slice(-6)}`,
+    assetId,
+    assetName: asset?.name,
+    modelId,
+    modelName: model?.name,
+    createdAt: new Date().toISOString(),
+  };
+  assetModelUsagesCache = [draft, ...assetModelUsagesCache];
+  persistAssetModelUsagesCache();
+  if (model) {
+    modelsCache = modelsCache.map(m => (m.id === modelId ? { ...m, usedByAssetIds: [...m.usedByAssetIds, assetId], usedByAssetNames: asset ? [...m.usedByAssetNames, asset.name] : m.usedByAssetNames } : m));
+    persistModelsCache();
+  }
+
+  const created = await apiModelRepository.createUsage(assetId, modelId);
+  assetModelUsagesCache = assetModelUsagesCache.map(u => (u.id === draft.id ? created : u));
+  persistAssetModelUsagesCache();
+  return created;
+}
+
+export async function deleteAssetModelUsage(id: string): Promise<void> {
+  const target = assetModelUsagesCache.find(u => u.id === id);
+  if (!target) return;
+  assetModelUsagesCache = assetModelUsagesCache.filter(u => u.id !== id);
+  persistAssetModelUsagesCache();
+  modelsCache = modelsCache.map(m => (m.id === target.modelId ? { ...m, usedByAssetIds: m.usedByAssetIds.filter(a => a !== target.assetId), usedByAssetNames: m.usedByAssetNames.filter(n => n !== target.assetName) } : m));
+  persistModelsCache();
+  await apiModelRepository.deleteUsage(id);
 }
 
 // --- RELEASE 5.1 — COMPLIANCE PACK FRAMEWORK: API-FIRST, NEON-BACKED ---
@@ -3863,6 +4011,7 @@ export function bootstrapPersistence(options?: { force?: boolean }): Promise<voi
         assets,
         evidence,
         governance,
+        models,
         compliancePacks,
         requirements,
         packControls,
@@ -3891,6 +4040,7 @@ export function bootstrapPersistence(options?: { force?: boolean }): Promise<voi
         safeSync(apiAssetRepository.getAssets(true), assetsCache), // Q1 Stabilization — include archived so the local cache is complete; getAssets()/getArchivedAssets() split the view.
         safeSync(apiEvidenceRepository.getEvidence(), evidenceCache),
         safeSync(apiGovernanceRepository.getGovernanceData(), { triggers: triggersCache, reauthorizations: reauthorizationsCache, reviews: reviewsCache }),
+        safeSync(apiModelRepository.getModels(true), modelsCache),
         safeSync(apiCompliancePackRepository.getCompliancePacks(), compliancePacksCache),
         safeSync(apiRequirementRepository.getRequirements(), requirementsCache),
         safeSync(apiControlRepository.getControls(), packControlsCache),
@@ -3933,6 +4083,9 @@ export function bootstrapPersistence(options?: { force?: boolean }): Promise<voi
 
       reviewsCache = governance.reviews.map(r => ({ ...r, assetName: assetNameById.get(r.assetId) || r.assetName }));
       persistReviewsCache();
+
+      modelsCache = models;
+      persistModelsCache();
 
       const packNameById = new Map(compliancePacks.map(p => [p.id, p.name]));
       requirementsCache = requirements.map(r => ({ ...r, packName: packNameById.get(r.packId) || r.packName }));

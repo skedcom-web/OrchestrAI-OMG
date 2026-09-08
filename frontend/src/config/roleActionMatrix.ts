@@ -16,6 +16,12 @@ export type ActionKey =
   | 'asset:edit'
   | 'asset:archive'
   | 'asset:restore'
+  | 'model:create'
+  | 'model:edit'
+  | 'model:archive'
+  | 'model:decide'
+  | 'assetModelUsage:create'
+  | 'assetModelUsage:delete'
   | 'evidenceRecord:create'
   | 'evidenceRecord:edit'
   | 'evidenceRecord:delete'
@@ -87,6 +93,13 @@ export const ROLE_ACTION_MATRIX: Record<ActionKey, UserRole[]> = {
   'asset:edit': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
   'asset:archive': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
   'asset:restore': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
+
+  'model:create': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
+  'model:edit': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
+  'model:archive': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
+  'model:decide': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER'],
+  'assetModelUsage:create': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
+  'assetModelUsage:delete': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
 
   'evidenceRecord:create': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER'],
   'evidenceRecord:edit': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER'],

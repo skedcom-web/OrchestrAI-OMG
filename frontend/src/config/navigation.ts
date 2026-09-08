@@ -154,6 +154,15 @@ export const NAV_DOMAINS: NavDomain[] = [
           { path: '/archived-assets', label: 'Archived Assets', icon: '🗄️', description: 'Soft-deleted assets, restorable by an authorised role — nothing is ever physically removed.', keywords: ['archive', 'restore', 'deleted', 'soft delete', 'audit history'] },
         ],
       },
+      {
+        label: 'Models',
+        modules: [
+          { path: '/models', label: 'Model Registry', icon: '🧬', description: 'Every AI model governed as a first-class, reusable asset — registered once, used by many.', keywords: ['model', 'registry', 'llm', 'foundation model'] },
+          { path: '/model-lifecycle', label: 'Model Lifecycle', icon: '🔄', description: 'Stage, retraining schedule and drift signal for every governed model.', keywords: ['model lifecycle', 'retraining', 'drift'] },
+          { path: '/model-risk', label: 'Model Risk & Approvals', icon: '⚖️', description: 'Risk tiering and GO / Conditional GO / No Go decisions for governed models.', keywords: ['model risk', 'model approval', 'model decision'] },
+          { path: '/model-analytics', label: 'Model Analytics', icon: '📊', description: 'Which assets use which models, and where model risk concentrates across the portfolio.', keywords: ['model analytics', 'model usage', 'model portfolio'] },
+        ],
+      },
     ],
   }),
 
@@ -406,14 +415,8 @@ export interface FutureModule extends NavModule {
 }
 
 export const FUTURE_MODULES: FutureModule[] = [
-  {
-    path: '/model-governance',
-    label: 'Model Governance',
-    icon: '🧬',
-    phase: 'Planned',
-    description: 'Model cards, retraining governance and model-level lineage — distinct from asset-level or governance-process drift.',
-    capabilities: ['Model card registry', 'Retraining governance', 'Model lineage tracking', 'Model-level drift detection'],
-  },
+  // R13 Model Governance shipped as a real workspace (AI Inventory & Registry
+  // → Models, above) — no longer a roadmap placeholder.
   {
     path: '/knowledge-governance',
     label: 'Knowledge Governance',

@@ -57,6 +57,10 @@ import { GovernanceTrendsDashboardPage } from './pages/GovernanceTrendsDashboard
 // Phase 8 Pages — Governance Operating System
 import { CommandCenterPage } from './pages/CommandCenterPage';
 import { AssetLifecyclePage } from './pages/AssetLifecyclePage';
+import { ModelRegistryPage } from './pages/ModelRegistryPage';
+import { ModelLifecyclePage } from './pages/ModelLifecyclePage';
+import { ModelRiskApprovalsPage } from './pages/ModelRiskApprovalsPage';
+import { ModelAnalyticsPage } from './pages/ModelAnalyticsPage';
 import { RbacAdministrationPage } from './pages/RbacAdministrationPage';
 import { TenantSettingsPage } from './pages/TenantSettingsPage';
 import { OmgOverviewPage } from './pages/OmgOverviewPage';
@@ -172,6 +176,12 @@ const GOVERNED_ROUTES: { path: string; element: React.ReactNode }[] = [
   { path: '/retirement', element: <RetirementCenterPage /> },
   { path: '/archived-assets', element: <ArchivedAssetsPage /> },
   { path: '/governance-readiness', element: <GovernanceReadinessDashboardPage /> },
+
+  // R13 — Model Governance
+  { path: '/models', element: <ModelRegistryPage /> },
+  { path: '/model-lifecycle', element: <ModelLifecyclePage /> },
+  { path: '/model-risk', element: <ModelRiskApprovalsPage /> },
+  { path: '/model-analytics', element: <ModelAnalyticsPage /> },
 
   // Domain 2 — Risk & Compliance
   { path: '/risk', element: <RiskCenterPage /> },

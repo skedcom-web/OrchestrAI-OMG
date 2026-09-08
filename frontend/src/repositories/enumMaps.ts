@@ -48,6 +48,8 @@ import type {
   RequirementPriority,
   RequirementStatus,
   RiskLevel,
+  LifecycleStage,
+  ModelType,
 } from '../types';
 
 function toBackend<T extends string>(map: Record<T, string>) {
@@ -72,6 +74,17 @@ const ASSET_TYPE: Record<AssetType, string> = {
 };
 
 const RISK_LEVEL: Record<RiskLevel, string> = { 'Low': 'LOW', 'Medium': 'MEDIUM', 'High': 'HIGH', 'Critical': 'CRITICAL' };
+
+/** R13 Foundation. */
+const LIFECYCLE_STAGE: Record<LifecycleStage, string> = {
+  'Register': 'REGISTER', 'Assess': 'ASSESS', 'Approve': 'APPROVE',
+  'Operate': 'OPERATE', 'Monitor': 'MONITOR', 'Reassess': 'REASSESS', 'Retire': 'RETIRE',
+};
+
+/** R13 — Model Governance. */
+const MODEL_TYPE: Record<ModelType, string> = {
+  'Foundation': 'FOUNDATION', 'Fine-Tuned': 'FINE_TUNED', 'Custom': 'CUSTOM', 'Third-Party': 'THIRD_PARTY',
+};
 
 const GOVERNANCE_STATUS: Record<GovernanceStatus, string> = {
   'Draft': 'DRAFT', 'Review': 'REVIEW', 'Validation': 'VALIDATION',
@@ -306,6 +319,8 @@ const CONFIDENCE_LEVEL: Record<ConfidenceLevel, string> = {
 export const enumMaps = {
   assetType: { toBackend: toBackend(ASSET_TYPE), toFrontend: toFrontend(ASSET_TYPE) },
   riskLevel: { toBackend: toBackend(RISK_LEVEL), toFrontend: toFrontend(RISK_LEVEL) },
+  lifecycleStage: { toBackend: toBackend(LIFECYCLE_STAGE), toFrontend: toFrontend(LIFECYCLE_STAGE) },
+  modelType: { toBackend: toBackend(MODEL_TYPE), toFrontend: toFrontend(MODEL_TYPE) },
   governanceStatus: { toBackend: toBackend(GOVERNANCE_STATUS), toFrontend: toFrontend(GOVERNANCE_STATUS) },
   decisionOutcome: { toBackend: toBackend(DECISION_OUTCOME), toFrontend: toFrontend(DECISION_OUTCOME) },
   oversightType: { toBackend: toBackend(OVERSIGHT_TYPE), toFrontend: toFrontend(OVERSIGHT_TYPE) },

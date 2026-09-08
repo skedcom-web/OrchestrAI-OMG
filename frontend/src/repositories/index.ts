@@ -28,6 +28,7 @@ import {
   localGovernancePolicyRepository,
   localGovernanceProfileRepository,
   localGovernanceRepository,
+  localModelRepository,
   localObligationControlRepository,
   localObligationEvidenceMappingRepository,
   localObligationRepository,
@@ -57,6 +58,7 @@ import {
   apiGovernancePolicyRepository,
   apiGovernanceProfileRepository,
   apiGovernanceRepository,
+  apiModelRepository,
   apiObligationControlRepository,
   apiObligationEvidenceMappingRepository,
   apiObligationRepository,
@@ -86,6 +88,7 @@ import type {
   GovernancePolicyRepository,
   GovernanceProfileRepository,
   GovernanceRepository,
+  ModelRepository,
   ObligationControlRepository,
   ObligationEvidenceMappingRepository,
   ObligationRepository,
@@ -119,6 +122,17 @@ export function getEvidenceRepository(): EvidenceRepository {
 export function getGovernanceRepository(): GovernanceRepository {
   return getDataMode() === 'production' ? apiGovernanceRepository : localGovernanceRepository;
 }
+
+/**
+ * R13 — Model Governance. Api is the default, matching the Release 5.1
+ * precedent below — a brand-new domain has no legacy demo data to preserve
+ * parity with, so it starts API-first rather than branching on data mode.
+ */
+export function getModelRepository(): ModelRepository {
+  return apiModelRepository;
+}
+
+export { localModelRepository };
 
 /**
  * Release 5.1 — Compliance Persistence Alignment. Api is the default for

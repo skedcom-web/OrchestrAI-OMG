@@ -33,6 +33,7 @@ import type {
   GovernanceProfileRepository,
   GovernanceRecordKind,
   GovernanceRepository,
+  ModelRepository,
   ObligationControlRepository,
   ObligationEvidenceMappingRepository,
   ObligationRepository,
@@ -46,6 +47,7 @@ import type {
   ActionRule,
   AIAsset,
   AssessorCertification,
+  AssetModelUsage,
   CompliancePack,
   ComplianceRequirement,
   ConditionDefinition,
@@ -63,6 +65,7 @@ import type {
   GovernancePolicy,
   GovernanceProfile,
   GovernanceReauthorizationRecord,
+  Model,
   Obligation,
   ObligationControl,
   ObligationEvidenceMapping,
@@ -335,6 +338,99 @@ function mappingFromBackend(row: any, controlName = '', evidenceName = ''): Evid
     evidenceName,
   };
 }
+
+// --- R13: MODEL GOVERNANCE ---
+
+function modelToBackend(data: Partial<Model>) {
+  const body: Record<string, unknown> = { ...data };
+  delete body.usedByAssetIds;
+  delete body.usedByAssetNames;
+  if (data.riskLevel) body.riskLevel = enumMaps.riskLevel.toBackend(data.riskLevel);
+  if (data.lifecycleStage) body.lifecycleStage = enumMaps.lifecycleStage.toBackend(data.lifecycleStage);
+  if (data.modelType) body.modelType = enumMaps.modelType.toBackend(data.modelType);
+  if (data.decisionOutcome) body.decisionOutcome = enumMaps.decisionOutcome.toBackend(data.decisionOutcome);
+  return body;
+}
+
+function modelFromBackend(row: any): Model {
+  const usages = Array.isArray(row.assetUsages) ? row.assetUsages : [];
+  return {
+    id: row.id,
+    name: row.name,
+    vendor: row.vendor ?? undefined,
+    version: row.version,
+    modelType: enumMaps.modelType.toFrontend(row.modelType),
+    description: row.description,
+    riskLevel: enumMaps.riskLevel.toFrontend(row.riskLevel),
+    lifecycleStage: enumMaps.lifecycleStage.toFrontend(row.lifecycleStage),
+    accountableOwner: row.accountableOwner,
+    modelOwner: row.modelOwner,
+    riskOwner: row.riskOwner ?? undefined,
+    trainingDataRef: row.trainingDataRef ?? undefined,
+    retrainingCadence: row.retrainingCadence ?? undefined,
+    lastRetrainedAt: row.lastRetrainedAt ?? undefined,
+    driftDetected: !!row.driftDetected,
+    driftNotes: row.driftNotes ?? undefined,
+    decisionOutcome: enumMaps.decisionOutcome.toFrontend(row.decisionOutcome),
+    decisionJustification: row.decisionJustification ?? undefined,
+    decisionOwner: row.decisionOwner ?? undefined,
+    decisionDate: row.decisionDate ?? undefined,
+    isArchived: !!row.isArchived,
+    archivedAt: row.archivedAt ?? undefined,
+    archivedBy: row.archivedBy ?? undefined,
+    archiveReason: row.archiveReason ?? undefined,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+    usedByAssetIds: usages.map((u: any) => u.assetId),
+    usedByAssetNames: usages.map((u: any) => u.asset?.name).filter(Boolean),
+  };
+}
+
+function usageFromBackend(row: any): AssetModelUsage {
+  return {
+    id: row.id,
+    assetId: row.assetId,
+    assetName: row.asset?.name,
+    modelId: row.modelId,
+    modelName: row.model?.name,
+    createdAt: row.createdAt,
+  };
+}
+
+export const apiModelRepository: ModelRepository = {
+  async getModels(includeArchived) {
+    const rows = await apiRequest<any[]>(`/models${includeArchived ? '?includeArchived=true' : ''}`);
+    return rows.map(modelFromBackend);
+  },
+  async createModel(data) {
+    const row = await apiRequest<any>('/models', { method: 'POST', body: JSON.stringify(modelToBackend(data)) });
+    return modelFromBackend(row);
+  },
+  async updateModel(id, data) {
+    const row = await apiRequest<any>(`/models/${id}`, { method: 'PATCH', body: JSON.stringify(modelToBackend(data)) });
+    return modelFromBackend(row);
+  },
+  async archiveModel(id, archivedBy, archiveReason) {
+    await apiRequest<void>(`/models/${id}`, { method: 'DELETE', body: JSON.stringify({ archivedBy, archiveReason }) });
+  },
+  async restoreModel(id) {
+    await apiRequest<void>(`/models/${id}/restore`, { method: 'PATCH' });
+  },
+  async recordModelDecision(id, outcome, justification, decisionOwner) {
+    const row = await apiRequest<any>(`/models/${id}/decision`, {
+      method: 'POST',
+      body: JSON.stringify({ outcome: enumMaps.decisionOutcome.toBackend(outcome), justification, decisionOwner }),
+    });
+    return modelFromBackend(row);
+  },
+  async createUsage(assetId, modelId) {
+    const row = await apiRequest<any>('/asset-model-usages', { method: 'POST', body: JSON.stringify({ assetId, modelId }) });
+    return usageFromBackend(row);
+  },
+  async deleteUsage(id) {
+    await apiRequest<void>(`/asset-model-usages/${id}`, { method: 'DELETE' });
+  },
+};
 
 export const apiCompliancePackRepository: CompliancePackRepository = {
   async getCompliancePacks() {
