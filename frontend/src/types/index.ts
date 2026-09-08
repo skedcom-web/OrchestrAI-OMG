@@ -1111,6 +1111,59 @@ export interface AgentToolGrant {
   createdAt: string;
 }
 
+/**
+ * R18 — Control Governance. Named GovernanceControl (not "Control") to avoid
+ * collision with the pre-existing Compliance Pack Framework's PackControl.
+ */
+export type ControlEffectivenessRating = 'NOT_YET_TESTED' | 'EFFECTIVE' | 'PARTIALLY_EFFECTIVE' | 'INEFFECTIVE';
+export type ControlTestOutcome = 'PASS' | 'FAIL';
+
+export interface GovernanceControl {
+  id: string;
+  name: string;
+  category: string;
+  description: string;
+  testProcedure: string;
+  riskLevel: RiskLevel;
+  effectivenessRating: ControlEffectivenessRating;
+
+  accountableOwner: string;
+  controlOwner: string;
+  riskOwner?: string;
+
+  isArchived: boolean;
+  archivedAt?: string;
+  archivedBy?: string;
+  archiveReason?: string;
+
+  attachments?: ControlAttachment[];
+
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Attaches a control to any governed entity — Asset, Model, Knowledge, Prompt or Tool — polymorphically, with no fallback FK. */
+export interface ControlAttachment {
+  id: string;
+  controlId: string;
+  entityType: 'Asset' | 'Model' | 'KnowledgeAsset' | 'Prompt' | 'Tool';
+  entityId: string;
+  entityName: string;
+  attachedBy: string;
+  attachedAt: string;
+  testResults?: ControlTestResult[];
+}
+
+export interface ControlTestResult {
+  id: string;
+  attachmentId: string;
+  tester: string;
+  outcome: ControlTestOutcome;
+  findings?: string;
+  evidenceRef?: string;
+  testDate: string;
+}
+
 export interface User {
   id: string;
   name: string;
@@ -1130,7 +1183,7 @@ export interface AuditLog {
   userName: string;
   userRole: string;
   action: string;
-  entityType: 'Asset' | 'User' | 'Ownership' | 'Risk' | 'Decision' | 'Validation' | 'Evidence' | 'Finding' | 'DecisionPackage' | 'ComplianceAssessment' | 'CompliancePackage' | 'KillSwitch' | 'Override' | 'Incident' | 'Retirement' | 'ScheduledReview' | 'CorrectiveAction' | 'GovernanceReviewPackage' | 'Policy' | 'PolicyMapping' | 'PolicyViolation' | 'ExecutiveReport' | 'ChangeRequest' | 'StateTransition' | 'ReassessmentTrigger' | 'GovernanceReauthorizationRecord' | 'EvidenceRecord' | 'Model' | 'KnowledgeAsset' | 'Prompt' | 'Tool' | 'AgentToolGrant';
+  entityType: 'Asset' | 'User' | 'Ownership' | 'Risk' | 'Decision' | 'Validation' | 'Evidence' | 'Finding' | 'DecisionPackage' | 'ComplianceAssessment' | 'CompliancePackage' | 'KillSwitch' | 'Override' | 'Incident' | 'Retirement' | 'ScheduledReview' | 'CorrectiveAction' | 'GovernanceReviewPackage' | 'Policy' | 'PolicyMapping' | 'PolicyViolation' | 'ExecutiveReport' | 'ChangeRequest' | 'StateTransition' | 'ReassessmentTrigger' | 'GovernanceReauthorizationRecord' | 'EvidenceRecord' | 'Model' | 'KnowledgeAsset' | 'Prompt' | 'Tool' | 'AgentToolGrant' | 'GovernanceControl' | 'ControlAttachment' | 'ControlTestResult';
   entityId: string;
   entityName: string;
   details: string;

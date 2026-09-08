@@ -34,6 +34,7 @@ import type {
   GovernanceProfileRepository,
   GovernanceRecordKind,
   GovernanceRepository,
+  GovernanceControlRepository,
   KnowledgeAssetRepository,
   ModelRepository,
   ObligationControlRepository,
@@ -72,6 +73,9 @@ import type {
   GovernancePolicy,
   GovernanceProfile,
   GovernanceReauthorizationRecord,
+  GovernanceControl,
+  ControlAttachment,
+  ControlTestResult,
   KnowledgeAsset,
   Model,
   Obligation,
@@ -739,6 +743,102 @@ export const apiAgentToolGrantRepository: AgentToolGrantRepository = {
   },
   async deleteGrant(id) {
     await apiRequest<void>(`/agent-tool-grants/${id}`, { method: 'DELETE' });
+  },
+};
+
+// --- R18: CONTROL GOVERNANCE (GovernanceControl / ControlAttachment / ControlTestResult) ---
+// Effectiveness ratings and test outcomes already match the backend's UPPER_SNAKE_CASE
+// enum values verbatim, so no enumMaps translation is needed for those two fields.
+
+function controlTestResultFromBackend(row: any): ControlTestResult {
+  return {
+    id: row.id,
+    attachmentId: row.attachmentId,
+    tester: row.tester,
+    outcome: row.outcome,
+    findings: row.findings ?? undefined,
+    evidenceRef: row.evidenceRef ?? undefined,
+    testDate: row.testDate,
+  };
+}
+
+function controlAttachmentFromBackend(row: any): ControlAttachment {
+  return {
+    id: row.id,
+    controlId: row.controlId,
+    entityType: row.entityType,
+    entityId: row.entityId,
+    entityName: row.entityName,
+    attachedBy: row.attachedBy,
+    attachedAt: row.attachedAt,
+    testResults: Array.isArray(row.testResults) ? row.testResults.map(controlTestResultFromBackend) : undefined,
+  };
+}
+
+function governanceControlToBackend(data: Partial<GovernanceControl>) {
+  const body: Record<string, unknown> = { ...data };
+  if (data.riskLevel) body.riskLevel = enumMaps.riskLevel.toBackend(data.riskLevel);
+  delete body.attachments;
+  return body;
+}
+
+function governanceControlFromBackend(row: any): GovernanceControl {
+  return {
+    id: row.id,
+    name: row.name,
+    category: row.category,
+    description: row.description,
+    testProcedure: row.testProcedure,
+    riskLevel: enumMaps.riskLevel.toFrontend(row.riskLevel),
+    effectivenessRating: row.effectivenessRating,
+    accountableOwner: row.accountableOwner,
+    controlOwner: row.controlOwner,
+    riskOwner: row.riskOwner ?? undefined,
+    isArchived: !!row.isArchived,
+    archivedAt: row.archivedAt ?? undefined,
+    archivedBy: row.archivedBy ?? undefined,
+    archiveReason: row.archiveReason ?? undefined,
+    attachments: Array.isArray(row.attachments) ? row.attachments.map(controlAttachmentFromBackend) : undefined,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  };
+}
+
+export const apiGovernanceControlRepository: GovernanceControlRepository = {
+  async getControls(includeArchived) {
+    const rows = await apiRequest<any[]>(`/governance-controls${includeArchived ? '?includeArchived=true' : ''}`);
+    return rows.map(governanceControlFromBackend);
+  },
+  async createControl(data) {
+    const row = await apiRequest<any>('/governance-controls', { method: 'POST', body: JSON.stringify(governanceControlToBackend(data)) });
+    return governanceControlFromBackend(row);
+  },
+  async updateControl(id, data) {
+    const row = await apiRequest<any>(`/governance-controls/${id}`, { method: 'PATCH', body: JSON.stringify(governanceControlToBackend(data)) });
+    return governanceControlFromBackend(row);
+  },
+  async archiveControl(id, archivedBy, archiveReason) {
+    await apiRequest<void>(`/governance-controls/${id}`, { method: 'DELETE', body: JSON.stringify({ archivedBy, archiveReason }) });
+  },
+  async restoreControl(id) {
+    await apiRequest<void>(`/governance-controls/${id}/restore`, { method: 'PATCH' });
+  },
+  async createAttachment(controlId, entityType, entityId, entityName, attachedBy) {
+    const row = await apiRequest<any>('/control-attachments', {
+      method: 'POST',
+      body: JSON.stringify({ controlId, entityType, entityId, entityName, attachedBy }),
+    });
+    return controlAttachmentFromBackend(row);
+  },
+  async deleteAttachment(id) {
+    await apiRequest<void>(`/control-attachments/${id}`, { method: 'DELETE' });
+  },
+  async recordTestResult(attachmentId, tester, outcome, findings, evidenceRef) {
+    const row = await apiRequest<any>(`/control-attachments/${attachmentId}/test-results`, {
+      method: 'POST',
+      body: JSON.stringify({ tester, outcome, findings, evidenceRef }),
+    });
+    return controlTestResultFromBackend(row);
   },
 };
 

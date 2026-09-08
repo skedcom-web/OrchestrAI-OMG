@@ -31,6 +31,7 @@ import type {
   GovernanceProfileRepository,
   GovernanceRecordKind,
   GovernanceRepository,
+  GovernanceControlRepository,
   KnowledgeAssetRepository,
   ModelRepository,
   ObligationControlRepository,
@@ -234,6 +235,34 @@ export const localAgentToolGrantRepository: AgentToolGrantRepository = {
   },
   async deleteGrant(id) {
     await storage.deleteAgentToolGrant(id);
+  },
+};
+
+/** R18 — Control Governance. Built for interface symmetry; not wired into the factory (Api-first, per the R13+ pattern). */
+export const localGovernanceControlRepository: GovernanceControlRepository = {
+  async getControls(includeArchived) {
+    return storage.getGovernanceControls(includeArchived);
+  },
+  async createControl(data) {
+    return storage.saveGovernanceControl(data);
+  },
+  async updateControl(id, data) {
+    return storage.saveGovernanceControl({ ...data, id });
+  },
+  async archiveControl(id, archivedBy, archiveReason) {
+    await storage.archiveGovernanceControl(id, archivedBy, archiveReason);
+  },
+  async restoreControl(id) {
+    await storage.restoreGovernanceControl(id);
+  },
+  async createAttachment(controlId, entityType, entityId, entityName, attachedBy) {
+    return storage.saveControlAttachment(controlId, entityType, entityId, entityName, attachedBy);
+  },
+  async deleteAttachment(id) {
+    await storage.deleteControlAttachment(id);
+  },
+  async recordTestResult(attachmentId, tester, outcome, findings, evidenceRef) {
+    return storage.recordControlTestResult(attachmentId, tester, outcome, findings, evidenceRef);
   },
 };
 

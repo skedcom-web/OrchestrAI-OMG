@@ -459,6 +459,90 @@ model AgentToolGrant {
 }
 
 // ---------------------------------------------------------------------------
+// R18 — CONTROL GOVERNANCE (Architecture Package, Blueprint 7)
+// A unified control library. Named GovernanceControl (not "Control") to
+// avoid colliding with the existing PackControl entity from the Compliance
+// Pack Framework — a different concept (a regulatory control mapped to a
+// requirement) that predates this domain.
+//
+// ControlAttachment is genuinely polymorphic across five entity types with
+// no "primary" one to special-case — the first table built exactly per the
+// Unified Data Architecture recommendation (Architecture Package §1/§11)
+// with no fallback FK column, unlike EvidenceRecord/CorrectiveAction/
+// GovernanceAlert which kept assetId alongside entityType/entityId.
+// ---------------------------------------------------------------------------
+
+enum ControlEffectivenessRating {
+  NOT_YET_TESTED
+  EFFECTIVE
+  PARTIALLY_EFFECTIVE
+  INEFFECTIVE
+}
+
+enum ControlTestOutcome {
+  PASS
+  FAIL
+}
+
+model GovernanceControl {
+  id                  String                     @id @default(uuid())
+  name                String
+  category            String
+  description         String                     @db.Text
+  testProcedure       String                     @db.Text
+  riskLevel           RiskLevel                  @default(MEDIUM)
+  effectivenessRating ControlEffectivenessRating @default(NOT_YET_TESTED)
+
+  accountableOwner String
+  controlOwner     String
+  riskOwner        String?
+
+  isArchived    Boolean   @default(false)
+  archivedAt    DateTime?
+  archivedBy    String?
+  archiveReason String?   @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  attachments ControlAttachment[]
+
+  @@map("governance_controls")
+}
+
+/// Polymorphic — spans Asset, Model, Knowledge, Prompt and Tool equally.
+model ControlAttachment {
+  id          String            @id @default(uuid())
+  controlId   String
+  control     GovernanceControl @relation(fields: [controlId], references: [id], onDelete: Cascade)
+  entityType  String
+  entityId    String
+  entityName  String
+  attachedBy  String
+  attachedAt  DateTime          @default(now())
+
+  testResults ControlTestResult[]
+
+  @@unique([controlId, entityType, entityId])
+  @@map("control_attachments")
+}
+
+model ControlTestResult {
+  id           String             @id @default(uuid())
+  attachmentId String
+  attachment   ControlAttachment  @relation(fields: [attachmentId], references: [id], onDelete: Cascade)
+  testDate     DateTime           @default(now())
+  tester       String
+  outcome      ControlTestOutcome
+  findings     String?            @db.Text
+  /// Loose reference, not a strict FK — mirrors EvidenceRecord's own
+  /// traceability fields, since not every test result has evidence filed yet.
+  evidenceRef  String?
+
+  @@map("control_test_results")
+}
+
+// ---------------------------------------------------------------------------
 // RELEASE 3 — Evidence Foundation
 // Evidence as a first-class, universal governance object: registry,
 // ownership, traceability, lifecycle and expiry. No scoring, no automation.

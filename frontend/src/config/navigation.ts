@@ -207,6 +207,14 @@ export const NAV_DOMAINS: NavDomain[] = [
         ],
       },
       {
+        label: 'Control Library',
+        modules: [
+          { path: '/control-library', label: 'Control Library', icon: '🧱', description: 'Governance controls registered once, attached to any Asset, Model, Knowledge source, Prompt or Tool.', keywords: ['control', 'library', 'registry', 'governance control'] },
+          { path: '/control-mapping', label: 'Control Mapping', icon: '🔗', description: 'Which entities each control is attached to, and where coverage gaps remain across the portfolio.', keywords: ['mapping', 'coverage', 'attach', 'cross-entity'] },
+          { path: '/control-effectiveness', label: 'Control Effectiveness', icon: '✅', description: 'Test history and pass/fail effectiveness ratings for every governance control.', keywords: ['test', 'effectiveness', 'pass', 'fail', 'evidence'] },
+        ],
+      },
+      {
         label: 'Compliance Framework',
         modules: [
           { path: '/compliance-center', label: 'Compliance Center', icon: '🏛️', description: 'Regulatory control evaluation and compliance posture per asset.', keywords: ['regulation', 'rbi', 'control', 'compliance'] },
@@ -446,16 +454,8 @@ export interface FutureModule extends NavModule {
 }
 
 export const FUTURE_MODULES: FutureModule[] = [
-  // R13 Model, R14 Knowledge, R15 Prompt, R16 Agent and R17 Tool Governance
-  // all shipped as real workspaces above — no longer roadmap placeholders.
-  {
-    path: '/ai-control-library',
-    label: 'Control Governance',
-    icon: '🧱',
-    phase: 'Planned',
-    description: 'A reusable, testable AI control catalogue with automated control testing and inheritance across assets.',
-    capabilities: ['Reusable control catalogue', 'Control effectiveness testing', 'Automated control evidence capture', 'Control inheritance across assets'],
-  },
+  // R13 Model, R14 Knowledge, R15 Prompt, R16 Agent, R17 Tool and R18 Control
+  // Governance all shipped as real workspaces above — no longer roadmap placeholders.
   {
     path: '/lifecycle-governance',
     label: 'Lifecycle Governance',

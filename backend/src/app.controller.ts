@@ -748,6 +748,180 @@ export class AppController {
     return { deleted: true, id };
   }
 
+  // --- R18: CONTROL GOVERNANCE ENDPOINTS ---
+  @Get('governance-controls')
+  @Roles(
+    'SUPER_ADMIN',
+    'GOVERNANCE_ADMIN',
+    'RISK_OFFICER',
+    'BUSINESS_OWNER',
+    'VALIDATOR',
+    'AUDITOR',
+    'VIEWER',
+  )
+  async getGovernanceControls(@Query('includeArchived') includeArchived?: string) {
+    return this.prisma.governanceControl.findMany({
+      where: includeArchived === 'true' ? undefined : { isArchived: false },
+      include: { attachments: { include: { testResults: { orderBy: { testDate: 'desc' } } } } },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  @Get('governance-controls/:id')
+  @Roles(
+    'SUPER_ADMIN',
+    'GOVERNANCE_ADMIN',
+    'RISK_OFFICER',
+    'BUSINESS_OWNER',
+    'VALIDATOR',
+    'AUDITOR',
+    'VIEWER',
+  )
+  async getGovernanceControl(@Param('id') id: string) {
+    const record = await this.prisma.governanceControl.findUnique({
+      where: { id },
+      include: { attachments: { include: { testResults: { orderBy: { testDate: 'desc' } } } } },
+    });
+    if (!record) throw new NotFoundException(`Control ${id} not found`);
+    return record;
+  }
+
+  @Post('governance-controls')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async createGovernanceControl(@Body() body: any) {
+    if (!body.accountableOwner || !body.controlOwner) {
+      throw new BadRequestException('Controls require a named Accountable Owner and Control Owner before they can be saved.');
+    }
+    if (!body.category || !body.testProcedure) {
+      throw new BadRequestException('Controls require a category and a documented test procedure before they can be saved.');
+    }
+    return this.prisma.governanceControl.create({ data: body });
+  }
+
+  @Patch('governance-controls/:id')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async updateGovernanceControl(@Param('id') id: string, @Body() body: any) {
+    const existing = await this.prisma.governanceControl.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundException(`Control ${id} not found`);
+    return this.prisma.governanceControl.update({ where: { id }, data: body });
+  }
+
+  @Delete('governance-controls/:id')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async archiveGovernanceControl(
+    @Param('id') id: string,
+    @Body() body: { archivedBy?: string; archiveReason?: string } = {},
+  ) {
+    const existing = await this.prisma.governanceControl.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundException(`Control ${id} not found`);
+    const record = await this.prisma.governanceControl.update({
+      where: { id },
+      data: {
+        isArchived: true,
+        archivedAt: new Date(),
+        archivedBy: body?.archivedBy ?? null,
+        archiveReason: body?.archiveReason ?? null,
+      },
+    });
+    return { archived: true, id, record };
+  }
+
+  @Patch('governance-controls/:id/restore')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async restoreGovernanceControl(@Param('id') id: string) {
+    const existing = await this.prisma.governanceControl.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundException(`Control ${id} not found`);
+    const record = await this.prisma.governanceControl.update({
+      where: { id },
+      data: { isArchived: false, archivedAt: null, archivedBy: null, archiveReason: null },
+    });
+    return { restored: true, id, record };
+  }
+
+  /** Attach a control to any governed entity — Asset, Model, Knowledge, Prompt or Tool. */
+  @Post('control-attachments')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async createControlAttachment(
+    @Body() body: { controlId: string; entityType: string; entityId: string; entityName: string; attachedBy: string },
+  ) {
+    if (!body.attachedBy) {
+      throw new BadRequestException('A control attachment requires a named attacher.');
+    }
+    return this.prisma.controlAttachment.create({ data: body });
+  }
+
+  @Delete('control-attachments/:id')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async deleteControlAttachment(@Param('id') id: string) {
+    await this.prisma.controlAttachment.delete({ where: { id } });
+    return { deleted: true, id };
+  }
+
+  /**
+   * Records a test result against one attachment, recomputes the parent
+   * control's overall effectiveness from the latest result per attachment,
+   * and — on a failed test — raises a CorrectiveAction against the attached
+   * entity via the polymorphic entityType/entityId Foundation already added
+   * to that table. Reuses the existing corrective-action workflow rather
+   * than inventing a new one.
+   */
+  @Post('control-attachments/:id/test-results')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER')
+  async recordControlTestResult(
+    @Param('id') attachmentId: string,
+    @Body() body: { tester: string; outcome: string; findings?: string; evidenceRef?: string },
+  ) {
+    const attachment = await this.prisma.controlAttachment.findUnique({
+      where: { id: attachmentId },
+      include: { control: { include: { attachments: { include: { testResults: { orderBy: { testDate: 'desc' }, take: 1 } } } } } },
+    });
+    if (!attachment) throw new NotFoundException(`Control attachment ${attachmentId} not found`);
+    if (!body.tester || !body.outcome) {
+      throw new BadRequestException('A control test result requires a named tester and an outcome.');
+    }
+
+    const testResult = await this.prisma.controlTestResult.create({
+      data: {
+        attachmentId,
+        tester: body.tester,
+        outcome: body.outcome as any,
+        findings: body.findings,
+        evidenceRef: body.evidenceRef,
+      },
+    });
+
+    // Recompute overall effectiveness from the latest result per attachment.
+    const latestPerAttachment = attachment.control.attachments.map(a =>
+      a.id === attachmentId ? body.outcome : a.testResults[0]?.outcome,
+    ).filter(Boolean);
+    latestPerAttachment.push(body.outcome);
+    const outcomes = [...new Set(latestPerAttachment)];
+    const rating =
+      outcomes.length === 0 ? 'NOT_YET_TESTED' :
+      outcomes.every(o => o === 'PASS') ? 'EFFECTIVE' :
+      outcomes.every(o => o === 'FAIL') ? 'INEFFECTIVE' :
+      'PARTIALLY_EFFECTIVE';
+    await this.prisma.governanceControl.update({ where: { id: attachment.controlId }, data: { effectivenessRating: rating as any } });
+
+    if (body.outcome === 'FAIL') {
+      await this.prisma.correctiveAction.create({
+        data: {
+          entityType: attachment.entityType,
+          entityId: attachment.entityId,
+          entityName: attachment.entityName,
+          title: `Control test failed: ${attachment.control.name}`,
+          status: 'Open',
+          severity: attachment.control.riskLevel === 'CRITICAL' || attachment.control.riskLevel === 'HIGH' ? 'High' : 'Medium',
+          assignedTo: attachment.control.controlOwner,
+          dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+          description: body.findings || `Test by ${body.tester} recorded a FAIL outcome for control "${attachment.control.name}" against ${attachment.entityName}.`,
+        },
+      });
+    }
+
+    return testResult;
+  }
+
   // --- RELEASE 4: EVIDENCE REPOSITORY ENDPOINTS ---
   @Get('evidence-records')
   @Roles(

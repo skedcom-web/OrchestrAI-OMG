@@ -42,6 +42,12 @@ export type ActionKey =
   | 'tool:decide'
   | 'agentToolGrant:create'
   | 'agentToolGrant:delete'
+  | 'governanceControl:create'
+  | 'governanceControl:edit'
+  | 'governanceControl:archive'
+  | 'controlAttachment:create'
+  | 'controlAttachment:delete'
+  | 'controlTestResult:create'
   | 'evidenceRecord:create'
   | 'evidenceRecord:edit'
   | 'evidenceRecord:delete'
@@ -143,6 +149,13 @@ export const ROLE_ACTION_MATRIX: Record<ActionKey, UserRole[]> = {
   'tool:decide': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER'],
   'agentToolGrant:create': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
   'agentToolGrant:delete': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
+
+  'governanceControl:create': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
+  'governanceControl:edit': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
+  'governanceControl:archive': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
+  'controlAttachment:create': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
+  'controlAttachment:delete': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
+  'controlTestResult:create': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER'],
 
   'evidenceRecord:create': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER'],
   'evidenceRecord:edit': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER'],

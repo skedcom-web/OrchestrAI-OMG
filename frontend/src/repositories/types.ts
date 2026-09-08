@@ -22,6 +22,10 @@ import type {
   DecisionOutcome,
   DecisionRecord,
   AgentToolGrant,
+  GovernanceControl,
+  ControlAttachment,
+  ControlTestResult,
+  ControlTestOutcome,
   AssetPromptUsage,
   KnowledgeAsset,
   Model,
@@ -174,6 +178,21 @@ export interface ControlRepository {
   createControl(data: Partial<PackControl>): Promise<PackControl>;
   updateControl(id: string, data: Partial<PackControl>): Promise<PackControl>;
   deleteControl(id: string): Promise<void>;
+}
+
+/**
+ * R18 — Control Governance. Named GovernanceControl (not ControlRepository)
+ * to avoid collision with the pre-existing Compliance Pack Framework above.
+ */
+export interface GovernanceControlRepository {
+  getControls(includeArchived?: boolean): Promise<GovernanceControl[]>;
+  createControl(data: Partial<GovernanceControl>): Promise<GovernanceControl>;
+  updateControl(id: string, data: Partial<GovernanceControl>): Promise<GovernanceControl>;
+  archiveControl(id: string, archivedBy?: string, archiveReason?: string): Promise<void>;
+  restoreControl(id: string): Promise<void>;
+  createAttachment(controlId: string, entityType: string, entityId: string, entityName: string, attachedBy: string): Promise<ControlAttachment>;
+  deleteAttachment(id: string): Promise<void>;
+  recordTestResult(attachmentId: string, tester: string, outcome: ControlTestOutcome, findings?: string, evidenceRef?: string): Promise<ControlTestResult>;
 }
 
 export interface EvidenceMappingRepository {

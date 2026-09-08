@@ -22,6 +22,7 @@ import type {
   KnowledgeAsset,
   Prompt,
   Tool,
+  GovernanceControl,
   CompliancePack,
   ComplianceRequirement,
   PackControl,
@@ -129,7 +130,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
     description: 'Platform Owner • Full system access, user management, platform settings & continuous monitoring oversight.',
     icon: '👑',
     allowedNav: [
-      '/', '/dashboard', '/assets', '/models', '/model-lifecycle', '/model-risk', '/model-analytics', '/knowledge-registry', '/knowledge-quality', '/knowledge-traceability', '/prompt-library', '/prompt-approvals', '/prompt-evidence', '/agent-accountability', '/agent-monitoring', '/tool-registry', '/tool-approvals', '/tool-monitoring', '/ownership', '/risk', 
+      '/', '/dashboard', '/assets', '/models', '/model-lifecycle', '/model-risk', '/model-analytics', '/knowledge-registry', '/knowledge-quality', '/knowledge-traceability', '/prompt-library', '/prompt-approvals', '/prompt-evidence', '/agent-accountability', '/agent-monitoring', '/tool-registry', '/tool-approvals', '/tool-monitoring', '/control-library', '/control-mapping', '/control-effectiveness','/ownership', '/risk', 
       '/validation', '/evidence', '/evidence-registry', '/review-workbench', '/findings', '/validation-dashboard', 
       '/decision-intelligence', '/governance-blockers', '/decision-workbench-v4', '/decision-dashboard',
       '/compliance-center', '/compliance-packs', '/regulatory-library', '/compliance-assessment', '/compliance-findings', '/compliance-dashboard',
@@ -163,7 +164,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
     description: 'Program Manager • Manage AI Assets, Review Calendar, Alerts & Governance Health Engine.',
     icon: '🛡️',
     allowedNav: [
-      '/', '/dashboard', '/assets', '/models', '/model-lifecycle', '/model-risk', '/model-analytics', '/knowledge-registry', '/knowledge-quality', '/knowledge-traceability', '/prompt-library', '/prompt-approvals', '/prompt-evidence', '/agent-accountability', '/agent-monitoring', '/tool-registry', '/tool-approvals', '/tool-monitoring', '/ownership', '/risk', 
+      '/', '/dashboard', '/assets', '/models', '/model-lifecycle', '/model-risk', '/model-analytics', '/knowledge-registry', '/knowledge-quality', '/knowledge-traceability', '/prompt-library', '/prompt-approvals', '/prompt-evidence', '/agent-accountability', '/agent-monitoring', '/tool-registry', '/tool-approvals', '/tool-monitoring', '/control-library', '/control-mapping', '/control-effectiveness','/ownership', '/risk', 
       '/validation', '/evidence', '/evidence-registry', '/review-workbench', '/findings', '/validation-dashboard', 
       '/decision-intelligence', '/governance-blockers', '/decision-workbench-v4', '/decision-dashboard',
       '/compliance-center', '/compliance-packs', '/regulatory-library', '/compliance-assessment', '/compliance-findings', '/compliance-dashboard',
@@ -205,7 +206,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
     description: 'Risk Governance • Monitor governance alerts, risk health & corrective remediation tasks.',
     icon: '⚡',
     allowedNav: [
-      '/', '/dashboard', '/assets', '/models', '/model-lifecycle', '/model-risk', '/model-analytics', '/knowledge-registry', '/knowledge-quality', '/knowledge-traceability', '/prompt-library', '/prompt-approvals', '/prompt-evidence', '/agent-accountability', '/agent-monitoring', '/tool-registry', '/tool-approvals', '/tool-monitoring', '/risk', '/evidence', '/evidence-registry', '/review-workbench', '/findings',
+      '/', '/dashboard', '/assets', '/models', '/model-lifecycle', '/model-risk', '/model-analytics', '/knowledge-registry', '/knowledge-quality', '/knowledge-traceability', '/prompt-library', '/prompt-approvals', '/prompt-evidence', '/agent-accountability', '/agent-monitoring', '/tool-registry', '/tool-approvals', '/tool-monitoring', '/control-library', '/control-mapping', '/control-effectiveness','/risk', '/evidence', '/evidence-registry', '/review-workbench', '/findings',
       '/decision-intelligence', '/governance-blockers', '/decision-workbench-v4', '/decision-dashboard',
       '/compliance-center', '/compliance-packs', '/regulatory-library', '/compliance-findings', '/compliance-dashboard',
       '/operations-center', '/kill-switch', '/override-center', '/incidents', '/operations-dashboard', '/governance-timeline',
@@ -241,7 +242,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
     description: 'Business Accountability • Track asset governance health, assigned corrective actions & scheduled reviews.',
     icon: '💼',
     allowedNav: [
-      '/', '/dashboard', '/assets', '/models', '/model-lifecycle', '/model-risk', '/model-analytics', '/knowledge-registry', '/knowledge-quality', '/knowledge-traceability', '/prompt-library', '/prompt-approvals', '/prompt-evidence', '/agent-accountability', '/agent-monitoring', '/tool-registry', '/tool-approvals', '/tool-monitoring', '/ownership', '/evidence', '/evidence-registry', '/decision-intelligence', 
+      '/', '/dashboard', '/assets', '/models', '/model-lifecycle', '/model-risk', '/model-analytics', '/knowledge-registry', '/knowledge-quality', '/knowledge-traceability', '/prompt-library', '/prompt-approvals', '/prompt-evidence', '/agent-accountability', '/agent-monitoring', '/tool-registry', '/tool-approvals', '/tool-monitoring', '/control-library', '/control-mapping', '/control-effectiveness','/ownership', '/evidence', '/evidence-registry', '/decision-intelligence', 
       '/compliance-center', '/compliance-packs', '/operations-center', '/kill-switch', '/incidents', '/governance-timeline',
       '/governance-monitoring', '/review-calendar', '/corrective-actions',
       // Phase 8 — Governance Operating System
@@ -274,7 +275,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
     description: 'Validation Officer • Model validation reviews, validation health & corrective action verification.',
     icon: '🧪',
     allowedNav: [
-      '/', '/dashboard', '/assets', '/models', '/model-lifecycle', '/model-risk', '/model-analytics', '/knowledge-registry', '/knowledge-quality', '/knowledge-traceability', '/prompt-library', '/prompt-approvals', '/prompt-evidence', '/agent-accountability', '/agent-monitoring', '/tool-registry', '/tool-approvals', '/tool-monitoring', '/validation', '/evidence', '/evidence-registry', '/review-workbench', '/findings', 
+      '/', '/dashboard', '/assets', '/models', '/model-lifecycle', '/model-risk', '/model-analytics', '/knowledge-registry', '/knowledge-quality', '/knowledge-traceability', '/prompt-library', '/prompt-approvals', '/prompt-evidence', '/agent-accountability', '/agent-monitoring', '/tool-registry', '/tool-approvals', '/tool-monitoring', '/control-library', '/control-mapping', '/control-effectiveness','/validation', '/evidence', '/evidence-registry', '/review-workbench', '/findings', 
       '/validation-dashboard', '/decision-intelligence', '/compliance-assessment', '/incidents', '/governance-timeline',
       '/governance-monitoring', '/corrective-actions',
       // Phase 8 — Governance Operating System
@@ -307,7 +308,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
     description: 'Independent Auditor • Read-only governance health, alert logs, review calendar & trends.',
     icon: '📜',
     allowedNav: [
-      '/', '/dashboard', '/assets', '/models', '/model-lifecycle', '/model-risk', '/model-analytics', '/knowledge-registry', '/knowledge-quality', '/knowledge-traceability', '/prompt-library', '/prompt-approvals', '/prompt-evidence', '/agent-accountability', '/agent-monitoring', '/tool-registry', '/tool-approvals', '/tool-monitoring', '/evidence', '/evidence-registry', '/findings', '/decision-workbench-v4', '/decision-dashboard',
+      '/', '/dashboard', '/assets', '/models', '/model-lifecycle', '/model-risk', '/model-analytics', '/knowledge-registry', '/knowledge-quality', '/knowledge-traceability', '/prompt-library', '/prompt-approvals', '/prompt-evidence', '/agent-accountability', '/agent-monitoring', '/tool-registry', '/tool-approvals', '/tool-monitoring', '/control-library', '/control-mapping', '/control-effectiveness','/evidence', '/evidence-registry', '/findings', '/decision-workbench-v4', '/decision-dashboard',
       '/compliance-center', '/compliance-packs', '/regulatory-library', '/compliance-findings', '/compliance-dashboard',
       '/operations-center', '/kill-switch', '/override-center', '/incidents', '/operations-dashboard', '/retirement', '/governance-timeline',
       '/governance-monitoring', '/governance-alerts', '/review-calendar', '/corrective-actions', '/governance-trends', '/audit-logs',
@@ -342,7 +343,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
     description: 'Executive Viewer • Governance Trends Dashboard & portfolio health score visibility.',
     icon: '👁️',
     allowedNav: [
-      '/', '/dashboard', '/assets', '/models', '/model-lifecycle', '/model-risk', '/model-analytics', '/knowledge-registry', '/knowledge-quality', '/knowledge-traceability', '/prompt-library', '/prompt-approvals', '/prompt-evidence', '/agent-accountability', '/agent-monitoring', '/tool-registry', '/tool-approvals', '/tool-monitoring', '/validation-dashboard', '/decision-dashboard', '/compliance-dashboard', '/operations-dashboard', '/governance-trends',
+      '/', '/dashboard', '/assets', '/models', '/model-lifecycle', '/model-risk', '/model-analytics', '/knowledge-registry', '/knowledge-quality', '/knowledge-traceability', '/prompt-library', '/prompt-approvals', '/prompt-evidence', '/agent-accountability', '/agent-monitoring', '/tool-registry', '/tool-approvals', '/tool-monitoring', '/control-library', '/control-mapping', '/control-effectiveness','/validation-dashboard', '/decision-dashboard', '/compliance-dashboard', '/operations-dashboard', '/governance-trends',
       // Phase 8 — Governance Operating System
       '/asset-lifecycle', '/command-center',
       // Phase 9 — Executive Governance (board observer, read-only surfaces)
@@ -1236,6 +1237,162 @@ export const INITIAL_TOOLS: Tool[] = [
     isArchived: false,
     createdAt: '2026-08-25',
     updatedAt: '2026-08-25',
+  },
+];
+
+/**
+ * R18 — Control Governance. ctrl-601 deliberately spans 4 entities across 4
+ * different types (Asset/Model/Tool/Prompt) with a visible mixed pass/fail
+ * test history, to demonstrate the cross-entity attachment model at a glance.
+ */
+export const INITIAL_GOVERNANCE_CONTROLS: GovernanceControl[] = [
+  {
+    id: 'ctrl-601',
+    name: 'Human-in-the-Loop Override Verification',
+    category: 'Preventive',
+    description: 'Confirms a human supervisor can intercept and override any autonomous fraud-response action before it takes irreversible effect.',
+    testProcedure: 'Trigger a live override signal mid-execution against each attached surface and confirm the in-flight action is halted before it takes irreversible effect.',
+    riskLevel: 'Critical',
+    effectivenessRating: 'PARTIALLY_EFFECTIVE',
+    accountableOwner: 'David Chen',
+    controlOwner: 'Elena Rostova',
+    riskOwner: 'Elena Rostova',
+    isArchived: false,
+    attachments: [
+      {
+        id: 'catt-601',
+        controlId: 'ctrl-601',
+        entityType: 'Asset',
+        entityId: 'ast-101',
+        entityName: 'Fraud Detection Sentinel Agent',
+        attachedBy: 'Elena Rostova',
+        attachedAt: '2026-06-01',
+        testResults: [
+          { id: 'ctres-601', attachmentId: 'catt-601', tester: 'Dr. Aris Thorne', outcome: 'PASS', findings: 'Manual override halted the agent within 2 seconds in all trial runs.', testDate: '2026-08-01' },
+        ],
+      },
+      {
+        id: 'catt-602',
+        controlId: 'ctrl-601',
+        entityType: 'Model',
+        entityId: 'model-201',
+        entityName: 'GraphSentinel Fraud Embedding Model',
+        attachedBy: 'Elena Rostova',
+        attachedAt: '2026-06-01',
+        testResults: [
+          { id: 'ctres-602', attachmentId: 'catt-602', tester: 'Dr. Aris Thorne', outcome: 'PASS', findings: 'Model inference correctly halts on override signal mid-batch.', testDate: '2026-07-28' },
+        ],
+      },
+      {
+        id: 'catt-603',
+        controlId: 'ctrl-601',
+        entityType: 'Tool',
+        entityId: 'tool-503',
+        entityName: 'Account Freeze Directive API',
+        attachedBy: 'Elena Rostova',
+        attachedAt: '2026-06-05',
+        testResults: [
+          { id: 'ctres-603', attachmentId: 'catt-603', tester: 'Sarah Jenkins', outcome: 'FAIL', findings: 'Override call succeeded but the freeze directive had already been dispatched to the core banking system — a 400ms race condition ahead of the interrupt.', testDate: '2026-08-01' },
+        ],
+      },
+      {
+        id: 'catt-604',
+        controlId: 'ctrl-601',
+        entityType: 'Prompt',
+        entityId: 'prompt-403',
+        entityName: 'Fraud Alert Explanation Prompt',
+        attachedBy: 'Elena Rostova',
+        attachedAt: '2026-06-05',
+        testResults: [
+          { id: 'ctres-604', attachmentId: 'catt-604', tester: 'Dr. Aris Thorne', outcome: 'PASS', findings: 'Explanation output correctly reflects the overridden decision when the interrupt lands before generation.', testDate: '2026-07-30' },
+        ],
+      },
+    ],
+    createdAt: '2026-06-01',
+    updatedAt: '2026-08-01',
+  },
+  {
+    id: 'ctrl-602',
+    name: 'Model Output Accuracy Threshold Check',
+    category: 'Detective',
+    description: 'Periodic back-test confirming the credit scorecard\'s live approval accuracy remains within 2 points of its validated benchmark.',
+    testProcedure: 'Re-score a held-out sample of live decisions against the validated benchmark and confirm accuracy drift stays within 2 points.',
+    riskLevel: 'High',
+    effectivenessRating: 'EFFECTIVE',
+    accountableOwner: 'David Chen',
+    controlOwner: 'David Chen',
+    isArchived: false,
+    attachments: [
+      {
+        id: 'catt-605',
+        controlId: 'ctrl-602',
+        entityType: 'Model',
+        entityId: 'model-202',
+        entityName: 'Retail Credit Risk Scorecard v4',
+        attachedBy: 'David Chen',
+        attachedAt: '2026-04-01',
+        testResults: [
+          { id: 'ctres-605', attachmentId: 'catt-605', tester: 'David Chen', outcome: 'PASS', findings: 'Live approval accuracy within 0.6 points of validated benchmark.', testDate: '2026-07-15' },
+        ],
+      },
+    ],
+    createdAt: '2026-04-01',
+    updatedAt: '2026-07-15',
+  },
+  {
+    id: 'ctrl-603',
+    name: 'Destructive Tool Dual-Authorization Control',
+    category: 'Preventive',
+    description: 'Requires two independent human approvals before any high-value trade execution above the sign-off threshold is released.',
+    testProcedure: 'Attempt to satisfy both authorization slots for a threshold-exceeding trade using a single approver session and confirm the system rejects it.',
+    riskLevel: 'Critical',
+    effectivenessRating: 'INEFFECTIVE',
+    accountableOwner: 'Elena Rostova',
+    controlOwner: 'Elena Rostova',
+    riskOwner: 'Elena Rostova',
+    isArchived: false,
+    attachments: [
+      {
+        id: 'catt-606',
+        controlId: 'ctrl-603',
+        entityType: 'Tool',
+        entityId: 'tool-502',
+        entityName: 'Trade Execution API',
+        attachedBy: 'Elena Rostova',
+        attachedAt: '2026-07-01',
+        testResults: [
+          { id: 'ctres-606', attachmentId: 'catt-606', tester: 'Sarah Jenkins', outcome: 'FAIL', findings: 'A single approver with elevated role permissions was able to satisfy both authorization slots.', testDate: '2026-08-05' },
+        ],
+      },
+    ],
+    createdAt: '2026-07-01',
+    updatedAt: '2026-08-05',
+  },
+  {
+    id: 'ctrl-604',
+    name: 'Knowledge Source Provenance Verification',
+    category: 'Detective',
+    description: 'Confirms every document ingested into the AML regulatory corpus carries a verifiable, unaltered source citation before indexing.',
+    testProcedure: 'Sample recently ingested documents and confirm each carries an unaltered, verifiable source citation prior to indexing.',
+    riskLevel: 'Medium',
+    effectivenessRating: 'NOT_YET_TESTED',
+    accountableOwner: 'David Chen',
+    controlOwner: 'Elena Rostova',
+    isArchived: false,
+    attachments: [
+      {
+        id: 'catt-607',
+        controlId: 'ctrl-604',
+        entityType: 'KnowledgeAsset',
+        entityId: 'knowledge-301',
+        entityName: 'AML Regulatory Guidance Corpus',
+        attachedBy: 'Elena Rostova',
+        attachedAt: '2026-08-28',
+        testResults: [],
+      },
+    ],
+    createdAt: '2026-08-28',
+    updatedAt: '2026-08-28',
   },
 ];
 

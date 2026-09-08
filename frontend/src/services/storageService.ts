@@ -43,6 +43,11 @@ import type {
   AssetPromptUsage,
   Tool,
   AgentToolGrant,
+  GovernanceControl,
+  ControlAttachment,
+  ControlTestResult,
+  ControlEffectivenessRating,
+  ControlTestOutcome,
   CompliancePack,
   ComplianceRequirement,
   PackControl,
@@ -93,6 +98,7 @@ import {
   INITIAL_KNOWLEDGE_ASSETS,
   INITIAL_PROMPTS,
   INITIAL_TOOLS,
+  INITIAL_GOVERNANCE_CONTROLS,
   INITIAL_COMPLIANCE_PACKS,
   INITIAL_COMPLIANCE_REQUIREMENTS,
   INITIAL_PACK_CONTROLS,
@@ -131,7 +137,7 @@ import {
 import { generateActionDrafts } from '../config/governanceActionsEngine';
 import { buildDecisionTrace } from '../config/decisionTraceabilityEngine';
 import type { DecisionTrace } from '../config/decisionTraceabilityEngine';
-import { apiAssetRepository, apiEvidenceRepository, apiGovernanceRepository, apiModelRepository, apiKnowledgeAssetRepository, apiPromptRepository, apiToolRepository, apiAgentToolGrantRepository } from '../repositories/apiRepositories';
+import { apiAssetRepository, apiEvidenceRepository, apiGovernanceRepository, apiModelRepository, apiKnowledgeAssetRepository, apiPromptRepository, apiToolRepository, apiAgentToolGrantRepository, apiGovernanceControlRepository } from '../repositories/apiRepositories';
 import {
   apiCompliancePackRepository,
   apiControlRepository,
@@ -208,6 +214,8 @@ const STORAGE_KEYS = {
   ASSET_PROMPT_USAGES: 'omg_asset_prompt_usages_v15',
   TOOLS: 'omg_tools_v16',
   AGENT_TOOL_GRANTS: 'omg_agent_tool_grants_v16',
+  GOVERNANCE_CONTROLS: 'omg_governance_controls_v18',
+  CONTROL_ATTACHMENTS: 'omg_control_attachments_v18',
   COMPLIANCE_PACKS: 'omg_compliance_packs_v7',
   COMPLIANCE_REQUIREMENTS: 'omg_compliance_requirements_v7',
   PACK_CONTROLS: 'omg_pack_controls_v7',
@@ -2524,6 +2532,156 @@ export async function deleteAgentToolGrant(id: string): Promise<void> {
   await apiAgentToolGrantRepository.deleteGrant(id);
 }
 
+// --- R18 — CONTROL GOVERNANCE: API-FIRST, NEON-BACKED ---
+// GovernanceControl (named to avoid the pre-existing PackControl/ControlRepository
+// collision) with nested attachments/testResults cached inline, same nesting
+// pattern as Prompt -> PromptVersion above.
+
+let governanceControlsCache: GovernanceControl[] = getItem<GovernanceControl[]>(STORAGE_KEYS.GOVERNANCE_CONTROLS, INITIAL_GOVERNANCE_CONTROLS);
+
+function persistGovernanceControlsCache() { setItem(STORAGE_KEYS.GOVERNANCE_CONTROLS, governanceControlsCache); }
+
+export function getGovernanceControls(includeArchived = false): GovernanceControl[] {
+  return includeArchived ? governanceControlsCache : governanceControlsCache.filter(c => !c.isArchived);
+}
+
+export async function saveGovernanceControl(data: Partial<GovernanceControl>): Promise<GovernanceControl> {
+  if (data.id) {
+    const idx = governanceControlsCache.findIndex(c => c.id === data.id);
+    if (idx !== -1) {
+      const updated: GovernanceControl = { ...governanceControlsCache[idx], ...data, updatedAt: new Date().toISOString() };
+      governanceControlsCache = [...governanceControlsCache];
+      governanceControlsCache[idx] = updated;
+      persistGovernanceControlsCache();
+      addAuditLog('usr-2', updated.controlOwner, 'GOVERNANCE_ADMIN', 'GOVERNANCE_CONTROL_UPDATED', 'GovernanceControl', updated.id, updated.name, `Updated control ${updated.name}`);
+      const saved = await apiGovernanceControlRepository.updateControl(updated.id, updated);
+      const i2 = governanceControlsCache.findIndex(c => c.id === updated.id);
+      if (i2 !== -1) { governanceControlsCache = [...governanceControlsCache]; governanceControlsCache[i2] = { ...saved, attachments: governanceControlsCache[i2].attachments }; persistGovernanceControlsCache(); }
+      return governanceControlsCache[i2 !== -1 ? i2 : idx];
+    }
+  }
+
+  const now = new Date().toISOString();
+  const draft: GovernanceControl = {
+    id: data.id || `ctrl-${Date.now().toString().slice(-6)}`,
+    name: data.name || 'New Control',
+    category: data.category || 'Preventive',
+    description: data.description || '',
+    testProcedure: data.testProcedure || '',
+    riskLevel: data.riskLevel || 'Medium',
+    effectivenessRating: 'NOT_YET_TESTED',
+    accountableOwner: data.accountableOwner || '',
+    controlOwner: data.controlOwner || '',
+    riskOwner: data.riskOwner,
+    isArchived: false,
+    attachments: [],
+    createdAt: now,
+    updatedAt: now,
+  };
+  governanceControlsCache = [draft, ...governanceControlsCache];
+  persistGovernanceControlsCache();
+  addAuditLog('usr-2', draft.controlOwner, 'GOVERNANCE_ADMIN', 'GOVERNANCE_CONTROL_CREATED', 'GovernanceControl', draft.id, draft.name, `Registered control ${draft.name}`);
+  const created = await apiGovernanceControlRepository.createControl(draft);
+  governanceControlsCache = governanceControlsCache.map(c => (c.id === draft.id ? { ...created, attachments: [] } : c));
+  persistGovernanceControlsCache();
+  return created;
+}
+
+export async function archiveGovernanceControl(id: string, archivedBy?: string, archiveReason?: string): Promise<void> {
+  const target = governanceControlsCache.find(c => c.id === id);
+  if (!target) return;
+  governanceControlsCache = governanceControlsCache.map(c => (c.id === id ? { ...c, isArchived: true, archivedAt: new Date().toISOString(), archivedBy, archiveReason } : c));
+  persistGovernanceControlsCache();
+  addAuditLog('usr-1', archivedBy || 'Sarah Jenkins', 'SUPER_ADMIN', 'GOVERNANCE_CONTROL_ARCHIVED', 'GovernanceControl', id, target.name, `Archived control ${target.name}${archiveReason ? `: ${archiveReason}` : ''}`);
+  await apiGovernanceControlRepository.archiveControl(id, archivedBy, archiveReason);
+}
+
+export async function restoreGovernanceControl(id: string): Promise<void> {
+  const target = governanceControlsCache.find(c => c.id === id);
+  if (!target) return;
+  governanceControlsCache = governanceControlsCache.map(c => (c.id === id ? { ...c, isArchived: false, archivedAt: undefined, archivedBy: undefined, archiveReason: undefined } : c));
+  persistGovernanceControlsCache();
+  await apiGovernanceControlRepository.restoreControl(id);
+}
+
+export async function saveControlAttachment(controlId: string, entityType: string, entityId: string, entityName: string, attachedBy: string): Promise<ControlAttachment> {
+  const idx = governanceControlsCache.findIndex(c => c.id === controlId);
+  if (idx === -1) throw new Error(`Control ${controlId} not found`);
+  const draft: ControlAttachment = {
+    id: `catt-${Date.now().toString().slice(-6)}`,
+    controlId,
+    entityType: entityType as ControlAttachment['entityType'],
+    entityId,
+    entityName,
+    attachedBy,
+    attachedAt: new Date().toISOString(),
+    testResults: [],
+  };
+  governanceControlsCache = [...governanceControlsCache];
+  governanceControlsCache[idx] = { ...governanceControlsCache[idx], attachments: [draft, ...(governanceControlsCache[idx].attachments || [])] };
+  persistGovernanceControlsCache();
+  addAuditLog('usr-2', attachedBy, 'GOVERNANCE_ADMIN', 'CONTROL_ATTACHMENT_CREATED', 'ControlAttachment', draft.id, `${governanceControlsCache[idx].name} → ${entityName}`, `Attached control ${governanceControlsCache[idx].name} to ${entityType} ${entityName}`);
+
+  const created = await apiGovernanceControlRepository.createAttachment(controlId, entityType, entityId, entityName, attachedBy);
+  const i2 = governanceControlsCache.findIndex(c => c.id === controlId);
+  if (i2 !== -1) {
+    governanceControlsCache = [...governanceControlsCache];
+    governanceControlsCache[i2] = { ...governanceControlsCache[i2], attachments: (governanceControlsCache[i2].attachments || []).map(a => (a.id === draft.id ? created : a)) };
+    persistGovernanceControlsCache();
+  }
+  return created;
+}
+
+export async function deleteControlAttachment(id: string): Promise<void> {
+  const idx = governanceControlsCache.findIndex(c => (c.attachments || []).some(a => a.id === id));
+  if (idx === -1) return;
+  const attachment = governanceControlsCache[idx].attachments!.find(a => a.id === id)!;
+  governanceControlsCache = [...governanceControlsCache];
+  governanceControlsCache[idx] = { ...governanceControlsCache[idx], attachments: governanceControlsCache[idx].attachments!.filter(a => a.id !== id) };
+  persistGovernanceControlsCache();
+  addAuditLog('usr-1', 'Sarah Jenkins', 'SUPER_ADMIN', 'CONTROL_ATTACHMENT_DELETED', 'ControlAttachment', id, `${governanceControlsCache[idx].name} → ${attachment.entityName}`, `Removed control attachment`);
+  await apiGovernanceControlRepository.deleteAttachment(id);
+}
+
+export async function recordControlTestResult(attachmentId: string, tester: string, outcome: ControlTestOutcome, findings?: string, evidenceRef?: string): Promise<ControlTestResult> {
+  const controlIdx = governanceControlsCache.findIndex(c => (c.attachments || []).some(a => a.id === attachmentId));
+  if (controlIdx === -1) throw new Error(`Control attachment ${attachmentId} not found`);
+  const draft: ControlTestResult = {
+    id: `ctres-${Date.now().toString().slice(-6)}`,
+    attachmentId,
+    tester,
+    outcome,
+    findings,
+    evidenceRef,
+    testDate: new Date().toISOString(),
+  };
+  governanceControlsCache = [...governanceControlsCache];
+  governanceControlsCache[controlIdx] = {
+    ...governanceControlsCache[controlIdx],
+    attachments: governanceControlsCache[controlIdx].attachments!.map(a => (a.id === attachmentId ? { ...a, testResults: [draft, ...(a.testResults || [])] } : a)),
+  };
+  const allOutcomes = governanceControlsCache[controlIdx].attachments!.map(a => (a.id === attachmentId ? outcome : a.testResults?.[0]?.outcome)).filter(Boolean) as ControlTestOutcome[];
+  const rating: ControlEffectivenessRating = allOutcomes.length === 0 ? 'NOT_YET_TESTED'
+    : allOutcomes.every(o => o === 'PASS') ? 'EFFECTIVE'
+    : allOutcomes.every(o => o === 'FAIL') ? 'INEFFECTIVE'
+    : 'PARTIALLY_EFFECTIVE';
+  governanceControlsCache[controlIdx] = { ...governanceControlsCache[controlIdx], effectivenessRating: rating };
+  persistGovernanceControlsCache();
+  addAuditLog('usr-2', tester, 'RISK_OFFICER', 'CONTROL_TEST_RESULT_RECORDED', 'ControlTestResult', draft.id, governanceControlsCache[controlIdx].name, `Recorded ${outcome} test result for control ${governanceControlsCache[controlIdx].name}`);
+
+  const saved = await apiGovernanceControlRepository.recordTestResult(attachmentId, tester, outcome, findings, evidenceRef);
+  const i2 = governanceControlsCache.findIndex(c => (c.attachments || []).some(a => a.id === attachmentId));
+  if (i2 !== -1) {
+    governanceControlsCache = [...governanceControlsCache];
+    governanceControlsCache[i2] = {
+      ...governanceControlsCache[i2],
+      attachments: governanceControlsCache[i2].attachments!.map(a => (a.id === attachmentId ? { ...a, testResults: a.testResults!.map(t => (t.id === draft.id ? saved : t)) } : a)),
+    };
+    persistGovernanceControlsCache();
+  }
+  return saved;
+}
+
 // --- RELEASE 5.1 — COMPLIANCE PACK FRAMEWORK: API-FIRST, NEON-BACKED ---
 // Release 5 shipped this domain on local storage deliberately ("framework
 // before regulation"). Release 5.1 aligns it with the Release 4.1 platform
@@ -4496,6 +4654,7 @@ export function bootstrapPersistence(options?: { force?: boolean }): Promise<voi
         prompts,
         tools,
         agentToolGrants,
+        governanceControls,
         compliancePacks,
         requirements,
         packControls,
@@ -4529,6 +4688,7 @@ export function bootstrapPersistence(options?: { force?: boolean }): Promise<voi
         safeSync(apiPromptRepository.getPrompts(true), promptsCache),
         safeSync(apiToolRepository.getTools(true), toolsCache),
         safeSync(apiAgentToolGrantRepository.getGrants(), agentToolGrantsCache),
+        safeSync(apiGovernanceControlRepository.getControls(true), governanceControlsCache),
         safeSync(apiCompliancePackRepository.getCompliancePacks(), compliancePacksCache),
         safeSync(apiRequirementRepository.getRequirements(), requirementsCache),
         safeSync(apiControlRepository.getControls(), packControlsCache),
@@ -4585,6 +4745,8 @@ export function bootstrapPersistence(options?: { force?: boolean }): Promise<voi
       persistToolsCache();
       agentToolGrantsCache = agentToolGrants;
       persistAgentToolGrantsCache();
+      governanceControlsCache = governanceControls;
+      persistGovernanceControlsCache();
 
       const packNameById = new Map(compliancePacks.map(p => [p.id, p.name]));
       requirementsCache = requirements.map(r => ({ ...r, packName: packNameById.get(r.packId) || r.packName }));

@@ -29,6 +29,7 @@ import {
   localGovernancePolicyRepository,
   localGovernanceProfileRepository,
   localGovernanceRepository,
+  localGovernanceControlRepository,
   localKnowledgeAssetRepository,
   localModelRepository,
   localObligationControlRepository,
@@ -63,6 +64,7 @@ import {
   apiGovernancePolicyRepository,
   apiGovernanceProfileRepository,
   apiGovernanceRepository,
+  apiGovernanceControlRepository,
   apiKnowledgeAssetRepository,
   apiModelRepository,
   apiObligationControlRepository,
@@ -97,6 +99,7 @@ import type {
   GovernancePolicyRepository,
   GovernanceProfileRepository,
   GovernanceRepository,
+  GovernanceControlRepository,
   KnowledgeAssetRepository,
   ModelRepository,
   ObligationControlRepository,
@@ -173,6 +176,13 @@ export function getAgentToolGrantRepository(): AgentToolGrantRepository {
 }
 
 export { localAgentToolGrantRepository };
+
+/** R18 — Control Governance. Named GovernanceControl to avoid the ControlRepository/PackControl collision above. */
+export function getGovernanceControlRepository(): GovernanceControlRepository {
+  return apiGovernanceControlRepository;
+}
+
+export { localGovernanceControlRepository };
 
 /**
  * Release 5.1 — Compliance Persistence Alignment. Api is the default for
