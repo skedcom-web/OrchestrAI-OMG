@@ -5,8 +5,8 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Select } from '../components/ui/Select';
 import { Modal } from '../components/ui/Modal';
-import { RiskBadge } from '../components/ui/Badge';
-import { getModels, saveModel, archiveModel } from '../services/storageService';
+import { RiskBadge, ReadinessBadge } from '../components/ui/Badge';
+import { getModels, saveModel, archiveModel, getCertificationReadinessFor } from '../services/storageService';
 import { useAuth } from '../contexts/AuthContext';
 import type { Model, ModelType, RiskLevel } from '../types';
 
@@ -128,6 +128,7 @@ export const ModelRegistryPage: React.FC = () => {
               {model.driftDetected && (
                 <span className="px-2 py-0.5 rounded-full bg-red-500/10 border border-red-500/30 text-red-500">Drift flagged</span>
               )}
+              <ReadinessBadge status={getCertificationReadinessFor('Model', model.id).status} size="sm" />
             </div>
 
             <div className="flex items-center justify-between pt-2 border-t border-[var(--border-subtle)] text-[11px] text-[var(--text-muted)]">

@@ -60,6 +60,17 @@ export async function migrateLocalDataToNeon(
   const localEvidence = getEvidenceRecords();
   report(`Migrating ${localEvidence.length} evidence records...`);
   for (const record of localEvidence) {
+    if (!record.assetId) {
+      // Polymorphic (entityType/entityId) evidence isn't asset-scoped, so it
+      // has no local asset id to remap — migrate it as-is.
+      try {
+        await apiEvidenceRepository.createEvidence(record);
+        result.evidenceCreated++;
+      } catch (err) {
+        result.errors.push(`Evidence "${record.name}": ${(err as Error).message}`);
+      }
+      continue;
+    }
     const neonAssetId = assetIdMap.get(record.assetId);
     if (!neonAssetId) {
       result.errors.push(`Evidence "${record.name}": linked asset was not migrated.`);

@@ -4,12 +4,14 @@ import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Select } from '../components/ui/Select';
 import { Modal } from '../components/ui/Modal';
+import { ReadinessBadge } from '../components/ui/Badge';
 import {
   getCertificationPrograms,
   getCertificationRecords,
   issueCertificationRecord,
   renewCertificationRecord,
   revokeCertificationRecord,
+  getCertificationReadinessFor,
   getAssets,
   getModels,
   getTools,
@@ -181,6 +183,7 @@ export const CertificationRecordsPage: React.FC = () => {
                 <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-[var(--bg-badge)] border border-[var(--border-color)] text-[var(--text-secondary)]">{record.entityType}</span>
                 <p className="text-sm font-bold text-[var(--text-primary)]">{record.entityName}</p>
                 <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full" style={{ color: STATUS_TONE[status], background: 'var(--bg-badge)', border: `1px solid ${STATUS_TONE[status]}40` }}>{status}</span>
+                <ReadinessBadge status={getCertificationReadinessFor(record.entityType, record.entityId).status} size="sm" />
               </div>
               <p className="text-xs text-[var(--text-secondary)] mt-1.5">
                 {record.program?.name || programs.find(p => p.id === record.programId)?.name} — issued {String(record.issuedAt).split('T')[0]} by {record.issuedBy}, expires {String(record.expiresAt).split('T')[0]}

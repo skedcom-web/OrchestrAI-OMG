@@ -7,7 +7,7 @@ import { Select } from '../components/ui/Select';
 import { Modal } from '../components/ui/Modal';
 import { RiskBadge, OversightBadge, AutonomyBadge, GovernanceStateBadge, ClassificationBadge, EvidenceStatusBadge, EvidenceExpiryBadge, ReadinessBadge } from '../components/ui/Badge';
 import { StatusBadge } from '../components/ui/StatusBadge';
-import { getAssets, getUsers, saveAsset, archiveAsset, getReassessmentTriggers, getScheduledReviews, getEvidenceRecordsForAsset, getGovernanceReadiness, getEvidenceReadiness, getReviewReadiness, getAuditReadiness, getGovernanceGapsForAsset } from '../services/storageService';
+import { getAssets, getUsers, saveAsset, archiveAsset, getReassessmentTriggers, getScheduledReviews, getEvidenceRecordsForAsset, getGovernanceReadiness, getEvidenceReadiness, getReviewReadiness, getAuditReadiness, getGovernanceGapsForAsset, getCertificationReadinessFor } from '../services/storageService';
 import { OVERSIGHT_TYPES, AUTONOMY_LEVELS, getAuthorityMatrixEntry, defaultAuthorityProfile } from '../config/governanceAuthority';
 import { GOVERNANCE_STATES, GOVERNANCE_CLASSIFICATIONS, defaultGovernanceState } from '../config/governanceContinuity';
 import { getExpiryIndicator } from '../config/evidenceFoundation';
@@ -495,7 +495,7 @@ export const AssetRegistryPage: React.FC = () => {
             {/* Release 4 — Readiness Section & Gap Summary */}
             <div>
               <h4 className="text-xs font-bold uppercase text-[var(--text-muted)] tracking-wider mb-2">Readiness</h4>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-3">
                 <div className="p-2.5 rounded-lg bg-[var(--bg-badge)] border border-[var(--border-color)] flex flex-col gap-1">
                   <span className="text-[10px] text-[var(--text-muted)]">Governance</span>
                   <ReadinessBadge status={getGovernanceReadiness(selectedAsset.id)!.status} size="sm" />
@@ -511,6 +511,10 @@ export const AssetRegistryPage: React.FC = () => {
                 <div className="p-2.5 rounded-lg bg-[var(--bg-badge)] border border-[var(--border-color)] flex flex-col gap-1">
                   <span className="text-[10px] text-[var(--text-muted)]">Audit</span>
                   <ReadinessBadge status={getAuditReadiness(selectedAsset.id)!.status} size="sm" />
+                </div>
+                <div className="p-2.5 rounded-lg bg-[var(--bg-badge)] border border-[var(--border-color)] flex flex-col gap-1">
+                  <span className="text-[10px] text-[var(--text-muted)]">Certification</span>
+                  <ReadinessBadge status={getCertificationReadinessFor('Asset', selectedAsset.id).status} size="sm" />
                 </div>
               </div>
 

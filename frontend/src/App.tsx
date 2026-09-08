@@ -138,6 +138,7 @@ import { LifecycleConsolePage } from './pages/LifecycleConsolePage';
 import { CertificationProgramsPage } from './pages/CertificationProgramsPage';
 import { CertificationRecordsPage } from './pages/CertificationRecordsPage';
 import { CertificationEvidencePage } from './pages/CertificationEvidencePage';
+import { GovernanceReportsPage } from './pages/GovernanceReportsPage';
 
 // GACF Pages — Governance Assessment Calibration & Consistency Framework
 import { AssessmentCenterPage } from './pages/AssessmentCenterPage';
@@ -253,6 +254,7 @@ const GOVERNED_ROUTES: { path: string; element: React.ReactNode }[] = [
   { path: '/certification-programs', element: <CertificationProgramsPage /> },
   { path: '/certification-records', element: <CertificationRecordsPage /> },
   { path: '/certification-evidence', element: <CertificationEvidencePage /> },
+  { path: '/governance-reports', element: <GovernanceReportsPage /> },
 
   // Domain — Governance Assessment Calibration & Consistency Framework (GACF)
   { path: '/assessment-center', element: <AssessmentCenterPage /> },

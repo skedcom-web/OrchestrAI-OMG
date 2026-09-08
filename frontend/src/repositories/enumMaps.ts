@@ -55,6 +55,7 @@ import type {
   PromptReviewStatus,
   AgentBehaviorStatus,
   ToolClassification,
+  ReviewFrequency,
 } from '../types';
 
 function toBackend<T extends string>(map: Record<T, string>) {
@@ -113,6 +114,11 @@ const AGENT_BEHAVIOR_STATUS: Record<AgentBehaviorStatus, string> = {
 /** R16/R17 — Tool Governance data model. */
 const TOOL_CLASSIFICATION: Record<ToolClassification, string> = {
   'Read-Only': 'READ_ONLY', 'Write': 'WRITE', 'Financial': 'FINANCIAL', 'External API': 'EXTERNAL_API', 'Destructive': 'DESTRUCTIVE',
+};
+
+/** R20.1 — Governance Continuity hardening. */
+const REVIEW_FREQUENCY: Record<ReviewFrequency, string> = {
+  'Monthly': 'MONTHLY', 'Quarterly': 'QUARTERLY', 'Semi Annual': 'SEMI_ANNUAL', 'Annual': 'ANNUAL',
 };
 
 const GOVERNANCE_STATUS: Record<GovernanceStatus, string> = {
@@ -355,6 +361,7 @@ export const enumMaps = {
   promptReviewStatus: { toBackend: toBackend(PROMPT_REVIEW_STATUS), toFrontend: toFrontend(PROMPT_REVIEW_STATUS) },
   agentBehaviorStatus: { toBackend: toBackend(AGENT_BEHAVIOR_STATUS), toFrontend: toFrontend(AGENT_BEHAVIOR_STATUS) },
   toolClassification: { toBackend: toBackend(TOOL_CLASSIFICATION), toFrontend: toFrontend(TOOL_CLASSIFICATION) },
+  reviewFrequency: { toBackend: toBackend(REVIEW_FREQUENCY), toFrontend: toFrontend(REVIEW_FREQUENCY) },
   governanceStatus: { toBackend: toBackend(GOVERNANCE_STATUS), toFrontend: toFrontend(GOVERNANCE_STATUS) },
   decisionOutcome: { toBackend: toBackend(DECISION_OUTCOME), toFrontend: toFrontend(DECISION_OUTCOME) },
   oversightType: { toBackend: toBackend(OVERSIGHT_TYPE), toFrontend: toFrontend(OVERSIGHT_TYPE) },

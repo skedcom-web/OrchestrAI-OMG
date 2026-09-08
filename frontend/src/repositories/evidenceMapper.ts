@@ -18,6 +18,9 @@ export function toBackendEvidence(data: Partial<EvidenceRecord>): Record<string,
   if (data.expiryDate !== undefined) body.expiryDate = data.expiryDate ? new Date(data.expiryDate).toISOString() : null;
   if (data.description !== undefined) body.description = data.description;
   if (data.assetId !== undefined) body.assetId = data.assetId;
+  if (data.entityType !== undefined) body.entityType = data.entityType;
+  if (data.entityId !== undefined) body.entityId = data.entityId;
+  if (data.entityName !== undefined) body.entityName = data.entityName;
 
   if (data.ownership !== undefined) {
     body.evidenceOwner = data.ownership.evidenceOwner;
@@ -47,8 +50,11 @@ export function fromBackendEvidence(row: any, assetName = ''): EvidenceRecord {
     createdDate: String(row.createdDate).split('T')[0],
     expiryDate: row.expiryDate ? String(row.expiryDate).split('T')[0] : undefined,
     description: row.description,
-    assetId: row.assetId,
-    assetName,
+    assetId: row.assetId ?? undefined,
+    assetName: row.assetId ? assetName : undefined,
+    entityType: row.entityType ?? undefined,
+    entityId: row.entityId ?? undefined,
+    entityName: row.entityName ?? undefined,
     ownership: {
       evidenceOwner: row.evidenceOwner,
       businessOwner: row.businessOwner || undefined,

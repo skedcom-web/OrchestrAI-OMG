@@ -3,12 +3,12 @@ import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Select } from '../components/ui/Select';
 import { Modal } from '../components/ui/Modal';
-import { getAssets, getUsers, saveAsset } from '../services/storageService';
+import { getAssets, getUsers, saveAssetOwnership } from '../services/storageService';
 import { useAuth } from '../contexts/AuthContext';
 import type { AIAsset, User, OwnershipAssignment } from '../types';
 
 export const OwnershipMatrixPage: React.FC = () => {
-  const { canPerform } = useAuth();
+  const { canPerform, currentUser } = useAuth();
   const [assets, setAssets] = useState<AIAsset[]>(() => getAssets());
   const [users] = useState<User[]>(() => getUsers());
   const [selectedAsset, setSelectedAsset] = useState<AIAsset | null>(null);
@@ -30,10 +30,7 @@ export const OwnershipMatrixPage: React.FC = () => {
     e.preventDefault();
     if (!selectedAsset) return;
 
-    const persisting = saveAsset({
-      ...selectedAsset,
-      ownership: formOwnership,
-    });
+    const persisting = saveAssetOwnership(selectedAsset.id, formOwnership, currentUser?.name || 'Unknown');
     refreshAssets(); // optimistic — the cache update happens synchronously before this line
     setIsModalOpen(false);
     setSelectedAsset(null);

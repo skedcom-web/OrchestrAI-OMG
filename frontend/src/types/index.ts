@@ -603,7 +603,17 @@ export interface EvidenceTraceability {
   timelineEventRef?: string;
 }
 
-/** Capability 1 — Evidence Registry. The universal governance evidence object. */
+/**
+ * Capability 1 — Evidence Registry. The universal governance evidence
+ * object. R20.1 completes the polymorphic architecture the backend schema
+ * has carried since R13 Foundation but the frontend never exposed:
+ * assetId/assetName are now optional (every pre-R20.1 record keeps them,
+ * unchanged), and entityType/entityId/entityName cover any governed entity —
+ * Model, Knowledge Asset, Prompt, Tool, Governance Control, Certification
+ * Record, or a future one — via the same shape R18's ControlAttachment and
+ * R20's CertificationRecord already use. Exactly one of assetId or
+ * entityType+entityId is expected to be set on any given record.
+ */
 export interface EvidenceRecord {
   id: string;
   name: string;
@@ -612,8 +622,11 @@ export interface EvidenceRecord {
   createdDate: string;
   expiryDate?: string;
   description: string;
-  assetId: string;
-  assetName: string;
+  assetId?: string;
+  assetName?: string;
+  entityType?: string;
+  entityId?: string;
+  entityName?: string;
   ownership: EvidenceOwnership;
   traceability?: EvidenceTraceability;
 }
@@ -661,6 +674,17 @@ export interface AuditReadinessResult {
   traceabilityAvailable: boolean;
 }
 
+/** R20.1 — Certification Readiness Scoring (Part 6). Same Ready/Partially Ready/Not Ready vocabulary as every readiness result above. */
+export interface CertificationReadinessResult {
+  status: ReadinessStatus;
+  hasRequiredControls: boolean;
+  evidenceComplete: boolean;
+  isApproved: boolean;
+  noOpenFindings: boolean;
+  noOpenCorrectiveActions: boolean;
+  reviewCurrent: boolean;
+}
+
 export type GovernanceGapType =
   | 'Missing Owner'
   | 'Missing Oversight'
@@ -668,7 +692,8 @@ export type GovernanceGapType =
   | 'Missing Evidence'
   | 'Expired Evidence'
   | 'Missing Review'
-  | 'Missing Reauthorization';
+  | 'Missing Reauthorization'
+  | 'Missing Traceability';
 
 export interface GovernanceGap {
   assetId: string;
@@ -1065,7 +1090,16 @@ export interface AIAsset {
   /** R16 — Agent Governance. Only meaningful where type is Agent or Multi-Agent System. */
   delegationScope?: string;
   behaviorMonitoringStatus?: AgentBehaviorStatus;
+  /** R20.1 — Governance Continuity hardening. Reused by every asset, not agent-specific. */
+  approvalDate?: string;
+  reviewFrequency?: ReviewFrequency;
 }
+
+/** R20.1 — Governance Continuity hardening. */
+export type ReviewFrequency = 'Monthly' | 'Quarterly' | 'Semi Annual' | 'Annual';
+
+/** Computed, not stored — same "derived, not persisted" discipline as EvidenceExpiryIndicator. */
+export type ReauthorizationStatus = 'Active' | 'Due Soon' | 'Overdue' | 'Expired';
 
 /** R16 — Agent Governance. */
 export type AgentBehaviorStatus = 'Normal' | 'Watchlist' | 'Alert';
@@ -1251,6 +1285,21 @@ export interface AuditLog {
   entityName: string;
   details: string;
   ipAddress?: string;
+}
+
+/** R20.1 — Executive Dashboard Enhancements (Part 4). */
+export interface ExecutiveKpiSummary {
+  totalGovernedEntities: number;
+  governanceReadinessScorePct: number;
+  evidenceCompletenessPct: number;
+  approvalBacklog: number;
+  openFindings: number;
+  openCorrectiveActions: number;
+  overdueReviews: number;
+  certificationReadinessPct: number;
+  controlEffectivenessPct: number;
+  governanceTrend: 'Positive' | 'Stable' | 'Attention Needed';
+  activeCertifications: number;
 }
 
 export interface GovernanceMetrics {
@@ -1654,7 +1703,7 @@ export interface GovernanceAlert {
   id: string;
   assetId: string;
   assetName: string;
-  alertType: 'Validation Expired' | 'Compliance Review Overdue' | 'Risk Review Overdue' | 'Critical Incident Open' | 'Kill Switch Event' | 'Unresolved Critical Finding';
+  alertType: 'Validation Expired' | 'Compliance Review Overdue' | 'Risk Review Overdue' | 'Critical Incident Open' | 'Kill Switch Event' | 'Unresolved Critical Finding' | 'Reauthorization Due Soon' | 'Reauthorization Overdue' | 'Reauthorization Expired';
   severity: FindingSeverity;
   createdAt: string;
   message: string;
@@ -1677,10 +1726,19 @@ export interface ScheduledReview {
 
 export type CorrectiveActionStatus = 'Open' | 'Assigned' | 'In Progress' | 'Completed' | 'Verified';
 
+/**
+ * R20.1 completes the polymorphic architecture the backend has carried
+ * since R13 Foundation (R18's control-test-failure auto-creation already
+ * writes entityType/entityId here) — assetId/assetName are optional, same
+ * pattern as EvidenceRecord.
+ */
 export interface CorrectiveAction {
   id: string;
-  assetId: string;
-  assetName: string;
+  assetId?: string;
+  assetName?: string;
+  entityType?: string;
+  entityId?: string;
+  entityName?: string;
   title: string;
   status: CorrectiveActionStatus;
   severity: FindingSeverity;

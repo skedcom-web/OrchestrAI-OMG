@@ -1,8 +1,9 @@
 import type { 
   AIAsset, 
   User, 
-  AuditLog, 
-  GovernanceMetrics, 
+  AuditLog,
+  GovernanceMetrics,
+  ExecutiveKpiSummary,
   DecisionRecord,
   ValidationRecord,
   EvidenceDocument,
@@ -43,6 +44,7 @@ import type {
   AssetPromptUsage,
   Tool,
   AgentToolGrant,
+  OwnershipAssignment,
   GovernanceControl,
   ControlAttachment,
   ControlTestResult,
@@ -118,14 +120,15 @@ import {
   INITIAL_RECOMMENDED_ACTIONS
 } from './mockData';
 import { getAuthorityMatrixEntry, defaultAuthorityProfile, authorityProfileCompleteness } from '../config/governanceAuthority';
-import { defaultGovernanceState } from '../config/governanceContinuity';
-import { getExpiryIndicator } from '../config/evidenceFoundation';
+import { defaultGovernanceState, computeReauthorizationStatus } from '../config/governanceContinuity';
+import { getExpiryIndicator, evidenceEntityRef } from '../config/evidenceFoundation';
 import {
   computeGovernanceReadiness,
   computeEvidenceReadiness,
   computeReviewReadiness,
   computeAuditReadiness,
   computeGovernanceGaps,
+  computeCertificationReadiness,
 } from '../config/readinessFoundation';
 import { computePackCoverage, computeRequirementCoverage, computePackGaps } from '../config/compliancePackFramework';
 import {
@@ -467,6 +470,41 @@ export async function saveAsset(assetData: Partial<AIAsset>): Promise<AIAsset> {
   assetsCache = assetsCache.map(a => (a.id === draftAsset.id ? created : a));
   persistAssetsCache();
   return created;
+}
+
+const OWNERSHIP_ROLE_LABELS: Record<keyof OwnershipAssignment, string> = {
+  businessOwner: 'Business Owner',
+  technicalOwner: 'Technical Owner',
+  riskOwner: 'Risk Owner',
+  complianceOwner: 'Compliance Owner',
+  approver: 'Approver',
+};
+
+/**
+ * R20.1 — Governance Continuity hardening. Wraps saveAsset's existing write
+ * path with per-role Owner Assigned/Changed/Removed audit events — the
+ * generic ASSET_UPDATED log saveAsset already writes doesn't say which role
+ * changed or how. Used by the Ownership Matrix and Agent Accountability
+ * displays alike, so every ownership edit anywhere gets the same granular
+ * trail rather than two parallel logging paths.
+ */
+export async function saveAssetOwnership(assetId: string, newOwnership: OwnershipAssignment, updatedBy: string): Promise<AIAsset> {
+  const existing = assetsCache.find(a => a.id === assetId);
+  const previous = existing?.ownership || {};
+  (Object.keys(OWNERSHIP_ROLE_LABELS) as (keyof OwnershipAssignment)[]).forEach(role => {
+    const before = previous[role];
+    const after = newOwnership[role];
+    if (before === after) return;
+    const label = OWNERSHIP_ROLE_LABELS[role];
+    if (!before && after) {
+      addAuditLog('usr-1', updatedBy, 'GOVERNANCE_ADMIN', 'OWNER_ASSIGNED', 'Ownership', assetId, existing?.name || assetId, `${label} assigned to ${after} on ${existing?.name || assetId}`);
+    } else if (before && !after) {
+      addAuditLog('usr-1', updatedBy, 'GOVERNANCE_ADMIN', 'OWNER_REMOVED', 'Ownership', assetId, existing?.name || assetId, `${label} (${before}) removed from ${existing?.name || assetId}`);
+    } else {
+      addAuditLog('usr-1', updatedBy, 'GOVERNANCE_ADMIN', 'OWNER_CHANGED', 'Ownership', assetId, existing?.name || assetId, `${label} changed from ${before} to ${after} on ${existing?.name || assetId}`);
+    }
+  });
+  return saveAsset({ id: assetId, ownership: newOwnership });
 }
 
 /**
@@ -1780,8 +1818,13 @@ export function getEvidenceRecordsForAsset(assetId: string): EvidenceRecord[] {
   return evidenceCache.filter(e => e.assetId === assetId);
 }
 
+/** R20.1 — the polymorphic counterpart to getEvidenceRecordsForAsset, for any non-Asset governed entity. */
+export function getEvidenceRecordsForEntity(entityType: string, entityId: string): EvidenceRecord[] {
+  return evidenceCache.filter(e => e.entityType === entityType && e.entityId === entityId);
+}
+
 export async function saveEvidenceRecord(data: Partial<EvidenceRecord>): Promise<EvidenceRecord> {
-  const asset = getAssetById(data.assetId || '');
+  const asset = data.assetId ? getAssetById(data.assetId) : undefined;
   const now = new Date().toISOString().split('T')[0];
 
   if (data.id) {
@@ -1811,6 +1854,7 @@ export async function saveEvidenceRecord(data: Partial<EvidenceRecord>): Promise
     }
   }
 
+  const isPolymorphic = !data.assetId && !!data.entityType && !!data.entityId;
   const draftRecord: EvidenceRecord = {
     id: `local-${Date.now()}`,
     name: data.name || 'New Evidence Record',
@@ -1819,8 +1863,11 @@ export async function saveEvidenceRecord(data: Partial<EvidenceRecord>): Promise
     createdDate: data.createdDate || now,
     expiryDate: data.expiryDate,
     description: data.description || '',
-    assetId: data.assetId || '',
-    assetName: asset?.name || 'AI Asset',
+    assetId: isPolymorphic ? undefined : (data.assetId || ''),
+    assetName: isPolymorphic ? undefined : (asset?.name || 'AI Asset'),
+    entityType: isPolymorphic ? data.entityType : undefined,
+    entityId: isPolymorphic ? data.entityId : undefined,
+    entityName: isPolymorphic ? (data.entityName || data.entityId) : undefined,
     ownership: data.ownership || { evidenceOwner: 'Unassigned' },
     traceability: data.traceability,
   };
@@ -1828,6 +1875,7 @@ export async function saveEvidenceRecord(data: Partial<EvidenceRecord>): Promise
   evidenceCache = [draftRecord, ...evidenceCache];
   persistEvidenceCache();
 
+  const { name: filedAgainstName } = evidenceEntityRef(draftRecord);
   addAuditLog(
     'usr-2',
     draftRecord.ownership.evidenceOwner,
@@ -1836,11 +1884,11 @@ export async function saveEvidenceRecord(data: Partial<EvidenceRecord>): Promise
     'EvidenceRecord',
     draftRecord.id,
     draftRecord.name,
-    `Registered evidence record ${draftRecord.name} [${draftRecord.evidenceType}] for ${draftRecord.assetName}`
+    `Registered evidence record ${draftRecord.name} [${draftRecord.evidenceType}] for ${filedAgainstName}`
   );
 
   const { id: _draftId, ...payload } = draftRecord;
-  const created = { ...(await apiEvidenceRepository.createEvidence(payload)), assetName: draftRecord.assetName };
+  const created = { ...(await apiEvidenceRepository.createEvidence(payload)), assetName: draftRecord.assetName, entityName: draftRecord.entityName };
   evidenceCache = evidenceCache.map(e => (e.id === draftRecord.id ? created : e));
   persistEvidenceCache();
   return created;
@@ -4327,9 +4375,14 @@ export function getCorrectiveActions(): CorrectiveAction[] {
   return getItem<CorrectiveAction[]>(STORAGE_KEYS.CORRECTIVE_ACTIONS, INITIAL_CORRECTIVE_ACTIONS);
 }
 
+/** R20.1 — the polymorphic counterpart to getCorrectiveActions' assetId filter, for any non-Asset governed entity. */
+export function getCorrectiveActionsForEntity(entityType: string, entityId: string): CorrectiveAction[] {
+  return getCorrectiveActions().filter(a => a.entityType === entityType && a.entityId === entityId);
+}
+
 export function saveCorrectiveAction(data: Partial<CorrectiveAction>): CorrectiveAction {
   const list = getCorrectiveActions();
-  const asset = getAssetById(data.assetId || '');
+  const asset = data.assetId ? getAssetById(data.assetId) : undefined;
   const now = new Date().toISOString().split('T')[0];
 
   if (data.id) {
@@ -4343,8 +4396,11 @@ export function saveCorrectiveAction(data: Partial<CorrectiveAction>): Correctiv
 
   const newAct: CorrectiveAction = {
     id: `act-${Date.now().toString().slice(-4)}`,
-    assetId: data.assetId || '',
-    assetName: asset?.name || 'AI Asset',
+    assetId: data.entityType ? undefined : (data.assetId || ''),
+    assetName: data.entityType ? undefined : (asset?.name || 'AI Asset'),
+    entityType: data.entityType,
+    entityId: data.entityId,
+    entityName: data.entityName,
     title: data.title || 'Governance Remediation Task',
     status: data.status || 'Open',
     severity: data.severity || 'Medium',
@@ -4363,7 +4419,7 @@ export function saveCorrectiveAction(data: Partial<CorrectiveAction>): Correctiv
     'CORRECTIVE_ACTION_CREATED',
     'CorrectiveAction',
     newAct.id,
-    newAct.assetName,
+    newAct.assetName || newAct.entityName || 'Unknown',
     `Assigned ${newAct.severity} Corrective Action: ${newAct.title} to ${newAct.assignedTo}`
   );
 
@@ -4436,13 +4492,59 @@ export function getAuditReadiness(assetId: string) {
   return computeAuditReadiness(asset, getEvidenceRecordsForAsset(assetId));
 }
 
+/**
+ * R20.1 — Certification Readiness Scoring (Part 6). Entity-agnostic: Assets
+ * resolve approval via governanceState and review currency via
+ * computeReauthorizationStatus; every other entity type (Model/Tool/
+ * KnowledgeAsset/Prompt/GovernanceControl) resolves approval via its own
+ * decisionOutcome and has no review-date concept yet, so reviewCurrent
+ * defaults true for them rather than penalizing a capability they don't have.
+ * Open Findings only applies to Assets — GovernanceFinding has no polymorphic
+ * shape (out of this release's scope, unlike Evidence/CorrectiveAction).
+ */
+export function getCertificationReadinessFor(entityType: string, entityId: string) {
+  const controls = getGovernanceControls().filter(c => c.attachments?.some(a => a.entityType === entityType && a.entityId === entityId));
+  const hasRequiredControls = controls.length > 0 && controls.every(c => c.effectivenessRating !== 'INEFFECTIVE');
+
+  const evidence = entityType === 'Asset' ? getEvidenceRecordsForAsset(entityId) : getEvidenceRecordsForEntity(entityType, entityId);
+  const evidenceComplete = evidence.length > 0 && evidence.every(e => getExpiryIndicator(e.expiryDate) !== 'Expired');
+
+  const openCorrectiveActionsCount = (entityType === 'Asset'
+    ? getCorrectiveActions().filter(a => a.assetId === entityId)
+    : getCorrectiveActionsForEntity(entityType, entityId)
+  ).filter(a => a.status !== 'Completed' && a.status !== 'Verified').length;
+
+  let isApproved = false;
+  let openFindingsCount = 0;
+  let reviewCurrent = true;
+
+  if (entityType === 'Asset') {
+    const asset = getAssetById(entityId);
+    isApproved = !!asset?.governanceState && ['Authorized', 'Monitoring', 'Conditional GO'].includes(asset.governanceState);
+    openFindingsCount = getGovernanceFindingsForAsset(entityId).filter(f => f.status === 'Open' || f.status === 'Under Review').length;
+    reviewCurrent = computeReauthorizationStatus(asset?.nextReviewDate) === 'Active';
+  } else if (entityType === 'Model') {
+    isApproved = getModels(true).find(m => m.id === entityId)?.decisionOutcome !== 'PENDING';
+  } else if (entityType === 'Tool') {
+    isApproved = getTools(true).find(t => t.id === entityId)?.decisionOutcome !== 'PENDING';
+  } else if (entityType === 'KnowledgeAsset') {
+    isApproved = getKnowledgeAssets(true).find(k => k.id === entityId)?.decisionOutcome !== 'PENDING';
+  } else if (entityType === 'Prompt') {
+    isApproved = getPrompts(true).find(p => p.id === entityId)?.decisionOutcome !== 'PENDING';
+  }
+
+  return computeCertificationReadiness(hasRequiredControls, evidenceComplete, isApproved, openFindingsCount, openCorrectiveActionsCount, reviewCurrent);
+}
+
 export function getGovernanceGapsForAsset(assetId: string) {
   const asset = getAssetById(assetId);
   if (!asset) return [];
   const evidence = getEvidenceRecordsForAsset(assetId);
   const reviews = getScheduledReviews().filter(r => r.assetId === assetId);
   const reauthorizations = getReauthorizationRecords().filter(r => r.assetId === assetId);
-  return computeGovernanceGaps(asset, evidence, reviews, reauthorizations);
+  const grants = getAgentToolGrants().filter(g => g.assetId === assetId);
+  const auditLogsForAsset = getAuditLogs().filter(l => l.entityId === assetId);
+  return computeGovernanceGaps(asset, evidence, reviews, reauthorizations, grants, auditLogsForAsset);
 }
 
 export function getAllGovernanceGaps() {
@@ -4486,6 +4588,8 @@ export function getGovernanceMetrics(): GovernanceMetrics {
   const actions = getCorrectiveActions();
   const triggers = getReassessmentTriggers();
   const evidenceRecords = getEvidenceRecords();
+  const allAgentToolGrants = getAgentToolGrants();
+  const allAuditLogs = getAuditLogs();
 
   let readyCount = 0;
   let condReadyCount = 0;
@@ -4722,7 +4826,9 @@ export function getGovernanceMetrics(): GovernanceMetrics {
     metrics.evidenceReadinessBreakdown[computeEvidenceReadiness(asset, assetEvidence).status]++;
     metrics.reviewReadinessBreakdown[computeReviewReadiness(asset, assetReviews, assetTriggers).status]++;
     metrics.auditReadinessBreakdown[computeAuditReadiness(asset, assetEvidence).status]++;
-    totalGaps += computeGovernanceGaps(asset, assetEvidence, assetReviews, assetReauthorizations).length;
+    const assetGrants = allAgentToolGrants.filter(g => g.assetId === asset.id);
+    const assetAuditLogs = allAuditLogs.filter(l => l.entityId === asset.id);
+    totalGaps += computeGovernanceGaps(asset, assetEvidence, assetReviews, assetReauthorizations, assetGrants, assetAuditLogs).length;
   });
   metrics.totalGovernanceGapsCount = totalGaps;
 
@@ -4774,6 +4880,84 @@ export function getGovernanceMetrics(): GovernanceMetrics {
   metrics.ownershipCompletionRate = assets.length > 0 ? Math.round((completeOwnershipCount / assets.length) * 100) : 0;
   metrics.authorityProfileCompletionRate = assets.length > 0 ? Math.round((completeAuthorityCount / assets.length) * 100) : 0;
   return metrics;
+}
+
+/**
+ * R20.1 — Executive Dashboard Enhancements (Part 4). Ten cross-domain KPIs,
+ * assembled entirely from getters/readiness functions every prior release
+ * already built — no new aggregation engine, no numeric scoring beyond the
+ * simple percentages this dashboard already uses elsewhere (ownershipCompletionRate
+ * etc. on GovernanceMetrics, above). "Open Findings" deliberately reads
+ * openFindingsCount (the Finding type, Findings Tracker) rather than
+ * openGovernanceFindingsCount (the separate policy-reasoning GovernanceFinding
+ * type), matching the choice ExecutiveGovernanceHubPage already made.
+ */
+export function getExecutiveKpiSummary(): ExecutiveKpiSummary {
+  const assets = getAssets();
+  const models = getModels(true);
+  const knowledgeAssets = getKnowledgeAssets(true);
+  const prompts = getPrompts(true);
+  const tools = getTools(true);
+  const controls = getGovernanceControls(true);
+  const certRecords = getCertificationRecords();
+  const metrics = getGovernanceMetrics();
+
+  const totalGovernedEntities = assets.length + models.length + knowledgeAssets.length + prompts.length + tools.length;
+
+  const pendingApprovals =
+    assets.filter(a => !a.decisionOutcome || a.decisionOutcome === 'PENDING').length +
+    models.filter(m => m.decisionOutcome === 'PENDING').length +
+    knowledgeAssets.filter(k => k.decisionOutcome === 'PENDING').length +
+    prompts.filter(p => p.decisionOutcome === 'PENDING').length +
+    tools.filter(t => t.decisionOutcome === 'PENDING').length;
+
+  const overdueReviews =
+    assets.filter(a => ['Overdue', 'Expired'].includes(computeReauthorizationStatus(a.nextReviewDate))).length +
+    getScheduledReviews().filter(r => r.status === 'Overdue').length;
+
+  const certReadinessResults = [
+    ...assets.map(a => getCertificationReadinessFor('Asset', a.id)),
+    ...models.map(m => getCertificationReadinessFor('Model', m.id)),
+    ...tools.map(t => getCertificationReadinessFor('Tool', t.id)),
+  ];
+  const certificationReadinessPct = certReadinessResults.length > 0
+    ? Math.round((certReadinessResults.filter(r => r.status === 'Ready').length / certReadinessResults.length) * 100)
+    : 0;
+
+  const testedControls = controls.filter(c => c.effectivenessRating !== 'NOT_YET_TESTED');
+  const controlEffectivenessPct = testedControls.length > 0
+    ? Math.round((testedControls.filter(c => c.effectivenessRating === 'EFFECTIVE').length / testedControls.length) * 100)
+    : 0;
+
+  const readinessBreakdown = metrics.governanceReadinessBreakdown;
+  const readinessTotal = readinessBreakdown.Ready + readinessBreakdown['Partially Ready'] + readinessBreakdown['Not Ready'];
+  const governanceReadinessScorePct = readinessTotal > 0 ? Math.round((readinessBreakdown.Ready / readinessTotal) * 100) : 0;
+
+  const evidenceBreakdown = metrics.evidenceReadinessBreakdown;
+  const evidenceTotal = evidenceBreakdown.Ready + evidenceBreakdown['Partially Ready'] + evidenceBreakdown['Not Ready'];
+  const evidenceCompletenessPct = evidenceTotal > 0 ? Math.round((evidenceBreakdown.Ready / evidenceTotal) * 100) : 0;
+
+  const openCorrectiveActions = metrics.openCorrectiveActionsCount;
+  const openFindings = metrics.openFindingsCount;
+
+  const activeCertifications = certRecords.filter(r => r.status === 'ACTIVE').length;
+  const problemSignals = (readinessTotal - readinessBreakdown.Ready) + openFindings + openCorrectiveActions + overdueReviews;
+  const governanceTrend: ExecutiveKpiSummary['governanceTrend'] =
+    problemSignals === 0 ? 'Positive' : problemSignals <= totalGovernedEntities * 0.15 ? 'Stable' : 'Attention Needed';
+
+  return {
+    totalGovernedEntities,
+    governanceReadinessScorePct,
+    evidenceCompletenessPct,
+    approvalBacklog: pendingApprovals,
+    openFindings,
+    openCorrectiveActions,
+    overdueReviews,
+    certificationReadinessPct,
+    controlEffectivenessPct,
+    governanceTrend,
+    activeCertifications,
+  };
 }
 
 // --- RELEASE 4.1 — PERSISTENCE COMPLETION: BOOTSTRAP FROM NEON ---
@@ -4894,7 +5078,7 @@ export function bootstrapPersistence(options?: { force?: boolean }): Promise<voi
       assetsCache = assets.map(normalizeAsset);
       persistAssetsCache();
 
-      evidenceCache = evidence.map(e => ({ ...e, assetName: assetNameById.get(e.assetId) || e.assetName }));
+      evidenceCache = evidence.map(e => ({ ...e, assetName: (e.assetId ? assetNameById.get(e.assetId) : undefined) || e.assetName }));
       persistEvidenceCache();
 
       triggersCache = governance.triggers.map(t => ({ ...t, assetName: assetNameById.get(t.assetId) || t.assetName }));

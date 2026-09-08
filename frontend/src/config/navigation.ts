@@ -37,6 +37,18 @@ export interface NavModule {
   keywords?: string[];
   /** Small trailing chip in the sidebar. Reserved for genuine product signals (e.g. "Beta") — never release/build labels. */
   badge?: string;
+  /**
+   * Product Experience Refresh — richer per-module content for a first-time
+   * reviewer, surfaced via the "About this module" panel in AppLayout's
+   * context band. Optional and additive: populated on the major modules
+   * only, never required, never changes routing, RBAC or behavior.
+   */
+  insight?: {
+    whatItDoes: string;
+    whyItMatters: string;
+    governanceOutcome: string;
+    keyArtifacts: string[];
+  };
 }
 
 /** Level 2 — a named sub-group of modules within a workspace. */
@@ -90,12 +102,362 @@ export const EXECUTIVE_DASHBOARD: NavModule = {
   icon: '▤',
   description: 'Single pane of glass across inventory, risk, ownership and decisions.',
   keywords: ['metrics', 'kpi', 'board', 'summary'],
+  insight: {
+    whatItDoes: 'A single cross-portfolio view of every governed AI system’s risk, readiness, evidence, certifications and open work.',
+    whyItMatters: 'Executives need one place to answer "are we in control?" without opening ten different tools.',
+    governanceOutcome: 'Continuous, board-ready visibility into governance posture.',
+    keyArtifacts: ['Governance KPIs', 'Readiness breakdowns', 'Risk heatmaps'],
+  },
 };
 
 export const NAV_DOMAINS: NavDomain[] = [
   domain({
+    id: 'foundation',
+    label: 'Governance Foundation',
+    question: 'What AI exists, and who is accountable for it?',
+    icon: '📦',
+    accent: '#6366F1',
+    groups: [
+      {
+        label: 'Assets',
+        modules: [
+          { path: '/assets', label: 'AI Asset Registry', icon: '🗂️', description: 'Authoritative inventory of every governed AI asset across the enterprise.', keywords: ['inventory', 'assets', 'register', 'catalog'], insight: {
+            whatItDoes: 'The system-of-record inventory of every AI system in use — applications, agents, models, copilots, workflows.',
+            whyItMatters: 'You cannot govern what you have not inventoried. Every other governance activity starts from this registry.',
+            governanceOutcome: 'A complete, current inventory with a named accountable owner on every entry.',
+            keyArtifacts: ['Asset records', 'Ownership assignments', 'Risk classifications'],
+          } },
+          { path: '/asset-lifecycle', label: 'Asset Lifecycle', icon: '🔄', description: 'Where every asset sits on the eight-stage governance journey.', keywords: ['journey', 'stage', 'lifecycle', 'pipeline'] },
+          { path: '/retirement', label: 'Asset Retirement', icon: '📦', description: 'Controlled decommissioning and archival of AI assets.', keywords: ['decommission', 'archive', 'sunset', 'retire'] },
+          { path: '/archived-assets', label: 'Archived Assets', icon: '🗄️', description: 'Soft-deleted assets, restorable by an authorised role — nothing is ever physically removed.', keywords: ['archive', 'restore', 'deleted', 'soft delete', 'audit history'] },
+        ],
+      },
+      {
+        label: 'Models',
+        modules: [
+          { path: '/models', label: 'Model Registry', icon: '🧬', description: 'Every AI model governed as a first-class, reusable asset — registered once, used by many.', keywords: ['model', 'registry', 'llm', 'foundation model'] },
+          { path: '/model-lifecycle', label: 'Model Lifecycle', icon: '🔄', description: 'Stage, retraining schedule and drift signal for every governed model.', keywords: ['model lifecycle', 'retraining', 'drift'] },
+          { path: '/model-risk', label: 'Model Risk & Approvals', icon: '⚖️', description: 'Risk tiering and GO / Conditional GO / No Go decisions for governed models.', keywords: ['model risk', 'model approval', 'model decision'] },
+          { path: '/model-analytics', label: 'Model Analytics', icon: '📊', description: 'Which assets use which models, and where model risk concentrates across the portfolio.', keywords: ['model analytics', 'model usage', 'model portfolio'] },
+        ],
+      },
+      {
+        label: 'Agents',
+        modules: [
+          { path: '/agent-accountability', label: 'Agent Accountability', icon: '🕹️', description: 'Accountability mapping, reauthorization, decision traceability, delegation scope and tool grants for every autonomous agent.', keywords: ['agent', 'delegation', 'tool grant', 'accountability', 'reauthorization', 'traceability'], insight: {
+            whatItDoes: 'Accountability mapping, reauthorization scheduling and decision traceability for every autonomous agent.',
+            whyItMatters: 'Agents act with delegated authority — the accountability, currency and traceability bar has to be at least as high as for any human decision-maker.',
+            governanceOutcome: 'Every agent has a named owner, a current authorization, and a reconstructable decision trail.',
+            keyArtifacts: ['Ownership assignments', 'Reauthorization schedules', 'Traceability chains'],
+          } },
+          { path: '/agent-monitoring', label: 'Agent Monitoring', icon: '📡', description: 'Behavior signal and reauthorization status for every autonomous agent — feeds the portfolio-wide Governance Monitoring view.', keywords: ['agent monitoring', 'behavior', 'watchlist', 'agent alert'], insight: {
+            whatItDoes: 'Behavior signal and reauthorization status for every autonomous agent, portfolio-wide.',
+            whyItMatters: 'An agent’s risk profile can change after launch — this is the ongoing watch, not a one-time check.',
+            governanceOutcome: 'Early signal on agents drifting toward risk or lapsing authorization.',
+            keyArtifacts: ['Behavior status', 'Reauthorization alerts'],
+          } },
+        ],
+      },
+      {
+        label: 'Tools',
+        modules: [
+          { path: '/tool-registry', label: 'Tool Registry', icon: '🧰', description: 'Every tool and external capability an AI agent can call — classified, owned and risk-tiered.', keywords: ['tool', 'registry', 'function calling', 'capability'], insight: {
+            whatItDoes: 'Inventory, risk classification and ownership for every capability an agent can call.',
+            whyItMatters: 'An agent is only as safe as the tools it is allowed to use — a destructive tool needs a different bar than a read-only one.',
+            governanceOutcome: 'No agent gets access to a tool that has not been classified and approved.',
+            keyArtifacts: ['Tool records', 'Classifications', 'Decisions', 'Grants'],
+          } },
+          { path: '/tool-approvals', label: 'Tool Approvals & Risk', icon: '⚖️', description: 'Risk tiering and GO / Conditional GO / No Go decisions for governed tools.', keywords: ['tool risk', 'tool approval', 'tool decision'] },
+          { path: '/tool-monitoring', label: 'Tool Call Monitoring', icon: '📶', description: 'Which agents are granted which tools, and where tool-access risk concentrates.', keywords: ['tool monitoring', 'tool usage', 'tool grants'] },
+        ],
+      },
+      {
+        label: 'Prompts',
+        modules: [
+          { path: '/prompt-library', label: 'Prompt Library', icon: '💬', description: 'Every governed prompt template, versioned — every edit is a new version, prior versions retained.', keywords: ['prompt', 'template', 'library', 'version history'] },
+          { path: '/prompt-approvals', label: 'Prompt Approvals & Risk', icon: '⚖️', description: 'Risk tiering and GO / Conditional GO / No Go decisions for governed prompts.', keywords: ['prompt risk', 'prompt approval', 'prompt decision'] },
+          { path: '/prompt-evidence', label: 'Prompt Evidence', icon: '🧾', description: 'Injection-control review, test transcripts and sign-off for every prompt version.', keywords: ['prompt evidence', 'injection control', 'red team', 'review sign-off'] },
+        ],
+      },
+      {
+        label: 'Knowledge',
+        modules: [
+          { path: '/knowledge-registry', label: 'Knowledge Registry', icon: '📚', description: 'Every knowledge source AI retrieves from — registered, owned and risk-tiered like any other governed entity.', keywords: ['knowledge', 'rag', 'retrieval', 'vector index', 'document store'] },
+          { path: '/knowledge-quality', label: 'Knowledge Quality & Lifecycle', icon: '🧪', description: 'Freshness, ownership and lifecycle stage for every governed knowledge source.', keywords: ['knowledge quality', 'freshness', 'staleness'] },
+          { path: '/knowledge-traceability', label: 'Knowledge Traceability', icon: '🔗', description: 'Which assets retrieve from which knowledge sources across the portfolio.', keywords: ['knowledge traceability', 'knowledge usage', 'rag lineage'] },
+        ],
+      },
+    ],
+  }),
+
+  domain({
+    id: 'operations',
+    label: 'Governance Operations',
+    question: 'Is this AI owned, risk-tiered, validated and approved?',
+    icon: '⚖️',
+    accent: '#8B5CF6',
+    groups: [
+      {
+        label: 'Ownership & Accountability',
+        modules: [
+          { path: '/ownership', label: 'Ownership Matrix', icon: '👥', description: 'Five-role RACIS accountability for business, technical, risk, compliance and approval.', keywords: ['racis', 'owner', 'accountability', 'raci'], insight: {
+            whatItDoes: 'Assigns and tracks the five accountable roles — Business, Technical, Risk, Compliance Owner and Approver — for every asset.',
+            whyItMatters: 'Governance without a named, accountable human is not governance. This closes that gap directly.',
+            governanceOutcome: 'Complete, named accountability across the AI estate.',
+            keyArtifacts: ['Ownership assignments', 'Accountability audit trail'],
+          } },
+        ],
+      },
+      {
+        label: 'Risk Management',
+        modules: [
+          { path: '/risk', label: 'Risk Center', icon: '⚡', description: 'Risk tiering across data sensitivity, decision impact and operational impact.', keywords: ['risk', 'tier', 'classification', 'severity'], insight: {
+            whatItDoes: 'Classifies every AI system by data sensitivity, decision impact and operational impact.',
+            whyItMatters: 'Risk-tiering determines how much oversight, evidence and control an entity actually needs.',
+            governanceOutcome: 'Risk-proportionate governance — critical systems get more scrutiny than low-risk ones.',
+            keyArtifacts: ['Risk tier assignments', 'Risk-based control mapping'],
+          } },
+          { path: '/governance-blockers', label: 'Governance Blockers', icon: '🧱', description: 'Hard blockers preventing an asset from receiving a production decision.', keywords: ['blocker', 'impediment', 'stop'] },
+        ],
+      },
+      {
+        label: 'Approval Workflows',
+        modules: [
+          { path: '/decision-workbench-v4', label: 'Decision Authority', shortLabel: 'Decision Authority', icon: '🖋️', description: 'Record GO / CONDITIONAL GO / NO GO decisions with full justification.', keywords: ['approve', 'go', 'no go', 'authority', 'sign off'], insight: {
+            whatItDoes: 'Records GO / Conditional GO / No GO decisions with full justification and a named decision owner.',
+            whyItMatters: 'Every material AI decision needs a human name attached to it — not a system default.',
+            governanceOutcome: 'A traceable, auditable decision record for every governance milestone.',
+            keyArtifacts: ['Decision records', 'Justifications', 'Decision owners'],
+          } },
+          { path: '/decision-intelligence', label: 'Decision Intelligence', icon: '⚖️', description: 'Governance readiness scoring and recommended decision outcome per asset.', keywords: ['readiness', 'score', 'recommendation'] },
+          { path: '/decision-dashboard', label: 'Decision Queue', icon: '🗳️', description: 'Live queue of pending, conditional and approved governance decisions.', keywords: ['queue', 'pending', 'approvals', 'decisions'] },
+        ],
+      },
+      {
+        label: 'Validation Management',
+        modules: [
+          { path: '/validation', label: 'Validation Center', icon: '🧪', description: 'Independent multi-disciplinary validation reviews and scoring.', keywords: ['test', 'validate', 'review', 'model risk'], insight: {
+            whatItDoes: 'Independent, multi-disciplinary review and scoring of an AI system before it goes live.',
+            whyItMatters: 'A second set of eyes, outside the build team, catches what self-assessment misses.',
+            governanceOutcome: 'Documented, defensible sign-off before production use.',
+            keyArtifacts: ['Validation records', 'Findings', 'Scores'],
+          } },
+          { path: '/validation-dashboard', label: 'Validation Analytics', icon: '📊', description: 'Portfolio validation coverage, pass rates and open defect trends.', keywords: ['analytics', 'validation', 'coverage'] },
+        ],
+      },
+      {
+        label: 'Control Governance',
+        modules: [
+          { path: '/control-library', label: 'Control Library', icon: '🧱', description: 'Governance controls registered once, attached to any Asset, Model, Knowledge source, Prompt or Tool.', keywords: ['control', 'library', 'registry', 'governance control'], insight: {
+            whatItDoes: 'A single library of governance controls, reusable across Assets, Models, Knowledge Assets, Prompts and Tools.',
+            whyItMatters: 'The same control — human-override verification, for example — often needs to apply to five different kinds of AI system. One control, many attachments, not five copies.',
+            governanceOutcome: 'Controls tested for real effectiveness, not just declared on paper.',
+            keyArtifacts: ['Control definitions', 'Attachments', 'Test results', 'Effectiveness ratings'],
+          } },
+          { path: '/control-mapping', label: 'Control Mapping', icon: '🔗', description: 'Which entities each control is attached to, and where coverage gaps remain across the portfolio.', keywords: ['mapping', 'coverage', 'attach', 'cross-entity'], insight: {
+            whatItDoes: 'Shows which entities each control is attached to, and where coverage gaps remain.',
+            whyItMatters: 'A control that is defined but never attached to anything protects nothing.',
+            governanceOutcome: 'Visible, closeable coverage gaps.',
+            keyArtifacts: ['Control-to-entity attachments'],
+          } },
+          { path: '/control-effectiveness', label: 'Control Effectiveness', icon: '✅', description: 'Test history and pass/fail effectiveness ratings for every governance control.', keywords: ['test', 'effectiveness', 'pass', 'fail', 'evidence'], insight: {
+            whatItDoes: 'Test history and pass/fail effectiveness ratings for every control.',
+            whyItMatters: '"We have a control" and "the control works" are different claims — this proves the second one.',
+            governanceOutcome: 'An evidence-backed effectiveness rating, not a self-declared one.',
+            keyArtifacts: ['Test results', 'Effectiveness ratings', 'Auto-raised corrective actions on failure'],
+          } },
+        ],
+      },
+    ],
+  }),
+
+  domain({
+    id: 'assurance',
+    label: 'Governance Assurance',
+    question: 'Can we prove it, and is it still valid?',
+    icon: '🧾',
+    accent: '#14B8A6',
+    groups: [
+      {
+        label: 'Evidence',
+        modules: [
+          { path: '/evidence-registry', label: 'Evidence Registry', icon: '🗃️', description: 'Universal governance evidence object — ownership, traceability, lifecycle and expiry, filed against any governed entity.', keywords: ['evidence', 'registry', 'traceability', 'lifecycle', 'expiry'], insight: {
+            whatItDoes: 'The universal store of governance proof — reports, assessments, sign-offs — filed against any governed entity.',
+            whyItMatters: 'A governance claim without evidence is just an assertion. Auditors and regulators ask for the evidence, not the claim.',
+            governanceOutcome: 'Audit-ready proof behind every governance decision.',
+            keyArtifacts: ['Evidence records', 'Ownership', 'Expiry tracking', 'Traceability links'],
+          } },
+          { path: '/evidence', label: 'Evidence Center', icon: '📄', description: 'ODF governance deliverables and audit-grade evidence library.', keywords: ['document', 'odf', 'deliverable', 'proof'] },
+        ],
+      },
+      {
+        label: 'Findings',
+        modules: [
+          { path: '/findings', label: 'Findings Tracker', icon: '⚠️', description: 'Validation defects and remediation tracking through to verification.', keywords: ['defect', 'issue', 'gap', 'remediation'], insight: {
+            whatItDoes: 'Tracks validation defects and governance issues through to verified resolution.',
+            whyItMatters: 'Finding a problem is only useful if it is tracked to closure, not lost in an email thread.',
+            governanceOutcome: 'No governance issue disappears without a resolution on record.',
+            keyArtifacts: ['Findings', 'Severities', 'Resolution records'],
+          } },
+        ],
+      },
+      {
+        label: 'Corrective Actions',
+        modules: [
+          { path: '/corrective-actions', label: 'Corrective Actions', icon: '🛠️', description: 'Assigned remediation actions through to verified closure.', keywords: ['capa', 'remediate', 'fix', 'action'], insight: {
+            whatItDoes: 'Assigned remediation tasks, through to verified completion.',
+            whyItMatters: 'A failed control or an open finding needs an owner, a deadline and proof it was fixed.',
+            governanceOutcome: 'Closed-loop remediation — nothing stays open indefinitely.',
+            keyArtifacts: ['Corrective action records', 'Verification notes'],
+          } },
+        ],
+      },
+      {
+        label: 'Certification',
+        modules: [
+          { path: '/certification-programs', label: 'Certification Programs', icon: '📜', description: 'Reusable certification program definitions — criteria, validity period and scope.', keywords: ['certification', 'program', 'criteria', 'credential'], insight: {
+            whatItDoes: 'Defines a certification once — its criteria, validity period and scope — reused across every entity it is issued against.',
+            whyItMatters: 'A certification is a stronger, more externally legible claim than an internal decision record alone.',
+            governanceOutcome: 'A consistent, defensible bar every certified entity has actually cleared.',
+            keyArtifacts: ['Certification programs'],
+          } },
+          { path: '/certification-records', label: 'Certification Records', icon: '🏆', description: 'Every certification issued, active, expiring or revoked, across Models, Tools and Assets.', keywords: ['certification', 'record', 'issued', 'expiring', 'revoked', 'credential'], insight: {
+            whatItDoes: 'Issues, renews and revokes formal credentials against any Asset, Model or Tool.',
+            whyItMatters: 'A stale certification is worse than none — it creates false confidence.',
+            governanceOutcome: 'A living register of what is currently certified, expiring, or revoked — never silently stale.',
+            keyArtifacts: ['Certification records', 'Renewal history', 'Revocation reasons'],
+          } },
+          { path: '/certification-evidence', label: 'Certification Evidence & Assessments', icon: '🧾', description: 'Assessment evidence filed in support of a certification decision.', keywords: ['certification evidence', 'assessment', 'proof'], insight: {
+            whatItDoes: 'Files assessment evidence in support of a specific certification decision.',
+            whyItMatters: 'A certification without the assessment behind it is a claim, not a credential.',
+            governanceOutcome: 'Every issued certification traces back to the evidence that earned it.',
+            keyArtifacts: ['Certification assessment evidence'],
+          } },
+        ],
+      },
+      {
+        label: 'Readiness',
+        modules: [
+          { path: '/governance-readiness', label: 'Governance Readiness Dashboard', icon: '🛡️', description: 'Ownership, Risk, Controls, Evidence, Reviews and Governance Decision — identify gaps before they reach a decision review.', keywords: ['readiness', 'prevention', 'controls', 'gaps', 'score'], insight: {
+            whatItDoes: 'A Ready / Partially Ready / Not Ready read on whether governance has actually happened for an entity.',
+            whyItMatters: 'Readiness measures whether the work was done — ownership assigned, evidence filed, review completed — never whether the outcome was good. It informs humans; it never blocks them.',
+            governanceOutcome: 'An honest, consistent readiness signal usable across every entity type.',
+            keyArtifacts: ['Readiness results', 'Gap lists'],
+          } },
+        ],
+      },
+    ],
+  }),
+
+  domain({
+    id: 'intelligence',
+    label: 'Governance Intelligence',
+    question: 'What does the platform already know, and how do we report it?',
+    icon: '🧠',
+    accent: '#EC4899',
+    groups: [
+      {
+        label: 'Governance Reports',
+        modules: [
+          { path: '/governance-reports', label: 'Governance Reports', icon: '📊', description: 'Seven executive report views — coverage, readiness, evidence, control effectiveness, certification, continuity and accountability.', keywords: ['report', 'coverage', 'accountability', 'executive report'], insight: {
+            whatItDoes: 'Seven executive report views — coverage, readiness, evidence, control effectiveness, certification, continuity and accountability.',
+            whyItMatters: 'Different audiences need different rollups of the same underlying governance data.',
+            governanceOutcome: 'One source of truth, many report lenses.',
+            keyArtifacts: ['Coverage percentages', 'Readiness breakdowns', 'Gap lists'],
+          } },
+        ],
+      },
+      {
+        label: 'Compliance Packs',
+        modules: [
+          { path: '/compliance-packs', label: 'Compliance Pack Framework', icon: '🧩', description: 'The reusable architecture every future regulation plugs into — packs, requirements, controls and evidence mappings.', keywords: ['compliance pack', 'requirement', 'control', 'coverage', 'framework', 'rbi', 'iso', 'eu ai act'], insight: {
+            whatItDoes: 'Maps regulatory sources, requirements and obligations to the controls and evidence that satisfy them.',
+            whyItMatters: 'Regulatory frameworks change; the underlying governance data should not have to be rebuilt for each new one.',
+            governanceOutcome: 'A reusable foundation any regulation can plug into.',
+            keyArtifacts: ['Compliance packs', 'Requirements', 'Evidence mappings'],
+          } },
+          { path: '/compliance-center', label: 'Compliance Center', icon: '🏛️', description: 'Regulatory control evaluation and compliance posture per asset.', keywords: ['regulation', 'rbi', 'control', 'compliance'] },
+          { path: '/compliance-assessment', label: 'Compliance Assessment', icon: '📋', description: 'Control-by-control assessment workflow with evidence linkage.', keywords: ['assess', 'evaluate', 'control test'] },
+          { path: '/compliance-findings', label: 'Compliance Gaps', icon: '🚨', description: 'Open regulatory gaps requiring remediation before audit.', keywords: ['gap', 'non-compliant', 'breach'] },
+          { path: '/compliance-dashboard', label: 'Compliance Analytics', icon: '📈', description: 'Tenant-wide regulatory alignment scoring and coverage.', keywords: ['rbi score', 'analytics', 'alignment'] },
+        ],
+      },
+      {
+        label: 'Regulatory Intelligence',
+        modules: [
+          { path: '/mapping-workspace', label: 'Mapping Workspace', icon: '🗺️', description: 'The reusable foundation every future regulation plugs into — sources, requirements, obligations, controls and evidence mappings.', keywords: ['regulatory source', 'obligation', 'mapping workspace', 'foundation', 'knowledge engine'] },
+          { path: '/regulatory-library', label: 'Regulatory Library', icon: '📚', description: 'Catalogue of regulatory and internal policy controls in force.', keywords: ['rbi', 'policy', 'library', 'standards'] },
+          { path: '/requirement-registry', label: 'Requirement Registry', icon: '📋', description: 'Every requirement registered across every regulatory source.', keywords: ['requirement registry', 'catalogue', 'regulatory'] },
+          { path: '/obligation-library', label: 'Obligation Library', icon: '🎯', description: 'Every requirement translated into actionable obligations, browsable across sources.', keywords: ['obligation library', 'named owner', 'approval authority', 'escalation'] },
+          { path: '/regulatory-applicability', label: 'Regulatory Applicability', icon: '🌐', description: 'Which regulations apply to this tenant, scoped by the active Governance Profile.', keywords: ['applicability', 'which regulations apply', 'scope'] },
+          { path: '/cross-framework-mapping', label: 'Cross-Framework Mapping', icon: '🔗', description: 'What controls satisfy multiple frameworks — evidence already doing double duty across compliance packs and regulatory sources.', keywords: ['cross-framework', 'reuse', 'control mapping', 'evidence reuse'] },
+          { path: '/compliance-impact-analysis', label: 'Compliance Impact Analysis', icon: '🔁', description: "What changed recently, and what's the compliance impact — cross-referenced against the affected asset's governance posture.", keywords: ['change impact', 'compliance impact', 'what changed'] },
+          { path: '/regulatory-change-readiness', label: 'Regulatory Change Readiness', icon: '📶', description: 'Active regulatory sources ranked by how ready this organization is if that regulation changed tomorrow.', keywords: ['change readiness', 'regulatory readiness', 'coverage ranking'] },
+          { path: '/policy-management', label: 'Policy Registry', icon: '📕', description: 'The enterprise AI rulebook: governance, risk, security, privacy and vendor policy.', keywords: ['policy', 'rulebook', 'registry', 'standard'] },
+          { path: '/policy-mapping', label: 'Policy Mapping', icon: '🔗', description: 'Bind policies to assets, asset types, vendors and business units; coverage is computed.', keywords: ['mapping', 'binding', 'coverage', 'applies to'] },
+          { path: '/policy-violations', label: 'Policy Violations', icon: '🚨', description: 'Detected and logged policy breaches through to accepted, remediated or closed.', keywords: ['violation', 'breach', 'non-compliance', 'exception'] },
+        ],
+      },
+      {
+        label: 'Reasoning Engine',
+        modules: [
+          { path: '/governance-intelligence', label: 'Governance Intelligence', icon: '🧠', description: 'Policy → Condition → Violation → Finding → Outcome, every outcome explainable — governance reasoning, not just governance records.', keywords: ['governance intelligence', 'policy', 'condition', 'finding', 'outcome', 'explainability', 'reasoning'] },
+          { path: '/governance-actions', label: 'Governance Actions', icon: '🛠️', description: 'Recommended actions raised from governance outcomes — Accept, Reject or Defer. Nothing executes automatically; humans remain accountable.', keywords: ['governance actions', 'recommended action', 'accept', 'reject', 'defer', 'playbook'] },
+          { path: '/governance-studio', label: 'Governance Intelligence Studio', icon: '🎛️', description: 'Configure governance logic without code changes — Condition, Outcome and Action Designers, Rule Mapping, Compliance Pack Builder and Customer Governance Profiles.', keywords: ['governance studio', 'condition designer', 'outcome designer', 'action designer', 'rule mapping', 'compliance pack builder', 'customer profile', 'configuration'] },
+        ],
+      },
+    ],
+  }),
+
+  domain({
+    id: 'oversight',
+    label: 'Audit & Oversight',
+    question: 'Prove what happened.',
+    icon: '🔍',
+    accent: '#10B981',
+    groups: [
+      {
+        label: 'Audit Trail',
+        modules: [
+          { path: '/audit-logs', label: 'Audit Logs', icon: '📜', description: 'Immutable Day-1 audit trail of every governance action taken.', keywords: ['audit', 'log', 'immutable', 'trail'], insight: {
+            whatItDoes: 'An immutable, Day-1 record of every governance action taken on the platform.',
+            whyItMatters: '"Prove it happened" is the actual test an audit applies — not "tell me it happened."',
+            governanceOutcome: 'A complete, tamper-evident activity record.',
+            keyArtifacts: ['Audit log entries', 'Actor', 'Timestamp', 'Detail'],
+          } },
+          { path: '/governance-timeline', label: 'Governance Timeline', icon: '⏱️', description: 'Chronological governance event history for any AI asset.', keywords: ['history', 'timeline', 'events', 'chronology'] },
+          { path: '/audit-readiness-intelligence', label: 'Audit Readiness Intelligence', icon: '📄', description: 'What evidence supports compliance today — asset-level and framework-level readiness, combined.', keywords: ['audit readiness', 'evidence gaps', 'audit intelligence'] },
+        ],
+      },
+      {
+        label: 'Lifecycle Console',
+        modules: [
+          { path: '/lifecycle-console', label: 'Universal Lifecycle Console', icon: '🔄', description: 'Every governed Model, Knowledge source, Prompt and Tool, current lifecycle stage, in one portfolio view.', keywords: ['lifecycle', 'stage', 'register', 'operate', 'retire', 'portfolio'], insight: {
+            whatItDoes: 'One portfolio-wide view of every Model, Knowledge Asset, Prompt and Tool current lifecycle stage.',
+            whyItMatters: 'Register, Assess, Approve, Operate, Monitor, Reassess, Retire — knowing where everything sits in that journey, at a glance.',
+            governanceOutcome: 'No entity silently stalls in an early stage or lingers past retirement.',
+            keyArtifacts: ['Lifecycle stage distribution', 'Entity lists'],
+          } },
+        ],
+      },
+      {
+        label: 'Decision Traceability',
+        modules: [
+          { path: '/decision-traceability', label: 'Decision Traceability', icon: '🧭', description: 'Reconstruct any governance decision end-to-end — Condition → Policy → Violation → Finding → Outcome → Recommended Action → Human Decision.', keywords: ['decision traceability', 'trace', 'replay', 'explainability', 'audit package', 'evidence pack'] },
+        ],
+      },
+      {
+        label: 'Trends',
+        modules: [
+          { path: '/governance-trends', label: 'Governance Trends', icon: '📈', description: 'Portfolio governance health trajectory and directional analytics.', keywords: ['trend', 'analytics', 'health score'] },
+        ],
+      },
+    ],
+  }),
+
+  domain({
     id: 'executive',
-    label: 'Executive Center',
+    label: 'Executive',
     question: 'Is enterprise AI under control?',
     icon: '🏛️',
     accent: '#F59E0B',
@@ -105,7 +467,6 @@ export const NAV_DOMAINS: NavDomain[] = [
         modules: [
           { path: '/executive-hub', label: 'Executive Hub', icon: '🏛️', description: 'Executive AI governance posture in five minutes, tuned to the CIO, CRO, Compliance or Board lens.', keywords: ['executive', 'cio', 'cro', 'board', 'hub', 'leadership'] },
           { path: '/governance-scorecards', label: 'Governance Scorecards', icon: '🗂️', description: 'Ownership, risk, validation, evidence and decision readiness scored across the estate.', keywords: ['scorecard', 'health index', 'readiness', 'score'] },
-          { path: '/governance-readiness', label: 'Governance Readiness Dashboard', icon: '🛡️', description: 'Ownership, Risk, Controls, Evidence, Reviews and Governance Decision — identify gaps before they reach a decision review.', keywords: ['readiness', 'prevention', 'controls', 'gaps', 'score'] },
           { path: '/executive-heatmaps', label: 'Executive Heatmaps', icon: '🔥', description: 'Risk concentration by business unit, AI category and governance lifecycle stage.', keywords: ['heatmap', 'business unit', 'concentration', 'exposure'] },
           { path: '/governance-insights', label: 'Governance Insights', icon: '💡', description: 'Trends and the shortest path from governance posture to executive action.', keywords: ['insight', 'trend', 'analytics', 'direction'] },
         ],
@@ -127,118 +488,6 @@ export const NAV_DOMAINS: NavDomain[] = [
           { path: '/governance-drift', label: 'Governance Drift Center', icon: '📉', description: 'Detects degradation of governance process effectiveness over time — ownership, review, evidence, reassessment, control and approval drift.', keywords: ['drift', 'degradation', 'ownership drift', 'review drift', 'evidence drift'] },
           { path: '/governance-health', label: 'Governance Health Center', icon: '💚', description: 'One executive governance health indicator, combining readiness, drift, evidence, reviews, reassessment, findings and control assurance.', keywords: ['health', 'health index', 'executive indicator'] },
           { path: '/board-reporting', label: 'Board & Regulator Reporting', icon: '📑', description: 'Executive Governance Report and Audit Readiness Report generated from the live record.', keywords: ['board', 'regulator', 'report', 'pack', 'audit readiness'] },
-        ],
-      },
-    ],
-  }),
-
-  domain({
-    id: 'registry',
-    label: 'AI Inventory & Registry',
-    question: 'What AI exists?',
-    icon: '📦',
-    accent: '#6366F1',
-    groups: [
-      {
-        label: 'Inventory',
-        modules: [
-          { path: '/assets', label: 'AI Asset Registry', icon: '🗂️', description: 'Authoritative inventory of every governed AI asset across the enterprise.', keywords: ['inventory', 'assets', 'register', 'catalog'] },
-          { path: '/ownership', label: 'Ownership Matrix', icon: '👥', description: 'Five-role RACIS accountability for business, technical, risk, compliance and approval.', keywords: ['racis', 'owner', 'accountability', 'raci'] },
-        ],
-      },
-      {
-        label: 'Lifecycle',
-        modules: [
-          { path: '/asset-lifecycle', label: 'Asset Lifecycle', icon: '🔄', description: 'Where every asset sits on the eight-stage governance journey.', keywords: ['journey', 'stage', 'lifecycle', 'pipeline'] },
-          { path: '/retirement', label: 'Asset Retirement', icon: '📦', description: 'Controlled decommissioning and archival of AI assets.', keywords: ['decommission', 'archive', 'sunset', 'retire'] },
-          { path: '/archived-assets', label: 'Archived Assets', icon: '🗄️', description: 'Soft-deleted assets, restorable by an authorised role — nothing is ever physically removed.', keywords: ['archive', 'restore', 'deleted', 'soft delete', 'audit history'] },
-        ],
-      },
-      {
-        label: 'Models',
-        modules: [
-          { path: '/models', label: 'Model Registry', icon: '🧬', description: 'Every AI model governed as a first-class, reusable asset — registered once, used by many.', keywords: ['model', 'registry', 'llm', 'foundation model'] },
-          { path: '/model-lifecycle', label: 'Model Lifecycle', icon: '🔄', description: 'Stage, retraining schedule and drift signal for every governed model.', keywords: ['model lifecycle', 'retraining', 'drift'] },
-          { path: '/model-risk', label: 'Model Risk & Approvals', icon: '⚖️', description: 'Risk tiering and GO / Conditional GO / No Go decisions for governed models.', keywords: ['model risk', 'model approval', 'model decision'] },
-          { path: '/model-analytics', label: 'Model Analytics', icon: '📊', description: 'Which assets use which models, and where model risk concentrates across the portfolio.', keywords: ['model analytics', 'model usage', 'model portfolio'] },
-        ],
-      },
-      {
-        label: 'Knowledge',
-        modules: [
-          { path: '/knowledge-registry', label: 'Knowledge Registry', icon: '📚', description: 'Every knowledge source AI retrieves from — registered, owned and risk-tiered like any other governed entity.', keywords: ['knowledge', 'rag', 'retrieval', 'vector index', 'document store'] },
-          { path: '/knowledge-quality', label: 'Knowledge Quality & Lifecycle', icon: '🧪', description: 'Freshness, ownership and lifecycle stage for every governed knowledge source.', keywords: ['knowledge quality', 'freshness', 'staleness'] },
-          { path: '/knowledge-traceability', label: 'Knowledge Traceability', icon: '🔗', description: 'Which assets retrieve from which knowledge sources across the portfolio.', keywords: ['knowledge traceability', 'knowledge usage', 'rag lineage'] },
-        ],
-      },
-      {
-        label: 'Prompts',
-        modules: [
-          { path: '/prompt-library', label: 'Prompt Library', icon: '💬', description: 'Every governed prompt template, versioned — every edit is a new version, prior versions retained.', keywords: ['prompt', 'template', 'library', 'version history'] },
-          { path: '/prompt-approvals', label: 'Prompt Approvals & Risk', icon: '⚖️', description: 'Risk tiering and GO / Conditional GO / No Go decisions for governed prompts.', keywords: ['prompt risk', 'prompt approval', 'prompt decision'] },
-          { path: '/prompt-evidence', label: 'Prompt Evidence', icon: '🧾', description: 'Injection-control review, test transcripts and sign-off for every prompt version.', keywords: ['prompt evidence', 'injection control', 'red team', 'review sign-off'] },
-        ],
-      },
-      {
-        label: 'Agents',
-        modules: [
-          { path: '/agent-accountability', label: 'Agent Accountability', icon: '🕹️', description: 'Delegation scope, tool grants and human override authority for every autonomous agent.', keywords: ['agent', 'delegation', 'tool grant', 'accountability'] },
-          { path: '/agent-monitoring', label: 'Agent Monitoring', icon: '📡', description: 'Behavior signal for every autonomous agent — feeds the portfolio-wide Governance Monitoring view.', keywords: ['agent monitoring', 'behavior', 'watchlist', 'agent alert'] },
-        ],
-      },
-    ],
-  }),
-
-  domain({
-    id: 'risk-compliance',
-    label: 'Risk & Compliance',
-    question: 'Can this AI be trusted?',
-    icon: '🛡️',
-    accent: '#F97316',
-    groups: [
-      {
-        label: 'Risk & Validation',
-        modules: [
-          { path: '/risk', label: 'Risk Center', icon: '⚡', description: 'Risk tiering across data sensitivity, decision impact and operational impact.', keywords: ['risk', 'tier', 'classification', 'severity'] },
-          { path: '/validation', label: 'Validation Center', icon: '🧪', description: 'Independent multi-disciplinary validation reviews and scoring.', keywords: ['test', 'validate', 'review', 'model risk'] },
-          { path: '/findings', label: 'Findings Tracker', icon: '⚠️', description: 'Validation defects and remediation tracking through to verification.', keywords: ['defect', 'issue', 'gap', 'remediation'] },
-          { path: '/validation-dashboard', label: 'Validation Analytics', icon: '📊', description: 'Portfolio validation coverage, pass rates and open defect trends.', keywords: ['analytics', 'validation', 'coverage'] },
-          { path: '/governance-blockers', label: 'Governance Blockers', icon: '🧱', description: 'Hard blockers preventing an asset from receiving a production decision.', keywords: ['blocker', 'impediment', 'stop'] },
-        ],
-      },
-      {
-        label: 'Control Library',
-        modules: [
-          { path: '/control-library', label: 'Control Library', icon: '🧱', description: 'Governance controls registered once, attached to any Asset, Model, Knowledge source, Prompt or Tool.', keywords: ['control', 'library', 'registry', 'governance control'] },
-          { path: '/control-mapping', label: 'Control Mapping', icon: '🔗', description: 'Which entities each control is attached to, and where coverage gaps remain across the portfolio.', keywords: ['mapping', 'coverage', 'attach', 'cross-entity'] },
-          { path: '/control-effectiveness', label: 'Control Effectiveness', icon: '✅', description: 'Test history and pass/fail effectiveness ratings for every governance control.', keywords: ['test', 'effectiveness', 'pass', 'fail', 'evidence'] },
-        ],
-      },
-      {
-        label: 'Compliance Framework',
-        modules: [
-          { path: '/compliance-center', label: 'Compliance Center', icon: '🏛️', description: 'Regulatory control evaluation and compliance posture per asset.', keywords: ['regulation', 'rbi', 'control', 'compliance'] },
-          { path: '/regulatory-library', label: 'Regulatory Library', icon: '📚', description: 'Catalogue of regulatory and internal policy controls in force.', keywords: ['rbi', 'policy', 'library', 'standards'] },
-          { path: '/compliance-packs', label: 'Compliance Pack Framework', icon: '🧩', description: 'The reusable architecture every future regulation plugs into — packs, requirements, controls and evidence mappings.', keywords: ['compliance pack', 'requirement', 'control', 'coverage', 'framework', 'rbi', 'iso', 'eu ai act'] },
-          { path: '/compliance-assessment', label: 'Compliance Assessment', icon: '📋', description: 'Control-by-control assessment workflow with evidence linkage.', keywords: ['assess', 'evaluate', 'control test'] },
-          { path: '/compliance-findings', label: 'Compliance Gaps', icon: '🚨', description: 'Open regulatory gaps requiring remediation before audit.', keywords: ['gap', 'non-compliant', 'breach'] },
-          { path: '/compliance-dashboard', label: 'Compliance Analytics', icon: '📈', description: 'Tenant-wide regulatory alignment scoring and coverage.', keywords: ['rbi score', 'analytics', 'alignment'] },
-        ],
-      },
-      {
-        label: 'Regulatory Foundation',
-        modules: [
-          { path: '/mapping-workspace', label: 'Mapping Workspace', icon: '🗺️', description: 'The reusable foundation every future regulation plugs into — sources, requirements, obligations, controls and evidence mappings.', keywords: ['regulatory source', 'obligation', 'mapping workspace', 'foundation', 'knowledge engine'] },
-          { path: '/requirement-registry', label: 'Requirement Registry', icon: '📋', description: 'Every requirement registered across every regulatory source.', keywords: ['requirement registry', 'catalogue', 'regulatory'] },
-          { path: '/obligation-library', label: 'Obligation Library', icon: '🎯', description: 'Every requirement translated into actionable obligations, browsable across sources.', keywords: ['obligation library', 'named owner', 'approval authority', 'escalation'] },
-        ],
-      },
-      {
-        label: 'Policy',
-        modules: [
-          { path: '/policy-management', label: 'Policy Registry', icon: '📕', description: 'The enterprise AI rulebook: governance, risk, security, privacy and vendor policy.', keywords: ['policy', 'rulebook', 'registry', 'standard'] },
-          { path: '/policy-mapping', label: 'Policy Mapping', icon: '🔗', description: 'Bind policies to assets, asset types, vendors and business units; coverage is computed.', keywords: ['mapping', 'binding', 'coverage', 'applies to'] },
-          { path: '/policy-violations', label: 'Policy Violations', icon: '🚨', description: 'Detected and logged policy breaches through to accepted, remediated or closed.', keywords: ['violation', 'breach', 'non-compliance', 'exception'] },
         ],
       },
     ],
@@ -269,14 +518,6 @@ export const NAV_DOMAINS: NavDomain[] = [
         ],
       },
       {
-        label: 'Certification',
-        modules: [
-          { path: '/certification-programs', label: 'Certification Programs', icon: '📜', description: 'Reusable certification program definitions — criteria, validity period and scope.', keywords: ['certification', 'program', 'criteria', 'credential'] },
-          { path: '/certification-records', label: 'Certification Records', icon: '🏆', description: 'Every certification issued, active, expiring or revoked, across Models, Tools and Assets.', keywords: ['certification', 'record', 'issued', 'expiring', 'revoked', 'credential'] },
-          { path: '/certification-evidence', label: 'Certification Evidence & Assessments', icon: '🧾', description: 'Assessment evidence filed in support of a certification decision.', keywords: ['certification evidence', 'assessment', 'proof'] },
-        ],
-      },
-      {
         label: 'Review',
         modules: [
           { path: '/review-workbench', label: 'Review Workbench', icon: '🧰', description: 'Reviewer working surface for validation and governance review execution.', keywords: ['reviewer', 'workbench', 'assess'] },
@@ -293,65 +534,9 @@ export const NAV_DOMAINS: NavDomain[] = [
   }),
 
   domain({
-    id: 'decisions',
-    label: 'Approvals & Decisions',
-    question: 'Can this AI move?',
-    icon: '⚖️',
-    accent: '#8B5CF6',
-    groups: [
-      {
-        label: 'Decide',
-        modules: [
-          { path: '/decision-workbench-v4', label: 'Decision Authority', shortLabel: 'Decision Authority', icon: '🖋️', description: 'Record GO / CONDITIONAL GO / NO GO decisions with full justification.', keywords: ['approve', 'go', 'no go', 'authority', 'sign off'] },
-          { path: '/decision-intelligence', label: 'Decision Intelligence', icon: '⚖️', description: 'Governance readiness scoring and recommended decision outcome per asset.', keywords: ['readiness', 'score', 'recommendation'] },
-          { path: '/decision-dashboard', label: 'Decision Queue', icon: '🗳️', description: 'Live queue of pending, conditional and approved governance decisions.', keywords: ['queue', 'pending', 'approvals', 'decisions'] },
-        ],
-      },
-    ],
-  }),
-
-  domain({
-    id: 'evidence',
-    label: 'Evidence & Traceability',
-    question: 'Can we prove it?',
-    icon: '📄',
-    accent: '#14B8A6',
-    groups: [
-      {
-        label: 'Evidence',
-        modules: [
-          { path: '/evidence', label: 'Evidence Center', icon: '📄', description: 'ODF governance deliverables and audit-grade evidence library.', keywords: ['document', 'odf', 'deliverable', 'proof'] },
-          { path: '/evidence-registry', label: 'Evidence Registry', icon: '🗃️', description: 'Universal governance evidence object — ownership, traceability, lifecycle and expiry.', keywords: ['evidence', 'registry', 'traceability', 'lifecycle', 'expiry'] },
-          { path: '/decision-traceability', label: 'Decision Traceability', icon: '🧭', description: 'Reconstruct any governance decision end-to-end — Condition → Policy → Violation → Finding → Outcome → Recommended Action → Human Decision.', keywords: ['decision traceability', 'trace', 'replay', 'explainability', 'audit package', 'evidence pack'] },
-        ],
-      },
-    ],
-  }),
-
-  domain({
-    id: 'oversight',
-    label: 'Audit & Oversight',
-    question: 'Prove what happened.',
-    icon: '🔍',
-    accent: '#10B981',
-    groups: [
-      {
-        label: 'Trail & Trends',
-        modules: [
-          { path: '/governance-timeline', label: 'Governance Timeline', icon: '⏱️', description: 'Chronological governance event history for any AI asset.', keywords: ['history', 'timeline', 'events', 'chronology'] },
-          { path: '/governance-trends', label: 'Governance Trends', icon: '📈', description: 'Portfolio governance health trajectory and directional analytics.', keywords: ['trend', 'analytics', 'health score'] },
-          { path: '/audit-logs', label: 'Audit Logs', icon: '📜', description: 'Immutable Day-1 audit trail of every governance action taken.', keywords: ['audit', 'log', 'immutable', 'trail'] },
-          { path: '/audit-readiness-intelligence', label: 'Audit Readiness Intelligence', icon: '📄', description: 'What evidence supports compliance today — asset-level and framework-level readiness, combined.', keywords: ['audit readiness', 'evidence gaps', 'audit intelligence'] },
-          { path: '/lifecycle-console', label: 'Universal Lifecycle Console', icon: '🔄', description: 'Every governed Model, Knowledge source, Prompt and Tool, current lifecycle stage, in one portfolio view.', keywords: ['lifecycle', 'stage', 'register', 'operate', 'retire', 'portfolio'] },
-        ],
-      },
-    ],
-  }),
-
-  domain({
-    id: 'operations',
-    label: 'Operations & Monitoring',
-    question: 'What is happening now?',
+    id: 'response',
+    label: 'Operations & Response',
+    question: 'What is happening now, and what changed?',
     icon: '📡',
     accent: '#06B6D4',
     groups: [
@@ -375,52 +560,16 @@ export const NAV_DOMAINS: NavDomain[] = [
         label: 'Respond',
         modules: [
           { path: '/incidents', label: 'Incident Management', icon: '⚡', description: 'AI incident triage, investigation, mitigation and closure.', keywords: ['incident', 'anomaly', 'outage'] },
-          { path: '/corrective-actions', label: 'Corrective Actions', icon: '🛠️', description: 'Assigned remediation actions through to verified closure.', keywords: ['capa', 'remediate', 'fix', 'action'] },
         ],
       },
       {
-        label: 'Change Management',
+        label: 'Change & Reassessment',
         modules: [
           { path: '/change-requests', label: 'Change Request Center', icon: '🔁', description: 'Raise, classify, impact-assess and route every significant change to a governed AI asset.', keywords: ['change', 'request', 'crq', 'amendment', 'modification'] },
           { path: '/change-impact', label: 'Impact & Reassessment', icon: '🔬', description: 'Governance impact profile across seven areas, and the rules that decide who must reapprove.', keywords: ['impact', 'reassessment', 'rules', 'magnitude', 'routing'] },
           { path: '/change-dashboard', label: 'Change Dashboard', icon: '📊', description: 'Executive visibility into change activity, bottlenecks and pending reapprovals.', keywords: ['change dashboard', 'bottleneck', 'throughput', 'pipeline'] },
           { path: '/change-history', label: 'Change History & States', icon: '📜', description: 'Immutable change audit trail and the governance state machine for every asset.', keywords: ['history', 'state machine', 'transition', 'lifecycle', 'trail'] },
-          { path: '/governance-triggers', label: 'Governance Triggers', icon: '🔔', description: 'Rules that convert change conditions into governance work automatically.', keywords: ['trigger', 'automation', 'escalation', 'rule'] },
-        ],
-      },
-      {
-        label: 'Tools',
-        modules: [
-          { path: '/tool-registry', label: 'Tool Registry', icon: '🧰', description: 'Every tool and external capability an AI agent can call — classified, owned and risk-tiered.', keywords: ['tool', 'registry', 'function calling', 'capability'] },
-          { path: '/tool-approvals', label: 'Tool Approvals & Risk', icon: '⚖️', description: 'Risk tiering and GO / Conditional GO / No Go decisions for governed tools.', keywords: ['tool risk', 'tool approval', 'tool decision'] },
-          { path: '/tool-monitoring', label: 'Tool Call Monitoring', icon: '📶', description: 'Which agents are granted which tools, and where tool-access risk concentrates.', keywords: ['tool monitoring', 'tool usage', 'tool grants'] },
-        ],
-      },
-    ],
-  }),
-
-  domain({
-    id: 'intelligence',
-    label: 'Knowledge & Intelligence',
-    question: 'What does the platform already know?',
-    icon: '🧠',
-    accent: '#EC4899',
-    groups: [
-      {
-        label: 'Reasoning Engine',
-        modules: [
-          { path: '/governance-intelligence', label: 'Governance Intelligence', icon: '🧠', description: 'Policy → Condition → Violation → Finding → Outcome, every outcome explainable — governance reasoning, not just governance records.', keywords: ['governance intelligence', 'policy', 'condition', 'finding', 'outcome', 'explainability', 'reasoning'] },
-          { path: '/governance-actions', label: 'Governance Actions', icon: '🛠️', description: 'Recommended actions raised from governance outcomes — Accept, Reject or Defer. Nothing executes automatically; humans remain accountable.', keywords: ['governance actions', 'recommended action', 'accept', 'reject', 'defer', 'playbook'] },
-          { path: '/governance-studio', label: 'Governance Intelligence Studio', icon: '🎛️', description: 'Configure governance logic without code changes — Condition, Outcome and Action Designers, Rule Mapping, Compliance Pack Builder and Customer Governance Profiles.', keywords: ['governance studio', 'condition designer', 'outcome designer', 'action designer', 'rule mapping', 'compliance pack builder', 'customer profile', 'configuration'] },
-        ],
-      },
-      {
-        label: 'Regulatory Intelligence',
-        modules: [
-          { path: '/regulatory-applicability', label: 'Regulatory Applicability', icon: '🌐', description: 'Which regulations apply to this tenant, scoped by the active Governance Profile.', keywords: ['applicability', 'which regulations apply', 'scope'] },
-          { path: '/cross-framework-mapping', label: 'Cross-Framework Mapping', icon: '🔗', description: 'What controls satisfy multiple frameworks — evidence already doing double duty across compliance packs and regulatory sources.', keywords: ['cross-framework', 'reuse', 'control mapping', 'evidence reuse'] },
-          { path: '/compliance-impact-analysis', label: 'Compliance Impact Analysis', icon: '🔁', description: "What changed recently, and what's the compliance impact — cross-referenced against the affected asset's governance posture.", keywords: ['change impact', 'compliance impact', 'what changed'] },
-          { path: '/regulatory-change-readiness', label: 'Regulatory Change Readiness', icon: '📶', description: 'Active regulatory sources ranked by how ready this organization is if that regulation changed tomorrow.', keywords: ['change readiness', 'regulatory readiness', 'coverage ranking'] },
+          { path: '/governance-triggers', label: 'Governance Triggers', icon: '🔔', description: 'Rules that convert change conditions into governance work automatically — the Reassessment Framework in action.', keywords: ['trigger', 'automation', 'escalation', 'rule', 'reassessment'] },
         ],
       },
     ],

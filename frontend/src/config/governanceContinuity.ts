@@ -10,6 +10,7 @@ import type {
   GovernanceClassification,
   GovernanceState,
   ReassessmentTriggerType,
+  ReauthorizationStatus,
 } from '../types';
 
 /* ============ Release 1 carry-forward — Governance Classification ======= */
@@ -67,6 +68,40 @@ export function defaultGovernanceState(): GovernanceState {
 }
 
 /* ============= Capability 3 — Reassessment Trigger Framework ============ */
+
+/**
+ * R20.1 — Governance Continuity hardening. Reauthorization currency, derived
+ * from nextReviewDate — same "computed, not stored" discipline as the
+ * Evidence Registry's own expiry indicator (see evidenceFoundation.ts).
+ * Due Soon mirrors that module's 30-day threshold for consistency; Expired
+ * is set at 90 days past due so "Overdue" has room to mean something before
+ * escalating to "Expired".
+ */
+export function computeReauthorizationStatus(nextReviewDate?: string): ReauthorizationStatus {
+  if (!nextReviewDate) return 'Active';
+  const remaining = Math.ceil((new Date(nextReviewDate).getTime() - new Date().setHours(0, 0, 0, 0)) / (24 * 60 * 60 * 1000));
+  if (remaining < -90) return 'Expired';
+  if (remaining < 0) return 'Overdue';
+  if (remaining <= 30) return 'Due Soon';
+  return 'Active';
+}
+
+export const REAUTHORIZATION_STATUS_TONE: Record<ReauthorizationStatus, string> = {
+  'Active': 'var(--status-success)',
+  'Due Soon': 'var(--status-warning)',
+  'Overdue': 'var(--status-danger)',
+  'Expired': 'var(--status-danger)',
+};
+
+export const REVIEW_FREQUENCY_DAYS: Record<string, number> = {
+  'Monthly': 30, 'Quarterly': 90, 'Semi Annual': 182, 'Annual': 365,
+};
+
+/** Advances nextReviewDate by the asset's review frequency from a given completion date — used when a review is marked complete. */
+export function computeNextReviewDate(fromDate: string, frequency?: string): string {
+  const days = (frequency && REVIEW_FREQUENCY_DAYS[frequency]) || 90;
+  return new Date(new Date(fromDate).getTime() + days * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+}
 
 export const REASSESSMENT_TRIGGER_TYPES: { type: ReassessmentTriggerType; icon: string }[] = [
   { type: 'Model Change', icon: '🧠' },

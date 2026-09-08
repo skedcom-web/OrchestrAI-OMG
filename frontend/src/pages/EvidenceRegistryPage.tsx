@@ -6,23 +6,47 @@ import { Input } from '../components/ui/Input';
 import { Select } from '../components/ui/Select';
 import { Modal } from '../components/ui/Modal';
 import { EvidenceStatusBadge, EvidenceExpiryBadge, ReadinessBadge } from '../components/ui/Badge';
-import { getAssets, getEvidenceRecords, getEvidenceTimeline, saveEvidenceRecord, deleteEvidenceRecord, getEvidenceReadiness } from '../services/storageService';
-import { EVIDENCE_TYPES, EVIDENCE_STATUSES, getExpiryIndicator, daysRemaining } from '../config/evidenceFoundation';
+import { getAssets, getModels, getKnowledgeAssets, getPrompts, getTools, getEvidenceRecords, getEvidenceTimeline, saveEvidenceRecord, deleteEvidenceRecord, getEvidenceReadiness } from '../services/storageService';
+import { EVIDENCE_TYPES, EVIDENCE_STATUSES, getExpiryIndicator, daysRemaining, evidenceEntityRef } from '../config/evidenceFoundation';
 import { useAuth } from '../contexts/AuthContext';
 import type { EvidenceRecord, EvidenceRecordType, EvidenceRecordStatus } from '../types';
 
+type EntityKind = 'Asset' | 'Model' | 'KnowledgeAsset' | 'Prompt' | 'Tool';
+
+const ENTITY_KIND_OPTIONS: { value: EntityKind; label: string }[] = [
+  { value: 'Asset', label: 'AI Asset' },
+  { value: 'Model', label: 'Model' },
+  { value: 'KnowledgeAsset', label: 'Knowledge Asset' },
+  { value: 'Prompt', label: 'Prompt' },
+  { value: 'Tool', label: 'Tool' },
+];
+
+const ENTITY_ROUTE: Record<EntityKind, string> = {
+  Asset: '/assets',
+  Model: '/models',
+  KnowledgeAsset: '/knowledge-registry',
+  Prompt: '/prompt-library',
+  Tool: '/tool-registry',
+};
+
 /**
- * OMG Release 3 — Evidence Registry.
+ * OMG Release 3 — Evidence Registry, completed for R20.1 (Part 2).
  *
  * The universal governance evidence object: registry, detail and timeline in
- * one module. Evidence links to an AI asset and, optionally, to the risk
- * assessment, governance review, decision, reauthorization or timeline event
- * it supports.
+ * one module. Evidence links to any governed entity — an AI Asset (the
+ * original, still the common case) or, via the polymorphic entityType/
+ * entityId the backend has carried since R13 Foundation, a Model, Knowledge
+ * Asset, Prompt or Tool. Optionally links to the risk assessment, governance
+ * review, decision, reauthorization or timeline event it supports.
  */
 export const EvidenceRegistryPage: React.FC = () => {
   const navigate = useNavigate();
   const { canPerform } = useAuth();
   const [assets] = useState(() => getAssets());
+  const [models] = useState(() => getModels());
+  const [knowledgeAssets] = useState(() => getKnowledgeAssets());
+  const [prompts] = useState(() => getPrompts());
+  const [tools] = useState(() => getTools());
   const [records, setRecords] = useState<EvidenceRecord[]>(() => getEvidenceRecords());
 
   const [search, setSearch] = useState('');
@@ -31,11 +55,25 @@ export const EvidenceRegistryPage: React.FC = () => {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState<Partial<EvidenceRecord> | null>(null);
+  const [editingEntityKind, setEditingEntityKind] = useState<EntityKind>('Asset');
   const [selectedRecord, setSelectedRecord] = useState<EvidenceRecord | null>(null);
 
   const refresh = () => setRecords(getEvidenceRecords());
 
+  const entityOptionsFor = (kind: EntityKind): { value: string; label: string }[] => {
+    switch (kind) {
+      case 'Asset': return assets.map(a => ({ value: a.id, label: `${a.name} (${a.type})` }));
+      case 'Model': return models.map(m => ({ value: m.id, label: m.name }));
+      case 'KnowledgeAsset': return knowledgeAssets.map(k => ({ value: k.id, label: k.name }));
+      case 'Prompt': return prompts.map(p => ({ value: p.id, label: p.name }));
+      case 'Tool': return tools.map(t => ({ value: t.id, label: t.name }));
+    }
+  };
+
+  const entityNameFor = (kind: EntityKind, id: string): string => entityOptionsFor(kind).find(o => o.value === id)?.label || id;
+
   const handleOpenCreateModal = () => {
+    setEditingEntityKind('Asset');
     setEditingRecord({
       name: '',
       evidenceType: 'Policy Document',
@@ -49,13 +87,30 @@ export const EvidenceRegistryPage: React.FC = () => {
   };
 
   const handleOpenEditModal = (record: EvidenceRecord) => {
+    setEditingEntityKind(record.assetId ? 'Asset' : ((record.entityType as EntityKind) || 'Asset'));
     setEditingRecord({ ...record });
     setIsModalOpen(true);
   };
 
+  const handleEntityKindChange = (kind: EntityKind) => {
+    setEditingEntityKind(kind);
+    setEditingRecord(v => ({ ...v, assetId: undefined, entityType: undefined, entityId: undefined, entityName: undefined }));
+  };
+
+  const handleEntitySelect = (id: string) => {
+    if (editingEntityKind === 'Asset') {
+      setEditingRecord(v => ({ ...v, assetId: id, entityType: undefined, entityId: undefined, entityName: undefined }));
+    } else {
+      setEditingRecord(v => ({ ...v, assetId: undefined, entityType: editingEntityKind, entityId: id, entityName: entityNameFor(editingEntityKind, id) }));
+    }
+  };
+
+  const currentEntityId = editingRecord?.assetId || editingRecord?.entityId || '';
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingRecord?.name || !editingRecord?.assetId || !editingRecord?.ownership?.evidenceOwner) return;
+    const hasEntity = !!editingRecord?.assetId || (!!editingRecord?.entityType && !!editingRecord?.entityId);
+    if (!editingRecord?.name || !hasEntity || !editingRecord?.ownership?.evidenceOwner) return;
 
     const persisting = saveEvidenceRecord(editingRecord as any); // synchronous cache update happens before this line returns
     refresh();
@@ -86,10 +141,11 @@ export const EvidenceRegistryPage: React.FC = () => {
   };
 
   const filteredRecords = records.filter(r => {
+    const ref = evidenceEntityRef(r);
     const matchesSearch =
       r.name.toLowerCase().includes(search.toLowerCase()) ||
       r.description.toLowerCase().includes(search.toLowerCase()) ||
-      r.assetName.toLowerCase().includes(search.toLowerCase());
+      ref.name.toLowerCase().includes(search.toLowerCase());
     const matchesType = typeFilter === 'ALL' || r.evidenceType === typeFilter;
     const matchesStatus = statusFilter === 'ALL' || r.status === statusFilter;
     return matchesSearch && matchesType && matchesStatus;
@@ -97,7 +153,13 @@ export const EvidenceRegistryPage: React.FC = () => {
 
   const typeOptions = [{ value: 'ALL', label: 'All Evidence Types' }, ...EVIDENCE_TYPES.map(t => ({ value: t.type, label: `${t.icon} ${t.type}` }))];
   const statusOptions = [{ value: 'ALL', label: 'All Statuses' }, ...EVIDENCE_STATUSES.map(s => ({ value: s.status, label: `${s.icon} ${s.status}` }))];
-  const assetOptions = assets.map(a => ({ value: a.id, label: `${a.name} (${a.type})` }));
+
+  const openLinkedEntity = (record: EvidenceRecord) => {
+    const ref = evidenceEntityRef(record);
+    const kind = (record.assetId ? 'Asset' : (record.entityType as EntityKind)) || 'Asset';
+    if (kind === 'Asset') navigate(`/assets?assetId=${ref.id}`);
+    else navigate(ENTITY_ROUTE[kind] || '/assets');
+  };
 
   return (
     <div className="flex flex-col gap-6 pb-12">
@@ -105,7 +167,7 @@ export const EvidenceRegistryPage: React.FC = () => {
         <div>
           <h1 className="text-3xl font-extrabold text-[var(--text-primary)]">Evidence Registry</h1>
           <p className="text-sm text-[var(--text-secondary)] mt-1">
-            The universal governance evidence object — audit-ready, traceable, and linked to every AI asset
+            The universal governance evidence object — audit-ready, traceable, and linked to any governed entity
           </p>
         </div>
         <Button
@@ -121,7 +183,7 @@ export const EvidenceRegistryPage: React.FC = () => {
       <Card className="!p-4 flex flex-col md:flex-row items-center gap-4">
         <div className="flex-1 w-full">
           <Input
-            placeholder="Search evidence by name, description, or asset..."
+            placeholder="Search evidence by name, description, or linked entity..."
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
@@ -141,7 +203,7 @@ export const EvidenceRegistryPage: React.FC = () => {
               <tr>
                 <th className="p-4">Evidence Name</th>
                 <th className="p-4">Type</th>
-                <th className="p-4">Linked Asset</th>
+                <th className="p-4">Linked Entity</th>
                 <th className="p-4">Owner</th>
                 <th className="p-4">Status</th>
                 <th className="p-4">Expiry</th>
@@ -156,43 +218,48 @@ export const EvidenceRegistryPage: React.FC = () => {
                   </td>
                 </tr>
               ) : (
-                filteredRecords.map(record => (
-                  <tr
-                    key={record.id}
-                    onClick={() => setSelectedRecord(record)}
-                    className="hover:bg-[var(--bg-card-hover)] cursor-pointer transition-colors"
-                  >
-                    <td className="p-4">
-                      <div className="flex flex-col">
-                        <span className="font-bold text-[var(--text-primary)]">{record.name}</span>
-                        <span className="text-xs text-[var(--text-muted)]">{record.id} • Created {record.createdDate}</span>
-                      </div>
-                    </td>
-                    <td className="p-4">
-                      <span className="px-2.5 py-1 rounded-md bg-[var(--bg-badge)] text-[var(--text-primary)] text-xs font-semibold border border-[var(--border-color)]">
-                        {record.evidenceType}
-                      </span>
-                    </td>
-                    <td className="p-4 text-xs font-medium text-[var(--text-secondary)]">{record.assetName}</td>
-                    <td className="p-4 text-xs font-medium text-[var(--text-secondary)]">{record.ownership.evidenceOwner}</td>
-                    <td className="p-4"><EvidenceStatusBadge status={record.status} /></td>
-                    <td className="p-4"><EvidenceExpiryBadge indicator={getExpiryIndicator(record.expiryDate)} size="sm" /></td>
-                    <td className="p-4 text-right" onClick={e => e.stopPropagation()}>
-                      <div className="flex items-center justify-end gap-2">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleOpenEditModal(record)}
-                          disabled={!canPerform('evidenceRecord:edit')}
-                          title={!canPerform('evidenceRecord:edit') ? 'Your governance role does not permit editing evidence records.' : undefined}
-                        >
-                          Edit
-                        </Button>
-                        <Button size="sm" variant="outline" onClick={() => navigate(`/assets?assetId=${record.assetId}`)}>Asset</Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                filteredRecords.map(record => {
+                  const ref = evidenceEntityRef(record);
+                  return (
+                    <tr
+                      key={record.id}
+                      onClick={() => setSelectedRecord(record)}
+                      className="hover:bg-[var(--bg-card-hover)] cursor-pointer transition-colors"
+                    >
+                      <td className="p-4">
+                        <div className="flex flex-col">
+                          <span className="font-bold text-[var(--text-primary)]">{record.name}</span>
+                          <span className="text-xs text-[var(--text-muted)]">{record.id} • Created {record.createdDate}</span>
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        <span className="px-2.5 py-1 rounded-md bg-[var(--bg-badge)] text-[var(--text-primary)] text-xs font-semibold border border-[var(--border-color)]">
+                          {record.evidenceType}
+                        </span>
+                      </td>
+                      <td className="p-4 text-xs font-medium text-[var(--text-secondary)]">
+                        <span className="text-[9px] font-extrabold uppercase text-[var(--text-muted)] mr-1">{ref.type}</span>{ref.name}
+                      </td>
+                      <td className="p-4 text-xs font-medium text-[var(--text-secondary)]">{record.ownership.evidenceOwner}</td>
+                      <td className="p-4"><EvidenceStatusBadge status={record.status} /></td>
+                      <td className="p-4"><EvidenceExpiryBadge indicator={getExpiryIndicator(record.expiryDate)} size="sm" /></td>
+                      <td className="p-4 text-right" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center justify-end gap-2">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleOpenEditModal(record)}
+                            disabled={!canPerform('evidenceRecord:edit')}
+                            title={!canPerform('evidenceRecord:edit') ? 'Your governance role does not permit editing evidence records.' : undefined}
+                          >
+                            Edit
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => openLinkedEntity(record)}>{ref.type}</Button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -200,12 +267,14 @@ export const EvidenceRegistryPage: React.FC = () => {
       </Card>
 
       {/* EVIDENCE DETAIL + TIMELINE */}
-      {selectedRecord && (
+      {selectedRecord && (() => {
+        const ref = evidenceEntityRef(selectedRecord);
+        return (
         <Modal
           isOpen={!!selectedRecord}
           onClose={() => setSelectedRecord(null)}
           title={selectedRecord.name}
-          subtitle={`Evidence ID: ${selectedRecord.id} • Linked to ${selectedRecord.assetName}`}
+          subtitle={`Evidence ID: ${selectedRecord.id} • Linked to ${ref.type}: ${ref.name}`}
           maxWidth="xl"
         >
           <div className="flex flex-col gap-6 py-2">
@@ -313,18 +382,20 @@ export const EvidenceRegistryPage: React.FC = () => {
               <div className="p-3 rounded-xl bg-[var(--bg-badge)] border border-[var(--border-color)] flex flex-col gap-2">
                 <div className="flex items-center gap-2 flex-wrap">
                   {selectedRecord.status === 'Active' && getExpiryIndicator(selectedRecord.expiryDate) !== 'Expired' && selectedRecord.ownership.evidenceOwner ? (
-                    <span className="text-[11px] font-semibold text-emerald-500">✓ This record counts toward Evidence Readiness and Audit Readiness for {selectedRecord.assetName}.</span>
+                    <span className="text-[11px] font-semibold text-emerald-500">✓ This record counts toward Evidence Readiness and Audit Readiness for {ref.name}.</span>
                   ) : (
                     <span className="text-[11px] font-semibold text-amber-500">⚠ This record does not currently count toward readiness (not Active, expired, or missing an owner).</span>
                   )}
                 </div>
-                <div className="flex items-center gap-2 pt-2 border-t border-[var(--border-color)]">
-                  <span className="text-[10px] text-[var(--text-muted)]">Asset Evidence Readiness:</span>
-                  {(() => {
-                    const r = getEvidenceReadiness(selectedRecord.assetId);
-                    return r ? <ReadinessBadge status={r.status} size="sm" /> : null;
-                  })()}
-                </div>
+                {selectedRecord.assetId && (
+                  <div className="flex items-center gap-2 pt-2 border-t border-[var(--border-color)]">
+                    <span className="text-[10px] text-[var(--text-muted)]">Asset Evidence Readiness:</span>
+                    {(() => {
+                      const r = getEvidenceReadiness(selectedRecord.assetId!);
+                      return r ? <ReadinessBadge status={r.status} size="sm" /> : null;
+                    })()}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -332,7 +403,7 @@ export const EvidenceRegistryPage: React.FC = () => {
               <h4 className="text-xs font-bold uppercase text-[var(--text-muted)] tracking-wider mb-2">Linked Governance Objects</h4>
               <div className="flex flex-wrap gap-1.5">
                 <span className="text-[11px] px-2.5 py-1 rounded-full bg-[var(--bg-badge)] border border-[var(--border-color)] text-[var(--text-primary)] font-semibold">
-                  🗂️ AI Asset — {selectedRecord.assetName}
+                  🗂️ {ref.type} — {ref.name}
                 </span>
                 {selectedRecord.traceability?.riskAssessmentRef && (
                   <span className="text-[11px] px-2.5 py-1 rounded-full bg-[var(--bg-badge)] border border-[var(--border-color)] text-[var(--text-primary)] font-semibold">⚡ Risk Assessment</span>
@@ -362,11 +433,12 @@ export const EvidenceRegistryPage: React.FC = () => {
               >
                 Delete Evidence
               </Button>
-              <Button size="sm" onClick={() => navigate(`/assets?assetId=${selectedRecord.assetId}`)}>Open Linked Asset</Button>
+              <Button size="sm" onClick={() => openLinkedEntity(selectedRecord)}>Open Linked {ref.type}</Button>
             </div>
           </div>
         </Modal>
-      )}
+        );
+      })()}
 
       {/* CREATE / EDIT MODAL */}
       {isModalOpen && editingRecord && (
@@ -394,27 +466,34 @@ export const EvidenceRegistryPage: React.FC = () => {
                 onChange={e => setEditingRecord({ ...editingRecord, evidenceType: e.target.value as EvidenceRecordType })}
               />
               <Select
-                label="Linked Asset *"
-                options={assetOptions}
-                value={editingRecord.assetId || ''}
-                onChange={e => setEditingRecord({ ...editingRecord, assetId: e.target.value })}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <Select
                 label="Evidence Status"
                 options={EVIDENCE_STATUSES.map(s => ({ value: s.status, label: `${s.icon} ${s.status}` }))}
                 value={editingRecord.status || 'Draft'}
                 onChange={e => setEditingRecord({ ...editingRecord, status: e.target.value as EvidenceRecordStatus })}
               />
-              <Input
-                label="Created Date"
-                type="date"
-                value={editingRecord.createdDate || ''}
-                onChange={e => setEditingRecord({ ...editingRecord, createdDate: e.target.value })}
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <Select
+                label="Linked Entity Type *"
+                options={ENTITY_KIND_OPTIONS}
+                value={editingEntityKind}
+                onChange={e => handleEntityKindChange(e.target.value as EntityKind)}
+              />
+              <Select
+                label="Linked Entity *"
+                options={[{ value: '', label: 'Select an entity…' }, ...entityOptionsFor(editingEntityKind)]}
+                value={currentEntityId}
+                onChange={e => handleEntitySelect(e.target.value)}
               />
             </div>
+
+            <Input
+              label="Created Date"
+              type="date"
+              value={editingRecord.createdDate || ''}
+              onChange={e => setEditingRecord({ ...editingRecord, createdDate: e.target.value })}
+            />
 
             <Input
               label="Expiry Date (optional)"

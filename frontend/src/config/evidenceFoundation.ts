@@ -6,7 +6,7 @@
  * scoring, no workflow automation in Release 3.
  */
 
-import type { EvidenceExpiryIndicator, EvidenceRecordStatus, EvidenceRecordType } from '../types';
+import type { EvidenceExpiryIndicator, EvidenceRecord, EvidenceRecordStatus, EvidenceRecordType } from '../types';
 
 /* ===================== Capability 2 — Evidence Types ===================== */
 
@@ -72,3 +72,14 @@ export const EXPIRY_INDICATOR_TONE: Record<EvidenceExpiryIndicator, string> = {
   'Expired': 'bg-red-500/15 text-red-500 border-red-500/40 font-bold',
   'No Expiry Set': 'bg-slate-500/10 text-slate-400 border-slate-500/30',
 };
+
+/**
+ * R20.1 — Evidence Registry polymorphic refactor. Resolves whichever of
+ * assetId/entityId + assetName/entityName is set on a record — the one
+ * place every consumer should read "what this evidence is filed against",
+ * so the optionality introduced here doesn't leak into every caller.
+ */
+export function evidenceEntityRef(e: Pick<EvidenceRecord, 'assetId' | 'assetName' | 'entityType' | 'entityId' | 'entityName'>): { type: string; id: string; name: string } {
+  if (e.assetId) return { type: 'Asset', id: e.assetId, name: e.assetName || e.assetId };
+  return { type: e.entityType || 'Unknown', id: e.entityId || '', name: e.entityName || e.entityId || 'Unknown' };
+}

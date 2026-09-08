@@ -5,6 +5,7 @@ import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Select } from '../components/ui/Select';
 import { getAssets, saveAsset } from '../services/storageService';
+import { computeReauthorizationStatus, REAUTHORIZATION_STATUS_TONE } from '../config/governanceContinuity';
 import { useAuth } from '../contexts/AuthContext';
 import type { AgentBehaviorStatus, AIAsset } from '../types';
 
@@ -41,6 +42,7 @@ export const AgentMonitoringPage: React.FC = () => {
 
   const alertCount = assets.filter(a => a.behaviorMonitoringStatus === 'Alert').length;
   const watchlistCount = assets.filter(a => a.behaviorMonitoringStatus === 'Watchlist').length;
+  const reauthDueCount = assets.filter(a => ['Due Soon', 'Overdue', 'Expired'].includes(computeReauthorizationStatus(a.nextReviewDate))).length;
 
   return (
     <div className="flex flex-col gap-6 pb-12">
@@ -55,15 +57,17 @@ export const AgentMonitoringPage: React.FC = () => {
         }
       />
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <Card className="!p-4"><p className="text-2xl font-extrabold tnum" style={{ color: 'var(--status-success)' }}>{assets.length - alertCount - watchlistCount}</p><p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] mt-1">Normal</p></Card>
         <Card className="!p-4"><p className="text-2xl font-extrabold tnum" style={{ color: 'var(--status-warning)' }}>{watchlistCount}</p><p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] mt-1">Watchlist</p></Card>
         <Card className="!p-4"><p className="text-2xl font-extrabold tnum" style={{ color: 'var(--status-danger)' }}>{alertCount}</p><p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] mt-1">Alert</p></Card>
+        <Card className="!p-4"><p className="text-2xl font-extrabold tnum" style={{ color: 'var(--status-warning)' }}>{reauthDueCount}</p><p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] mt-1">Reauth Due/Overdue</p></Card>
       </div>
 
       <div className="flex flex-col gap-3">
         {assets.map(asset => {
           const status = asset.behaviorMonitoringStatus || 'Normal';
+          const reauthStatus = computeReauthorizationStatus(asset.nextReviewDate);
           return (
             <Card key={asset.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="min-w-0">
@@ -72,8 +76,11 @@ export const AgentMonitoringPage: React.FC = () => {
                   <span className="text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full" style={{ color: STATUS_TONE[status], background: 'var(--bg-badge)', border: `1px solid ${STATUS_TONE[status]}40` }}>
                     {status}
                   </span>
+                  <span className="text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full" style={{ color: REAUTHORIZATION_STATUS_TONE[reauthStatus], background: 'var(--bg-badge)', border: `1px solid ${REAUTHORIZATION_STATUS_TONE[reauthStatus]}40` }}>
+                    Reauth: {reauthStatus}
+                  </span>
                 </div>
-                <p className="text-xs text-[var(--text-muted)] mt-1">{asset.type} · Autonomy Level {asset.autonomyLevel ?? '—'} · {asset.oversightType || 'Oversight not classified'}</p>
+                <p className="text-xs text-[var(--text-muted)] mt-1">{asset.type} · Autonomy Level {asset.autonomyLevel ?? '—'} · {asset.oversightType || 'Oversight not classified'} · Next review {asset.nextReviewDate || '—'}</p>
               </div>
               {canPerform('asset:edit') && (
                 <Select value={status} onChange={e => handleStatusChange(asset, e.target.value as AgentBehaviorStatus)} options={STATUS_OPTIONS} className="sm:max-w-[10rem]" />

@@ -56,13 +56,10 @@ export const LoginPage: React.FC = () => {
           {/* Core Headline & Mission */}
           <div className="my-8 flex flex-col gap-4 relative z-10">
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight text-white">
-              Everyone Talks AI Governance.<br />We Make It Operational.
+              Enterprise AI Governance<br />Operating System.
             </h1>
             <p className="text-base text-white/95 font-semibold">
-              Ownership. Risk. Approvals. Evidence. Accountability.
-            </p>
-            <p className="text-sm text-blue-100/90 font-medium">
-              Connected across the entire AI lifecycle.
+              Govern AI Assets, Models, Agents, Tools, Knowledge Assets and Prompts through continuous governance, accountability, evidence, reassessment and audit-ready oversight.
             </p>
 
             {/* vNext — Prevention-First positioning statement */}

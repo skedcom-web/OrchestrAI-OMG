@@ -9,6 +9,8 @@ import { getGovernanceMetrics } from '../services/storageService';
 import {
   BUSINESS_VALUE,
   CAPABILITIES,
+  CAPABILITY_GROUP_INFO,
+  type CapabilityGroup,
   CUSTOMER_PACKS,
   DESIGN_PARTNER_INDUSTRIES,
   ENGAGEMENT_PHASES,
@@ -18,7 +20,9 @@ import {
   EXECUTIVE_MESSAGE_STATEMENT,
   FINAL_DECLARATION_STATEMENT,
   FINAL_DECLARATION_TITLE,
+  GOVERNANCE_PRINCIPLE_STATEMENT,
   PREVENTION_POSITIONING_STATEMENT,
+  PRODUCT_MESSAGING_SHIFTS,
   FOUNDING_PARTNERS_STATEMENT,
   FUTURE_COMPLIANCE_ACCELERATORS_STATEMENT,
   PARTNER_WITH_US_STATEMENT,
@@ -84,15 +88,11 @@ export const OmgOverviewPage: React.FC = () => {
             </div>
 
             <h1 className="text-[2.1rem] sm:text-[2.9rem] font-extrabold leading-[1.08] text-[var(--text-primary)]">
-              Everyone Talks AI Governance.<br />We <span className="text-gradient-brand">Make It Operational.</span>
+              Enterprise AI Governance <span className="text-gradient-brand">Operating System.</span>
             </h1>
 
-            <p className="text-[15px] font-semibold text-[var(--text-secondary)]">
-              Ownership. Risk. Approvals. Evidence. Accountability.
-            </p>
-
-            <p className="text-[15px] font-bold text-gradient-brand">
-              Connected across the entire AI lifecycle.
+            <p className="text-[15px] font-semibold text-[var(--text-secondary)] max-w-xl">
+              Govern AI Assets, Models, Agents, Tools, Knowledge Assets and Prompts through continuous governance, accountability, evidence, reassessment and audit-ready oversight.
             </p>
 
             <p className="text-[13px] font-semibold text-[var(--text-secondary)] leading-relaxed max-w-xl">
@@ -154,7 +154,7 @@ export const OmgOverviewPage: React.FC = () => {
             </div>
 
             <p className="text-[11px] text-[var(--text-muted)]">
-              Thirty-six steps — no training required.
+              Five guided tours, built for how you'll actually use OMG — no training required.
             </p>
           </div>
 
@@ -307,6 +307,29 @@ export const OmgOverviewPage: React.FC = () => {
         </p>
       </section>
 
+      {/* ============== THE SHIFT — product messaging ============== */}
+      <section
+        data-noglass
+        className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-5 sm:p-6 flex flex-col gap-4"
+      >
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {PRODUCT_MESSAGING_SHIFTS.map(shift => (
+            <div
+              key={shift.from}
+              data-noglass
+              className="rounded-xl border border-[var(--border-subtle)] px-4 py-3.5 flex flex-col gap-1"
+              style={{ background: 'var(--bg-sunken)' }}
+            >
+              <span className="text-[11px] font-semibold text-[var(--text-muted)] line-through decoration-1">{shift.from}</span>
+              <span className="text-[13.5px] font-bold text-gradient-brand">→ {shift.to}</span>
+            </div>
+          ))}
+        </div>
+        <p className="text-[13px] font-bold text-center text-[var(--text-primary)]">
+          {GOVERNANCE_PRINCIPLE_STATEMENT}
+        </p>
+      </section>
+
       {/* ============== SECTION 1 — THE ENTERPRISE PROBLEM ============== */}
       <section className="flex flex-col gap-4">
         <SectionHeader
@@ -412,14 +435,10 @@ export const OmgOverviewPage: React.FC = () => {
             Take the Guided Tour
           </h2>
           <p className="text-[12.5px] text-[var(--text-secondary)] mt-1.5 leading-relaxed max-w-2xl">
-            Thirty-six stops across the governance flow — accountability, oversight and autonomy,
-            then risk, validation, evidence, decision, governance state, review schedule,
-            reassessment triggers, timeline and reauthorization history, then readiness, gap
-            detection and audit readiness, then compliance packs, requirements, controls,
-            coverage and gaps, then change and audit, then the regulatory knowledge engine,
-            governance intelligence, governance actions, decision traceability and the
-            Governance Intelligence Studio. Each stop explains what the module is, why it
-            exists and what to look at, and can take you straight there.
+            Five named tours, each built for a different reason you're here: Executive Overview,
+            Governance Lifecycle, Agent Governance, Audit & Assurance, and Governance
+            Intelligence. Pick the one that matches what you need, and every stop explains what
+            the module is, why it exists and what to look at — and can take you straight there.
           </p>
         </div>
         <button
@@ -471,32 +490,45 @@ export const OmgOverviewPage: React.FC = () => {
       </section>
 
       {/* ============== SECTION 7 — PLATFORM CAPABILITIES ============== */}
-      <section className="flex flex-col gap-4">
+      <section className="flex flex-col gap-6">
         <SectionHeader
           eyebrow="Section 7"
           title="Key Platform Capabilities"
-          subtitle="Thirty-seven capabilities, each a working module you can open right now."
+          subtitle="Thirty-seven capabilities across five governance layers, each a working module you can open right now."
           icon="🧩"
         />
 
-        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-2.5">
-          {CAPABILITIES.map(c => (
-            <button
-              key={c.label}
-              onClick={() => navigate(c.path)}
-              data-noglass
-              className="text-left rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-3.5 flex flex-col gap-2 hover:border-[var(--accent-border)] hover:-translate-y-0.5 transition-all cursor-pointer"
-            >
-              <span className="text-[19px]" aria-hidden>
-                {c.icon}
-              </span>
-              <span className="text-[12.5px] font-bold text-[var(--text-primary)] leading-tight">
-                {c.label}
-              </span>
-              <span className="text-[10.5px] text-[var(--text-muted)] leading-snug">{c.blurb}</span>
-            </button>
-          ))}
-        </div>
+        {(Object.keys(CAPABILITY_GROUP_INFO) as CapabilityGroup[]).map(group => {
+          const info = CAPABILITY_GROUP_INFO[group];
+          const items = CAPABILITIES.filter(c => c.group === group);
+          return (
+            <div key={group} className="flex flex-col gap-3">
+              <div className="flex items-baseline gap-2.5 flex-wrap">
+                <span className="text-[15px]" aria-hidden>{info.icon}</span>
+                <h3 className="text-[14px] font-extrabold text-[var(--text-primary)]">{info.label}</h3>
+                <span className="text-[11px] text-[var(--text-muted)]">{info.tagline}</span>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-2.5">
+                {items.map(c => (
+                  <button
+                    key={c.label}
+                    onClick={() => navigate(c.path)}
+                    data-noglass
+                    className="text-left rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-3.5 flex flex-col gap-2 hover:border-[var(--accent-border)] hover:-translate-y-0.5 transition-all cursor-pointer"
+                  >
+                    <span className="text-[19px]" aria-hidden>
+                      {c.icon}
+                    </span>
+                    <span className="text-[12.5px] font-bold text-[var(--text-primary)] leading-tight">
+                      {c.label}
+                    </span>
+                    <span className="text-[10.5px] text-[var(--text-muted)] leading-snug">{c.blurb}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          );
+        })}
       </section>
 
       {/* ============== SECTION 8 — BUSINESS VALUE ============== */}

@@ -12,7 +12,9 @@
  */
 
 import type {
+  AgentToolGrant,
   AIAsset,
+  AuditLog,
   EvidenceRecord,
   GovernanceCondition,
   GovernanceFinding,
@@ -120,5 +122,66 @@ export function buildDecisionTrace(
     humanDecisions,
     timeline,
     traceabilityComplete: !unaddressedConditions,
+  };
+}
+
+/**
+ * R20.1 — Agent Decision Traceability (Part 1.3 of the hardening release).
+ * A sibling reconstruction, not a replacement: buildDecisionTrace above
+ * reconstructs policy reasoning (Condition -> Policy -> ... -> Human
+ * Decision); this reconstructs an agent's operational chain — which tool it
+ * used, what audit trail that produced, what evidence resulted, and the
+ * asset's current outcome. Same "computed, not stored" discipline — assembled
+ * from AgentToolGrant, AuditLog and EvidenceRecord, all of which already
+ * exist. No new persisted domain object.
+ */
+export type AgentTraceabilityStage = 'Agent' | 'Tool' | 'Action' | 'Evidence' | 'Outcome';
+
+export interface AgentTraceabilityEntry {
+  stage: AgentTraceabilityStage;
+  label: string;
+  detail: string;
+  timestamp?: string;
+}
+
+export interface AgentTraceabilityChain {
+  assetId: string;
+  assetName: string;
+  toolsUsed: AgentToolGrant[];
+  actionsPerformed: AuditLog[];
+  evidenceGenerated: EvidenceRecord[];
+  outcome: string;
+  timeline: AgentTraceabilityEntry[];
+  /** False when the agent has tool access but no audit trail, evidence, or resolved outcome behind it — a reconstruction gap. */
+  traceabilityComplete: boolean;
+}
+
+export function buildAgentTraceabilityChain(
+  asset: AIAsset,
+  toolGrants: AgentToolGrant[],
+  auditLogs: AuditLog[],
+  evidence: EvidenceRecord[]
+): AgentTraceabilityChain {
+  const actionsPerformed = auditLogs.filter(l => l.entityId === asset.id).slice(0, 10);
+  const timeline: AgentTraceabilityEntry[] = [];
+
+  timeline.push({ stage: 'Agent', label: asset.name, detail: `${asset.type} · ${asset.department}` });
+  toolGrants.forEach(g => timeline.push({ stage: 'Tool', label: g.toolName || g.toolId, detail: `Granted by ${g.grantedBy}`, timestamp: g.createdAt }));
+  actionsPerformed.forEach(a => timeline.push({ stage: 'Action', label: a.action, detail: a.details, timestamp: a.timestamp }));
+  evidence.forEach(e => timeline.push({ stage: 'Evidence', label: e.name, detail: e.description, timestamp: e.createdDate }));
+  timeline.push({ stage: 'Outcome', label: asset.decisionOutcome || 'PENDING', detail: `Current governance outcome for ${asset.name}.` });
+
+  const outcomeResolved = !!asset.decisionOutcome && asset.decisionOutcome !== 'PENDING';
+  const traceabilityComplete = toolGrants.length > 0 && actionsPerformed.length > 0 && evidence.length > 0 && outcomeResolved;
+
+  return {
+    assetId: asset.id,
+    assetName: asset.name,
+    toolsUsed: toolGrants,
+    actionsPerformed,
+    evidenceGenerated: evidence,
+    outcome: asset.decisionOutcome || 'PENDING',
+    timeline,
+    traceabilityComplete,
   };
 }

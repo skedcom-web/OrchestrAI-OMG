@@ -143,7 +143,7 @@ export const CorrectiveActionsPage: React.FC = () => {
               <span className="text-2xl shrink-0">🛠️</span>
               <div className="flex flex-col">
                 <div className="flex items-center gap-2">
-                  <span className="font-extrabold text-sm text-[var(--text-primary)]">{act.assetName}</span>
+                  <span className="font-extrabold text-sm text-[var(--text-primary)]">{act.assetName || act.entityName || 'Unknown'}</span>
                   <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded ${
                     act.severity === 'Critical' ? 'bg-purple-500/20 text-purple-400' : 'bg-red-500/20 text-red-400'
                   }`}>

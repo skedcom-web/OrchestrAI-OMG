@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
 import { findModule } from '../../config/navigation';
+import { GOVERNANCE_PRINCIPLE_STATEMENT } from '../../config/landingContent';
 import { useExperience } from '../../contexts/ExperienceContext';
 
 interface AppLayoutProps {
@@ -13,6 +14,10 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const location = useLocation();
   const { isExecutive } = useExperience();
   const located = findModule(location.pathname);
+  const [insightOpen, setInsightOpen] = useState(false);
+
+  // Collapse the panel whenever the route changes, so it never persists onto an unrelated module.
+  useEffect(() => { setInsightOpen(false); }, [location.pathname]);
 
   return (
     <div className="min-h-screen flex bg-[var(--bg-app)] text-[var(--text-primary)] transition-colors">
@@ -44,11 +49,49 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
             </span>
           )}
 
+          {located?.module?.insight && (
+            <button
+              type="button"
+              onClick={() => setInsightOpen(v => !v)}
+              className="inline-flex items-center gap-1 text-[10px] font-bold text-[var(--accent-primary)] hover:underline shrink-0"
+              aria-expanded={insightOpen}
+            >
+              ⓘ About this module
+            </button>
+          )}
+
           <span className="ml-auto text-[10px] font-bold uppercase tracking-[0.1em] text-[var(--text-muted)] shrink-0">
             {isExecutive ? 'Executive' : 'Governance'}
             <span className="hidden sm:inline"> Experience</span>
           </span>
         </div>
+
+        {insightOpen && located?.module?.insight && (
+          <div className="px-3 sm:px-6 py-4 border-b border-[var(--border-subtle)] bg-[var(--bg-sidebar)]/60">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 max-w-5xl">
+              <div>
+                <p className="text-[10px] font-extrabold uppercase tracking-wider text-[var(--text-muted)] mb-1">What It Does</p>
+                <p className="text-xs text-[var(--text-secondary)] leading-relaxed">{located.module.insight.whatItDoes}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-extrabold uppercase tracking-wider text-[var(--text-muted)] mb-1">Why It Matters</p>
+                <p className="text-xs text-[var(--text-secondary)] leading-relaxed">{located.module.insight.whyItMatters}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-extrabold uppercase tracking-wider text-[var(--text-muted)] mb-1">Governance Outcome</p>
+                <p className="text-xs text-[var(--text-secondary)] leading-relaxed">{located.module.insight.governanceOutcome}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-extrabold uppercase tracking-wider text-[var(--text-muted)] mb-1">Key Artifacts</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {located.module.insight.keyArtifacts.map(a => (
+                    <span key={a} className="text-[10.5px] px-2 py-0.5 rounded-full bg-[var(--bg-badge)] border border-[var(--border-subtle)] text-[var(--text-secondary)]">{a}</span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         <main
           key={location.pathname}
@@ -63,13 +106,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
             OrchestrAI <strong className="text-[var(--text-secondary)]">OMG</strong> — Enterprise AI
             Governance Operating System
           </span>
-          <span className="flex items-center gap-4">
-            <span>Govern Every AI</span>
-            <span aria-hidden>·</span>
-            <span>Control Every Decision</span>
-            <span aria-hidden>·</span>
-            <span>Prove Every Outcome</span>
-          </span>
+          <span>{GOVERNANCE_PRINCIPLE_STATEMENT}</span>
         </footer>
       </div>
     </div>

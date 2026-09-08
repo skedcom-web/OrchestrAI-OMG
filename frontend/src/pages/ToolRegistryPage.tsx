@@ -5,8 +5,8 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Select } from '../components/ui/Select';
 import { Modal } from '../components/ui/Modal';
-import { RiskBadge } from '../components/ui/Badge';
-import { getTools, saveTool, archiveTool, getAgentToolGrants } from '../services/storageService';
+import { RiskBadge, ReadinessBadge } from '../components/ui/Badge';
+import { getTools, saveTool, archiveTool, getAgentToolGrants, getCertificationReadinessFor } from '../services/storageService';
 import { useAuth } from '../contexts/AuthContext';
 import type { RiskLevel, Tool, ToolClassification } from '../types';
 
@@ -120,6 +120,7 @@ export const ToolRegistryPage: React.FC = () => {
                 {tool.classification}
               </span>
               <span className="px-2 py-0.5 rounded-full bg-[var(--accent-light)] border border-[var(--accent-border)] text-[var(--accent-primary)]">{tool.lifecycleStage}</span>
+              <ReadinessBadge status={getCertificationReadinessFor('Tool', tool.id).status} size="sm" />
             </div>
             <div className="flex items-center justify-between pt-2 border-t border-[var(--border-subtle)] text-[11px] text-[var(--text-muted)]">
               <span>{grantCount(tool.id) > 0 ? `Granted to ${grantCount(tool.id)} agent${grantCount(tool.id) > 1 ? 's' : ''}` : 'Not yet granted'}</span>

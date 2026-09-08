@@ -5,10 +5,11 @@ import { Button } from '../components/ui/Button';
 import { MetricCard } from '../components/ui/MetricCard';
 import { RiskBadge, OversightBadge, GovernanceStateBadge, ClassificationBadge, EvidenceStatusBadge, ReadinessBadge, ComplianceCoverageBadge, GovernancePolicySeverityBadge, RecommendedActionStatusBadge } from '../components/ui/Badge';
 import { StatusBadge } from '../components/ui/StatusBadge';
-import { getGovernanceMetrics, getAssets, getAuditLogs, getEvidenceRecords, getAllGovernanceGaps, getAllPackGaps, getAllSourceGaps } from '../services/storageService';
+import { getGovernanceMetrics, getExecutiveKpiSummary, getAssets, getAuditLogs, getEvidenceRecords, getAllGovernanceGaps, getAllPackGaps, getAllSourceGaps, getModels, getKnowledgeAssets, getPrompts, getTools, getGovernanceControls, getCertificationRecords, getScheduledReviews } from '../services/storageService';
+import { computeReauthorizationStatus } from '../config/governanceContinuity';
 import { OVERSIGHT_TYPES, AUTONOMY_LEVELS } from '../config/governanceAuthority';
 import { GOVERNANCE_STATES, GOVERNANCE_CLASSIFICATIONS } from '../config/governanceContinuity';
-import { EVIDENCE_TYPES, EVIDENCE_STATUSES, getExpiryIndicator } from '../config/evidenceFoundation';
+import { EVIDENCE_TYPES, EVIDENCE_STATUSES, getExpiryIndicator, evidenceEntityRef } from '../config/evidenceFoundation';
 import type { AssetType, RiskLevel, HumanOversightType, ReadinessStatus, ComplianceCoverageStatus, RecommendedActionStatus } from '../types';
 
 const READINESS_ORDER: ReadinessStatus[] = ['Ready', 'Partially Ready', 'Not Ready'];
@@ -17,12 +18,29 @@ const COVERAGE_ORDER: ComplianceCoverageStatus[] = ['Covered', 'Partially Covere
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const [metrics] = useState(() => getGovernanceMetrics());
+  const [kpis] = useState(() => getExecutiveKpiSummary());
   const [assets] = useState(() => getAssets());
   const [auditLogs] = useState(() => getAuditLogs().slice(0, 5));
   const [evidenceRecords] = useState(() => getEvidenceRecords());
   const [gaps] = useState(() => getAllGovernanceGaps());
   const [packGaps] = useState(() => getAllPackGaps());
   const [sourceGaps] = useState(() => getAllSourceGaps());
+  const [models] = useState(() => getModels());
+  const [knowledgeAssets] = useState(() => getKnowledgeAssets());
+  const [prompts] = useState(() => getPrompts());
+  const [tools] = useState(() => getTools());
+  const [controls] = useState(() => getGovernanceControls());
+  const [certRecords] = useState(() => getCertificationRecords());
+
+  const overdueAssets = assets.filter(a => ['Overdue', 'Expired'].includes(computeReauthorizationStatus(a.nextReviewDate)));
+  const overdueScheduledReviews = getScheduledReviews().filter(r => r.status === 'Overdue');
+  const pendingApprovalItems = [
+    ...assets.filter(a => !a.decisionOutcome || a.decisionOutcome === 'PENDING').map(a => ({ name: a.name, kind: 'Asset' })),
+    ...models.filter(m => m.decisionOutcome === 'PENDING').map(m => ({ name: m.name, kind: 'Model' })),
+    ...knowledgeAssets.filter(k => k.decisionOutcome === 'PENDING').map(k => ({ name: k.name, kind: 'Knowledge Asset' })),
+    ...prompts.filter(p => p.decisionOutcome === 'PENDING').map(p => ({ name: p.name, kind: 'Prompt' })),
+    ...tools.filter(t => t.decisionOutcome === 'PENDING').map(t => ({ name: t.name, kind: 'Tool' })),
+  ];
 
   const expiringOrExpiredEvidence = evidenceRecords
     .filter(e => {
@@ -51,6 +69,122 @@ export const DashboardPage: React.FC = () => {
             Decision Authority Center
           </Button>
         </div>
+      </div>
+
+      {/* R20.1 — Governance Command Center KPIs (Part 4) */}
+      <div>
+        <h2 className="text-xs font-extrabold uppercase tracking-wider text-[var(--text-muted)] mb-3">Governance Command Center</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          <MetricCard title="Total Governed Entities" value={kpis.totalGovernedEntities} icon={<span className="text-lg">🗂️</span>} />
+          <MetricCard title="Governance Readiness" value={`${kpis.governanceReadinessScorePct}%`} icon={<span className="text-lg">🛡️</span>} trendType={kpis.governanceReadinessScorePct >= 70 ? 'positive' : kpis.governanceReadinessScorePct >= 40 ? 'neutral' : 'negative'} />
+          <MetricCard title="Evidence Completeness" value={`${kpis.evidenceCompletenessPct}%`} icon={<span className="text-lg">🧾</span>} trendType={kpis.evidenceCompletenessPct >= 70 ? 'positive' : kpis.evidenceCompletenessPct >= 40 ? 'neutral' : 'negative'} />
+          <MetricCard title="Approval Backlog" value={kpis.approvalBacklog} icon={<span className="text-lg">⏳</span>} trendType={kpis.approvalBacklog === 0 ? 'positive' : 'negative'} />
+          <MetricCard title="Open Findings" value={kpis.openFindings} icon={<span className="text-lg">⚠️</span>} trendType={kpis.openFindings === 0 ? 'positive' : 'negative'} />
+          <MetricCard title="Open Corrective Actions" value={kpis.openCorrectiveActions} icon={<span className="text-lg">🛠️</span>} trendType={kpis.openCorrectiveActions === 0 ? 'positive' : 'negative'} />
+          <MetricCard title="Overdue Reviews" value={kpis.overdueReviews} icon={<span className="text-lg">📅</span>} trendType={kpis.overdueReviews === 0 ? 'positive' : 'negative'} />
+          <MetricCard title="Certification Readiness" value={`${kpis.certificationReadinessPct}%`} icon={<span className="text-lg">🏆</span>} subtitle={`${kpis.activeCertifications} active certifications`} trendType={kpis.certificationReadinessPct >= 70 ? 'positive' : kpis.certificationReadinessPct >= 40 ? 'neutral' : 'negative'} />
+          <MetricCard title="Control Effectiveness" value={`${kpis.controlEffectivenessPct}%`} icon={<span className="text-lg">🧱</span>} trendType={kpis.controlEffectivenessPct >= 70 ? 'positive' : kpis.controlEffectivenessPct >= 40 ? 'neutral' : 'negative'} />
+          <MetricCard title="Governance Trend" value={kpis.governanceTrend} icon={<span className="text-lg">📈</span>} trendType={kpis.governanceTrend === 'Positive' ? 'positive' : kpis.governanceTrend === 'Stable' ? 'neutral' : 'negative'} />
+        </div>
+      </div>
+
+      {/* R20.1 — Executive Widgets (Part 4) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+        <Card>
+          <p className="text-xs font-extrabold uppercase tracking-wider text-[var(--text-muted)] mb-3">What Exists</p>
+          <div className="flex flex-col gap-1.5 text-xs">
+            <div className="flex justify-between"><span className="text-[var(--text-secondary)]">AI Assets</span><span className="font-bold text-[var(--text-primary)] tnum">{assets.length}</span></div>
+            <div className="flex justify-between"><span className="text-[var(--text-secondary)]">Models</span><span className="font-bold text-[var(--text-primary)] tnum">{models.length}</span></div>
+            <div className="flex justify-between"><span className="text-[var(--text-secondary)]">Knowledge Assets</span><span className="font-bold text-[var(--text-primary)] tnum">{knowledgeAssets.length}</span></div>
+            <div className="flex justify-between"><span className="text-[var(--text-secondary)]">Prompts</span><span className="font-bold text-[var(--text-primary)] tnum">{prompts.length}</span></div>
+            <div className="flex justify-between"><span className="text-[var(--text-secondary)]">Tools</span><span className="font-bold text-[var(--text-primary)] tnum">{tools.length}</span></div>
+            <div className="flex justify-between"><span className="text-[var(--text-secondary)]">Controls</span><span className="font-bold text-[var(--text-primary)] tnum">{controls.length}</span></div>
+            <div className="flex justify-between"><span className="text-[var(--text-secondary)]">Certifications</span><span className="font-bold text-[var(--text-primary)] tnum">{certRecords.length}</span></div>
+          </div>
+        </Card>
+
+        <Card>
+          <p className="text-xs font-extrabold uppercase tracking-wider text-[var(--text-muted)] mb-3">What Needs Attention</p>
+          {gaps.length === 0 ? <p className="text-xs text-[var(--text-muted)]">No governance gaps detected.</p> : (
+            <div className="flex flex-col gap-2">
+              {gaps.slice(0, 5).map((g, i) => (
+                <button key={i} onClick={() => navigate('/governance-readiness')} className="text-left text-xs">
+                  <span className="font-bold text-[var(--text-primary)] block truncate">{g.assetName}</span>
+                  <span className="text-[var(--text-muted)]">{g.gapType}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </Card>
+
+        <Card>
+          <p className="text-xs font-extrabold uppercase tracking-wider text-[var(--text-muted)] mb-3">What Is Overdue</p>
+          {overdueAssets.length === 0 && overdueScheduledReviews.length === 0 ? <p className="text-xs text-[var(--text-muted)]">Nothing overdue.</p> : (
+            <div className="flex flex-col gap-2">
+              {overdueAssets.slice(0, 3).map(a => (
+                <button key={a.id} onClick={() => navigate('/agent-monitoring')} className="text-left text-xs">
+                  <span className="font-bold text-[var(--text-primary)] block truncate">{a.name}</span>
+                  <span className="text-[var(--text-muted)]">Reauthorization overdue</span>
+                </button>
+              ))}
+              {overdueScheduledReviews.slice(0, 3).map(r => (
+                <button key={r.id} onClick={() => navigate('/review-calendar')} className="text-left text-xs">
+                  <span className="font-bold text-[var(--text-primary)] block truncate">{r.assetName}</span>
+                  <span className="text-[var(--text-muted)]">{r.reviewType} overdue</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </Card>
+
+        <Card>
+          <p className="text-xs font-extrabold uppercase tracking-wider text-[var(--text-muted)] mb-3">What Is Pending Approval</p>
+          {pendingApprovalItems.length === 0 ? <p className="text-xs text-[var(--text-muted)]">No approvals pending.</p> : (
+            <div className="flex flex-col gap-2">
+              {pendingApprovalItems.slice(0, 5).map((item, i) => (
+                <div key={i} className="text-xs">
+                  <span className="font-bold text-[var(--text-primary)] block truncate">{item.name}</span>
+                  <span className="text-[var(--text-muted)]">{item.kind}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+
+        <Card>
+          <p className="text-xs font-extrabold uppercase tracking-wider text-[var(--text-muted)] mb-3">What Is Expiring</p>
+          {expiringOrExpiredEvidence.length === 0 ? <p className="text-xs text-[var(--text-muted)]">No evidence expiring soon.</p> : (
+            <div className="flex flex-col gap-2">
+              {expiringOrExpiredEvidence.slice(0, 5).map(e => (
+                <div key={e.id} className="text-xs">
+                  <span className="font-bold text-[var(--text-primary)] block truncate">{e.name}</span>
+                  <span className="text-[var(--text-muted)]">Expires {e.expiryDate}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+
+        <Card>
+          <p className="text-xs font-extrabold uppercase tracking-wider text-[var(--text-muted)] mb-3">Highest Risk Areas</p>
+          <div className="flex flex-col gap-1.5 text-xs">
+            {(['Critical', 'High', 'Medium', 'Low'] as const).map(level => (
+              <div key={level} className="flex justify-between"><span className="text-[var(--text-secondary)]">{level} Risk</span><span className="font-bold text-[var(--text-primary)] tnum">{metrics.riskBreakdown[level]}</span></div>
+            ))}
+          </div>
+        </Card>
+
+        <Card>
+          <p className="text-xs font-extrabold uppercase tracking-wider text-[var(--text-muted)] mb-3">Recent Governance Changes</p>
+          <div className="flex flex-col gap-2">
+            {auditLogs.map(log => (
+              <div key={log.id} className="text-xs">
+                <span className="font-bold text-[var(--text-primary)] block truncate">{log.action}</span>
+                <span className="text-[var(--text-muted)]">{log.entityName} — {log.timestamp}</span>
+              </div>
+            ))}
+          </div>
+        </Card>
       </div>
 
       {/* KPI Cards Grid */}
@@ -332,7 +466,7 @@ export const DashboardPage: React.FC = () => {
                   className="text-left p-2.5 rounded-xl bg-[var(--bg-badge)] border border-[var(--border-color)] hover:border-[var(--accent-border)] transition-all cursor-pointer"
                 >
                   <span className="text-xs font-bold text-[var(--text-primary)] block truncate">{e.name}</span>
-                  <span className="text-[10px] text-[var(--text-muted)]">{e.assetName} • Expires {e.expiryDate}</span>
+                  <span className="text-[10px] text-[var(--text-muted)]">{evidenceEntityRef(e).name} • Expires {e.expiryDate}</span>
                 </button>
               ))
             )}

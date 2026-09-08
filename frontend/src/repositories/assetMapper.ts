@@ -34,6 +34,9 @@ export function toBackendAsset(data: Partial<AIAsset>): Record<string, unknown> 
   }
   if (data.governanceState !== undefined) body.governanceState = enumMaps.governanceState.toBackend(data.governanceState);
   if (data.nextReviewDate !== undefined) body.nextReviewDate = data.nextReviewDate ? new Date(data.nextReviewDate).toISOString() : null;
+  if (data.approvalDate !== undefined) body.approvalDate = data.approvalDate ? new Date(data.approvalDate).toISOString() : null;
+  if (data.lastReviewDate !== undefined) body.lastReviewDate = data.lastReviewDate ? new Date(data.lastReviewDate).toISOString() : null;
+  if (data.reviewFrequency !== undefined) body.reviewFrequency = data.reviewFrequency ? enumMaps.reviewFrequency.toBackend(data.reviewFrequency) : null;
 
   if (data.authorityProfile !== undefined) {
     const ap = data.authorityProfile;
@@ -88,6 +91,9 @@ export function fromBackendAsset(row: any): AIAsset {
       : undefined,
     governanceState: row.governanceState ? enumMaps.governanceState.toFrontend(row.governanceState) : undefined,
     nextReviewDate: row.nextReviewDate ? String(row.nextReviewDate).split('T')[0] : undefined,
+    approvalDate: row.approvalDate ? String(row.approvalDate).split('T')[0] : undefined,
+    lastReviewDate: row.lastReviewDate ? String(row.lastReviewDate).split('T')[0] : undefined,
+    reviewFrequency: row.reviewFrequency ? enumMaps.reviewFrequency.toFrontend(row.reviewFrequency) : undefined,
     techStack: row.techStack,
     dataSensitivity: row.dataSensitivity,
     validationScore: row.validationScore ?? undefined,

@@ -149,7 +149,7 @@ export function getEvidenceOverview(): EvidenceOverview {
   const records = getEvidenceRecords();
   const metrics = getGovernanceMetrics();
 
-  const linkedAssetIds = new Set(records.map(r => r.assetId));
+  const linkedAssetIds = new Set(records.map(r => r.assetId).filter((id): id is string => !!id));
   const ownershipComplete = records.filter(
     r => r.ownership.evidenceOwner && r.ownership.approvalAuthority
   ).length;

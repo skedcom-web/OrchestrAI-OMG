@@ -405,6 +405,16 @@ enum AgentBehaviorStatus {
   ALERT
 }
 
+/// R20.1 — Governance Continuity hardening. Reauthorization cadence for any
+/// asset's recurring governance review (not agent-specific — Agent
+/// Reauthorization is the first consumer, not a parallel model).
+enum ReviewFrequency {
+  MONTHLY
+  QUARTERLY
+  SEMI_ANNUAL
+  ANNUAL
+}
+
 enum ToolClassification {
   READ_ONLY
   WRITE
@@ -740,6 +750,15 @@ model AIAsset {
   // Release 2 — Governance State Model (Capability 1)
   governanceState AssetGovernanceState? @default(DRAFT)
   nextReviewDate  DateTime?
+
+  /// R20.1 — Governance Continuity hardening. lastReviewDate existed on the
+  /// frontend type since Release 2 but was never persisted; wired properly
+  /// here. approvalDate/reviewFrequency are new, reused across every asset
+  /// (not agent-only) so Agent Reauthorization is one case of a general
+  /// capability rather than a parallel one.
+  approvalDate    DateTime?
+  lastReviewDate  DateTime?
+  reviewFrequency ReviewFrequency?
 
   /// R16 — Agent Governance. Only meaningful where type = AGENT or
   /// MULTI_AGENT_SYSTEM, same optionality convention as oversightType/

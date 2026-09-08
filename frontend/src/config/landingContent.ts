@@ -622,7 +622,194 @@ export const TOUR_STEPS: TourStep[] = [
     why: 'Built Once. Configured Many Times. The same platform serves Banking, Insurance, Healthcare, Government and Enterprise by configuration, not by rebuilding — the final core-platform release before customer-specific compliance packs.',
     look: 'Toggle a condition or outcome tier off and the reasoning engine skips it immediately; edit an action rule and the next generated recommendation reflects it — no deployment required.',
   },
+  {
+    n: 37,
+    title: 'Agent Accountability',
+    path: '/agent-accountability',
+    icon: '🕹️',
+    what: 'Business Owner, Technical Owner, Risk Owner and Approver, assigned by name for every autonomous agent — Complete or Incomplete, at a glance.',
+    why: 'An agent acts with delegated authority. It needs a human accountable behind it, exactly like any other governed AI system.',
+    look: 'Compare a fully-owned agent against one with gaps — the platform never disguises an incomplete accountability picture.',
+  },
+  {
+    n: 38,
+    title: 'Agent Reauthorization',
+    path: '/agent-accountability',
+    icon: '🔁',
+    what: 'Approval date, last review, next review and review frequency — with Active, Due Soon, Overdue or Expired computed automatically.',
+    why: 'An approval from a year ago does not mean an agent is still safe today. Governance has to stay current, not just get granted once.',
+    look: 'Overdue and expired agents surface on the Executive Dashboard\'s Overdue Reviews KPI, not just on their own record.',
+  },
+  {
+    n: 39,
+    title: 'Agent Decision Traceability',
+    path: '/agent-accountability',
+    icon: '🧭',
+    what: 'Agent → Tool Used → Action Performed → Evidence Generated → Outcome, reconstructed live from the audit trail and evidence registry.',
+    why: 'When an agent acts autonomously, you need to reconstruct exactly what it did and why — not just that it acted.',
+    look: 'Open the Traceability Chain on any agent — it is assembled fresh from real records, never a pre-scripted narrative.',
+  },
+  {
+    n: 40,
+    title: 'Tool Governance',
+    path: '/tool-registry',
+    icon: '🧰',
+    what: 'Every capability an agent can call, classified from Read-Only to Destructive, risk-tiered and owned.',
+    why: 'An agent is only as safe as the tools it is allowed to use.',
+    look: 'Tool Call Monitoring shows exactly which agents hold which grants, and where destructive access concentrates.',
+  },
+  {
+    n: 41,
+    title: 'Control Governance',
+    path: '/control-library',
+    icon: '🧱',
+    what: 'A single control library, attached to any Asset, Model, Knowledge Asset, Prompt or Tool — one control, many attachments.',
+    why: 'A control declared but never tested protects nothing on paper only.',
+    look: 'Control Effectiveness shows real pass/fail test history driving each control\'s Effective, Partially Effective or Ineffective rating.',
+  },
+  {
+    n: 42,
+    title: 'Certification Governance',
+    path: '/certification-records',
+    icon: '🏆',
+    what: 'Formal credentials — issued, renewed or revoked against any Asset, Model or Tool, backed by assessment evidence.',
+    why: 'A certification is a stronger, more externally legible claim than an internal decision record alone.',
+    look: 'See Active, Expiring Soon and Revoked side by side — a live register, never a static PDF.',
+  },
+  {
+    n: 43,
+    title: 'Universal Lifecycle Console',
+    path: '/lifecycle-console',
+    icon: '🔄',
+    what: 'One portfolio-wide view of every Model, Knowledge Asset, Prompt and Tool\'s current lifecycle stage.',
+    why: 'Register, Assess, Approve, Operate, Monitor, Reassess, Retire — knowing where everything sits, at a glance.',
+    look: 'Filter by entity type or stage to spot anything stalled early or lingering past retirement.',
+  },
+  {
+    n: 44,
+    title: 'Governance Reports',
+    path: '/governance-reports',
+    icon: '📊',
+    what: 'Seven executive report views — coverage, readiness, evidence, control effectiveness, certification, continuity and accountability.',
+    why: 'Different audiences ask the same underlying governance data different questions.',
+    look: 'Switch the report selector live to see one engine answering seven questions, not seven separate tools.',
+  },
+  {
+    n: 45,
+    title: 'Executive Dashboard',
+    path: '/dashboard',
+    icon: '🏛️',
+    what: 'Ten KPIs and seven widgets rolling up risk, readiness, evidence, certifications, accountability, reauthorization, findings and controls across the whole portfolio.',
+    why: 'A governance leader needs one screen that answers "are we in control?" without opening ten different tools.',
+    look: 'Every widget is live — drilling into a KPI takes you to the exact records behind it, not a static snapshot.',
+  },
+  {
+    n: 46,
+    title: 'Governance Health',
+    path: '/dashboard',
+    icon: '💠',
+    what: 'A portfolio-wide read on whether governance activity — ownership, evidence, review, reauthorization — is actually keeping pace.',
+    why: 'Health measures whether governance is happening, not whether outcomes are good — it never blocks anything, it just tells the truth.',
+    look: 'Watch the same health signal for a well-governed asset versus one with open gaps, side by side.',
+  },
+  {
+    n: 47,
+    title: 'Ownership',
+    path: '/ownership',
+    icon: '👤',
+    what: 'The single Ownership Matrix — Business Owner, Technical Owner, Risk Owner, Compliance Owner and Approver — used everywhere on the platform, for every entity type.',
+    why: 'One shared ownership model means an agent, a model and a tool are all held to the same accountability bar — no separate framework per entity type.',
+    look: 'Complete or Incomplete, per entity, at a glance — an incomplete ownership picture is never hidden.',
+  },
+  {
+    n: 48,
+    title: 'Findings',
+    path: '/findings',
+    icon: '🧾',
+    what: 'Every validation defect and governance issue, tracked from discovery through to verified resolution.',
+    why: 'A finding that isn’t tracked to closure is just an email nobody followed up on.',
+    look: 'Severity, owner and status are visible on every finding — nothing sits open without an assigned name.',
+  },
+  {
+    n: 49,
+    title: 'Corrective Actions',
+    path: '/corrective-actions',
+    icon: '🛠️',
+    what: 'Remediation tasks raised against a finding or a failed control, tracked through to verified completion.',
+    why: 'A failed control or an open finding needs an owner, a deadline and proof it was actually fixed.',
+    look: 'Closed-loop by design — an action only leaves Open once its fix is verified, not just claimed.',
+  },
+  {
+    n: 50,
+    title: 'Certification Evidence',
+    path: '/certification-evidence',
+    icon: '📎',
+    what: 'The assessment proof — reports, test results, sign-offs — filed behind every issued certification.',
+    why: 'A certification is only as strong as the evidence an auditor could pull behind it.',
+    look: 'Every certification record links straight to the evidence that justified it — nothing is certified on assertion alone.',
+  },
 ];
+
+/* ================== Section 5b — five named guided tours ================= */
+
+export interface GuidedTourDefinition {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  stepTitles: string[];
+}
+
+/**
+ * Five named tours, each a curated path through TOUR_STEPS (by title — a
+ * step can appear in more than one tour, e.g. Findings belongs to both the
+ * Lifecycle and Audit tours). Refresh of the single 36-stop tour above into
+ * named, audience-specific paths — no new step content beyond what R16–R20.1
+ * actually shipped (steps 37–44).
+ */
+export const GUIDED_TOURS: GuidedTourDefinition[] = [
+  {
+    id: 'executive-overview',
+    name: 'Executive Overview',
+    description: 'Governance health, readiness, certifications, findings and evidence coverage, in ten minutes.',
+    icon: '🏛️',
+    stepTitles: ['Executive Dashboard', 'Governance Health', 'Readiness Center', 'Certification Governance', 'Findings', 'Evidence Registry', 'Governance Reports'],
+  },
+  {
+    id: 'governance-lifecycle',
+    name: 'Governance Lifecycle',
+    description: 'Register, own, classify, validate, approve, evidence, control, remediate, certify, reassess — the full journey.',
+    icon: '🔄',
+    stepTitles: ['AI Asset Registry', 'Ownership', 'Risk Center', 'Validation Center', 'Decision Authority', 'Evidence Registry', 'Control Governance', 'Findings', 'Corrective Actions', 'Certification Governance', 'Change & Reassessment', 'Reauthorization History'],
+  },
+  {
+    id: 'agent-governance',
+    name: 'Agent Governance',
+    description: 'Accountability, ownership, approval, reauthorization, and decision traceability for autonomous agents.',
+    icon: '🕹️',
+    stepTitles: ['AI Asset Registry', 'Agent Accountability', 'Ownership', 'Decision Authority', 'Agent Reauthorization', 'Agent Decision Traceability', 'Evidence Registry', 'Governance Monitoring'],
+  },
+  {
+    id: 'audit-assurance',
+    name: 'Audit & Assurance',
+    description: 'Evidence, audit trail, lifecycle visibility, reporting, certification evidence, findings and corrective actions.',
+    icon: '🔍',
+    stepTitles: ['Evidence Registry', 'Audit & Reporting', 'Universal Lifecycle Console', 'Governance Reports', 'Certification Evidence', 'Findings', 'Corrective Actions'],
+  },
+  {
+    id: 'governance-intelligence',
+    name: 'Governance Intelligence',
+    description: 'Regulatory mapping, compliance packs, readiness scoring, governance analytics and executive reporting.',
+    icon: '🧠',
+    stepTitles: ['Regulatory Knowledge Engine', 'Compliance Packs', 'Readiness Center', 'Governance Intelligence', 'Governance Reports'],
+  },
+];
+
+export function getTourSteps(tour: GuidedTourDefinition): TourStep[] {
+  return tour.stepTitles
+    .map(title => TOUR_STEPS.find(s => s.title === title))
+    .filter((s): s is TourStep => !!s);
+}
 
 /* ==================== Section 6 — who uses OMG ========================== */
 
@@ -659,44 +846,60 @@ export const PERSONAS: { role: string; icon: string; need: string; startAt: stri
 
 /* ================ Section 7 — platform capabilities ===================== */
 
-export const CAPABILITIES: { label: string; icon: string; path: string; blurb: string }[] = [
-  { label: 'AI Registry', icon: '🗂️', path: '/assets', blurb: 'Prevent unmanaged AI from entering production' },
-  { label: 'Risk Management', icon: '⚡', path: '/risk', blurb: 'Four-tier classification' },
-  { label: 'Validation', icon: '🧪', path: '/validation', blurb: 'Six independent disciplines' },
-  { label: 'Evidence Management', icon: '📄', path: '/evidence', blurb: 'Preserve the evidence you will need before regulators ask for it' },
-  { label: 'Decision Workbench', icon: '⚖️', path: '/decision-workbench-v4', blurb: 'GO / Conditional / NO GO' },
-  { label: 'Human Oversight', icon: '✋', path: '/override-center', blurb: 'Override and kill switch' },
-  { label: 'Monitoring', icon: '📡', path: '/governance-monitoring', blurb: 'Identify governance gaps before they become business risks' },
-  { label: 'Governance Continuity', icon: '🔁', path: '/change-requests', blurb: 'Change-driven reassessment' },
-  { label: 'Audit & Reporting', icon: '📜', path: '/audit-logs', blurb: 'Append-only trail' },
-  { label: 'Lifecycle Management', icon: '🔄', path: '/asset-lifecycle', blurb: 'Registration to retirement' },
-  { label: 'Compliance Pack Framework', icon: '🧩', path: '/compliance-packs', blurb: 'Pack, requirement, control, coverage' },
-  { label: 'Regulatory Knowledge Engine', icon: '🗺️', path: '/mapping-workspace', blurb: 'Source, requirement, obligation, evidence' },
-  { label: 'Governance Intelligence', icon: '🧠', path: '/governance-intelligence', blurb: 'Stop high-risk AI from bypassing governance controls' },
-  { label: 'Governance Actions', icon: '🛠️', path: '/governance-actions', blurb: 'Accept, reject or defer — human-governed' },
-  { label: 'Decision Traceability', icon: '🧭', path: '/decision-traceability', blurb: 'Reconstruct any decision end-to-end' },
-  { label: 'Governance Intelligence Studio', icon: '🎛️', path: '/governance-studio', blurb: 'Configure governance logic without code changes' },
-  { label: 'Governance Value Dashboard', icon: '📊', path: '/governance-value', blurb: 'Governance effectiveness, measured — the board-friendly view' },
-  { label: 'Governance Drift Center', icon: '📉', path: '/governance-drift', blurb: 'Detect governance process degradation before it compounds' },
-  { label: 'Governance Health Center', icon: '💚', path: '/governance-health', blurb: 'One executive indicator for governance health, advisory only' },
-  { label: 'Governance Effectiveness Score', icon: '🧮', path: '/governance-effectiveness', blurb: 'Is governance actually improving over time' },
-  { label: 'Governance ROI', icon: '💰', path: '/governance-roi', blurb: 'Governance activity translated into business value' },
-  { label: 'Governance Maturity', icon: '📶', path: '/governance-maturity', blurb: 'Reactive through Optimized, by domain' },
-  { label: 'Governance Benchmarking', icon: '📐', path: '/governance-benchmarking', blurb: 'Compare against industry reference benchmarks' },
-  { label: 'Governance Outcomes', icon: '🎯', path: '/governance-outcomes', blurb: 'What value governance delivered, not just activity' },
-  { label: 'Regulatory Applicability', icon: '🌐', path: '/regulatory-applicability', blurb: 'Which regulations apply to this tenant' },
-  { label: 'Cross-Framework Mapping', icon: '🔗', path: '/cross-framework-mapping', blurb: 'Controls that satisfy multiple frameworks at once' },
-  { label: 'Compliance Impact Analysis', icon: '🔁', path: '/compliance-impact-analysis', blurb: 'What changed recently, and its compliance impact' },
-  { label: 'Regulatory Change Readiness', icon: '📶', path: '/regulatory-change-readiness', blurb: 'Ready if a regulation changed tomorrow' },
-  { label: 'Audit Readiness Intelligence', icon: '📄', path: '/audit-readiness-intelligence', blurb: 'What evidence supports compliance today' },
-  { label: 'Assessment Center', icon: '📝', path: '/assessment-center', blurb: 'Record a standardized governance assessment' },
-  { label: 'Assessment Playbooks', icon: '📖', path: '/assessment-playbooks', blurb: 'Structured guidance for every assessment type' },
-  { label: 'Calibration Library', icon: '📚', path: '/calibration-library', blurb: 'Scoring rubric and worked reference examples' },
-  { label: 'Variance Analysis', icon: '📊', path: '/variance-analysis', blurb: 'Observed dispersion in recorded assessment scores' },
-  { label: 'Assessment Academy', icon: '🎓', path: '/assessment-academy', blurb: 'Guidance on consistent, well-evidenced assessment' },
-  { label: 'Assessor Certification', icon: '🏅', path: '/assessor-certification', blurb: 'Calibration accuracy against benchmark scenarios' },
-  { label: 'Multi-Assessor Consensus', icon: '👥', path: '/consensus-assessments', blurb: 'Independent scoring, hidden until the round closes' },
-  { label: 'Benchmark Recommendations', icon: '🧭', path: '/benchmark-recommendations', blurb: 'Guided playbooks, examples and scoring ranges' },
+export type CapabilityGroup = 'foundation' | 'operations' | 'assurance' | 'intelligence' | 'oversight';
+
+/**
+ * Product Experience Refresh — the five capability sections a first-time
+ * reviewer sees on the landing page, matching the same five names used for
+ * the primary navigation groups so the product reads as one consistent
+ * model rather than two different taxonomies.
+ */
+export const CAPABILITY_GROUP_INFO: Record<CapabilityGroup, { label: string; tagline: string; icon: string }> = {
+  foundation: { label: 'Governance Foundation', tagline: 'What exists, and who is accountable for it.', icon: '🗂️' },
+  operations: { label: 'Governance Operations', tagline: 'How risk, validation and approval actually happen.', icon: '⚙️' },
+  assurance: { label: 'Governance Assurance', tagline: 'The proof, the fixes, and the credentials behind every claim.', icon: '🛡️' },
+  intelligence: { label: 'Governance Intelligence', tagline: 'Regulatory context and reasoning, applied to what you govern.', icon: '🧠' },
+  oversight: { label: 'Governance Oversight', tagline: 'Whether governance is holding up, continuously — not just at approval.', icon: '👁️' },
+};
+
+export const CAPABILITIES: { label: string; icon: string; path: string; blurb: string; group: CapabilityGroup }[] = [
+  { label: 'AI Registry', icon: '🗂️', path: '/assets', blurb: 'Prevent unmanaged AI from entering production', group: 'foundation' },
+  { label: 'Lifecycle Management', icon: '🔄', path: '/asset-lifecycle', blurb: 'Registration to retirement', group: 'foundation' },
+  { label: 'Risk Management', icon: '⚡', path: '/risk', blurb: 'Four-tier classification', group: 'operations' },
+  { label: 'Validation', icon: '🧪', path: '/validation', blurb: 'Six independent disciplines', group: 'operations' },
+  { label: 'Decision Workbench', icon: '⚖️', path: '/decision-workbench-v4', blurb: 'GO / Conditional / NO GO', group: 'operations' },
+  { label: 'Assessment Center', icon: '📝', path: '/assessment-center', blurb: 'Record a standardized governance assessment', group: 'operations' },
+  { label: 'Assessment Playbooks', icon: '📖', path: '/assessment-playbooks', blurb: 'Structured guidance for every assessment type', group: 'operations' },
+  { label: 'Calibration Library', icon: '📚', path: '/calibration-library', blurb: 'Scoring rubric and worked reference examples', group: 'operations' },
+  { label: 'Variance Analysis', icon: '📊', path: '/variance-analysis', blurb: 'Observed dispersion in recorded assessment scores', group: 'operations' },
+  { label: 'Assessment Academy', icon: '🎓', path: '/assessment-academy', blurb: 'Guidance on consistent, well-evidenced assessment', group: 'operations' },
+  { label: 'Multi-Assessor Consensus', icon: '👥', path: '/consensus-assessments', blurb: 'Independent scoring, hidden until the round closes', group: 'operations' },
+  { label: 'Benchmark Recommendations', icon: '🧭', path: '/benchmark-recommendations', blurb: 'Guided playbooks, examples and scoring ranges', group: 'operations' },
+  { label: 'Evidence Management', icon: '📄', path: '/evidence', blurb: 'Preserve the evidence you will need before regulators ask for it', group: 'assurance' },
+  { label: 'Governance Continuity', icon: '🔁', path: '/change-requests', blurb: 'Change-driven reassessment', group: 'assurance' },
+  { label: 'Assessor Certification', icon: '🏅', path: '/assessor-certification', blurb: 'Calibration accuracy against benchmark scenarios', group: 'assurance' },
+  { label: 'Compliance Pack Framework', icon: '🧩', path: '/compliance-packs', blurb: 'Pack, requirement, control, coverage', group: 'intelligence' },
+  { label: 'Regulatory Knowledge Engine', icon: '🗺️', path: '/mapping-workspace', blurb: 'Source, requirement, obligation, evidence', group: 'intelligence' },
+  { label: 'Governance Intelligence', icon: '🧠', path: '/governance-intelligence', blurb: 'Stop high-risk AI from bypassing governance controls', group: 'intelligence' },
+  { label: 'Governance Actions', icon: '🛠️', path: '/governance-actions', blurb: 'Accept, reject or defer — human-governed', group: 'intelligence' },
+  { label: 'Governance Intelligence Studio', icon: '🎛️', path: '/governance-studio', blurb: 'Configure governance logic without code changes', group: 'intelligence' },
+  { label: 'Regulatory Applicability', icon: '🌐', path: '/regulatory-applicability', blurb: 'Which regulations apply to this tenant', group: 'intelligence' },
+  { label: 'Cross-Framework Mapping', icon: '🔗', path: '/cross-framework-mapping', blurb: 'Controls that satisfy multiple frameworks at once', group: 'intelligence' },
+  { label: 'Compliance Impact Analysis', icon: '🔁', path: '/compliance-impact-analysis', blurb: 'What changed recently, and its compliance impact', group: 'intelligence' },
+  { label: 'Regulatory Change Readiness', icon: '📶', path: '/regulatory-change-readiness', blurb: 'Ready if a regulation changed tomorrow', group: 'intelligence' },
+  { label: 'Human Oversight', icon: '✋', path: '/override-center', blurb: 'Override and kill switch', group: 'oversight' },
+  { label: 'Monitoring', icon: '📡', path: '/governance-monitoring', blurb: 'Identify governance gaps before they become business risks', group: 'oversight' },
+  { label: 'Audit & Reporting', icon: '📜', path: '/audit-logs', blurb: 'Append-only trail', group: 'oversight' },
+  { label: 'Decision Traceability', icon: '🧭', path: '/decision-traceability', blurb: 'Reconstruct any decision end-to-end', group: 'oversight' },
+  { label: 'Audit Readiness Intelligence', icon: '📄', path: '/audit-readiness-intelligence', blurb: 'What evidence supports compliance today', group: 'oversight' },
+  { label: 'Governance Value Dashboard', icon: '📊', path: '/governance-value', blurb: 'Governance effectiveness, measured — the board-friendly view', group: 'oversight' },
+  { label: 'Governance Drift Center', icon: '📉', path: '/governance-drift', blurb: 'Detect governance process degradation before it compounds', group: 'oversight' },
+  { label: 'Governance Health Center', icon: '💚', path: '/governance-health', blurb: 'One executive indicator for governance health, advisory only', group: 'oversight' },
+  { label: 'Governance Effectiveness Score', icon: '🧮', path: '/governance-effectiveness', blurb: 'Is governance actually improving over time', group: 'oversight' },
+  { label: 'Governance ROI', icon: '💰', path: '/governance-roi', blurb: 'Governance activity translated into business value', group: 'oversight' },
+  { label: 'Governance Maturity', icon: '📶', path: '/governance-maturity', blurb: 'Reactive through Optimized, by domain', group: 'oversight' },
+  { label: 'Governance Benchmarking', icon: '📐', path: '/governance-benchmarking', blurb: 'Compare against industry reference benchmarks', group: 'oversight' },
+  { label: 'Governance Outcomes', icon: '🎯', path: '/governance-outcomes', blurb: 'What value governance delivered, not just activity', group: 'oversight' },
 ];
 
 /* ======= Section 8.5 — sales positioning: platform vs. customer packs === */
@@ -805,11 +1008,13 @@ export const PLATFORM_JOURNEY: PlatformJourneyStep[] = [
 
 /**
  * Release 11 — Governance Effectiveness & Outcomes Engine. Additive to the
- * existing hero, not a replacement: "Everyone Talks AI Governance. We Make
- * It Operational." stays as the primary headline (see the codebase gotcha
- * in project memory about the two independently-hardcoded hero sections);
- * this is a new positioning statement surfaced alongside it, the same way
- * the vNext Prevention-First box was added without touching the H1.
+ * hero: a positioning statement surfaced alongside the H1, the same way the
+ * vNext Prevention-First box was added without touching it.
+ *
+ * Product Experience Refresh — the H1 itself was later changed to
+ * "Enterprise AI Governance Operating System" in both hero sections
+ * (OmgOverviewPage.tsx and LoginPage.tsx are independently hardcoded — keep
+ * them in sync if either changes again).
  */
 export const EFFECTIVENESS_POSITIONING_TAGS: string[] = [
   'Governance',
@@ -874,3 +1079,18 @@ export const FINAL_DECLARATION_STATEMENT = 'Built Once. Configured Together. Gov
 /** vNext — Prevention-First Blueprint's Final Positioning Statement. */
 export const PREVENTION_POSITIONING_STATEMENT =
   'OrchestrAI OMG helps organizations identify governance gaps, strengthen accountability, preserve evidence, and make informed decisions before governance weaknesses become business consequences.';
+
+/**
+ * Product Experience Refresh — the shift OMG asks a first-time reviewer to
+ * see: from paperwork to a running system. Reused wherever the app wants to
+ * reinforce category positioning (landing page, footer), never as a
+ * replacement for the module-level "what/why/outcome" content.
+ */
+export const PRODUCT_MESSAGING_SHIFTS: { from: string; to: string }[] = [
+  { from: 'Governance Documentation', to: 'Governance Operations' },
+  { from: 'Point-in-Time Reviews', to: 'Continuous Governance' },
+  { from: 'Compliance Repositories', to: 'Governance Operating Systems' },
+];
+
+export const GOVERNANCE_PRINCIPLE_STATEMENT =
+  'Governance by Design. Governance by Evidence. Governance by Continuity.';
