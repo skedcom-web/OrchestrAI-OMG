@@ -85,7 +85,7 @@ export const LoginPage: React.FC = () => {
                 onClick={() => handlePersonaClick('SUPER_ADMIN')}
                 className="px-4 py-2.5 rounded-xl border border-white/40 text-white text-sm font-bold hover:bg-white/10 transition-all cursor-pointer"
               >
-                Explore Demo
+                Explore OMG
               </button>
             </div>
           </div>

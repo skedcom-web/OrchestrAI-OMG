@@ -149,7 +149,7 @@ export const OmgOverviewPage: React.FC = () => {
                 data-noglass
                 className="px-5 py-2.5 rounded-xl text-[13px] font-bold bg-[var(--bg-card)] border border-[var(--border-color)] text-[var(--text-primary)] hover:border-[var(--accent-border)] transition-all cursor-pointer"
               >
-                Explore Demo
+                Explore OMG
               </button>
             </div>
 
