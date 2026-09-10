@@ -13,11 +13,11 @@ import type { GovernanceTimelineEvent } from '../types';
 
 type JourneyTab = 'timeline' | 'decision' | 'story' | 'value';
 
-const TABS: { key: JourneyTab; label: string; icon: string }[] = [
-  { key: 'timeline', label: 'Timeline', icon: '🧭' },
-  { key: 'decision', label: 'Decision Reconstruction', icon: '⚖️' },
-  { key: 'story', label: 'Governance Story', icon: '📖' },
-  { key: 'value', label: 'Governance Value', icon: '📈' },
+const TABS: { key: JourneyTab; label: string; shortLabel: string; icon: string }[] = [
+  { key: 'timeline', label: 'Timeline', shortLabel: 'Timeline', icon: '🧭' },
+  { key: 'decision', label: 'Decision Reconstruction', shortLabel: 'Decisions', icon: '⚖️' },
+  { key: 'story', label: 'Governance Story', shortLabel: 'Story', icon: '📖' },
+  { key: 'value', label: 'Governance Value', shortLabel: 'Value', icon: '📈' },
 ];
 
 const EVENT_TONE: Record<GovernanceTimelineEvent['type'], string> = {
@@ -98,18 +98,18 @@ export const GovernanceJourneyExplorerPage: React.FC = () => {
           </Card>
 
           <Card className="!p-0 overflow-hidden">
-            <div className="flex items-center gap-1 px-5 pt-3 border-b border-[var(--border-color)] overflow-x-auto">
+            <div className="flex items-center gap-0.5 sm:gap-1 px-2 sm:px-5 pt-3 border-b border-[var(--border-color)]">
               {TABS.map(tab => (
                 <button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key)}
-                  className={`px-3.5 py-2 rounded-t-lg text-xs font-bold whitespace-nowrap transition-all cursor-pointer border-b-2 ${
+                  className={`flex-1 sm:flex-initial px-1.5 sm:px-3.5 py-2 rounded-t-lg text-[10.5px] sm:text-xs font-bold whitespace-nowrap transition-all cursor-pointer border-b-2 ${
                     activeTab === tab.key
                       ? 'border-[var(--accent-primary)] text-[var(--accent-primary)]'
                       : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
                   }`}
                 >
-                  {tab.icon} {tab.label}
+                  {tab.icon} <span className="sm:hidden">{tab.shortLabel}</span><span className="hidden sm:inline">{tab.label}</span>
                 </button>
               ))}
             </div>

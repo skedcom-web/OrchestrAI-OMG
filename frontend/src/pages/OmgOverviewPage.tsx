@@ -409,6 +409,30 @@ export const OmgOverviewPage: React.FC = () => {
           icon="🔎"
         />
         <WorkedExample />
+
+        <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-4">
+          <span
+            data-noglass
+            className="shrink-0 w-11 h-11 grid place-items-center rounded-xl text-[20px] border border-[var(--accent-border)] bg-[var(--accent-light)]"
+            aria-hidden
+          >
+            🧭
+          </span>
+          <div className="min-w-0 flex-1">
+            <h3 className="text-[14px] font-bold text-[var(--text-primary)]">Governance Journey Explorer</h3>
+            <p className="text-[12px] text-[var(--text-secondary)] mt-0.5 leading-relaxed">
+              Reconstruct governance decisions, trace evidence, findings, corrective actions, certifications, and governance outcomes using existing governance records.
+            </p>
+          </div>
+          <button
+            onClick={() => navigate('/governance-journey')}
+            data-noglass
+            className="shrink-0 w-full sm:w-auto px-4 py-2.5 rounded-xl text-[12.5px] font-bold text-white shadow-md hover:shadow-lg transition-all active:scale-[0.98] cursor-pointer"
+            style={{ background: 'var(--grad-brand)' }}
+          >
+            Launch Governance Journey →
+          </button>
+        </div>
       </section>
 
       {/* ============== SECTION 4 — GOVERNANCE CONTINUITY ============== */}

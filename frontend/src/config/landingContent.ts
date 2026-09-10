@@ -748,6 +748,15 @@ export const TOUR_STEPS: TourStep[] = [
     why: 'A certification is only as strong as the evidence an auditor could pull behind it.',
     look: 'Every certification record links straight to the evidence that justified it — nothing is certified on assertion alone.',
   },
+  {
+    n: 51,
+    title: 'Governance Journey Explorer',
+    path: '/governance-journey',
+    icon: '🧭',
+    what: 'Before: reconstructing what happened to an asset meant manually opening Inventory, Risk, Evidence, Findings, Corrective Actions and Certification one at a time. After: one screen assembles the Timeline, Decision Reconstruction, Governance Story and Governance Value straight from those same records.',
+    why: 'The story was always there, split across modules. Making it visible in one place turns governance data into governance understanding — without adding a single new record type.',
+    look: 'Select the Fraud Detection Sentinel Agent for a clean approval story, or the Enterprise Portfolio Multi-Agent System to see a real reassessment, an open finding and a revoked certification play out — every field traced to a record on file, or marked Not Recorded.',
+  },
 ];
 
 /* ================== Section 5b — five named guided tours ================= */
@@ -780,7 +789,7 @@ export const GUIDED_TOURS: GuidedTourDefinition[] = [
     name: 'Governance Lifecycle',
     description: 'Register, own, classify, validate, approve, evidence, control, remediate, certify, reassess — the full journey.',
     icon: '🔄',
-    stepTitles: ['AI Asset Registry', 'Ownership', 'Risk Center', 'Validation Center', 'Decision Authority', 'Evidence Registry', 'Control Governance', 'Findings', 'Corrective Actions', 'Certification Governance', 'Change & Reassessment', 'Reauthorization History'],
+    stepTitles: ['AI Asset Registry', 'Ownership', 'Risk Center', 'Validation Center', 'Decision Authority', 'Evidence Registry', 'Control Governance', 'Findings', 'Corrective Actions', 'Certification Governance', 'Change & Reassessment', 'Reauthorization History', 'Governance Journey Explorer'],
   },
   {
     id: 'agent-governance',
@@ -794,7 +803,7 @@ export const GUIDED_TOURS: GuidedTourDefinition[] = [
     name: 'Audit & Assurance',
     description: 'Evidence, audit trail, lifecycle visibility, reporting, certification evidence, findings and corrective actions.',
     icon: '🔍',
-    stepTitles: ['Evidence Registry', 'Audit & Reporting', 'Universal Lifecycle Console', 'Governance Reports', 'Certification Evidence', 'Findings', 'Corrective Actions'],
+    stepTitles: ['Evidence Registry', 'Audit & Reporting', 'Universal Lifecycle Console', 'Governance Reports', 'Certification Evidence', 'Findings', 'Corrective Actions', 'Governance Journey Explorer'],
   },
   {
     id: 'governance-intelligence',
