@@ -1682,7 +1682,59 @@ export interface GovernanceTimelineEvent {
   details: string;
   type: 'registration' | 'risk' | 'validation' | 'decision' | 'compliance' | 'override' | 'killswitch' | 'retirement'
     // Release 2 — Governance Continuity
-    | 'authorized' | 'trigger' | 'review' | 'reauthorization';
+    | 'authorized' | 'trigger' | 'review' | 'reauthorization'
+    // Governance Journey Explorer — closes the gap to evidence, findings, corrective actions,
+    // certification and incident events, all sourced from existing records.
+    | 'evidence' | 'finding' | 'corrective-action' | 'certification' | 'incident';
+}
+
+/**
+ * Governance Journey Explorer — Decision Reconstruction. Assembled entirely
+ * from existing records (asset fields, evidence, reassessment triggers,
+ * corrective actions and reauthorization decisions); introduces no new data.
+ */
+export interface DecisionReconstruction {
+  asset: AIAsset;
+  primaryDecision: {
+    outcome: DecisionOutcome;
+    approver: string;
+    approvalDate?: string;
+    riskRating: RiskLevel;
+    evidenceUsed: EvidenceRecord[];
+    linkedDocuments: EvidenceDocument[];
+    conditionsApplied?: string;
+  };
+  reassessments: Array<{
+    trigger: ReassessmentTrigger;
+    correctiveActions: CorrectiveAction[];
+    outcome?: GovernanceReauthorizationRecord;
+  }>;
+}
+
+/** Governance Journey Explorer — Governance Story Mode narrative fields. */
+export interface GovernanceStorySummary {
+  asset: AIAsset;
+  owner: string;
+  risk: RiskLevel;
+  evidenceCount: number;
+  approvalDate?: string;
+  deploymentStatus: string;
+  openFinding?: Finding;
+  openCorrectiveAction?: CorrectiveAction;
+  currentStatus: string;
+}
+
+/** Governance Journey Explorer — Governance Value Demonstrator, portfolio-wide. */
+export interface GovernanceValueSummary {
+  totalAssets: number;
+  assetsWithCompleteOwnership: number;
+  totalEvidenceRecords: number;
+  openFindings: number;
+  resolvedFindings: number;
+  activeCertifications: number;
+  expiredOrRevokedCertifications: number;
+  totalReauthorizations: number;
+  openReassessmentTriggers: number;
 }
 
 // ------------------- PHASE 7 TYPES -------------------

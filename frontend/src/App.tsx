@@ -46,6 +46,7 @@ import { RetirementCenterPage } from './pages/RetirementCenterPage';
 import { ArchivedAssetsPage } from './pages/ArchivedAssetsPage';
 import { GovernanceReadinessDashboardPage } from './pages/GovernanceReadinessDashboardPage';
 import { GovernanceTimelinePage } from './pages/GovernanceTimelinePage';
+import { GovernanceJourneyExplorerPage } from './pages/GovernanceJourneyExplorerPage';
 
 // Phase 7 Pages
 import { GovernanceMonitoringPage } from './pages/GovernanceMonitoringPage';
@@ -287,6 +288,7 @@ const GOVERNED_ROUTES: { path: string; element: React.ReactNode }[] = [
 
   // Domain 5 — Audit & Oversight
   { path: '/governance-timeline', element: <GovernanceTimelinePage /> },
+  { path: '/governance-journey', element: <GovernanceJourneyExplorerPage /> },
   { path: '/governance-trends', element: <GovernanceTrendsDashboardPage /> },
   { path: '/audit-logs', element: <AuditLogsPage /> },
 

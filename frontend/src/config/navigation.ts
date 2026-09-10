@@ -268,6 +268,17 @@ export const NAV_DOMAINS: NavDomain[] = [
           } },
         ],
       },
+      {
+        label: 'Governance Journey',
+        modules: [
+          { path: '/governance-journey', label: 'Governance Journey Explorer', icon: '🧭', description: 'One operational governance narrative per asset — timeline, decision reconstruction, story mode and portfolio value, built from records already on file.', keywords: ['journey', 'timeline', 'story', 'narrative', 'decision reconstruction', 'value'], insight: {
+            whatItDoes: 'Stitches an asset\'s ownership, risk, evidence, approvals, reassessments, findings, corrective actions and certification into one chronological narrative.',
+            whyItMatters: 'Reconstructing a governance decision by hand across ten modules is slow and error-prone. The story should already exist in the records — it just needs to be made visible.',
+            governanceOutcome: 'A governance history any executive, auditor or board member can read in minutes, with nothing invented beyond what was actually recorded.',
+            keyArtifacts: ['Governance journey timeline', 'Decision reconstruction', 'Governance story summary', 'Portfolio value view'],
+          } },
+        ],
+      },
     ],
   }),
 

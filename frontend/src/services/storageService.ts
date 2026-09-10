@@ -78,7 +78,10 @@ import type {
   GovernanceAssessmentRecord,
   AssessorCertification,
   ConsensusAssessment,
-  ConfidenceAssessment
+  ConfidenceAssessment,
+  DecisionReconstruction,
+  GovernanceStorySummary,
+  GovernanceValueSummary
 } from '../types';
 import {
   INITIAL_ASSETS,
@@ -1569,7 +1572,205 @@ export function getGovernanceTimeline(assetId: string): GovernanceTimelineEvent[
     });
   });
 
+  // Governance Journey Explorer — extends the timeline to evidence, findings,
+  // corrective actions, certification and incident events, closing the gap
+  // to a complete governance narrative without introducing any new data.
+  getEvidenceRecordsForAsset(assetId).forEach(e => {
+    timeline.push({
+      id: `tl-evd-${e.id}`,
+      assetId: asset.id,
+      timestamp: e.createdDate,
+      stage: `12. Evidence Submitted (${e.evidenceType})`,
+      actor: e.ownership.evidenceOwner,
+      details: `${e.name} — ${e.status}`,
+      type: 'evidence',
+    });
+  });
+
+  getFindings().filter(f => f.assetId === assetId).forEach(f => {
+    timeline.push({
+      id: `tl-fnd-${f.id}`,
+      assetId: asset.id,
+      timestamp: f.reportedDate,
+      stage: `13. Finding Raised (${f.severity})`,
+      actor: f.reportedBy,
+      details: `${f.title} — ${f.status}`,
+      type: 'finding',
+    });
+  });
+
+  getCorrectiveActions().filter(c => c.assetId === assetId).forEach(c => {
+    timeline.push({
+      id: `tl-ca-${c.id}`,
+      assetId: asset.id,
+      timestamp: c.dueDate,
+      stage: `14. Corrective Action (${c.severity})`,
+      actor: c.assignedTo,
+      details: `${c.title} — ${c.status}`,
+      type: 'corrective-action',
+    });
+  });
+
+  getCertificationRecords().filter(c => c.entityType === 'Asset' && c.entityId === assetId).forEach(c => {
+    timeline.push({
+      id: `tl-cert-issued-${c.id}`,
+      assetId: asset.id,
+      timestamp: c.issuedAt,
+      stage: '15. Certification Issued',
+      actor: c.issuedBy,
+      details: `${c.entityName} certified. Status: ${c.status}`,
+      type: 'certification',
+    });
+    if (c.renewedAt) {
+      timeline.push({
+        id: `tl-cert-renewed-${c.id}`,
+        assetId: asset.id,
+        timestamp: c.renewedAt,
+        stage: '15. Certification Renewed',
+        actor: c.renewedBy || c.issuedBy,
+        details: c.renewalNotes || `${c.entityName} certification renewed.`,
+        type: 'certification',
+      });
+    }
+    if (c.revokedAt) {
+      timeline.push({
+        id: `tl-cert-revoked-${c.id}`,
+        assetId: asset.id,
+        timestamp: c.revokedAt,
+        stage: '15. Certification Revoked',
+        actor: c.revokedBy || c.issuedBy,
+        details: c.revocationReason || `${c.entityName} certification revoked.`,
+        type: 'certification',
+      });
+    }
+  });
+
+  getIncidents().filter(i => i.assetId === assetId).forEach(i => {
+    timeline.push({
+      id: `tl-inc-${i.id}`,
+      assetId: asset.id,
+      timestamp: i.createdAt,
+      stage: `16. Governance Incident (${i.severity})`,
+      actor: i.reportedBy,
+      details: `${i.title} — ${i.status}`,
+      type: 'incident',
+    });
+  });
+
   return timeline.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+}
+
+const SEVERITY_RANK: Record<string, number> = { Critical: 4, High: 3, Medium: 2, Low: 1 };
+
+/**
+ * Governance Journey Explorer — Decision Reconstruction. Lets an auditor or
+ * governance owner reconstruct why an asset was approved and what happened
+ * at each reassessment, without a manual investigation across modules.
+ * Reuses existing records only — no new workflow or stored decision object.
+ */
+export function getDecisionReconstruction(assetId: string): DecisionReconstruction | null {
+  const asset = getAssetById(assetId);
+  if (!asset) return null;
+
+  const evidenceUsed = getEvidenceRecordsForAsset(assetId);
+  const linkedDocuments = getEvidence().filter(d => d.assetId === assetId);
+  const reauthorizations = getReauthorizationRecords().filter(r => r.assetId === assetId);
+  const latestReauth = [...reauthorizations].sort((a, b) => new Date(b.reviewDate).getTime() - new Date(a.reviewDate).getTime())[0];
+
+  const reassessments = getReassessmentTriggers()
+    .filter(t => t.assetId === assetId)
+    .map(trigger => {
+      const correctiveActions = getCorrectiveActions().filter(c => c.assetId === assetId);
+      const outcome = reauthorizations
+        .filter(r => new Date(r.reviewDate).getTime() >= new Date(trigger.dateDetected).getTime())
+        .sort((a, b) => new Date(a.reviewDate).getTime() - new Date(b.reviewDate).getTime())[0];
+      return { trigger, correctiveActions, outcome };
+    });
+
+  return {
+    asset,
+    primaryDecision: {
+      outcome: asset.decisionOutcome || 'PENDING',
+      approver: asset.ownership.approver || asset.authorityProfile?.accountableOwner || 'Not recorded',
+      approvalDate: asset.approvalDate || latestReauth?.reviewDate,
+      riskRating: asset.riskLevel,
+      evidenceUsed,
+      linkedDocuments,
+      conditionsApplied: asset.decisionOutcome === 'CONDITIONAL GO' ? (latestReauth?.reason) : undefined,
+    },
+    reassessments,
+  };
+}
+
+/**
+ * Governance Journey Explorer — Governance Story Mode. Converts a governed
+ * asset's existing records into the human-readable narrative an executive,
+ * auditor or board member reads in under a minute — no fabricated figures,
+ * every field traced back to a real record or an honest "not recorded".
+ */
+export function getGovernanceStory(assetId: string): GovernanceStorySummary | null {
+  const asset = getAssetById(assetId);
+  if (!asset) return null;
+
+  const evidenceCount = getEvidenceRecordsForAsset(assetId).length;
+  const reauthorizations = getReauthorizationRecords().filter(r => r.assetId === assetId);
+  const latestReauth = [...reauthorizations].sort((a, b) => new Date(b.reviewDate).getTime() - new Date(a.reviewDate).getTime())[0];
+
+  const openFindings = getFindings()
+    .filter(f => f.assetId === assetId && f.status !== 'Resolved' && f.status !== 'Verified')
+    .sort((a, b) => (SEVERITY_RANK[b.severity] || 0) - (SEVERITY_RANK[a.severity] || 0));
+
+  const openCorrectiveActions = getCorrectiveActions()
+    .filter(c => c.assetId === assetId && c.status !== 'Completed' && c.status !== 'Verified')
+    .sort((a, b) => (SEVERITY_RANK[b.severity] || 0) - (SEVERITY_RANK[a.severity] || 0));
+
+  const certification = getCertificationRecords().find(c => c.entityType === 'Asset' && c.entityId === assetId);
+
+  return {
+    asset,
+    owner: asset.ownership.businessOwner || asset.authorityProfile?.accountableOwner || 'Not assigned',
+    risk: asset.riskLevel,
+    evidenceCount,
+    approvalDate: asset.approvalDate || latestReauth?.reviewDate,
+    deploymentStatus: asset.operationalStatus || 'Not yet deployed',
+    openFinding: openFindings[0],
+    openCorrectiveAction: openCorrectiveActions[0],
+    currentStatus: certification ? `Certified (${certification.status})` : (asset.governanceState || asset.status),
+  };
+}
+
+/**
+ * Governance Journey Explorer — Governance Value Demonstrator. Portfolio-wide
+ * counts computed live from real records — never a fabricated metric.
+ */
+export function getGovernanceValueSummary(): GovernanceValueSummary {
+  const assets = getAssets();
+  const assetsWithCompleteOwnership = assets.filter(a => {
+    const o = a.ownership || {};
+    return !!(o.businessOwner && o.technicalOwner && o.riskOwner && o.complianceOwner && o.approver);
+  }).length;
+
+  const findings = getFindings();
+  const openFindings = findings.filter(f => f.status !== 'Resolved' && f.status !== 'Verified').length;
+  const resolvedFindings = findings.filter(f => f.status === 'Resolved' || f.status === 'Verified').length;
+
+  const certifications = getCertificationRecords();
+  const activeCertifications = certifications.filter(c => c.status === 'ACTIVE').length;
+  const expiredOrRevokedCertifications = certifications.filter(c => c.status === 'EXPIRED' || c.status === 'REVOKED').length;
+
+  const openReassessmentTriggers = getReassessmentTriggers().filter(t => t.status === 'Open').length;
+
+  return {
+    totalAssets: assets.length,
+    assetsWithCompleteOwnership,
+    totalEvidenceRecords: getEvidenceRecords().length,
+    openFindings,
+    resolvedFindings,
+    activeCertifications,
+    expiredOrRevokedCertifications,
+    totalReauthorizations: getReauthorizationRecords().length,
+    openReassessmentTriggers,
+  };
 }
 
 // --- PHASE 7: CONTINUOUS MONITORING & GOVERNANCE HEALTH ENGINE ---
