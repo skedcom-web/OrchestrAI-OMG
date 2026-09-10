@@ -5401,7 +5401,7 @@ export function bootstrapPersistence(options?: { force?: boolean }): Promise<voi
       console.info(`OMG persistence: loaded ${assets.length} assets, ${evidence.length} evidence records, ${compliancePacks.length} compliance packs, ${regulatorySources.length} regulatory sources, ${governancePolicies.length} governance policies, ${recommendedActions.length} recommended actions, ${conditionDefinitions.length} condition definitions, ${outcomeRules.length} outcome rules, ${actionRules.length} action rules, ${governanceProfiles.length} governance profiles from Neon.`);
     } catch (err) {
       console.warn('OMG persistence: could not reach the governance API at startup; continuing with cached/local data until the next retry.', err);
-      bootstrapPromise = null; // allow a later manual retry (e.g. from Tenant Settings)
+      bootstrapPromise = null; // allow a later manual retry
     }
   })();
 

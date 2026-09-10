@@ -603,8 +603,7 @@ export const NAV_DOMAINS: NavDomain[] = [
       {
         label: 'Platform',
         modules: [
-          { path: '/tenant-settings', label: 'Tenant Settings', icon: '🏢', description: 'Tenant profile, governance thresholds and platform experience defaults.', keywords: ['settings', 'configuration', 'tenant', 'thresholds'] },
-          { path: '/release-notes', label: 'Product Release Notes', icon: '🗞️', description: 'Platform release history and what shipped in each version — moved out of everyday navigation so it never gets in the way of governance work.', keywords: ['release', 'release notes', 'version', 'changelog', 'what shipped', 'history'] },
+          { path: '/release-notes', label: 'Product Release Notes', icon: '🗞️', description: 'How OMG evolved — governance capabilities added release by release, moved out of everyday navigation so it never gets in the way of governance work.', keywords: ['release', 'release notes', 'version', 'changelog', 'evolution', 'history', 'timeline'] },
         ],
       },
     ],

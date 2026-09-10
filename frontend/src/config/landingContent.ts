@@ -757,6 +757,15 @@ export const TOUR_STEPS: TourStep[] = [
     why: 'The story was always there, split across modules. Making it visible in one place turns governance data into governance understanding — without adding a single new record type.',
     look: 'Select the Fraud Detection Sentinel Agent for a clean approval story, or the Enterprise Portfolio Multi-Agent System to see a real reassessment, an open finding and a revoked certification play out — every field traced to a record on file, or marked Not Recorded.',
   },
+  {
+    n: 52,
+    title: 'Product Release Notes',
+    path: '/release-notes',
+    icon: '🗞️',
+    what: 'A single evolution timeline, oldest release first, showing how OMG grew from an AI asset registry into the full governance operating system it is today.',
+    why: 'Releases matter because governance capability is not static — practitioner feedback, audit observations and real governance gaps become new capability over time, through the OrchestrAI Delivery Framework (ODF). Seeing that history builds confidence that the platform keeps closing real gaps, not just adding features.',
+    look: 'The current release is marked; every earlier release lists exactly what it added, in the order it shipped — the same order the underlying governance model matured.',
+  },
 ];
 
 /* ================== Section 5b — five named guided tours ================= */
@@ -782,7 +791,7 @@ export const GUIDED_TOURS: GuidedTourDefinition[] = [
     name: 'Executive Overview',
     description: 'Governance health, readiness, certifications, findings and evidence coverage, in ten minutes.',
     icon: '🏛️',
-    stepTitles: ['Executive Dashboard', 'Governance Health', 'Readiness Center', 'Certification Governance', 'Findings', 'Evidence Registry', 'Governance Reports'],
+    stepTitles: ['Executive Dashboard', 'Governance Health', 'Readiness Center', 'Certification Governance', 'Findings', 'Evidence Registry', 'Governance Reports', 'Product Release Notes'],
   },
   {
     id: 'governance-lifecycle',

@@ -5,8 +5,13 @@ import { NAV_DOMAINS, FUTURE_MODULES } from '../config/navigation';
 /**
  * The one place release, build and platform-version information is shown to
  * users. Every other screen in OMG shows business content only — no release
- * numbers, no phase labels, no build tags. Admin → Tenant Settings →
- * Product Release Notes is that single, deliberate exception.
+ * numbers, no phase labels, no build tags. Admin → Product Release Notes is
+ * that single, deliberate exception.
+ *
+ * Reframed from a "what shipped" changelog into OMG's product evolution
+ * timeline: oldest release first, so the platform's own governance story —
+ * how practitioner feedback became operational capability — reads the same
+ * direction it happened in.
  */
 
 interface ReleaseEntry {
@@ -14,38 +19,28 @@ interface ReleaseEntry {
   date: string;
   title: string;
   highlights: string[];
+  current?: boolean;
 }
 
+/** Oldest first — this is a timeline, not a changelog. */
 const RELEASE_HISTORY: ReleaseEntry[] = [
   {
-    version: 'Release 13',
-    date: '2026',
-    title: 'Assessment Consistency & Decision Quality',
+    version: 'Releases 1–9',
+    date: '2024 – 2025',
+    title: 'Foundational Governance Platform',
     highlights: [
-      'Assessor Certification — score benchmark scenarios and see calibration accuracy',
-      'Multi-Assessor Consensus — independent scoring rounds with variance reporting',
-      'Confidence Scoring across assessment and validation records',
-      'Benchmark Recommendations guided by use case, risk category and asset type',
-    ],
-  },
-  {
-    version: 'Release 12',
-    date: '2026',
-    title: 'Regulatory Knowledge & Audit Readiness',
-    highlights: [
-      'Regulatory Applicability, Cross-Framework Mapping and Compliance Impact Analysis',
-      'Regulatory Change Readiness and Audit Readiness Intelligence',
-      'Universal Regulatory Knowledge & Obligation Engine: Source → Requirement → Obligation → Control → Evidence',
-    ],
-  },
-  {
-    version: 'Release 11',
-    date: '2025',
-    title: 'Governance Effectiveness & Outcomes',
-    highlights: [
-      'Governance Effectiveness Score, ROI, Maturity and Benchmarking',
-      'Governance Outcomes — value delivered, not just activity performed',
-      'Executive dashboards for governance-as-value, not governance-as-overhead',
+      'AI Asset Registry',
+      'Ownership Matrix',
+      'Asset Lifecycle Management',
+      'Risk Classification',
+      'Independent Validation Center',
+      'Findings Tracking',
+      'Compliance Center',
+      'Policy Registry',
+      'Regulatory Controls',
+      'Governance Workflows',
+      'Audit Trail Foundation',
+      'Governance Dashboard Foundation',
     ],
   },
   {
@@ -53,22 +48,73 @@ const RELEASE_HISTORY: ReleaseEntry[] = [
     date: '2025',
     title: 'Compliance Pack Framework',
     highlights: [
-      'Universal, reusable Compliance Pack architecture — packs, requirements, controls, evidence',
-      'Governance Intelligence Studio for no-code condition, outcome and action configuration',
-      'Customer Governance Profiles scoping which regulations apply per tenant',
+      'Compliance Pack Architecture',
+      'Requirement → Control → Evidence Mapping',
+      'Governance Intelligence Studio',
+      'Customer Governance Profiles',
+      'Cross-Regulatory Mapping',
     ],
   },
   {
-    version: 'Releases 1–9',
-    date: '2024 – 2025',
-    title: 'Foundational Governance Platform',
+    version: 'Release 11',
+    date: '2025',
+    title: 'Governance Effectiveness & Outcomes',
     highlights: [
-      'AI Asset Registry, Ownership Matrix and Asset Lifecycle',
-      'Risk tiering, independent Validation Center and Findings tracking',
-      'Compliance Center, Policy Registry and regulatory control evaluation',
-      'Decision Authority, Evidence Center and immutable Audit Logs',
-      'Operations monitoring, incident management and human override controls',
-      'Governance Intelligence, Actions and full Decision Traceability',
+      'Governance Effectiveness Scoring',
+      'Governance ROI',
+      'Governance Maturity Assessment',
+      'Governance Outcome Measurement',
+      'Executive Governance Dashboards',
+    ],
+  },
+  {
+    version: 'Release 12',
+    date: '2026',
+    title: 'Regulatory Knowledge & Audit Readiness',
+    highlights: [
+      'Universal Regulatory Knowledge Engine',
+      'Source → Requirement → Obligation → Control → Evidence',
+      'Regulatory Applicability Analysis',
+      'Audit Readiness Intelligence',
+      'Regulatory Change Readiness',
+    ],
+  },
+  {
+    version: 'Release 13',
+    date: '2026',
+    title: 'Assessment Consistency & Decision Quality',
+    highlights: [
+      'Assessor Certification',
+      'Benchmark Assessments',
+      'Multi-Assessor Consensus',
+      'Variance Analysis',
+      'Confidence Scoring',
+      'Assessment Recommendations',
+    ],
+  },
+  {
+    version: 'Release 14',
+    date: '2026',
+    title: 'Governance Operations & Journey Intelligence',
+    current: true,
+    highlights: [
+      'Agent Governance',
+      'Tool Governance',
+      'Control Governance',
+      'Certification Governance',
+      'Governance Continuity',
+      'Governance Reassessment',
+      'Evidence Traceability',
+      'Decision Reconstruction',
+      'Governance Journey Explorer',
+      'Governance Story',
+      'Governance Value Dashboard',
+      'Governance Readiness',
+      'Certification Readiness',
+      'Governance Findings Intelligence',
+      'Corrective Action Intelligence',
+      'Executive Governance Command Center',
+      'Cross-Domain Governance Reporting',
     ],
   },
 ];
@@ -76,14 +122,15 @@ const RELEASE_HISTORY: ReleaseEntry[] = [
 export const ReleaseNotesPage: React.FC = () => {
   const workspaceCount = NAV_DOMAINS.length;
   const moduleCount = NAV_DOMAINS.reduce((n, d) => n + d.modules.length, 0) + 3;
+  const currentRelease = RELEASE_HISTORY.find(r => r.current) || RELEASE_HISTORY[RELEASE_HISTORY.length - 1];
 
   return (
     <div className="flex flex-col gap-7 pb-4">
       <div>
         <h1 className="text-2xl font-extrabold text-[var(--text-primary)]">Product Release Notes</h1>
-        <p className="text-[13px] text-[var(--text-secondary)] mt-1">
-          Platform version history. Every other screen in OMG is release-number free by design —
-          this is where that information lives instead.
+        <p className="text-[13px] text-[var(--text-secondary)] mt-1 max-w-2xl">
+          Track the evolution of governance capabilities across OMG releases and understand how
+          practitioner feedback became operational governance functionality.
         </p>
       </div>
 
@@ -98,7 +145,7 @@ export const ReleaseNotesPage: React.FC = () => {
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
           {[
-            { label: 'Current Version', value: RELEASE_HISTORY[0].version },
+            { label: 'Current Version', value: currentRelease.version },
             { label: 'Governance Workspaces', value: String(workspaceCount) },
             { label: 'Governed Modules', value: String(moduleCount) },
             { label: 'Roadmap Items', value: String(FUTURE_MODULES.length) },
@@ -117,11 +164,25 @@ export const ReleaseNotesPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Release history */}
+      {/* ODF in Action */}
+      <section className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-5 flex flex-col gap-3">
+        <SectionHeader
+          title="ODF in Action"
+          icon="🔁"
+        />
+        <p className="text-[12.5px] text-[var(--text-secondary)] leading-relaxed max-w-3xl">
+          Many OMG capabilities originated from practitioner discussions, governance challenges,
+          audit observations, and customer feedback. Through the OrchestrAI Delivery Framework
+          (ODF), insights are continuously validated, operationalized, and transformed into
+          governance capabilities.
+        </p>
+      </section>
+
+      {/* Release history — product evolution timeline */}
       <section className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-5 flex flex-col gap-5">
         <SectionHeader
-          title="Release History"
-          subtitle="What shipped, most recent first."
+          title="Product Evolution Timeline"
+          subtitle="How governance capabilities evolved, oldest to newest."
           icon="📜"
         />
 
@@ -129,7 +190,8 @@ export const ReleaseNotesPage: React.FC = () => {
           {RELEASE_HISTORY.map(entry => (
             <div
               key={entry.version}
-              className="relative pl-5 border-l-2 border-[var(--border-subtle)]"
+              className="relative pl-5 border-l-2"
+              style={{ borderColor: entry.current ? 'var(--accent-primary)' : 'var(--border-subtle)' }}
             >
               <div
                 className="absolute -left-[5px] top-1 w-2 h-2 rounded-full"
@@ -144,6 +206,14 @@ export const ReleaseNotesPage: React.FC = () => {
                 <span className="text-[12.5px] font-semibold text-[var(--text-secondary)]">
                   · {entry.title}
                 </span>
+                {entry.current && (
+                  <span
+                    data-noglass
+                    className="inline-flex items-center px-2 py-0.5 rounded-full text-[9.5px] font-extrabold uppercase tracking-wide bg-[var(--accent-light)] text-[var(--accent-primary)] border border-[var(--accent-border)]"
+                  >
+                    Current Release
+                  </span>
+                )}
               </div>
               <ul className="mt-2 flex flex-col gap-1">
                 {entry.highlights.map(h => (

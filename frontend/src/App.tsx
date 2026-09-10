@@ -77,7 +77,6 @@ import { ControlLibraryPage } from './pages/ControlLibraryPage';
 import { ControlMappingPage } from './pages/ControlMappingPage';
 import { ControlEffectivenessPage } from './pages/ControlEffectivenessPage';
 import { RbacAdministrationPage } from './pages/RbacAdministrationPage';
-import { TenantSettingsPage } from './pages/TenantSettingsPage';
 import { OmgOverviewPage } from './pages/OmgOverviewPage';
 import { FutureModulePage } from './pages/FutureModulePage';
 import { ReleaseNotesPage } from './pages/ReleaseNotesPage';
@@ -295,7 +294,6 @@ const GOVERNED_ROUTES: { path: string; element: React.ReactNode }[] = [
   // Domain 6 — Administration
   { path: '/users', element: <UserManagementPage /> },
   { path: '/rbac', element: <RbacAdministrationPage /> },
-  { path: '/tenant-settings', element: <TenantSettingsPage /> },
   { path: '/release-notes', element: <ReleaseNotesPage /> },
 ];
 
