@@ -144,13 +144,30 @@ const RELEASE_HISTORY: ReleaseEntry[] = [
     version: 'Release 17',
     date: '2026',
     title: 'Customer Workspace Foundation',
-    current: true,
     highlights: [
       'Customer Workspace Registry',
       'Customer Configuration Layer',
       'Customer Extension Catalog',
       'Customer Solution Blueprint Repository',
       'Customer Readiness Dashboard',
+    ],
+  },
+  {
+    version: 'Release 18',
+    date: '2026',
+    title: 'Governability Foundation & Governance Intelligence Enhancement',
+    current: true,
+    highlights: [
+      'Governability Engine (Governable / Governable With Conditions / Review Required / Governance Attention Required / Not Governable)',
+      'Evidence Sufficiency Engine (Availability, Recency, Completeness, Relevance, Context Alignment)',
+      'Authority Currency Engine (Exists, Reachable, Applicable)',
+      'Admissibility Assessment Engine (Continue / Continue With Conditions / Escalate / Reauthorize / Pause)',
+      'Governability Dashboard',
+      'Reassessment Trigger Framework completed — Vendor Change and Ownership Change triggers, a working "report a material change" entry point, and automatic Governance Alerts',
+      'Governance Decision Reconstruction enriched with Governability Assessment',
+      'Governance Export Pack (JSON, CSV, Print/PDF)',
+      'Governability Studio — versioned, audited Evidence Thresholds, Authority Review Periods, Admissibility Rules, Reassessment Rules and Escalation Rules',
+      'Post-Intervention Revalidation flow',
     ],
   },
 ];
@@ -212,6 +229,49 @@ export const ReleaseNotesPage: React.FC = () => {
           (ODF), insights are continuously validated, operationalized, and transformed into
           governance capabilities.
         </p>
+      </section>
+
+      {/* Why Governability — Release 18 */}
+      <section className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-5 flex flex-col gap-4">
+        <SectionHeader
+          title="Why Governability"
+          subtitle="Release 18 — the difference between a valid date and a legitimate decision."
+          icon="🛡️"
+        />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <p className="text-[11.5px] font-extrabold uppercase tracking-wide text-[var(--text-muted)] mb-1.5">Why it was introduced</p>
+            <p className="text-[12.5px] text-[var(--text-secondary)] leading-relaxed">
+              A recurring practitioner observation: evidence may persist, authority may still exist, and a decision's
+              review date may still be in the future — but none of that guarantees the decision remains legitimate
+              once the conditions underneath it have changed. Governability answers that standing question directly.
+            </p>
+          </div>
+          <div>
+            <p className="text-[11.5px] font-extrabold uppercase tracking-wide text-[var(--text-muted)] mb-1.5">Continuity vs. Governability</p>
+            <p className="text-[12.5px] text-[var(--text-secondary)] leading-relaxed">
+              Governance Continuity asks whether a decision's review date is still current. Governability asks the
+              harder question underneath it: given everything that has changed since, does the decision still hold
+              up? Continuity is a calendar check; Governability is a live composition of evidence, authority and
+              admissibility.
+            </p>
+          </div>
+          <div>
+            <p className="text-[11.5px] font-extrabold uppercase tracking-wide text-[var(--text-muted)] mb-1.5">What OMG does</p>
+            <p className="text-[12.5px] text-[var(--text-secondary)] leading-relaxed">
+              Computes Evidence Sufficiency, Authority Currency, Admissibility and a composite Governability status
+              live, from governance records already on file, and explains every verdict with the reasons behind it.
+            </p>
+          </div>
+          <div>
+            <p className="text-[11.5px] font-extrabold uppercase tracking-wide text-[var(--text-muted)] mb-1.5">What OMG intentionally does not do</p>
+            <p className="text-[12.5px] text-[var(--text-secondary)] leading-relaxed">
+              Enforce, block, or execute anything. OMG is not a runtime control platform, an AI gateway, an IAM
+              solution, or an execution engine — a "Not Governable" or "Pause" verdict is a recommendation for a
+              human to act on, never an automatic suspension.
+            </p>
+          </div>
+        </div>
       </section>
 
       {/* Release history — product evolution timeline */}

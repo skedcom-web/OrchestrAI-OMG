@@ -154,7 +154,7 @@ export const OmgOverviewPage: React.FC = () => {
             </div>
 
             <p className="text-[11px] text-[var(--text-muted)]">
-              Five guided tours, built for how you'll actually use OMG — no training required.
+              Six guided tours, built for how you'll actually use OMG — no training required.
             </p>
           </div>
 
@@ -446,6 +446,48 @@ export const OmgOverviewPage: React.FC = () => {
         <GovernanceContinuity />
       </section>
 
+      {/* ============== SECTION 4B — GOVERNABILITY INTELLIGENCE ============== */}
+      <section className="flex flex-col gap-4">
+        <SectionHeader
+          eyebrow="Section 4B · Governance Continuity ≠ Runtime Governability"
+          title="Governability Intelligence"
+          subtitle="Continuity asks whether a decision's date is still valid. Governability asks the harder question: given everything that has changed since, does the decision still hold up?"
+          icon="🛡️"
+        />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          {[
+            { icon: '🛡️', title: 'Governability', desc: 'One composite verdict — Governable, Governable With Conditions, Review Required, Governance Attention Required, or Not Governable.' },
+            { icon: '🗃️', title: 'Evidence Sufficiency', desc: 'Not just "does evidence exist" — is it recent, complete, relevant and still aligned with current context.' },
+            { icon: '🪪', title: 'Authority Currency', desc: 'Not just "is an owner named" — is that authority still recently confirmed and still matched to current risk.' },
+            { icon: '⚖️', title: 'Admissibility', desc: 'Whether the next governance decision remains legitimate: Continue, Continue With Conditions, Escalate, Reauthorize, or Pause.' },
+          ].map(item => (
+            <div key={item.title} className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4 flex flex-col gap-2">
+              <span data-noglass className="w-10 h-10 grid place-items-center rounded-xl text-[18px] bg-[var(--accent-light)] border border-[var(--accent-border)]" aria-hidden>{item.icon}</span>
+              <h3 className="text-[13px] font-bold text-[var(--text-primary)]">{item.title}</h3>
+              <p className="text-[11.5px] text-[var(--text-secondary)] leading-relaxed">{item.desc}</p>
+            </div>
+          ))}
+        </div>
+        <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-4">
+          <div className="min-w-0 flex-1">
+            <h3 className="text-[14px] font-bold text-[var(--text-primary)]">Governability Dashboard</h3>
+            <p className="text-[12px] text-[var(--text-secondary)] mt-0.5 leading-relaxed">
+              All four signals, portfolio-wide — computed live, advisory only. OMG does not become a runtime
+              enforcement platform to answer this question; it stays a governance intelligence layer that tells a
+              human the truth.
+            </p>
+          </div>
+          <button
+            onClick={() => navigate('/governability-dashboard')}
+            data-noglass
+            className="shrink-0 w-full sm:w-auto px-4 py-2.5 rounded-xl text-[12.5px] font-bold text-white shadow-md hover:shadow-lg transition-all active:scale-[0.98] cursor-pointer"
+            style={{ background: 'var(--grad-brand)' }}
+          >
+            Open Governability Dashboard →
+          </button>
+        </div>
+      </section>
+
       {/* ============== PLATFORM FOUNDATION — ROADMAP HIGHLIGHTS ============== */}
       <section className="flex flex-col gap-4">
         <SectionHeader
@@ -499,10 +541,11 @@ export const OmgOverviewPage: React.FC = () => {
             Take the Guided Tour
           </h2>
           <p className="text-[12.5px] text-[var(--text-secondary)] mt-1.5 leading-relaxed max-w-2xl">
-            Five named tours, each built for a different reason you're here: Executive Overview,
-            Governance Lifecycle, Agent Governance, Audit & Assurance, and Governance
-            Intelligence. Pick the one that matches what you need, and every stop explains what
-            the module is, why it exists and what to look at — and can take you straight there.
+            Six named tours, each built for a different reason you're here: Executive Overview,
+            Governance Lifecycle, Agent Governance, Audit & Assurance, Governance
+            Intelligence, and Governability Intelligence. Pick the one that matches what you need,
+            and every stop explains what the module is, why it exists and what to look at — and
+            can take you straight there.
           </p>
         </div>
         <button

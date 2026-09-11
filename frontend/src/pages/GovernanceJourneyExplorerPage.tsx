@@ -11,14 +11,26 @@ import {
 } from '../services/storageService';
 import type { GovernanceTimelineEvent } from '../types';
 
-type JourneyTab = 'timeline' | 'decision' | 'story' | 'value';
+type JourneyTab = 'timeline' | 'decision' | 'governability' | 'story' | 'value';
 
 const TABS: { key: JourneyTab; label: string; shortLabel: string; icon: string }[] = [
   { key: 'timeline', label: 'Timeline', shortLabel: 'Timeline', icon: '🧭' },
   { key: 'decision', label: 'Decision Reconstruction', shortLabel: 'Decisions', icon: '⚖️' },
+  { key: 'governability', label: 'Governability', shortLabel: 'Governability', icon: '🛡️' },
   { key: 'story', label: 'Governance Story', shortLabel: 'Story', icon: '📖' },
   { key: 'value', label: 'Governance Value', shortLabel: 'Value', icon: '📈' },
 ];
+
+const GOVERNABILITY_TONE: Record<string, string> = {
+  'Governable': 'var(--status-success)',
+  'Governable With Conditions': 'var(--status-warning)',
+  'Review Required': 'var(--status-warning)',
+  'Governance Attention Required': 'var(--status-danger)',
+  'Not Governable': 'var(--status-danger)',
+  'Sufficient': 'var(--status-success)', 'Partially Sufficient': 'var(--status-warning)', 'Insufficient': 'var(--status-danger)',
+  'Current': 'var(--status-success)', 'Review Required-authority': 'var(--status-warning)', 'Expired': 'var(--status-danger)', 'Not Applicable': 'var(--text-muted)',
+  'Continue': 'var(--status-success)', 'Continue With Conditions': 'var(--status-warning)', 'Escalate': 'var(--status-danger)', 'Reauthorize': 'var(--status-warning)', 'Pause': 'var(--status-danger)',
+};
 
 const EVENT_TONE: Record<GovernanceTimelineEvent['type'], string> = {
   registration: 'var(--accent-primary)',
@@ -64,7 +76,10 @@ export const GovernanceJourneyExplorerPage: React.FC = () => {
   const [assetId, setAssetId] = useState<string>(
     (preselected && assets.some(a => a.id === preselected)) ? preselected : (assets[0]?.id || '')
   );
-  const [activeTab, setActiveTab] = useState<JourneyTab>('timeline');
+  const preselectedTab = searchParams.get('tab') as JourneyTab | null;
+  const [activeTab, setActiveTab] = useState<JourneyTab>(
+    (preselectedTab && TABS.some(t => t.key === preselectedTab)) ? preselectedTab : 'timeline'
+  );
   const [expandedEventId, setExpandedEventId] = useState<string | null>(null);
 
   const asset = assets.find(a => a.id === assetId);
@@ -73,13 +88,59 @@ export const GovernanceJourneyExplorerPage: React.FC = () => {
   const story = useMemo(() => (assetId ? getGovernanceStory(assetId) : null), [assetId]);
   const value = useMemo(() => getGovernanceValueSummary(), []);
 
+  // ============== MODULE 10 — GOVERNANCE EXPORT PACK ==============
+  const handleExportJSON = () => {
+    if (!asset || !decision) return;
+    const pack = {
+      asset: { id: asset.id, name: asset.name, riskLevel: asset.riskLevel, governanceState: asset.governanceState },
+      decisionChain: decision.primaryDecision,
+      evidenceChain: decision.primaryDecision.evidenceUsed,
+      approvalChain: { outcome: decision.primaryDecision.outcome, approver: decision.primaryDecision.approver, approvalDate: decision.primaryDecision.approvalDate },
+      reassessmentHistory: decision.reassessments,
+      governabilityAssessment: decision.governability,
+      timeline,
+    };
+    const blob = new Blob([JSON.stringify(pack, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `omg-governance-pack-${asset.id}-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExportCSV = () => {
+    if (!asset) return;
+    const header = ['Stage', 'Timestamp', 'Actor', 'Details', 'Type'];
+    const rows = timeline.map(e => [e.stage, e.timestamp, e.actor, e.details.replace(/"/g, "'"), e.type]);
+    const csv = [header, ...rows].map(r => r.map(cell => `"${cell}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `omg-governance-timeline-${asset.id}-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handlePrint = () => window.print();
+
   return (
     <div className="flex flex-col gap-6 pb-12">
-      <div>
-        <h1 className="text-3xl font-extrabold text-[var(--text-primary)]">Governance Journey Explorer</h1>
-        <p className="text-sm text-[var(--text-secondary)] mt-1">
-          One operational governance narrative, assembled live from records already on file — ownership, risk, evidence, approvals, reassessments, findings, corrective actions and certification.
-        </p>
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-3xl font-extrabold text-[var(--text-primary)]">Governance Journey Explorer</h1>
+          <p className="text-sm text-[var(--text-secondary)] mt-1">
+            One operational governance narrative, assembled live from records already on file — ownership, risk, evidence, approvals, reassessments, findings, corrective actions and certification.
+          </p>
+        </div>
+        {asset && (
+          <div className="flex items-center gap-1.5 shrink-0 print:hidden">
+            <button onClick={handleExportJSON} className="px-3 py-2 rounded-lg text-[11px] font-bold border border-[var(--border-color)] text-[var(--text-secondary)] hover:border-[var(--accent-border)] cursor-pointer">Export JSON</button>
+            <button onClick={handleExportCSV} className="px-3 py-2 rounded-lg text-[11px] font-bold border border-[var(--border-color)] text-[var(--text-secondary)] hover:border-[var(--accent-border)] cursor-pointer">Export CSV</button>
+            <button onClick={handlePrint} className="px-3 py-2 rounded-lg text-[11px] font-bold border border-[var(--border-color)] text-[var(--text-secondary)] hover:border-[var(--accent-border)] cursor-pointer">Print / Save as PDF</button>
+          </div>
+        )}
       </div>
 
       {assets.length === 0 ? (
@@ -233,6 +294,81 @@ export const GovernanceJourneyExplorerPage: React.FC = () => {
                       </div>
                     )}
                   </div>
+                </div>
+              )}
+
+              {/* ============== GOVERNABILITY (RELEASE 18) ============== */}
+              {activeTab === 'governability' && decision && (
+                <div className="flex flex-col gap-5">
+                  <Card className="!p-5 border-[var(--accent-border)]">
+                    <div className="flex items-center justify-between gap-3 flex-wrap">
+                      <p className="text-[10px] font-extrabold uppercase tracking-wider text-[var(--text-muted)]">Governability Status</p>
+                      <Pill tone={GOVERNABILITY_TONE[decision.governability.status]}>{decision.governability.status}</Pill>
+                    </div>
+                    <p className="text-xs text-[var(--text-secondary)] mt-2">{decision.governability.reasons[0]}</p>
+                  </Card>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Card className="!p-4">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-[10px] font-extrabold uppercase tracking-wider text-[var(--text-muted)]">Evidence Sufficiency</p>
+                        <Pill tone={GOVERNABILITY_TONE[decision.governability.evidenceSufficiency.status]}>{decision.governability.evidenceSufficiency.status}</Pill>
+                      </div>
+                      <ul className="mt-2.5 flex flex-col gap-1">
+                        {[
+                          ['Availability', decision.governability.evidenceSufficiency.evidenceAvailable],
+                          ['Recency', decision.governability.evidenceSufficiency.evidenceRecency],
+                          ['Completeness', decision.governability.evidenceSufficiency.evidenceCompleteness],
+                          ['Relevance', decision.governability.evidenceSufficiency.evidenceRelevance],
+                          ['Context Alignment', decision.governability.evidenceSufficiency.evidenceContextAlignment],
+                        ].map(([label, ok]) => (
+                          <li key={label as string} className="text-[11px] flex items-center justify-between gap-2">
+                            <span className="text-[var(--text-secondary)]">{label as string}</span>
+                            <span style={{ color: ok ? 'var(--status-success)' : 'var(--status-danger)' }}>{ok ? '✓' : '✕'}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </Card>
+
+                    <Card className="!p-4">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-[10px] font-extrabold uppercase tracking-wider text-[var(--text-muted)]">Authority Currency</p>
+                        <Pill tone={GOVERNABILITY_TONE[decision.governability.authorityCurrency.status]}>{decision.governability.authorityCurrency.status}</Pill>
+                      </div>
+                      <ul className="mt-2.5 flex flex-col gap-1">
+                        {[
+                          ['Exists', decision.governability.authorityCurrency.authorityExists],
+                          ['Reachable', decision.governability.authorityCurrency.authorityReachable],
+                          ['Applicable', decision.governability.authorityCurrency.authorityApplicable],
+                        ].map(([label, ok]) => (
+                          <li key={label as string} className="text-[11px] flex items-center justify-between gap-2">
+                            <span className="text-[var(--text-secondary)]">{label as string}</span>
+                            <span style={{ color: ok ? 'var(--status-success)' : 'var(--status-danger)' }}>{ok ? '✓' : '✕'}</span>
+                          </li>
+                        ))}
+                      </ul>
+                      {decision.governability.authorityCurrency.daysSinceLastReview !== null && (
+                        <p className="text-[10.5px] text-[var(--text-muted)] mt-2 pt-2 border-t border-[var(--border-subtle)]">Last confirmed {decision.governability.authorityCurrency.daysSinceLastReview} days ago.</p>
+                      )}
+                    </Card>
+
+                    <Card className="!p-4">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-[10px] font-extrabold uppercase tracking-wider text-[var(--text-muted)]">Admissibility</p>
+                        <Pill tone={GOVERNABILITY_TONE[decision.governability.admissibility.outcome]}>{decision.governability.admissibility.outcome}</Pill>
+                      </div>
+                      <ul className="mt-2.5 flex flex-col gap-1.5">
+                        {decision.governability.admissibility.reasons.map((r, i) => (
+                          <li key={i} className="text-[11px] text-[var(--text-secondary)]">{r}</li>
+                        ))}
+                      </ul>
+                    </Card>
+                  </div>
+
+                  <p className="text-[10.5px] text-[var(--text-muted)]">
+                    Governability, Evidence Sufficiency, Authority Currency and Admissibility are advisory signals,
+                    computed live from records already on file — none of them suspends, blocks or executes anything.
+                  </p>
                 </div>
               )}
 

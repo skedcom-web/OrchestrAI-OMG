@@ -13,6 +13,7 @@ import type {
   GovernanceIncident,
   RetirementRecord,
   GovernanceAlert,
+  GovernabilityConfigEntry,
   ScheduledReview,
   CorrectiveAction,
   ReassessmentTrigger,
@@ -191,6 +192,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       // gated individually by roleActionMatrix.ts, not by hiding the page.
       '/mapping-workspace', '/requirement-registry', '/obligation-library',
       '/governance-intelligence', '/governance-actions', '/decision-traceability', '/governance-studio',
+      '/governability-dashboard', '/governability-studio',
       '/archived-assets', '/governance-readiness',
       // OMG vNext — Governance Intelligence (Value, Drift, Health)
       '/governance-value', '/governance-drift', '/governance-health',
@@ -227,6 +229,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       // Q1 Stabilization — see note on Governance Admin above.
       '/mapping-workspace', '/requirement-registry', '/obligation-library',
       '/governance-intelligence', '/governance-actions', '/decision-traceability', '/governance-studio',
+      '/governability-dashboard', '/governability-studio',
       '/archived-assets', '/governance-readiness',
       // OMG vNext — Governance Intelligence (Value, Drift, Health)
       '/governance-value', '/governance-drift', '/governance-health',
@@ -260,6 +263,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       // Q1 Stabilization — see note on Governance Admin above.
       '/mapping-workspace', '/requirement-registry', '/obligation-library',
       '/governance-intelligence', '/governance-actions', '/decision-traceability', '/governance-studio',
+      '/governability-dashboard', '/governability-studio',
       '/archived-assets', '/governance-readiness',
       // OMG vNext — Governance Intelligence (Value, Drift, Health)
       '/governance-value', '/governance-drift', '/governance-health',
@@ -293,6 +297,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       // Q1 Stabilization — see note on Governance Admin above.
       '/mapping-workspace', '/requirement-registry', '/obligation-library',
       '/governance-intelligence', '/governance-actions', '/decision-traceability', '/governance-studio',
+      '/governability-dashboard', '/governability-studio',
       '/archived-assets', '/governance-readiness',
       // OMG vNext — Governance Intelligence (Value, Drift, Health)
       '/governance-value', '/governance-drift', '/governance-health',
@@ -328,6 +333,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       // Q1 Stabilization — see note on Governance Admin above.
       '/mapping-workspace', '/requirement-registry', '/obligation-library',
       '/governance-intelligence', '/governance-actions', '/decision-traceability', '/governance-studio',
+      '/governability-dashboard', '/governability-studio',
       '/archived-assets', '/governance-readiness',
       // OMG vNext — Governance Intelligence (Value, Drift, Health)
       '/governance-value', '/governance-drift', '/governance-health',
@@ -359,6 +365,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       // Q1 Stabilization — see note on Governance Admin above.
       '/mapping-workspace', '/requirement-registry', '/obligation-library',
       '/governance-intelligence', '/governance-actions', '/decision-traceability', '/governance-studio',
+      '/governability-dashboard', '/governability-studio',
       '/archived-assets', '/governance-readiness',
       // OMG vNext — Governance Intelligence (Value, Drift, Health)
       '/governance-value', '/governance-drift', '/governance-health',
@@ -1505,6 +1512,28 @@ export const INITIAL_GOVERNANCE_ALERTS: GovernanceAlert[] = [
     message: 'Quarterly RBI control validation review is overdue by 7 days.',
     resolutionPath: '/compliance-assessment',
   },
+];
+
+/**
+ * Release 18, Module 11 — Governability Studio defaults. Evidence Threshold
+ * and Authority Review Period entries are genuinely read by
+ * evidenceSufficiencyEngine.ts / authorityCurrencyEngine.ts via
+ * getGovernabilityConfigOverrides() in storageService.ts. Admissibility,
+ * Reassessment and Escalation Rule entries are reference/descriptive —
+ * versioned and audited the same way, but not yet parsed by the engines,
+ * the same "reference checklist, not workflow state" convention as
+ * GOVERNANCE_PLAYBOOKS in governanceActionsEngine.ts.
+ */
+export const INITIAL_GOVERNABILITY_CONFIG: GovernabilityConfigEntry[] = [
+  { id: 'evt-critical', configArea: 'Evidence Threshold', label: 'Minimum evidence records — Critical risk', value: '2', version: 1, updatedAt: '2026-09-11', updatedBy: 'System Default' },
+  { id: 'evt-high', configArea: 'Evidence Threshold', label: 'Minimum evidence records — High risk', value: '2', version: 1, updatedAt: '2026-09-11', updatedBy: 'System Default' },
+  { id: 'evt-medium', configArea: 'Evidence Threshold', label: 'Minimum evidence records — Medium risk', value: '1', version: 1, updatedAt: '2026-09-11', updatedBy: 'System Default' },
+  { id: 'evt-low', configArea: 'Evidence Threshold', label: 'Minimum evidence records — Low risk', value: '1', version: 1, updatedAt: '2026-09-11', updatedBy: 'System Default' },
+  { id: 'arp-review', configArea: 'Authority Review Period', label: 'Authority expires after (days)', value: '90', version: 1, updatedAt: '2026-09-11', updatedBy: 'System Default' },
+  { id: 'arp-warning', configArea: 'Authority Review Period', label: 'Authority review-required warning after (days)', value: '60', version: 1, updatedAt: '2026-09-11', updatedBy: 'System Default' },
+  { id: 'adm-highrisk-pause', configArea: 'Admissibility Rule', label: 'High/Critical risk with insufficient evidence recommends Pause', value: 'Enabled', version: 1, updatedAt: '2026-09-11', updatedBy: 'System Default' },
+  { id: 'reass-auto-flip', configArea: 'Reassessment Rule', label: 'Open trigger on Authorized/Monitoring asset flips governance state to Reassessment Required', value: 'Enabled', version: 1, updatedAt: '2026-09-11', updatedBy: 'System Default' },
+  { id: 'esc-outcome', configArea: 'Escalation Rule', label: 'Escalation Recommended outcome or expired authority recommends Escalate/Pause', value: 'Enabled', version: 1, updatedAt: '2026-09-11', updatedBy: 'System Default' },
 ];
 
 export const INITIAL_SCHEDULED_REVIEWS: ScheduledReview[] = [

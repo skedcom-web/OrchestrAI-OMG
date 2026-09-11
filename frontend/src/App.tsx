@@ -80,6 +80,8 @@ import { RbacAdministrationPage } from './pages/RbacAdministrationPage';
 import { OmgOverviewPage } from './pages/OmgOverviewPage';
 import { FutureModulePage } from './pages/FutureModulePage';
 import { ReleaseNotesPage } from './pages/ReleaseNotesPage';
+import { GovernabilityDashboardPage } from './pages/GovernabilityDashboardPage';
+import { GovernabilityStudioPage } from './pages/GovernabilityStudioPage';
 import { EnvironmentManagementPage } from './pages/EnvironmentManagementPage';
 import { TenantManagementPage } from './pages/TenantManagementPage';
 import { CustomerWorkspaceFoundationPage } from './pages/CustomerWorkspaceFoundationPage';
@@ -248,6 +250,8 @@ const GOVERNED_ROUTES: { path: string; element: React.ReactNode }[] = [
   { path: '/governance-actions', element: <GovernanceActionsWorkspacePage /> },
   { path: '/decision-traceability', element: <DecisionTraceabilityPage /> },
   { path: '/governance-studio', element: <GovernanceIntelligenceStudioPage /> },
+  { path: '/governability-dashboard', element: <GovernabilityDashboardPage /> },
+  { path: '/governability-studio', element: <GovernabilityStudioPage /> },
   { path: '/regulatory-applicability', element: <RegulatoryApplicabilityPage /> },
   { path: '/cross-framework-mapping', element: <CrossFrameworkMappingPage /> },
   { path: '/compliance-impact-analysis', element: <ComplianceImpactAnalysisPage /> },

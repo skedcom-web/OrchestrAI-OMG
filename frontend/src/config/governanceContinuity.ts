@@ -117,4 +117,7 @@ export const REASSESSMENT_TRIGGER_TYPES: { type: ReassessmentTriggerType; icon: 
   { type: 'Performance Drift', icon: '📉' },
   { type: 'Regulatory Change', icon: '🏛️' },
   { type: 'Policy Change', icon: '📕' },
+  // Release 18 — Governability Foundation
+  { type: 'Vendor Change', icon: '🏭' },
+  { type: 'Ownership Change', icon: '👤' },
 ];

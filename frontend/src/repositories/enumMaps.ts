@@ -183,6 +183,9 @@ const TRIGGER_TYPE: Record<ReassessmentTriggerType, string> = {
   'Performance Drift': 'PERFORMANCE_DRIFT',
   'Regulatory Change': 'REGULATORY_CHANGE',
   'Policy Change': 'POLICY_CHANGE',
+  // Release 18 — Governability Foundation
+  'Vendor Change': 'VENDOR_CHANGE',
+  'Ownership Change': 'OWNERSHIP_CHANGE',
 };
 
 const TRIGGER_STATUS: Record<ReassessmentTriggerStatus, string> = {

@@ -793,9 +793,72 @@ export const TOUR_STEPS: TourStep[] = [
     why: 'ODF-driven customization needs a real place to plug into. This release draws that boundary explicitly, so customer-specific work never has to be forced into platform code.',
     look: 'Every extension in the catalog is labeled ODF Implementation or Customer-Specific — the boundary is visible, not assumed.',
   },
+  {
+    n: 56,
+    title: 'Governability Dashboard',
+    path: '/governability-dashboard',
+    icon: '🛡️',
+    what: 'Whether governance legitimacy can still be established, portfolio-wide — Governable, Governable With Conditions, Review Required, Governance Attention Required, or Not Governable, computed live.',
+    why: 'Governance Continuity asks whether a decision\'s date is still valid. Governability asks the harder question: given everything that has changed since, does the decision still hold up? OMG answers this as intelligence, not enforcement.',
+    look: 'Every status traces to real Evidence Sufficiency, Authority Currency and Admissibility signals, listed underneath — nothing here is a black-box score.',
+  },
+  {
+    n: 57,
+    title: 'Evidence Sufficiency',
+    path: '/governance-journey?tab=governability',
+    icon: '🗃️',
+    what: 'Five dimensions beyond "does evidence exist": Availability, Recency, Completeness, Relevance and Context Alignment.',
+    why: 'Presence is not the same as sufficiency. A single expired report satisfies "evidence exists" but should not satisfy "evidence supports this decision".',
+    look: 'Select the Enterprise Portfolio Multi-Agent System to see which of the five checks actually fail, and why.',
+  },
+  {
+    n: 58,
+    title: 'Authority Currency',
+    path: '/governance-journey?tab=governability',
+    icon: '🪪',
+    what: 'Whether decision authority still exists, is still recently confirmed, and is still matched to the asset\'s current risk tier.',
+    why: 'A named owner from a year ago is not the same claim as a currently-confirmed one — especially once risk has moved and oversight has not kept pace.',
+    look: 'Days since last review, and whether current oversight still matches what the Authority Matrix expects for this risk tier.',
+  },
+  {
+    n: 59,
+    title: 'Admissibility',
+    path: '/governance-journey?tab=governability',
+    icon: '⚖️',
+    what: 'Whether the next governance decision remains legitimate: Continue, Continue With Conditions, Escalate, Reauthorize, or Pause.',
+    why: 'This is the composition that turns "conditions now" into a recommendation — advisory only, never an automatic suspension.',
+    look: 'Every outcome carries its reasons — composed from the existing Governance Outcome ladder, Evidence Sufficiency and Authority Currency, nothing invented.',
+  },
+  {
+    n: 60,
+    title: 'Reassessment',
+    path: '/governability-dashboard',
+    icon: '🔁',
+    what: 'Report a material change — Model, Prompt, Vendor, Ownership, Risk, Regulatory, Policy Change or Control Failure — and see it raise a Governance Alert, a reassessment requirement, and a timeline entry.',
+    why: 'The reassessment trigger taxonomy already worked end to end; what was missing was a human-facing way to actually use it. This closes that gap.',
+    look: 'File a trigger and watch the asset\'s Governability status update immediately — computed, not just recorded.',
+  },
+  {
+    n: 61,
+    title: 'Decision Reconstruction',
+    path: '/governance-journey?tab=decision',
+    icon: '⚖️',
+    what: 'Why was it approved, what evidence supported it, who approved it, what authority existed, and what reassessments followed — all reconstructed from records already on file.',
+    why: 'An auditor should never have to manually cross-reference five modules to answer "why is this asset allowed to run".',
+    look: 'The Governability tab sits right alongside this reconstruction — the "why" and the "is it still true" live together.',
+  },
+  {
+    n: 62,
+    title: 'Export Pack',
+    path: '/governance-journey',
+    icon: '📦',
+    what: 'Decision Chain, Evidence Chain, Approval Chain, Reassessment History and the Governability Assessment, exported as JSON, CSV, or printed to PDF.',
+    why: 'Governance records that cannot leave the platform are not audit-ready. An auditor or regulator needs to take the record with them.',
+    look: 'Export buttons appear in the header the moment an asset is selected — every format pulls from the exact same live data as the screen.',
+  },
 ];
 
-/* ================== Section 5b — five named guided tours ================= */
+/* ================== Section 5b — six named guided tours ================= */
 
 export interface GuidedTourDefinition {
   id: string;
@@ -806,11 +869,12 @@ export interface GuidedTourDefinition {
 }
 
 /**
- * Five named tours, each a curated path through TOUR_STEPS (by title — a
+ * Six named tours, each a curated path through TOUR_STEPS (by title — a
  * step can appear in more than one tour, e.g. Findings belongs to both the
  * Lifecycle and Audit tours). Refresh of the single 36-stop tour above into
  * named, audience-specific paths — no new step content beyond what R16–R20.1
- * actually shipped (steps 37–44).
+ * actually shipped (steps 37–44); Release 18 adds the sixth, Governability
+ * Intelligence, the same way.
  */
 export const GUIDED_TOURS: GuidedTourDefinition[] = [
   {
@@ -847,6 +911,13 @@ export const GUIDED_TOURS: GuidedTourDefinition[] = [
     description: 'Regulatory mapping, compliance packs, readiness scoring, governance analytics and executive reporting.',
     icon: '🧠',
     stepTitles: ['Regulatory Knowledge Engine', 'Compliance Packs', 'Readiness Center', 'Governance Intelligence', 'Governance Reports'],
+  },
+  {
+    id: 'governability-intelligence',
+    name: 'Governability Intelligence',
+    description: 'Governance Continuity vs. Runtime Governability — Evidence Sufficiency, Authority Currency, Admissibility and Post-Intervention Revalidation.',
+    icon: '🛡️',
+    stepTitles: ['Governability Dashboard', 'Evidence Sufficiency', 'Authority Currency', 'Admissibility', 'Reassessment', 'Decision Reconstruction', 'Export Pack'],
   },
 ];
 

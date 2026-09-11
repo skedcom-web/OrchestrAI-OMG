@@ -417,6 +417,18 @@ export const NAV_DOMAINS: NavDomain[] = [
           { path: '/governance-studio', label: 'Governance Intelligence Studio', icon: '🎛️', description: 'Configure governance logic without code changes — Condition, Outcome and Action Designers, Rule Mapping, Compliance Pack Builder and Customer Governance Profiles.', keywords: ['governance studio', 'condition designer', 'outcome designer', 'action designer', 'rule mapping', 'compliance pack builder', 'customer profile', 'configuration'] },
         ],
       },
+      {
+        label: 'Governability',
+        modules: [
+          { path: '/governability-dashboard', label: 'Governability Dashboard', icon: '🛡️', description: 'Whether governance legitimacy can still be established — Evidence Sufficiency, Authority Currency and Admissibility, computed live. Advisory only.', keywords: ['governability', 'evidence sufficiency', 'authority currency', 'admissibility', 'reassessment', 'revalidation'], insight: {
+            whatItDoes: 'Composes Evidence Sufficiency, Authority Currency and Admissibility into one live Governability verdict per asset, plus portfolio-wide breakdowns.',
+            whyItMatters: 'Governance Continuity tracks whether a decision has a valid date. Governability asks the harder question: given everything that has changed, does the decision still hold up?',
+            governanceOutcome: 'A continuously re-derivable answer to "is this still governable" — advisory, never a block.',
+            keyArtifacts: ['Governability status', 'Evidence Sufficiency result', 'Authority Currency result', 'Admissibility outcome', 'Revalidation result'],
+          } },
+          { path: '/governability-studio', label: 'Governability Studio', icon: '⚙️', description: 'Configure Evidence Thresholds, Authority Review Periods, Admissibility Rules, Reassessment Rules and Escalation Rules — every change versioned, audited and traceable.', keywords: ['governability studio', 'evidence threshold', 'authority review period', 'admissibility rule', 'escalation rule', 'configuration'] },
+        ],
+      },
     ],
   }),
 

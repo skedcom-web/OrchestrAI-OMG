@@ -32,6 +32,10 @@ import type {
   ReassessmentTrigger,
   GovernanceReauthorizationRecord,
   GovernanceState,
+  GovernabilityResult,
+  GovernabilityConfigEntry,
+  RevalidationResult,
+  RevalidationStep,
   EvidenceRecord,
   EvidenceTimelineEvent,
   Model,
@@ -97,6 +101,7 @@ import {
   INITIAL_GOVERNANCE_INCIDENTS,
   INITIAL_RETIREMENT_RECORDS,
   INITIAL_GOVERNANCE_ALERTS,
+  INITIAL_GOVERNABILITY_CONFIG,
   INITIAL_SCHEDULED_REVIEWS,
   INITIAL_CORRECTIVE_ACTIONS,
   INITIAL_REASSESSMENT_TRIGGERS,
@@ -146,6 +151,9 @@ import {
   computeGovernanceOutcome,
 } from '../config/governanceReasoningEngine';
 import { generateActionDrafts } from '../config/governanceActionsEngine';
+import { computeGovernability, type GovernabilityConfigOverrides } from '../config/governabilityEngine';
+import { DEFAULT_EVIDENCE_COMPLETENESS_MINIMUMS } from '../config/evidenceSufficiencyEngine';
+import { DEFAULT_AUTHORITY_REVIEW_PERIOD_DAYS, DEFAULT_AUTHORITY_WARNING_PERIOD_DAYS } from '../config/authorityCurrencyEngine';
 import { buildDecisionTrace } from '../config/decisionTraceabilityEngine';
 import type { DecisionTrace } from '../config/decisionTraceabilityEngine';
 import { apiAssetRepository, apiEvidenceRepository, apiGovernanceRepository, apiModelRepository, apiKnowledgeAssetRepository, apiPromptRepository, apiToolRepository, apiAgentToolGrantRepository, apiGovernanceControlRepository, apiCertificationProgramRepository, apiCertificationRecordRepository } from '../repositories/apiRepositories';
@@ -252,6 +260,7 @@ const STORAGE_KEYS = {
   ASSESSOR_CERTIFICATIONS: 'omg_assessor_certifications_gacf2',
   CONSENSUS_ASSESSMENTS: 'omg_consensus_assessments_gacf2',
   CONFIDENCE_ASSESSMENTS: 'omg_confidence_assessments_gacf2',
+  GOVERNABILITY_CONFIG: 'omg_governability_config_r18',
 };
 
 function getItem<T>(key: string, defaultData: T): T {
@@ -1699,6 +1708,9 @@ export function getDecisionReconstruction(assetId: string): DecisionReconstructi
       conditionsApplied: asset.decisionOutcome === 'CONDITIONAL GO' ? (latestReauth?.reason) : undefined,
     },
     reassessments,
+    // Release 18, Module 9 — "what authority existed" and "what recommendation
+    // was produced", computed the same way the Governability Dashboard does.
+    governability: getGovernabilityForAsset(assetId) as GovernabilityResult,
   };
 }
 
@@ -1837,6 +1849,13 @@ export function getGovernanceAlerts(): GovernanceAlert[] {
   return getItem<GovernanceAlert[]>(STORAGE_KEYS.ALERTS, INITIAL_GOVERNANCE_ALERTS);
 }
 
+/** Release 18, Module 6 — the generator function Governance Alerts never had before this release. */
+export function addGovernanceAlert(alert: Omit<GovernanceAlert, 'id' | 'createdAt'>): GovernanceAlert {
+  const created: GovernanceAlert = { ...alert, id: `alt-${Date.now().toString().slice(-4)}`, createdAt: new Date().toISOString() };
+  setItem(STORAGE_KEYS.ALERTS, [created, ...getGovernanceAlerts()]);
+  return created;
+}
+
 let reviewsCache: ScheduledReview[] = getItem<ScheduledReview[]>(STORAGE_KEYS.SCHEDULED_REVIEWS, INITIAL_SCHEDULED_REVIEWS);
 let triggersCache: ReassessmentTrigger[] = getItem<ReassessmentTrigger[]>(STORAGE_KEYS.REASSESSMENT_TRIGGERS, INITIAL_REASSESSMENT_TRIGGERS);
 let reauthorizationsCache: GovernanceReauthorizationRecord[] = getItem<GovernanceReauthorizationRecord[]>(STORAGE_KEYS.REAUTHORIZATION_RECORDS, INITIAL_REAUTHORIZATION_RECORDS);
@@ -1942,6 +1961,20 @@ export async function saveReassessmentTrigger(data: Partial<ReassessmentTrigger>
   // A trigger is the event that moves an authorized asset back into reassessment.
   if (asset && (asset.governanceState === 'Authorized' || asset.governanceState === 'Monitoring')) {
     fireAndForget(saveAsset({ id: asset.id, governanceState: 'Reassessment Required' }), `governance state for ${asset.name}`);
+  }
+
+  // Release 18, Module 6 — every trigger raises a Governance Alert alongside
+  // the reassessment requirement above and the Timeline Entry already
+  // produced by getGovernanceTimeline's existing trigger stage.
+  if (asset) {
+    addGovernanceAlert({
+      assetId: asset.id,
+      assetName: asset.name,
+      alertType: 'Reassessment Triggered',
+      severity: draftTrigger.severity,
+      message: `${draftTrigger.triggerType} trigger raised for ${asset.name} — reassessment required.`,
+      resolutionPath: '/governability-dashboard',
+    });
   }
 
   addAuditLog(
@@ -4247,6 +4280,102 @@ export function getAllPolicyViolations(): GovernancePolicyViolation[] {
 }
 
 /** Objectives 5 & 6 — Governance Outcome Engine + Explainability, computed live. Tiers disabled in Release 10's Outcome Designer are skipped, cascading to the next enabled tier. */
+// --- RELEASE 18 — GOVERNABILITY FOUNDATION ---
+
+/** Module 11 — Governability Studio. Read-only reference + the two live-wired config areas. */
+export function getGovernabilityConfig(): GovernabilityConfigEntry[] {
+  return getItem<GovernabilityConfigEntry[]>(STORAGE_KEYS.GOVERNABILITY_CONFIG, INITIAL_GOVERNABILITY_CONFIG);
+}
+
+/** Every configuration change is versioned, audited and traceable — never silent, per the Release 18 blueprint. */
+export function saveGovernabilityConfigEntry(id: string, value: string, updatedBy: string): GovernabilityConfigEntry {
+  const current = getGovernabilityConfig();
+  const idx = current.findIndex(c => c.id === id);
+  if (idx === -1) throw new Error(`Unknown governability config entry: ${id}`);
+  const updated: GovernabilityConfigEntry = { ...current[idx], value, version: current[idx].version + 1, updatedAt: new Date().toISOString(), updatedBy };
+  const next = [...current];
+  next[idx] = updated;
+  setItem(STORAGE_KEYS.GOVERNABILITY_CONFIG, next);
+  addAuditLog('usr-1', updatedBy, 'SUPER_ADMIN', 'GOVERNABILITY_CONFIG_UPDATED', 'GovernabilityConfigEntry', updated.id, updated.label, `${updated.configArea} "${updated.label}" changed to "${value}" (v${updated.version})`);
+  return updated;
+}
+
+function getGovernabilityConfigOverrides(): GovernabilityConfigOverrides {
+  const config = getGovernabilityConfig();
+  const num = (id: string, fallback: number): number => {
+    const entry = config.find(c => c.id === id);
+    const parsed = entry ? Number(entry.value) : NaN;
+    return Number.isFinite(parsed) ? parsed : fallback;
+  };
+  return {
+    evidenceCompletenessMinimums: {
+      Critical: num('evt-critical', DEFAULT_EVIDENCE_COMPLETENESS_MINIMUMS.Critical),
+      High: num('evt-high', DEFAULT_EVIDENCE_COMPLETENESS_MINIMUMS.High),
+      Medium: num('evt-medium', DEFAULT_EVIDENCE_COMPLETENESS_MINIMUMS.Medium),
+      Low: num('evt-low', DEFAULT_EVIDENCE_COMPLETENESS_MINIMUMS.Low),
+    },
+    authorityReviewPeriodDays: num('arp-review', DEFAULT_AUTHORITY_REVIEW_PERIOD_DAYS),
+    authorityWarningPeriodDays: num('arp-warning', DEFAULT_AUTHORITY_WARNING_PERIOD_DAYS),
+  };
+}
+
+/** Module 1 — Governability Engine, per asset. Composes Evidence Sufficiency, Authority Currency and Admissibility from records already on file. */
+export function getGovernabilityForAsset(assetId: string): GovernabilityResult | null {
+  const asset = assetsCache.find(a => a.id === assetId);
+  if (!asset) return null;
+  const assetEvidence = getEvidenceRecordsForAsset(assetId);
+  const assetTriggers = getReassessmentTriggers().filter(t => t.assetId === assetId);
+  const outcome = getGovernanceOutcomeForAsset(assetId);
+  return computeGovernability(asset, assetEvidence, assetTriggers, outcome?.status || null, getGovernabilityConfigOverrides());
+}
+
+/** Module 5 — Governability Dashboard, portfolio-wide. */
+export function getAllGovernabilityResults(): GovernabilityResult[] {
+  const overrides = getGovernabilityConfigOverrides();
+  return assetsCache.map(asset => {
+    const assetEvidence = getEvidenceRecordsForAsset(asset.id);
+    const assetTriggers = getReassessmentTriggers().filter(t => t.assetId === asset.id);
+    const outcome = getGovernanceOutcomeForAsset(asset.id);
+    return computeGovernability(asset, assetEvidence, assetTriggers, outcome?.status || null, overrides);
+  });
+}
+
+/**
+ * Module 12 — Post-Intervention Revalidation. Walks Evidence Review →
+ * Authority Review → Admissibility Review for a detected context change,
+ * using the same Governability computation the Dashboard already shows —
+ * no separate scoring model. The recommendation is advisory: "Remain
+ * Stopped" never itself stops anything, it surfaces that a human should not
+ * treat the prior authorization as still standing.
+ */
+export function computeRevalidation(assetId: string, contextChange: string): RevalidationResult | null {
+  const asset = assetsCache.find(a => a.id === assetId);
+  const governability = getGovernabilityForAsset(assetId);
+  if (!asset || !governability) return null;
+
+  const steps: RevalidationStep[] = [
+    {
+      step: 'Evidence Review',
+      status: governability.evidenceSufficiency.status === 'Sufficient' ? 'Passed' : governability.evidenceSufficiency.status === 'Insufficient' ? 'Failed' : 'Pending',
+      detail: governability.evidenceSufficiency.reasons[0] || 'No evidence detail available.',
+    },
+    {
+      step: 'Authority Review',
+      status: governability.authorityCurrency.status === 'Current' ? 'Passed' : governability.authorityCurrency.status === 'Expired' ? 'Failed' : 'Pending',
+      detail: governability.authorityCurrency.reasons[0] || 'No authority detail available.',
+    },
+    {
+      step: 'Admissibility Review',
+      status: governability.admissibility.outcome === 'Continue' ? 'Passed' : governability.admissibility.outcome === 'Pause' ? 'Failed' : 'Pending',
+      detail: governability.admissibility.reasons[0] || 'No admissibility detail available.',
+    },
+  ];
+
+  const recommendation: RevalidationResult['recommendation'] = steps.some(s => s.status === 'Failed') ? 'Remain Stopped' : 'Continue';
+
+  return { assetId: asset.id, assetName: asset.name, contextChange, steps, recommendation, reasons: governability.reasons };
+}
+
 export function getGovernanceOutcomeForAsset(assetId: string): GovernanceOutcome | null {
   const asset = assetsCache.find(a => a.id === assetId);
   if (!asset) return null;

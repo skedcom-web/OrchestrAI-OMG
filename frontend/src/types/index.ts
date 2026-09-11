@@ -347,7 +347,10 @@ export type ReassessmentTriggerType =
   | 'Risk Threshold Breach'
   | 'Performance Drift'
   | 'Regulatory Change'
-  | 'Policy Change';
+  | 'Policy Change'
+  // Release 18 — Governability Foundation
+  | 'Vendor Change'
+  | 'Ownership Change';
 
 export type ReassessmentTriggerStatus = 'Open' | 'Under Review' | 'Resolved' | 'Dismissed';
 
@@ -1280,7 +1283,7 @@ export interface AuditLog {
   userName: string;
   userRole: string;
   action: string;
-  entityType: 'Asset' | 'User' | 'Ownership' | 'Risk' | 'Decision' | 'Validation' | 'Evidence' | 'Finding' | 'DecisionPackage' | 'ComplianceAssessment' | 'CompliancePackage' | 'KillSwitch' | 'Override' | 'Incident' | 'Retirement' | 'ScheduledReview' | 'CorrectiveAction' | 'GovernanceReviewPackage' | 'Policy' | 'PolicyMapping' | 'PolicyViolation' | 'ExecutiveReport' | 'ChangeRequest' | 'StateTransition' | 'ReassessmentTrigger' | 'GovernanceReauthorizationRecord' | 'EvidenceRecord' | 'Model' | 'KnowledgeAsset' | 'Prompt' | 'Tool' | 'AgentToolGrant' | 'GovernanceControl' | 'ControlAttachment' | 'ControlTestResult' | 'CertificationProgram' | 'CertificationRecord' | 'CertificationEvidence';
+  entityType: 'Asset' | 'User' | 'Ownership' | 'Risk' | 'Decision' | 'Validation' | 'Evidence' | 'Finding' | 'DecisionPackage' | 'ComplianceAssessment' | 'CompliancePackage' | 'KillSwitch' | 'Override' | 'Incident' | 'Retirement' | 'ScheduledReview' | 'CorrectiveAction' | 'GovernanceReviewPackage' | 'Policy' | 'PolicyMapping' | 'PolicyViolation' | 'ExecutiveReport' | 'ChangeRequest' | 'StateTransition' | 'ReassessmentTrigger' | 'GovernanceReauthorizationRecord' | 'EvidenceRecord' | 'Model' | 'KnowledgeAsset' | 'Prompt' | 'Tool' | 'AgentToolGrant' | 'GovernanceControl' | 'ControlAttachment' | 'ControlTestResult' | 'CertificationProgram' | 'CertificationRecord' | 'CertificationEvidence' | 'GovernabilityConfigEntry';
   entityId: string;
   entityName: string;
   details: string;
@@ -1709,6 +1712,8 @@ export interface DecisionReconstruction {
     correctiveActions: CorrectiveAction[];
     outcome?: GovernanceReauthorizationRecord;
   }>;
+  /** Release 18, Module 9 — answers "what authority existed" and "what recommendation was produced" alongside the existing "why was it approved". */
+  governability: GovernabilityResult;
 }
 
 /** Governance Journey Explorer — Governance Story Mode narrative fields. */
@@ -1755,7 +1760,9 @@ export interface GovernanceAlert {
   id: string;
   assetId: string;
   assetName: string;
-  alertType: 'Validation Expired' | 'Compliance Review Overdue' | 'Risk Review Overdue' | 'Critical Incident Open' | 'Kill Switch Event' | 'Unresolved Critical Finding' | 'Reauthorization Due Soon' | 'Reauthorization Overdue' | 'Reauthorization Expired';
+  alertType: 'Validation Expired' | 'Compliance Review Overdue' | 'Risk Review Overdue' | 'Critical Incident Open' | 'Kill Switch Event' | 'Unresolved Critical Finding' | 'Reauthorization Due Soon' | 'Reauthorization Overdue' | 'Reauthorization Expired'
+    // Release 18 — Governability Foundation
+    | 'Reassessment Triggered' | 'Governance Attention Required';
   severity: FindingSeverity;
   createdAt: string;
   message: string;
@@ -2174,4 +2181,97 @@ export interface CustomerConfigurationEntry {
   configArea: string;
   description: string;
   status: CustomerConfigurationStatus;
+}
+
+/* ================================================================
+ * Release 18 — Governability Foundation & Governance Intelligence
+ * Enhancement. Advisory only, throughout — nothing below executes,
+ * blocks, or enforces anything. Every status is computed live from
+ * existing governance records; none is a new source of truth.
+ * ================================================================ */
+
+/* -------------------- Module 2 — Evidence Sufficiency -------------------- */
+
+export type EvidenceSufficiencyStatus = 'Sufficient' | 'Partially Sufficient' | 'Insufficient';
+
+export interface EvidenceSufficiencyResult {
+  status: EvidenceSufficiencyStatus;
+  evidenceAvailable: boolean;
+  evidenceRecency: boolean;
+  evidenceCompleteness: boolean;
+  evidenceRelevance: boolean;
+  evidenceContextAlignment: boolean;
+  reasons: string[];
+}
+
+/* --------------------- Module 3 — Authority Currency ---------------------- */
+
+export type AuthorityCurrencyStatus = 'Current' | 'Review Required' | 'Expired' | 'Not Applicable';
+
+export interface AuthorityCurrencyResult {
+  status: AuthorityCurrencyStatus;
+  authorityExists: boolean;
+  authorityReachable: boolean;
+  authorityApplicable: boolean;
+  daysSinceLastReview: number | null;
+  reasons: string[];
+}
+
+/* ------------------ Module 4 — Admissibility Assessment ------------------- */
+
+export type AdmissibilityOutcome = 'Continue' | 'Continue With Conditions' | 'Escalate' | 'Reauthorize' | 'Pause';
+
+export interface AdmissibilityResult {
+  outcome: AdmissibilityOutcome;
+  reasons: string[];
+}
+
+/* --------------------------- Module 1 — Governability ---------------------------- */
+
+export type GovernabilityStatus = 'Governable' | 'Governable With Conditions' | 'Review Required' | 'Governance Attention Required' | 'Not Governable';
+
+export interface GovernabilityResult {
+  assetId: string;
+  assetName: string;
+  status: GovernabilityStatus;
+  evidenceSufficiency: EvidenceSufficiencyResult;
+  authorityCurrency: AuthorityCurrencyResult;
+  admissibility: AdmissibilityResult;
+  reasons: string[];
+}
+
+/* --------------------- Module 11 — Governability Studio -------------------- */
+
+export type GovernabilityConfigArea = 'Evidence Threshold' | 'Authority Review Period' | 'Admissibility Rule' | 'Reassessment Rule' | 'Escalation Rule';
+
+/** Every configuration change is versioned, audited and traceable per the Release 18 blueprint — never silent. */
+export interface GovernabilityConfigEntry {
+  id: string;
+  configArea: GovernabilityConfigArea;
+  label: string;
+  value: string;
+  version: number;
+  updatedAt: string;
+  updatedBy: string;
+}
+
+/* ------------------- Module 12 — Post-Intervention Revalidation ------------------ */
+
+export type RevalidationStepStatus = 'Pending' | 'Passed' | 'Failed';
+
+export interface RevalidationStep {
+  step: 'Evidence Review' | 'Authority Review' | 'Admissibility Review';
+  status: RevalidationStepStatus;
+  detail: string;
+}
+
+export type RevalidationRecommendation = 'Continue' | 'Remain Stopped';
+
+export interface RevalidationResult {
+  assetId: string;
+  assetName: string;
+  contextChange: string;
+  steps: RevalidationStep[];
+  recommendation: RevalidationRecommendation;
+  reasons: string[];
 }

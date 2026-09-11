@@ -122,7 +122,10 @@ export type ActionKey =
   /** Release 15 — Environment Foundation. No backend endpoint exists (the
    * selector previews metadata only, it never switches a real data source),
    * so this is scoped as tightly as the kill-switch controls above. */
-  | 'environment:switch';
+  | 'environment:switch'
+  /** Release 18 — Governability Studio. Config edits are versioned/audited
+   * client-side only (no backend endpoint yet), same scoping rationale. */
+  | 'governabilityConfig:edit';
 
 /** Mirrors backend/src/app.controller.ts's @Roles() grants exactly, endpoint by endpoint. */
 export const ROLE_ACTION_MATRIX: Record<ActionKey, UserRole[]> = {
@@ -258,6 +261,8 @@ export const ROLE_ACTION_MATRIX: Record<ActionKey, UserRole[]> = {
   'override:record': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER'],
 
   'environment:switch': ['SUPER_ADMIN'],
+
+  'governabilityConfig:edit': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
 };
 
 export const ALL_ROLES: UserRole[] = [
