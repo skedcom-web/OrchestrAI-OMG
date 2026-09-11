@@ -96,7 +96,6 @@ const RELEASE_HISTORY: ReleaseEntry[] = [
     version: 'Release 14',
     date: '2026',
     title: 'Governance Operations & Journey Intelligence',
-    current: true,
     highlights: [
       'Agent Governance',
       'Tool Governance',
@@ -115,6 +114,43 @@ const RELEASE_HISTORY: ReleaseEntry[] = [
       'Corrective Action Intelligence',
       'Executive Governance Command Center',
       'Cross-Domain Governance Reporting',
+    ],
+  },
+  {
+    version: 'Release 15',
+    date: '2026',
+    title: 'Environment Foundation',
+    highlights: [
+      'Environment Registry (DEV / QA / PROD)',
+      'Environment Selector (Super Admin only)',
+      'Environment Metadata Dashboard',
+      'Environment-Aware Seed Loading',
+      'Environment Health Indicators',
+    ],
+  },
+  {
+    version: 'Release 16',
+    date: '2026',
+    title: 'Tenant Foundation',
+    highlights: [
+      'Tenant Registry',
+      'Tenant Metadata Model',
+      'Tenant Context Service',
+      'Tenant-Aware Data Architecture',
+      'Tenant Dashboard Widgets',
+    ],
+  },
+  {
+    version: 'Release 17',
+    date: '2026',
+    title: 'Customer Workspace Foundation',
+    current: true,
+    highlights: [
+      'Customer Workspace Registry',
+      'Customer Configuration Layer',
+      'Customer Extension Catalog',
+      'Customer Solution Blueprint Repository',
+      'Customer Readiness Dashboard',
     ],
   },
 ];

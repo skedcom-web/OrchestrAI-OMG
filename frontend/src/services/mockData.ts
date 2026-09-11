@@ -141,6 +141,8 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       '/users', '/audit-logs',
       // Phase 8 — Governance Operating System
       '/asset-lifecycle', '/rbac', '/release-notes', '/command-center',
+      // Release 15-17 — Environment, Tenant & Customer Workspace Foundation
+      '/environment-management', '/tenant-management', '/customer-workspace',
       // Phase 9 — Executive Governance & Policy Governance
       '/executive-hub', '/governance-scorecards', '/executive-heatmaps', '/governance-insights',
       '/board-reporting', '/policy-management', '/policy-mapping', '/policy-violations',
@@ -175,6 +177,8 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       '/audit-logs',
       // Phase 8 — Governance Operating System
       '/asset-lifecycle', '/release-notes', '/command-center',
+      // Release 15-17 — Environment, Tenant & Customer Workspace Foundation
+      '/environment-management', '/tenant-management', '/customer-workspace',
       // Phase 9 — Executive Governance & Policy Governance
       '/executive-hub', '/governance-scorecards', '/executive-heatmaps', '/governance-insights',
       '/board-reporting', '/policy-management', '/policy-mapping', '/policy-violations',

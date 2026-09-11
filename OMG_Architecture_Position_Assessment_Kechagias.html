@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OMG Architecture Position Assessment — Chris Kechagias Enterprise Review</title>
+<style>
+:root{
+  --bg:#f5f7fb; --surface:#ffffff; --surface-alt:#eef2f8; --border:#d9e1ec; --border-strong:#b9c6db;
+  --text:#141d2e; --text-muted:#54627a; --text-faint:#8492a8;
+  --accent:#1f4e79; --accent-dark:#0f2c47; --accent-light:#e6eef7;
+  --full:#166a3f; --full-bg:#e2f5ea; --full-border:#a9dcc0;
+  --partial:#96650a; --partial-bg:#fbf0d9; --partial-border:#edcf8f;
+  --not:#a4231c; --not-bg:#fbe6e4; --not-border:#eab3ac;
+  --roadmap:#2a5aa8; --roadmap-bg:#e6edfa; --roadmap-border:#b9cbef;
+  --customer:#6b3f9e; --customer-bg:#efe6f8; --customer-border:#d4bfea;
+  --odf:#0d7a80; --odf-bg:#dff3f4; --odf-border:#a9dfe1;
+  --shadow: 0 1px 3px rgba(20,29,46,0.06), 0 8px 24px rgba(20,29,46,0.05);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1520; --surface:#161f30; --surface-alt:#1c2740; --border:#2a3852; --border-strong:#3a4b6b;
+    --text:#e7ecf5; --text-muted:#a9b6cc; --text-faint:#7c8aa3;
+    --accent:#6ea3d8; --accent-dark:#9dc3ec; --accent-light:#1c3350;
+    --full:#6fd39c; --full-bg:#123526; --full-border:#1e5b3e;
+    --partial:#eec877; --partial-bg:#3a2e0e; --partial-border:#6b5219;
+    --not:#f0938c; --not-bg:#3a1815; --not-border:#6b2a23;
+    --roadmap:#93b7ee; --roadmap-bg:#152744; --roadmap-border:#26426e;
+    --customer:#c9a9ef; --customer-bg:#271a3a; --customer-border:#432a5e;
+    --odf:#6fd6da; --odf-bg:#0e2f31; --odf-border:#195356;
+    --shadow: 0 1px 3px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.3);
+  }
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:"Segoe UI","Helvetica Neue",Arial,sans-serif;
+  font-size:14.5px; line-height:1.62;
+}
+h1,h2,h3,h4{font-family:"Segoe UI",Arial,sans-serif; color:var(--accent-dark); font-weight:800; text-wrap:balance;}
+p{margin:0 0 10px 0;}
+a{color:var(--accent);}
+.wrap{max-width:1180px; margin:0 auto; padding:0 24px;}
+
+/* ---------- Cover ---------- */
+.cover{
+  background:linear-gradient(160deg, var(--accent-dark) 0%, var(--accent) 100%);
+  color:#f2f6fb; padding:64px 0 46px 0;
+}
+.cover .wrap{max-width:1180px;}
+.cover .kicker{
+  font-size:11.5px; font-weight:800; letter-spacing:.14em; text-transform:uppercase;
+  color:#bcd4ec; margin-bottom:14px;
+}
+.cover h1{color:#ffffff; font-size:33px; margin:0 0 10px 0; line-height:1.22;}
+.cover .subtitle{color:#d9e7f5; font-size:15.5px; max-width:820px; margin-bottom:22px;}
+.cover .meta-row{display:flex; flex-wrap:wrap; gap:10px; margin-top:18px;}
+.cover .meta-chip{
+  background:rgba(255,255,255,0.10); border:1px solid rgba(255,255,255,0.22);
+  border-radius:8px; padding:8px 14px; font-size:12.3px; color:#eaf2fa;
+}
+.cover .meta-chip b{color:#ffffff;}
+
+/* ---------- Sticky nav ---------- */
+.topnav{
+  position:sticky; top:0; z-index:50; background:var(--surface);
+  border-bottom:1px solid var(--border); box-shadow:var(--shadow);
+}
+.topnav .wrap{display:flex; align-items:center; gap:2px; overflow-x:auto; padding:0 24px;}
+.topnav a{
+  white-space:nowrap; display:inline-block; padding:13px 12px; font-size:12.3px; font-weight:700;
+  color:var(--text-muted); text-decoration:none; border-bottom:3px solid transparent;
+}
+.topnav a:hover{color:var(--accent); border-bottom-color:var(--border-strong);}
+.topnav .brand{font-weight:800; color:var(--accent-dark); padding-right:14px; border-right:1px solid var(--border); margin-right:6px; white-space:nowrap; flex:none;}
+.topnav .wrap{flex-wrap:nowrap;}
+
+/* ---------- Sections ---------- */
+section{padding:44px 0;}
+section.alt{background:var(--surface-alt);}
+.section-head{margin-bottom:26px; max-width:880px;}
+.eyebrow{font-size:11px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:var(--accent); margin-bottom:8px;}
+h2.title{font-size:24px; margin:0 0 8px 0;}
+.section-sub{color:var(--text-muted); font-size:14px;}
+
+.card{background:var(--surface); border:1px solid var(--border); border-radius:12px; box-shadow:var(--shadow); padding:22px 24px;}
+.grid-2{display:grid; grid-template-columns:1fr 1fr; gap:18px;}
+.grid-3{display:grid; grid-template-columns:repeat(3,1fr); gap:16px;}
+.grid-4{display:grid; grid-template-columns:repeat(4,1fr); gap:14px;}
+@media(max-width:900px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr;}}
+
+/* ---------- Badges ---------- */
+.badge{
+  display:inline-flex; align-items:center; gap:5px; font-size:10.8px; font-weight:800;
+  letter-spacing:.03em; text-transform:uppercase; padding:4px 10px; border-radius:999px; border:1px solid;
+  white-space:nowrap;
+}
+.b-full{color:var(--full); background:var(--full-bg); border-color:var(--full-border);}
+.b-partial{color:var(--partial); background:var(--partial-bg); border-color:var(--partial-border);}
+.b-not{color:var(--not); background:var(--not-bg); border-color:var(--not-border);}
+.b-roadmap{color:var(--roadmap); background:var(--roadmap-bg); border-color:var(--roadmap-border);}
+.b-customer{color:var(--customer); background:var(--customer-bg); border-color:var(--customer-border);}
+.b-odf{color:var(--odf); background:var(--odf-bg); border-color:var(--odf-border);}
+.dot{width:8px; height:8px; border-radius:50%; display:inline-block; flex:none;}
+.dot.b-full{background:var(--full);} .dot.b-partial{background:var(--partial);}
+.dot.b-not{background:var(--not);} .dot.b-roadmap{background:var(--roadmap);}
+.dot.b-customer{background:var(--customer);} .dot.b-odf{background:var(--odf);}
+
+/* ---------- Legend ---------- */
+.legend{display:flex; flex-wrap:wrap; gap:10px; margin:14px 0 4px 0;}
+.legend .badge{padding:5px 12px;}
+
+/* ---------- Executive summary ---------- */
+.stat-row{display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin:22px 0;}
+@media(max-width:900px){.stat-row{grid-template-columns:repeat(2,1fr);}}
+.stat{background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px 14px; text-align:center; box-shadow:var(--shadow);}
+.stat .num{font-size:26px; font-weight:800; color:var(--accent-dark); font-variant-numeric:tabular-nums;}
+.stat .lbl{font-size:10.8px; text-transform:uppercase; letter-spacing:.06em; color:var(--text-muted); margin-top:4px; font-weight:700;}
+
+.verdict-box{
+  background:var(--accent-light); border:1px solid var(--border-strong); border-left:5px solid var(--accent);
+  border-radius:10px; padding:20px 22px; margin:20px 0; font-size:15px;
+}
+.verdict-box b{color:var(--accent-dark);}
+
+.pull-quote{
+  border-left:4px solid var(--accent); background:var(--surface); border-radius:0 10px 10px 0;
+  padding:14px 20px; margin:16px 0; font-style:italic; color:var(--text-muted); font-size:14px;
+}
+
+/* ---------- Tables ---------- */
+table{width:100%; border-collapse:collapse; font-size:12.8px; background:var(--surface); border-radius:10px; overflow:hidden;}
+.table-wrap{overflow-x:auto; border:1px solid var(--border); border-radius:10px; box-shadow:var(--shadow);}
+th{background:var(--accent-dark); color:#eef4fb; text-align:left; padding:10px 12px; font-weight:700; font-size:11.5px; text-transform:uppercase; letter-spacing:.03em;}
+td{padding:10px 12px; border-top:1px solid var(--border); vertical-align:top;}
+tr:nth-child(even) td{background:var(--surface-alt);}
+td.center{text-align:center;}
+.mono{font-family:"Consolas","Courier New",monospace; font-size:11.8px; background:var(--surface-alt); padding:1px 5px; border-radius:4px;}
+
+/* ---------- Heat map ---------- */
+.heatmap{display:grid; grid-template-columns:repeat(4,1fr); gap:10px;}
+@media(max-width:900px){.heatmap{grid-template-columns:repeat(2,1fr);}}
+.heat-cell{
+  border-radius:10px; padding:13px 14px; border:1px solid; min-height:82px;
+  display:flex; flex-direction:column; justify-content:space-between;
+}
+.heat-cell .name{font-size:12.5px; font-weight:700; color:var(--text);}
+.heat-cell .stat-label{font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; margin-top:8px;}
+.heat-full{background:var(--full-bg); border-color:var(--full-border);} .heat-full .stat-label{color:var(--full);}
+.heat-partial{background:var(--partial-bg); border-color:var(--partial-border);} .heat-partial .stat-label{color:var(--partial);}
+.heat-not{background:var(--not-bg); border-color:var(--not-border);} .heat-not .stat-label{color:var(--not);}
+.heat-roadmap{background:var(--roadmap-bg); border-color:var(--roadmap-border);} .heat-roadmap .stat-label{color:var(--roadmap);}
+
+/* ---------- Q-cards (Kechagias) ---------- */
+.qcard{background:var(--surface); border:1px solid var(--border); border-radius:12px; box-shadow:var(--shadow); padding:20px 22px; margin-bottom:16px;}
+.qcard-head{display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:10px;}
+.qnum{display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; border-radius:7px; background:var(--accent); color:#fff; font-weight:800; font-size:12.5px; margin-right:8px;}
+.qcard h4{font-size:15.5px; margin:0; display:inline;}
+.qfields{display:grid; grid-template-columns:1fr 1fr; gap:8px 22px; margin-top:12px;}
+@media(max-width:800px){.qfields{grid-template-columns:1fr;}}
+.qfield .flabel{font-size:10.3px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); margin-bottom:3px;}
+.qfield .fval{font-size:13px; color:var(--text);}
+.qfield.full-row{grid-column:1/-1;}
+
+/* ---------- Practitioner ---------- */
+.practitioner-card{background:var(--surface); border:1px solid var(--border); border-radius:12px; box-shadow:var(--shadow); padding:22px 24px; margin-bottom:20px;}
+.practitioner-card h3{margin:0 0 4px 0;}
+.practitioner-card .focus-tag{font-size:12px; color:var(--text-muted); margin-bottom:14px;}
+
+/* ---------- Boundary diagram ---------- */
+.boundary-svg-wrap{background:var(--surface); border:1px solid var(--border); border-radius:12px; box-shadow:var(--shadow); padding:22px; text-align:center;}
+.boundary-svg-wrap svg{max-width:100%; height:auto;}
+figcaption{font-size:12.3px; color:var(--text-muted); margin-top:10px;}
+
+/* ---------- Risk / reco list ---------- */
+.risk-item, .reco-item{
+  display:flex; gap:14px; background:var(--surface); border:1px solid var(--border); border-radius:10px;
+  padding:14px 16px; margin-bottom:10px; box-shadow:var(--shadow);
+}
+.risk-sev{flex:none; width:78px; text-align:center; align-self:flex-start;}
+.reco-num{flex:none; width:30px; height:30px; border-radius:8px; background:var(--accent); color:#fff; font-weight:800; display:flex; align-items:center; justify-content:center; font-size:13px;}
+.risk-item h4, .reco-item h4{margin:0 0 4px 0; font-size:14px;}
+.risk-item p, .reco-item p{margin:0; font-size:13px; color:var(--text-muted);}
+
+/* ---------- Scope tables (Phase 3) ---------- */
+.scope-section{margin-bottom:26px;}
+.scope-section h3{display:flex; align-items:center; gap:10px; font-size:16.5px; margin-bottom:6px;}
+.scope-letter{width:30px; height:30px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:800; color:#fff; flex:none;}
+
+/* ---------- Footer ---------- */
+footer{padding:30px 0 60px 0; color:var(--text-faint); font-size:12px; text-align:center;}
+.back-to-top{display:inline-block; margin-top:10px; font-size:12px; color:var(--accent); text-decoration:none; font-weight:700;}
+
+/* ---------- Print ---------- */
+@media print{
+  .topnav{display:none;}
+  .cover{background:var(--accent-dark) !important; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
+  section{padding:18px 0; break-inside:avoid-page;}
+  .card, .qcard, table, .heatmap, .practitioner-card, .boundary-svg-wrap{break-inside:avoid;}
+  body{font-size:11.5px;}
+  a{text-decoration:none; color:inherit;}
+}
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <div class="wrap">
+    <div class="kicker">ODF Architecture Position Assessment</div>
+    <h1>OMG Architecture Position Assessment</h1>
+    <div class="subtitle">An evidence-only, code-verified determination of OMG's true architectural position — prepared for the Chris Kechagias enterprise review. Every classification below is backed by a file:line citation from the actual codebase; nothing is assumed, inflated, or drawn from the roadmap.</div>
+    <div class="meta-row">
+      <div class="meta-chip"><b>Method:</b> Static codebase analysis, frontend + backend</div>
+      <div class="meta-chip"><b>Scope:</b> 28 architecture areas · 18 assessment questions · 3 practitioner reviews</div>
+      <div class="meta-chip"><b>Date:</b> 11 September 2026</div>
+      <div class="meta-chip"><b>Status:</b> Analysis only — no code changed</div>
+    </div>
+  </div>
+</div>
+
+<nav class="topnav">
+  <div class="wrap">
+    <span class="brand">OMG · Position Review</span>
+    <a href="#exec-summary">Executive Summary</a>
+    <a href="#positioning">Positioning</a>
+    <a href="#heatmap">Heat Map</a>
+    <a href="#matrix">Capability Matrix</a>
+    <a href="#scope">Platform Scope</a>
+    <a href="#kechagias">Kechagias 18</a>
+    <a href="#runtime-gov">Runtime Governability</a>
+    <a href="#practitioners">Practitioners</a>
+    <a href="#boundary">Boundary Model</a>
+    <a href="#evolution">Evolution Plan</a>
+    <a href="#risks">Risks</a>
+    <a href="#recommendations">Recommendations</a>
+  </div>
+</nav>
+
+<!-- ================= EXECUTIVE SUMMARY ================= -->
+<section id="exec-summary">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Phase 7 · Executive Summary</div>
+      <h2 class="title">What OMG actually is today</h2>
+      <p class="section-sub">A direct answer, before the supporting evidence.</p>
+    </div>
+
+    <div class="verdict-box">
+      <b>OMG is a Governance Intelligence &amp; Continuity Layer</b> — a genuinely deep, internally consistent system of record and advisory reasoning engine for AI governance decisions. It captures governance state, evidence, decisions, findings, and continuity signals across ~106 routed pages spanning 8 governance domains, and reasons over that data with real (not decorative) rule engines. It is <b>not</b> a runtime enforcement engine, not an execution control plane, and not yet an enterprise-hardened product — authentication always succeeds with no password, RBAC trusts a client-asserted role header by its own author's admission, there is no multi-tenancy, and no integration surface exists to any external system. OMG's greatest strength and its most serious gap sit side by side: an unusually disciplined "advisory-only, human-accountable" architecture, built on top of enterprise-readiness foundations (auth, notifications, export, configuration, integration) that are thin or absent.
+    </div>
+
+    <div class="stat-row">
+      <div class="stat"><div class="num">106</div><div class="lbl">Routed pages, 8 domains</div></div>
+      <div class="stat"><div class="num">12</div><div class="lbl">of 28 areas fully implemented</div></div>
+      <div class="stat"><div class="num">9</div><div class="lbl">of 28 areas partial</div></div>
+      <div class="stat"><div class="num">7</div><div class="lbl">of 28 areas not implemented</div></div>
+      <div class="stat"><div class="num">0</div><div class="lbl">runtime connections found</div></div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h4 style="margin-top:0;">Where OMG is genuinely strong</h4>
+        <p>Governance Continuity, Reassessment taxonomy, Governance Journey Explorer, Decision Reconstruction, Governance Story, Governance Value metrics, Evidence/Findings/Corrective Actions/Certification lifecycle management, the Governance Reasoning Engine and its Human Decision Layer, Governance Studio, the Policy Engine, and a genuine dual-mode (localStorage / Postgres+NestJS) data architecture. These are real, evidenced, and consistently built to the same "advisory only, human-accountable" standard.</p>
+      </div>
+      <div class="card">
+        <h4 style="margin-top:0;">Where OMG is not yet enterprise-ready</h4>
+        <p>Authentication (no password, always succeeds), backend authorization (trusts an unverified client header), multi-tenancy (none found), integrations (zero SSO/webhooks/third-party APIs), notifications (no delivery mechanism at all), export (one JSON button, four browser-print dialogs), configuration management (the settings page was removed and nothing replaced it), and deployment automation (no CI/CD, no IaC).</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= POSITIONING ================= -->
+<section class="alt" id="positioning">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Phase 4 · Architectural Positioning</div>
+      <h2 class="title">Where OMG truly sits in enterprise architecture</h2>
+    </div>
+
+    <div class="table-wrap" style="margin-bottom:20px;">
+      <table>
+        <thead><tr><th style="width:32%;">Candidate position</th><th style="width:14%;">Verdict</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td><b>Governance Intelligence Layer</b></td><td><span class="badge b-full">Best fit</span></td><td>Reasoning engines (conditions → policy violations → outcome ladder → recommended actions) operate over real structured governance data and produce explainable, evidenced verdicts. This is intelligence about governance, not just storage of it.</td></tr>
+          <tr><td><b>Governance Continuity Layer</b></td><td><span class="badge b-full">Best fit (secondary)</span></td><td><code class="mono">computeReauthorizationStatus()</code> and the reassessment-trigger state model genuinely track whether a governance decision remains current over time — a real, working continuity mechanism, not just a label.</td></tr>
+          <tr><td>Governance Coordination Layer</td><td><span class="badge b-partial">Partially fits</span></td><td>OMG coordinates human governance activity (decisions, reviews, certifications, actions) across many domains, but "coordination" implies cross-system orchestration OMG does not do — it coordinates people, not systems.</td></tr>
+          <tr><td>Evidence Management Layer</td><td><span class="badge b-partial">Underclaims</span></td><td>Evidence management is one real capability among many (continuity, reasoning, journey, value, certification) — calling OMG only this understates what exists.</td></tr>
+          <tr><td>Governance Platform</td><td><span class="badge b-partial">Overclaims, currently</span></td><td>"Platform" implies enterprise-grade multi-tenant, secure, integrable software. The domain modeling is platform-grade; the operational hygiene (auth, tenancy, integration) is not there yet.</td></tr>
+          <tr><td>Governance Operating System</td><td><span class="badge b-not">Overclaims</span></td><td>Implies runtime scheduling/orchestration authority over governed systems. No such authority or mechanism exists anywhere in the codebase.</td></tr>
+          <tr><td>Runtime Governance Layer / Runtime Control Plane</td><td><span class="badge b-not">Does not apply</span></td><td>Zero code touches a running agent, model, or tool process. No webhook, no telemetry ingestion, no execution interception exists (confirmed via exhaustive grep — see Kari Hyötylä analysis below).</td></tr>
+          <tr><td>Runtime Enforcement Engine / Execution Platform</td><td><span class="badge b-not">Explicitly not, by design</span></td><td>Every governance engine's own header comment disclaims automatic enforcement. The kill switch is 100% human-triggered. This is a deliberate boundary, not a gap.</td></tr>
+          <tr><td>Decision Authority Platform</td><td><span class="badge b-not">Does not apply</span></td><td>OMG records decisions humans make; it never holds independent authority to decide or act on a governed asset's behalf.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pull-quote">Honest position: OMG is a governance system of record with a real reasoning layer on top — mature in its domain modeling, immature in its enterprise operating characteristics, and deliberately (correctly) absent from the runtime execution path entirely.</div>
+  </div>
+</section>
+
+<!-- ================= HEAT MAP ================= -->
+<section id="heatmap">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Phase 1 · Capability Heat Map</div>
+      <h2 class="title">28 architecture areas at a glance</h2>
+      <p class="section-sub">Full evidence and citations for every cell are in the Capability Matrix below.</p>
+    </div>
+    <div class="legend">
+      <span class="badge b-full"><span class="dot b-full"></span>Fully Implemented</span>
+      <span class="badge b-partial"><span class="dot b-partial"></span>Partially Implemented</span>
+      <span class="badge b-not"><span class="dot b-not"></span>Not Implemented</span>
+      <span class="badge b-roadmap"><span class="dot b-roadmap"></span>Roadmap</span>
+    </div>
+    <div class="heatmap">
+      <div class="heat-cell heat-full"><div class="name">Governance Domains &amp; Modules</div><div class="stat-label">Fully Implemented</div></div>
+      <div class="heat-cell heat-full"><div class="name">Governance Studio</div><div class="stat-label">Fully Implemented</div></div>
+      <div class="heat-cell heat-full"><div class="name">Governance Continuity</div><div class="stat-label">Fully Implemented</div></div>
+      <div class="heat-cell heat-partial"><div class="name">Reassessment</div><div class="stat-label">Partially Implemented</div></div>
+      <div class="heat-cell heat-full"><div class="name">Governance Journey Explorer</div><div class="stat-label">Fully Implemented</div></div>
+      <div class="heat-cell heat-full"><div class="name">Decision Reconstruction</div><div class="stat-label">Fully Implemented</div></div>
+      <div class="heat-cell heat-full"><div class="name">Governance Story</div><div class="stat-label">Fully Implemented</div></div>
+      <div class="heat-cell heat-full"><div class="name">Governance Value</div><div class="stat-label">Fully Implemented</div></div>
+      <div class="heat-cell heat-full"><div class="name">Evidence Registry</div><div class="stat-label">Fully Implemented</div></div>
+      <div class="heat-cell heat-full"><div class="name">Findings</div><div class="stat-label">Fully Implemented</div></div>
+      <div class="heat-cell heat-full"><div class="name">Corrective Actions</div><div class="stat-label">Fully Implemented</div></div>
+      <div class="heat-cell heat-full"><div class="name">Certification Governance</div><div class="stat-label">Fully Implemented</div></div>
+      <div class="heat-cell heat-full"><div class="name">Governance Readiness</div><div class="stat-label">Fully Implemented</div></div>
+      <div class="heat-cell heat-full"><div class="name">Executive Dashboards</div><div class="stat-label">Fully Implemented</div></div>
+      <div class="heat-cell heat-partial"><div class="name">Governance Reporting</div><div class="stat-label">Partially Implemented</div></div>
+      <div class="heat-cell heat-partial"><div class="name">Auditability</div><div class="stat-label">Partially Implemented</div></div>
+      <div class="heat-cell heat-partial"><div class="name">User Management</div><div class="stat-label">Partially Implemented</div></div>
+      <div class="heat-cell heat-partial"><div class="name">RBAC</div><div class="stat-label">Partially Implemented</div></div>
+      <div class="heat-cell heat-not"><div class="name">Configuration Management</div><div class="stat-label">Not Implemented</div></div>
+      <div class="heat-cell heat-not"><div class="name">Notification Framework</div><div class="stat-label">Not Implemented</div></div>
+      <div class="heat-cell heat-not"><div class="name">Workflow Engine</div><div class="stat-label">Not Implemented</div></div>
+      <div class="heat-cell heat-full"><div class="name">Policy Engine</div><div class="stat-label">Fully Implemented</div></div>
+      <div class="heat-cell heat-full"><div class="name">Data Model / Storage Layer</div><div class="stat-label">Fully Implemented</div></div>
+      <div class="heat-cell heat-partial"><div class="name">Export Capabilities</div><div class="stat-label">Partially Implemented</div></div>
+      <div class="heat-cell heat-not"><div class="name">Integration Capabilities</div><div class="stat-label">Not Implemented</div></div>
+      <div class="heat-cell heat-partial"><div class="name">Deployment Architecture</div><div class="stat-label">Partially Implemented</div></div>
+      <div class="heat-cell heat-not"><div class="name">Security — Authentication</div><div class="stat-label">Not Implemented</div></div>
+      <div class="heat-cell heat-partial"><div class="name">Security — Authorization</div><div class="stat-label">Partially Implemented</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CAPABILITY MATRIX ================= -->
+<section class="alt" id="matrix">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Phase 1 · Maturity Matrix</div>
+      <h2 class="title">Complete architecture analysis, with evidence</h2>
+      <p class="section-sub">Every row cites the actual file(s) read. "NOT FOUND" means an explicit negative search result, not an assumption.</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th style="width:16%;">Area</th><th style="width:10%;">Class.</th><th style="width:34%;">Evidence</th><th>Behavior</th></tr></thead>
+        <tbody>
+          <tr><td><b>Governance Domains</b></td><td><span class="badge b-full">Full</span></td><td><span class="mono">navigation.ts:113-611</span></td><td>8 domains (Foundation, Operations, Assurance, Intelligence, Audit &amp; Oversight, Executive, Assessments, Response, Administration), ~103 domain pages + 3 standalone, auto-derived <span class="mono">ALL_MODULE_PATHS</span>/<span class="mono">MODULE_INDEX</span>.</td></tr>
+          <tr><td><b>Governance Modules</b></td><td><span class="badge b-full">Full</span></td><td><span class="mono">navigation.ts:74-76,697-736</span></td><td>Modules flatten from domain groups programmatically — adding a module needs no separate search/breadcrumb wiring.</td></tr>
+          <tr><td><b>Governance Studio</b></td><td><span class="badge b-full">Full</span></td><td><span class="mono">GovernanceIntelligenceStudioPage.tsx</span> (530 lines)</td><td>7 real interactive tabs: Condition/Outcome/Action Designer (enable/disable + CRUD, RBAC-gated, real Neon sync), Rule Mapping Engine &amp; Compliance Pack Builder (read-only derived views), Customer Profiles. Detection logic itself is fixed platform code — new condition types cannot be created client-side, by design.</td></tr>
+          <tr><td><b>Governance Continuity</b></td><td><span class="badge b-full">Full</span></td><td><span class="mono">governanceContinuity.ts:80-87</span></td><td><span class="mono">computeReauthorizationStatus()</span> — live date-math (Active/Due Soon/Overdue/Expired), computed not stored.</td></tr>
+          <tr><td><b>Reassessment</b></td><td><span class="badge b-partial">Partial</span></td><td><span class="mono">storageService.ts:1908-1963</span></td><td>13-type trigger taxonomy real; filing a trigger auto-flips <span class="mono">governanceState → 'Reassessment Required'</span> — but no reachable UI creates a trigger, and nothing detects change automatically.</td></tr>
+          <tr><td><b>Governance Journey Explorer</b></td><td><span class="badge b-full">Full</span></td><td><span class="mono">GovernanceJourneyExplorerPage.tsx</span>, route <span class="mono">/governance-journey</span></td><td>4 tabs (Timeline/Decision/Story/Value) aggregating 16 real event stages per asset. Built this session; verified live.</td></tr>
+          <tr><td><b>Decision Reconstruction</b></td><td><span class="badge b-full">Full</span></td><td><span class="mono">getDecisionReconstruction()</span>, storageService.ts</td><td>Rebuilds the full decision trail from real evidence/findings/outcome records — retrospective, accurate, not judgmental about current admissibility.</td></tr>
+          <tr><td><b>Governance Story</b></td><td><span class="badge b-full">Full</span></td><td><span class="mono">getGovernanceStory()</span>, storageService.ts</td><td>Narrative composition over the same real aggregated data — verified working.</td></tr>
+          <tr><td><b>Governance Value</b></td><td><span class="badge b-full">Full</span></td><td><span class="mono">governanceValueMetrics.ts:47</span>, used by 6 pages</td><td><span class="mono">computePortfolioGovernanceMetrics()</span> — 8 real metrics (readiness avg, evidence coverage %, review compliance %, reassessment compliance %, findings resolution rate, SLA compliance, approval cycle time, open risks), all derived from live seeded records. No fabricated numbers found.</td></tr>
+          <tr><td><b>Evidence Registry</b></td><td><span class="badge b-full">Full</span></td><td><span class="mono">EvidenceRegistryPage.tsx</span>, EvidenceRecord type</td><td>Real CRUD registry with lifecycle status (Active/Superseded), expiry, ownership — confirmed via seed data (ast-106 has one expired/superseded record).</td></tr>
+          <tr><td><b>Findings</b></td><td><span class="badge b-full">Full</span></td><td><span class="mono">getFindings()</span>, storageService.ts:770</td><td>Real findings drive the Governance Outcome ladder and the Governance Actions Engine — not decorative.</td></tr>
+          <tr><td><b>Corrective Actions</b></td><td><span class="badge b-full">Full</span></td><td><span class="mono">CorrectiveActionsPage.tsx</span>, storageService.ts:4575</td><td>Wired frontend (contrary to an earlier session's "orphaned" note — verified re-wired), feeds Certification Readiness.</td></tr>
+          <tr><td><b>Certification Governance</b></td><td><span class="badge b-full">Full</span></td><td><span class="mono">CertificationRecordsPage.tsx</span> (254 lines)</td><td>Real Issue → Monitor → Renew/Revoke workflow, each step a human-actor-attributed, RBAC-gated call (<span class="mono">issueCertificationRecord</span>/<span class="mono">renewCertificationRecord</span>/<span class="mono">revokeCertificationRecord</span>). Revoke requires a mandatory reason. Confirmed via ast-106's revoked certification record.</td></tr>
+          <tr><td><b>Governance Readiness</b></td><td><span class="badge b-full">Full</span></td><td><span class="mono">readinessFoundation.ts</span> (6 functions), surfaced both per-asset and portfolio-wide</td><td>Ready/Partially Ready/Not Ready tiers, deliberately non-numeric. A parallel numeric scoring system (<span class="mono">governanceReadinessScore.ts</span>) also exists and is used by 7 pages — flagged as a naming/concept-overlap risk, not a defect.</td></tr>
+          <tr><td><b>Executive Dashboards</b></td><td><span class="badge b-full">Full</span></td><td><span class="mono">executiveGovernance.ts</span> (983 lines, "derivation only")</td><td>~20 exported getters, all traced back to <span class="mono">storageService.ts</span>/<span class="mono">policyService.ts</span> primitives — pure display composition, not a new data source.</td></tr>
+          <tr><td><b>Governance Reporting</b></td><td><span class="badge b-partial">Partial</span></td><td><span class="mono">GovernanceReportsPage.tsx</span> (7 real rollups), <span class="mono">BoardReportingPage.tsx:83-96</span></td><td>7 genuine cross-domain reports exist; only export capability anywhere is a single JSON-download button on one page. No CSV/PDF/Excel generation.</td></tr>
+          <tr><td><b>Auditability</b></td><td><span class="badge b-partial">Partial</span></td><td><span class="mono">storageService.ts</span> ~60 call sites, <span class="mono">AuditLogsPage.tsx</span>; backend <span class="mono">schema.prisma:2131</span></td><td>Full local audit trail (write path + dedicated page) covering nearly every mutation. Backend has a real AuditLog table and GET endpoint, but no POST — frontend audit writes never reach Neon in Production Mode. Hardcoded fake IP (<span class="mono">'127.0.0.1 (Local)'</span>).</td></tr>
+          <tr><td><b>User Management</b></td><td><span class="badge b-partial">Partial</span></td><td><span class="mono">UserManagementPage.tsx</span> (228 lines)</td><td>Real create/edit UI, but localStorage-only, no password field, and the backend exposes GET <span class="mono">/api/users</span> only — no POST/PATCH, so created users never reach the backend.</td></tr>
+          <tr><td><b>RBAC</b></td><td><span class="badge b-partial">Partial</span></td><td><span class="mono">AuthContext.tsx:72-83</span>, <span class="mono">roleActionMatrix.ts</span> (~130 keys), <span class="mono">backend/src/auth/roles.guard.ts</span></td><td>Mechanism is thorough and consistently applied (frontend allow-lists + a dedicated backend guard on ~46 endpoints). But the guard's own doc comment states it trusts a client-supplied <span class="mono">x-user-role</span> header with no cryptographic verification — a complete mechanism sitting on an unverified trust root.</td></tr>
+          <tr><td><b>Configuration Management</b></td><td><span class="badge b-not">Not Impl.</span></td><td>Deleted: <span class="mono">TenantSettingsPage.tsx</span> (commit <span class="mono">d69c015</span>)</td><td>No settings/config page of any kind exists post-deletion. Only narrow rule-content configuration survives via Governance Studio + Policy Registry (counted separately above).</td></tr>
+          <tr><td><b>Notification Framework</b></td><td><span class="badge b-not">Not Impl.</span></td><td>Exhaustive grep: <span class="mono">sendEmail|smtp|webhook|notify</span> → no delivery code found</td><td>"Governance Alert" is static seed data with no generator function. No toast library exists in <span class="mono">package.json</span>; user feedback is native <span class="mono">alert()</span>/<span class="mono">confirm()</span> dialogs.</td></tr>
+          <tr><td><b>Workflow Engine</b></td><td><span class="badge b-not">Not Impl.</span></td><td>No generic engine found; each process is bespoke</td><td>Decision, certification, kill-switch, and retirement each have independent, hand-written logic. Only Change Management has its own narrow transition tracker (<span class="mono">changeManagementService.ts</span>), not reused elsewhere.</td></tr>
+          <tr><td><b>Policy Engine</b></td><td><span class="badge b-full">Full</span></td><td><span class="mono">policyService.ts:249-297</span>, <span class="mono">governanceReasoningEngine.ts:35-166</span></td><td>Real rule-evaluation logic (<span class="mono">switch</span> on 7 enforcement rules) over live asset state, auto-generating violations; real policy-authoring UI (<span class="mono">PolicyRegistryPage.tsx</span>). Genuinely functional, not just displayed data.</td></tr>
+          <tr><td><b>Data Model / Storage Layer</b></td><td><span class="badge b-full">Full</span></td><td><span class="mono">repositories/index.ts:125-144</span>, <span class="mono">backend/prisma/schema.prisma</span></td><td>Real dual-mode architecture: localStorage "Demo Mode" (default) vs. a genuine Postgres/Neon-backed NestJS API "Production Mode," with a working migration utility. Some subsystems (Audit Log, User CRUD) don't participate in the mode switch and stay local-only regardless.</td></tr>
+          <tr><td><b>Export Capabilities</b></td><td><span class="badge b-partial">Partial</span></td><td><span class="mono">BoardReportingPage.tsx:83-96</span>; 4 files using <span class="mono">window.print()</span></td><td>One real JSON export. Four modals trigger the browser's native print dialog (relies on the OS "print to PDF," not a real PDF library). No CSV or Excel export anywhere.</td></tr>
+          <tr><td><b>Integration Capabilities</b></td><td><span class="badge b-not">Not Impl.</span></td><td>Exhaustive grep across frontend + backend</td><td>No SSO/SAML/OAuth, no third-party API client SDKs, no webhook infrastructure. The only outbound network call anywhere is the frontend calling its own backend.</td></tr>
+          <tr><td><b>Deployment Architecture</b></td><td><span class="badge b-partial">Partial</span></td><td><span class="mono">firebase.json</span>; hardcoded URLs in <span class="mono">apiClient.ts:10</span>, <span class="mono">main.ts:10-13</span></td><td>Static frontend on Firebase Hosting is formally configured. Backend on Render is inferred only from hardcoded URLs — no Dockerfile, no <span class="mono">render.yaml</span>, no CI/CD pipeline exists in the repository.</td></tr>
+          <tr><td><b>Security — Authentication</b></td><td><span class="badge b-not">Not Impl.</span></td><td><span class="mono">LoginPage.tsx</span>, <span class="mono">AuthContext.tsx:57-64</span></td><td>Email-only login with no password field; <span class="mono">login()</span> always returns <span class="mono">true</span> — there is no failure path at all.</td></tr>
+          <tr><td><b>Security — Authorization</b></td><td><span class="badge b-partial">Partial</span></td><td><span class="mono">backend/src/auth/roles.guard.ts</span> (90 lines)</td><td>Fails closed on a missing/unrecognized role, denies escalation by default — genuinely careful design — but its own doc comment admits the role claim is client-asserted and unverifiable.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PLATFORM SCOPE ================= -->
+<section id="scope">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Phase 3 · Common vs. Configurable vs. ODF vs. Customer Runtime</div>
+      <h2 class="title">Where each capability belongs</h2>
+      <p class="section-sub">Only verified, real capabilities are listed in Sections A and B. Sections C and D are judgment calls about where future work should be delivered, argued from what exists today.</p>
+    </div>
+
+    <div class="scope-section">
+      <h3><span class="scope-letter" style="background:var(--full);">A</span> Common OMG Platform — every customer gets this as standard</h3>
+      <p class="section-sub" style="margin-bottom:10px;">Industry-agnostic, reusable, already implemented.</p>
+      <div class="card">
+        <p>Governance Continuity (reauthorization status) · Reassessment taxonomy + auto state-flip · Governance Journey Explorer, Decision Reconstruction, Governance Story, Governance Value metrics · Evidence Registry, Findings, Corrective Actions, Certification issue/renew/revoke workflow · Governance Readiness (6-function suite, per-asset and portfolio-wide) · Executive Dashboards (display composition) · Governance Reasoning Engine (conditions → violations → outcome ladder → recommended actions) and its Human Decision Layer (Accept/Reject/Defer) · Governance Studio (enable/disable + CRUD on rules, policies, action rules) · Policy Engine (authoring + auto-detected violations) · RBAC allow-list/action-key mechanism · Dual-mode data architecture with migration utility · Kill Switch mechanism (human-gated, audited) · Local Audit Trail.</p>
+      </div>
+    </div>
+
+    <div class="scope-section">
+      <h3><span class="scope-letter" style="background:var(--partial);">B</span> Configurable OMG Platform — customers configure without custom development</h3>
+      <p class="section-sub" style="margin-bottom:10px;">Verified real today — not proposed.</p>
+      <div class="card">
+        <p>Governance Studio: enable/disable individual conditions, outcomes, and action rules; author and edit Policies and Policy Mappings; Compliance Pack Builder (Regulatory Source → Requirement → Obligation → Control → Policy); activate a Customer Governance Profile. This is the entire set of genuinely-configurable-today capabilities — thresholds such as reauthorization windows, evidence minimums, and mandatory authority fields are currently <b>hardcoded constants</b>, not configurable, and therefore do not belong in this section (see Phase 6 for the proposal to change that).</p>
+      </div>
+    </div>
+
+    <div class="scope-section">
+      <h3><span class="scope-letter" style="background:var(--odf);">C</span> ODF Customization — best delivered through services</h3>
+      <div class="card">
+        <p>Customer-specific governance workflows beyond Governance Studio's fixed catalogue · Industry-specific governance process content authored into the existing Policy/Compliance Pack structures · Organization-specific multi-step approval chains (OMG records a single decision point today, not a configurable chain) · Regulatory interpretation — mapping a customer's specific obligations into OMG's generic Requirement→Obligation→Control chain · Custom executive dashboards beyond the existing set · Integrating a customer's real identity provider (SSO/SAML/OAuth) since OMG has no such capability to configure · Multi-tenant environment setup for a specific enterprise deployment · Wiring notification delivery (email/Slack/Teams) to a customer's own tools, since OMG has no delivery mechanism to configure.</p>
+      </div>
+    </div>
+
+    <div class="scope-section">
+      <h3><span class="scope-letter" style="background:var(--customer);">D</span> Customer Runtime Governance Layer — should NOT be OMG core</h3>
+      <div class="card">
+        <p><b>Runtime enforcement engines</b> — conflicts directly with OMG's deliberate advisory-only, human-accountable architecture; building one would require an entirely different execution-control system. <b>Agent execution control planes</b> — infrastructure/orchestration territory; zero code today touches a running agent process. <b>Runtime policy engines</b> — OMG's Policy Engine evaluates recorded/seeded state, never live traffic; a runtime version intercepts execution, a fundamentally different system. <b>Tool execution brokers</b> — OMG tracks tool <i>grants</i> (who is allowed what); it has no code that brokers an actual tool call. <b>Enterprise orchestration controls</b> — outside OMG's data-model scope; would require deep integration with a customer's own agent framework. <b>Customer-specific kill-switch architectures</b> — OMG's kill switch flips a status field it owns; it cannot and does not stop a running process anywhere. A true runtime kill switch requires integration with the customer's execution environment. <b>Enterprise runtime gateways</b> — no runtime traffic ever flows through OMG; it is a system of record, not a proxy.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= KECHAGIAS 18 ================= -->
+<section class="alt" id="kechagias">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Phase 2 · Chris Kechagias Assessment</div>
+      <h2 class="title">18-question enterprise assessment</h2>
+      <p class="section-sub">Each item: current status, classification, evidence, modules, strengths, limitations, honest positioning, and recommended direction.</p>
+    </div>
+
+    <div class="table-wrap" style="margin-bottom:26px;">
+      <table>
+        <thead><tr><th style="width:4%;">#</th><th style="width:24%;">Area</th><th style="width:14%;">Classification</th><th>Honest positioning, in one line</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Product Maturity</td><td><span class="badge b-partial">Partial</span></td><td>Mature governance domain model; immature enterprise operating characteristics.</td></tr>
+          <tr><td>2</td><td>Deployment Model</td><td><span class="badge b-partial">Partial</span></td><td>Functional split hosting, but manual and undocumented — no IaC or CI/CD.</td></tr>
+          <tr><td>3</td><td>External Governing Position</td><td><span class="badge b-not">Not Impl.</span></td><td>OMG governs its own records about assets, not any external running system.</td></tr>
+          <tr><td>4</td><td>Authority Boundary</td><td><span class="badge b-full">Full</span></td><td>Unusually consistent advisory-only boundary — a genuine differentiator.</td></tr>
+          <tr><td>5</td><td>Governance Configuration</td><td><span class="badge b-partial">Partial</span></td><td>Rule/policy content is configurable; operating thresholds are hardcoded.</td></tr>
+          <tr><td>6</td><td>Identity &amp; Delegation</td><td><span class="badge b-not">Not Impl.</span></td><td>Rich descriptive data capture; zero validation of identity or delegation.</td></tr>
+          <tr><td>7</td><td>Runtime Enforcement</td><td><span class="badge b-not">Not Impl. (by design)</span></td><td>Deliberately absent — OMG recommends, it never enforces.</td></tr>
+          <tr><td>8</td><td>Integration Architecture</td><td><span class="badge b-not">Not Impl.</span></td><td>OMG is a closed system today — no path in or out to any external tool.</td></tr>
+          <tr><td>9</td><td>Change &amp; Reassessment</td><td><span class="badge b-partial">Partial</span></td><td>Correct taxonomy and consequence logic; no working front door to use it.</td></tr>
+          <tr><td>10</td><td>Evidence Integrity</td><td><span class="badge b-partial">Partial</span></td><td>Real lifecycle bookkeeping; no sufficiency bar, no cryptographic integrity.</td></tr>
+          <tr><td>11</td><td>Safe Failure</td><td><span class="badge b-partial">Partial</span></td><td>Authorization fails closed; authentication fails open by construction.</td></tr>
+          <tr><td>12</td><td>Security &amp; Assurance</td><td><span class="badge b-not">Not Impl.</span></td><td>Candidly demo-grade — the code says so itself, which is notable.</td></tr>
+          <tr><td>13</td><td>Scale &amp; Performance</td><td><span class="badge b-not">Not evaluated / structurally capped</span></td><td>Demo Mode is single-browser by construction; no load evidence either way.</td></tr>
+          <tr><td>14</td><td>Regulatory Content</td><td><span class="badge b-partial">Partial</span></td><td>The mapping framework is real; content depth/currency was not verified.</td></tr>
+          <tr><td>15</td><td>Data Ownership &amp; Portability</td><td><span class="badge b-partial">Partial</span></td><td>Demo→production migration exists; no full customer data export tool.</td></tr>
+          <tr><td>16</td><td>Partner &amp; IP Model</td><td><span class="badge b-roadmap">Not evaluable from code</span></td><td>A commercial/legal question, outside what a codebase audit can answer.</td></tr>
+          <tr><td>17</td><td>Enterprise Implementation</td><td><span class="badge b-not">Not Impl.</span></td><td>No multi-tenancy model found anywhere — single-tenant by construction today.</td></tr>
+          <tr><td>18</td><td>End-to-End Governance Demonstration</td><td><span class="badge b-full">Full</span></td><td>OMG's strongest asset — a genuine, non-fabricated, evidence-backed story.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Detailed cards for the most consequential items -->
+    <div class="qcard">
+      <div class="qcard-head"><div><span class="qnum">1</span><h4 style="display:inline;">Product Maturity</h4></div><span class="badge b-partial">Partially Implemented</span></div>
+      <div class="qfields">
+        <div class="qfield"><div class="flabel">Current status</div><div class="fval">106 routed pages, 8 governance domains, deep pure-function engines (readiness, gates, drift, outcome ladder, health score, continuity, journey, decision reconstruction, story, value) and a real dual-mode backend.</div></div>
+        <div class="qfield"><div class="flabel">Evidence found</div><div class="fval"><span class="mono">navigation.ts</span>, <span class="mono">storageService.ts</span>, all <span class="mono">governance*Engine.ts</span> files</div></div>
+        <div class="qfield"><div class="flabel">Modules involved</div><div class="fval">Effectively every governance domain module</div></div>
+        <div class="qfield"><div class="flabel">Strengths</div><div class="fval">Exceptionally deep, consistent domain modeling; explainable advisory engines; real backend with a genuine Prisma schema.</div></div>
+        <div class="qfield"><div class="flabel">Limitations</div><div class="fval">Several enterprise table-stakes capabilities (auth, notifications, export, configuration) are thin or absent.</div></div>
+        <div class="qfield full-row"><div class="flabel">Honest positioning</div><div class="fval">OMG is a mature <b>governance domain model and reasoning layer</b>, not yet a mature <b>enterprise software product</b> in the operational sense.</div></div>
+        <div class="qfield full-row"><div class="flabel">Recommended direction</div><div class="fval">Prioritize enterprise-hygiene capabilities (Phase 6) before further governance-domain expansion — the domain model does not need more breadth right now.</div></div>
+      </div>
+    </div>
+
+    <div class="qcard">
+      <div class="qcard-head"><div><span class="qnum">4</span><h4 style="display:inline;">Authority Boundary</h4></div><span class="badge b-full">Fully Implemented</span></div>
+      <div class="qfields">
+        <div class="qfield"><div class="flabel">Current status</div><div class="fval">Every governance engine reviewed explicitly disclaims automatic action: "advisory only," "nothing here blocks, gates or auto-remediates," "human accountability remains the final authority."</div></div>
+        <div class="qfield"><div class="flabel">Evidence found</div><div class="fval"><span class="mono">governanceGatesEngine.ts:4-8</span>, <span class="mono">governanceReasoningEngine.ts</span>, <span class="mono">governanceDriftEngine.ts</span>, <span class="mono">GovernanceActionsWorkspacePage.tsx:99</span> ("Nothing executes automatically; humans remain accountable")</div></div>
+        <div class="qfield"><div class="flabel">Modules involved</div><div class="fval">All governance reasoning/gates/drift/readiness engines; the Governance Actions Workspace</div></div>
+        <div class="qfield"><div class="flabel">Strengths</div><div class="fval">This consistency across a dozen independently-written files is unusual and is a genuine architectural differentiator.</div></div>
+        <div class="qfield"><div class="flabel">Limitations</div><div class="fval">The boundary is a code convention enforced by developer discipline, not a structural guarantee — nothing in the platform would stop a future feature from crossing it.</div></div>
+        <div class="qfield full-row"><div class="flabel">Honest positioning</div><div class="fval">OMG has an authority boundary by design, not by structural enforcement.</div></div>
+        <div class="qfield full-row"><div class="flabel">Recommended direction</div><div class="fval">Formalize the boundary explicitly (e.g., "Governance Actions never execute — persisted objects plus RBAC are the only mutation path") as a documented architectural contract, not just a comment convention.</div></div>
+      </div>
+    </div>
+
+    <div class="qcard">
+      <div class="qcard-head"><div><span class="qnum">8</span><h4 style="display:inline;">Integration Architecture</h4></div><span class="badge b-not">Not Implemented</span></div>
+      <div class="qfields">
+        <div class="qfield"><div class="flabel">Current status</div><div class="fval">Zero SSO/SAML/OAuth, zero webhooks, zero third-party API client SDKs anywhere in frontend or backend.</div></div>
+        <div class="qfield"><div class="flabel">Evidence found</div><div class="fval">Exhaustive grep of both <span class="mono">package.json</span> files (only React/Router and NestJS/Prisma dependencies); no webhook route in <span class="mono">app.controller.ts</span></div></div>
+        <div class="qfield"><div class="flabel">Modules involved</div><div class="fval">None — this is an absence, confirmed by negative search</div></div>
+        <div class="qfield"><div class="flabel">Strengths</div><div class="fval">A closed system has no external attack surface and no undocumented data flows.</div></div>
+        <div class="qfield"><div class="flabel">Limitations</div><div class="fval">No path exists today for any external system, identity provider, or monitoring tool to connect to OMG.</div></div>
+        <div class="qfield full-row"><div class="flabel">Honest positioning</div><div class="fval">This is the single most consequential enterprise gap in this entire audit — not because integrations are inherently required, but because it caps every subsequent claim about enterprise readiness.</div></div>
+        <div class="qfield full-row"><div class="flabel">Recommended direction</div><div class="fval">Define a generic Governance-to-Runtime event-ingestion contract (Phase 6) before building any specific connector — the contract is Common Platform; individual connectors are Customer Extension / ODF.</div></div>
+      </div>
+    </div>
+
+    <div class="qcard">
+      <div class="qcard-head"><div><span class="qnum">12</span><h4 style="display:inline;">Security &amp; Assurance</h4></div><span class="badge b-not">Not Implemented</span></div>
+      <div class="qfields">
+        <div class="qfield"><div class="flabel">Current status</div><div class="fval">No password/credential check anywhere; the backend role-header guard is explicitly documented by its own author as forgeable; no encryption-at-rest; no rate limiting/lockout found.</div></div>
+        <div class="qfield"><div class="flabel">Evidence found</div><div class="fval"><span class="mono">LoginPage.tsx</span> (no password field), <span class="mono">AuthContext.tsx:57-64</span> (<span class="mono">login()</span> always returns <span class="mono">true</span>), <span class="mono">roles.guard.ts:12-32</span> ("THIS GUARD PERFORMS AUTHORISATION ONLY. IT DOES NOT PERFORM AUTHENTICATION... A caller can therefore still assert any role they choose.")</div></div>
+        <div class="qfield"><div class="flabel">Modules involved</div><div class="fval"><span class="mono">LoginPage.tsx</span>, <span class="mono">AuthContext.tsx</span>, <span class="mono">backend/src/auth/roles.guard.ts</span></div></div>
+        <div class="qfield"><div class="flabel">Strengths</div><div class="fval">The RBAC <i>design</i> (allow-lists + a ~130-key action matrix) is thorough and consistently applied everywhere it exists.</div></div>
+        <div class="qfield"><div class="flabel">Limitations</div><div class="fval">None of that design sits on a real identity/authentication foundation — it is, today, unconditionally bypassable by design.</div></div>
+        <div class="qfield full-row"><div class="flabel">Honest positioning</div><div class="fval">OMG's current security posture is candidly demo-grade — the code's own comments say so outright, which is itself notable and to its credit; it is not a hidden gap.</div></div>
+        <div class="qfield full-row"><div class="flabel">Recommended direction</div><div class="fval">Real authentication is a blocking prerequisite for any customer-facing production exposure. Given OMG has no identity system of its own, integrating a customer's real IdP (SSO/SAML/OAuth) is the right shape — a Customer Extension / ODF item, not something OMG should build from scratch as a bespoke identity provider.</div></div>
+      </div>
+    </div>
+
+    <div class="qcard">
+      <div class="qcard-head"><div><span class="qnum">17</span><h4 style="display:inline;">Enterprise Implementation</h4></div><span class="badge b-not">Not Implemented</span></div>
+      <div class="qfields">
+        <div class="qfield"><div class="flabel">Current status</div><div class="fval">No multi-tenancy model found anywhere in the data model or storage layer — single global localStorage keys, no tenant field observed on governance records.</div></div>
+        <div class="qfield"><div class="flabel">Evidence found</div><div class="fval">Repository and storage-layer review; consistent with a prior session's memory noting the same architecture gap</div></div>
+        <div class="qfield"><div class="flabel">Modules involved</div><div class="fval"><span class="mono">repositories/index.ts</span>, <span class="mono">storageService.ts</span></div></div>
+        <div class="qfield"><div class="flabel">Strengths</div><div class="fval">The dual-mode (demo/production) architecture is a clean foundation to build tenancy on top of, if pursued.</div></div>
+        <div class="qfield"><div class="flabel">Limitations</div><div class="fval">Cannot safely host more than one customer's data in a single deployment today.</div></div>
+        <div class="qfield full-row"><div class="flabel">Honest positioning</div><div class="fval">OMG today is architected as a single-tenant demo/pilot system, not a multi-customer SaaS platform.</div></div>
+        <div class="qfield full-row"><div class="flabel">Recommended direction</div><div class="fval">Multi-tenancy is foundational — it should be resolved before any second real customer is onboarded to a shared deployment, and is Common Platform work, not something to defer to ODF per-customer.</div></div>
+      </div>
+    </div>
+
+    <div class="qcard">
+      <div class="qcard-head"><div><span class="qnum">18</span><h4 style="display:inline;">End-to-End Governance Demonstration</h4></div><span class="badge b-full">Fully Implemented</span></div>
+      <div class="qfields">
+        <div class="qfield"><div class="flabel">Current status</div><div class="fval">The Governance Journey Explorer, Decision Reconstruction, and Governance Story genuinely demonstrate an end-to-end story on real seeded data — verified via the "strong path" (ast-101, Fraud Detection Sentinel Agent: Monitoring, clean active evidence, zero open findings) vs. "weak path" (ast-106, Enterprise Portfolio Multi-Agent System: No GO, superseded/expired evidence, open critical finding, in-progress corrective action, revoked certification, active kill switch) contrast.</div></div>
+        <div class="qfield"><div class="flabel">Evidence found</div><div class="fval"><span class="mono">mockData.ts:385</span> (ast-101), <span class="mono">mockData.ts:579</span> (ast-106), independently re-verified this session against current seed data</div></div>
+        <div class="qfield"><div class="flabel">Modules involved</div><div class="fval">Governance Journey Explorer, Decision Reconstruction, Governance Story, Certification Records, Kill Switch Center</div></div>
+        <div class="qfield"><div class="flabel">Strengths</div><div class="fval">This is OMG's single strongest storytelling asset — a genuine, non-fabricated, evidence-backed narrative of governance working (and failing) end to end.</div></div>
+        <div class="qfield"><div class="flabel">Limitations</div><div class="fval">It is retrospective and demonstrative; it does not itself judge whether the "strong path" asset's authorization is still admissible today (see Runtime Governability Analysis below).</div></div>
+        <div class="qfield full-row"><div class="flabel">Honest positioning</div><div class="fval">A genuinely differentiating capability — worth leading with in any enterprise conversation.</div></div>
+        <div class="qfield full-row"><div class="flabel">Recommended direction</div><div class="fval">Preserve as-is; extend it (not replace it) with the Governability Status composite proposed in Phase 6.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= RUNTIME GOVERNABILITY ================= -->
+<section class="alt" id="runtime-gov">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Cross-Reference · Runtime Governability Analysis</div>
+      <h2 class="title">The question underneath this entire review</h2>
+      <p class="section-sub">Condensed from the dedicated Runtime Governability Discussion Paper prepared for Szilvia Földesné Ambrus's challenge; restated here because it frames the Kari Hyötylä findings below.</p>
+    </div>
+    <div class="pull-quote">"Evidence may persist. Authority may still exist. But when context changes, the admissibility of continued execution should not necessarily persist by inheritance." — the challenge this entire analysis is grounded against.</div>
+    <div class="card">
+      <p>OMG has essentially all the raw signal a runtime governability judgment would need — evidence, authority, certification, health, drift, reauthorization-by-date — already computed live, and already following the right architectural conventions (pure functions, computed not stored, advisory not blocking). What is missing is not new governance domains or new data. It is one composition layer that diffs "conditions now" against "conditions when authority was granted," and turns presence-checks into sufficiency-checks. Of the ten specific admissibility questions examined in the Discussion Paper, OMG answers <b>one fully</b> (reauthorization timing), <b>four partially</b>, and <b>five not at all</b> — every gap traces to a missing composition, not missing data. This finding is the basis for the entire Phase 6 evolution plan below.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PRACTITIONERS ================= -->
+<section id="practitioners">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Phase 5 · Practitioner Alignment Analysis</div>
+      <h2 class="title">Evaluated against three named practitioner challenges</h2>
+    </div>
+
+    <div class="practitioner-card">
+      <h3>George Williams</h3>
+      <div class="focus-tag">Focus: Interpretive Governance · Delegation Governance · Authority Boundaries · Cognitive Governance Concepts</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th style="width:26%;">Concern</th><th style="width:16%;">Rating</th><th>Finding</th></tr></thead>
+          <tbody>
+            <tr><td>Interpretive Governance</td><td><span class="badge b-not">Not Impl.</span></td><td>All detection is fixed-rule pattern matching (<span class="mono">policyService.ts</span> switch-cases, <span class="mono">governanceReasoningEngine.ts</span> fixed conditions). No capability to interpret ambiguous or novel situations beyond matching predefined rules exists.</td></tr>
+            <tr><td>Delegation Governance</td><td><span class="badge b-partial">Partial</span></td><td><span class="mono">delegationScope</span> (free text) and <span class="mono">AgentToolGrant</span> exist as descriptive records, but nothing validates, expires, or interprets the legitimacy of a delegation.</td></tr>
+            <tr><td>Authority Boundaries</td><td><span class="badge b-full">Full</span></td><td>Same finding as Kechagias Q4 — a consistently enforced advisory-only boundary across every governance engine.</td></tr>
+            <tr><td>Cognitive Governance Concepts</td><td><span class="badge b-not">Not Impl.</span></td><td>Every engine reviewed is deterministic rule/threshold logic over structured fields. No ML/LLM-based interpretive layer exists — confirmed by <span class="mono">package.json</span> carrying no AI/LLM SDK dependency at all.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="practitioner-card">
+      <h3>Kari Hyötylä</h3>
+      <div class="focus-tag">Focus: Governance State · Execution Request · Current Condition Validation · Authorization Decision · Runtime Effect Validation · Evidence of Effect</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th style="width:26%;">Concern</th><th style="width:16%;">Rating</th><th>Finding</th></tr></thead>
+          <tbody>
+            <tr><td>Governance State</td><td><span class="badge b-full">Full</span></td><td>The <span class="mono">GOVERNANCE_STATES</span> model and live per-asset <span class="mono">governanceState</span> field are real and working.</td></tr>
+            <tr><td>Execution Request</td><td><span class="badge b-not">Not Impl.</span></td><td>OMG has no concept of an incoming "execution request" to evaluate — no runtime interception point exists at all, consistent with the zero-integration finding above.</td></tr>
+            <tr><td>Current Condition Validation</td><td><span class="badge b-partial">Partial</span></td><td>Readiness/gates/drift genuinely validate current condition against governance criteria — but only when a human navigates to view it, never triggered by or tied to any actual execution event.</td></tr>
+            <tr><td>Authorization Decision</td><td><span class="badge b-partial">Partial</span></td><td><span class="mono">DecisionRecord</span>/<span class="mono">decisionOutcome</span> is a durable, real, point-in-time human decision — but it is recorded once, not made per execution request, since no execution requests exist in the model.</td></tr>
+            <tr><td>Runtime Effect Validation</td><td><span class="badge b-not">Not Impl.</span></td><td>No code anywhere observes or validates the actual runtime behavior or effect of a governed asset. OMG tracks governance metadata, never live behavior.</td></tr>
+            <tr><td>Evidence of Effect</td><td><span class="badge b-not">Not Impl.</span></td><td><span class="mono">EvidenceRecord</span> captures governance artifacts (reports, assessments), never a specific runtime execution's actual output or effect. No telemetry/observability ingestion pipeline exists.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="margin-top:14px; font-size:13px; color:var(--text-muted);"><b>Reading across this cluster:</b> OMG is a <i>pre-runtime and post-hoc</i> governance system — it assesses before deployment and tracks status over the asset's lifecycle — but has no connection whatsoever to any individual runtime execution or transaction. This is a sharp, structurally consistent finding, not a scattered set of small gaps.</p>
+    </div>
+
+    <div class="practitioner-card">
+      <h3>Szilvia Földesné Ambrus</h3>
+      <div class="focus-tag">Focus: Continuous Governability · Runtime Revalidation · Authority Revalidation · Evidence Sufficiency Validation · Admissibility Revalidation · Context-Aware Governance</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th style="width:26%;">Concern</th><th style="width:16%;">Rating</th><th>Finding</th></tr></thead>
+          <tbody>
+            <tr><td>Continuous Governability</td><td><span class="badge b-roadmap">Roadmap</span></td><td>No composite exists today; the Governability Status composite proposed in Phase 6 directly targets this.</td></tr>
+            <tr><td>Runtime Revalidation</td><td><span class="badge b-not">Not Impl.</span></td><td>Consistent with Kari's Runtime Effect Validation finding — no runtime connection exists at all.</td></tr>
+            <tr><td>Authority Revalidation</td><td><span class="badge b-not">Not Impl.</span></td><td><span class="mono">authorityProfileCompleteness()</span> counts non-empty name fields; it never re-derives whether the named authority is still current.</td></tr>
+            <tr><td>Evidence Sufficiency Validation</td><td><span class="badge b-partial">Partial</span></td><td>Presence and expiry are checked; quantity, type-matching, and true sufficiency are not.</td></tr>
+            <tr><td>Admissibility Revalidation</td><td><span class="badge b-not">Not Impl.</span></td><td>No mechanism diffs the conditions at decision/certification time against current conditions.</td></tr>
+            <tr><td>Context-Aware Governance</td><td><span class="badge b-partial">Partial</span></td><td>The reassessment taxonomy names context-change categories and readiness/gates do compute from current fields — but nothing automatically detects that context has changed.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= BOUNDARY MODEL ================= -->
+<section class="alt" id="boundary">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Architectural Boundary Model</div>
+      <h2 class="title">Where OMG's authority ends</h2>
+    </div>
+    <figure class="boundary-svg-wrap">
+      <svg viewBox="0 0 920 340" role="img" aria-label="Diagram showing OMG's Governance Intelligence and Continuity Layer producing advisory signals consumed by a human decision layer, which is the only path to any action; runtime execution and enforcement sit entirely outside OMG, in the customer's own environment, with no direct connection today.">
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+          </marker>
+        </defs>
+        <!-- OMG boundary box -->
+        <rect x="30" y="30" width="520" height="280" rx="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="5 4" opacity="0.55"/>
+        <text x="50" y="56" font-size="13" font-weight="700" fill="currentColor">OMG — Governance Intelligence &amp; Continuity Layer</text>
+
+        <rect x="55" y="78" width="210" height="70" rx="10" fill="currentColor" opacity="0.08" stroke="currentColor" stroke-width="1"/>
+        <text x="160" y="106" font-size="12" text-anchor="middle" fill="currentColor" font-weight="700">System of Record</text>
+        <text x="160" y="124" font-size="10.5" text-anchor="middle" fill="currentColor" opacity="0.75">Assets, Evidence, Decisions,</text>
+        <text x="160" y="137" font-size="10.5" text-anchor="middle" fill="currentColor" opacity="0.75">Findings, Certifications</text>
+
+        <rect x="300" y="78" width="230" height="70" rx="10" fill="currentColor" opacity="0.08" stroke="currentColor" stroke-width="1"/>
+        <text x="415" y="106" font-size="12" text-anchor="middle" fill="currentColor" font-weight="700">Reasoning Engines</text>
+        <text x="415" y="124" font-size="10.5" text-anchor="middle" fill="currentColor" opacity="0.75">Readiness · Gates · Drift ·</text>
+        <text x="415" y="137" font-size="10.5" text-anchor="middle" fill="currentColor" opacity="0.75">Outcome Ladder (advisory only)</text>
+
+        <line x1="160" y1="148" x2="160" y2="190" stroke="currentColor" stroke-width="1.3" marker-end="url(#arrow)"/>
+        <line x1="415" y1="148" x2="415" y2="190" stroke="currentColor" stroke-width="1.3" marker-end="url(#arrow)"/>
+
+        <rect x="120" y="196" width="320" height="60" rx="10" fill="currentColor" opacity="0.14" stroke="currentColor" stroke-width="1.3"/>
+        <text x="280" y="222" font-size="12" text-anchor="middle" fill="currentColor" font-weight="800">Human Decision Layer</text>
+        <text x="280" y="240" font-size="10.5" text-anchor="middle" fill="currentColor" opacity="0.8">Accept / Reject / Defer — the only path to any action</text>
+
+        <line x1="280" y1="256" x2="280" y2="284" stroke="currentColor" stroke-width="1.3" marker-end="url(#arrow)"/>
+        <text x="280" y="300" font-size="10.5" text-anchor="middle" fill="currentColor" opacity="0.75">Kill Switch · Certification · Retirement (human-triggered actions)</text>
+
+        <!-- boundary line -->
+        <line x1="580" y1="30" x2="580" y2="310" stroke="currentColor" stroke-width="2.2" opacity="0.6"/>
+        <text x="592" y="45" font-size="10" fill="currentColor" opacity="0.6" transform="rotate(90 592,45)"></text>
+
+        <!-- Outside box -->
+        <rect x="610" y="30" width="280" height="280" rx="14" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.4"/>
+        <text x="630" y="56" font-size="13" font-weight="700" fill="currentColor" opacity="0.85">Customer Runtime Environment</text>
+        <rect x="635" y="90" width="230" height="60" rx="10" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="4 3" opacity="0.6"/>
+        <text x="750" y="115" font-size="11.5" text-anchor="middle" fill="currentColor" opacity="0.8">Running Agents / Models / Tools</text>
+        <text x="750" y="131" font-size="10" text-anchor="middle" fill="currentColor" opacity="0.6">No connection found (0 integrations)</text>
+
+        <rect x="635" y="176" width="230" height="60" rx="10" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="4 3" opacity="0.6"/>
+        <text x="750" y="201" font-size="11.5" text-anchor="middle" fill="currentColor" opacity="0.8">Runtime Enforcement / Kill Mechanism</text>
+        <text x="750" y="217" font-size="10" text-anchor="middle" fill="currentColor" opacity="0.6">Customer-owned, out of OMG scope</text>
+
+        <text x="750" y="270" font-size="10.5" text-anchor="middle" fill="currentColor" opacity="0.7">Proposed: a Governance-to-Runtime</text>
+        <text x="750" y="284" font-size="10.5" text-anchor="middle" fill="currentColor" opacity="0.7">event contract (Phase 6) — not yet built</text>
+      </svg>
+      <figcaption>OMG's authority stops at the Human Decision Layer. Everything to the right of the boundary line — running systems and any enforcement mechanism — is outside OMG today, with zero code-level connection found.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ================= EVOLUTION PLAN ================= -->
+<section id="evolution">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Phase 6 · OMG Next Evolution</div>
+      <h2 class="title">Only meaningful gaps — no feature bloat</h2>
+      <p class="section-sub">Every item below is a strict extension of what already exists. None of them turns OMG into a runtime execution platform.</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th style="width:30%;">Enhancement</th><th style="width:16%;">Classification</th><th>Why, and what it reuses</th></tr></thead>
+        <tbody>
+          <tr><td>Context Drift Signal (auto-diff decision-time vs. current state)</td><td><span class="badge b-full">Common Platform</span></td><td>Pure function over data OMG already has (asset state, Decision Reconstruction snapshots).</td></tr>
+          <tr><td>Evidence Sufficiency Signal engine</td><td><span class="badge b-full">Common Platform</span></td><td>Extends <span class="mono">computeEvidenceReadiness()</span>; the specific minimum-bar values are:</td></tr>
+          <tr><td>&nbsp;&nbsp;↳ Sufficiency thresholds per classification</td><td><span class="badge b-partial">Configurable Platform</span></td><td>Same lookup-table pattern already proven by <span class="mono">REVIEW_FREQUENCY_DAYS</span>.</td></tr>
+          <tr><td>Authority Currency Signal (mechanism)</td><td><span class="badge b-full">Common Platform</span></td><td>Re-derives from ownership data already in OMG.</td></tr>
+          <tr><td>&nbsp;&nbsp;↳ Verifying identity against a real directory</td><td><span class="badge b-customer">Customer Extension</span></td><td>Requires the customer's own IdP — OMG has no identity system to check against.</td></tr>
+          <tr><td>Governance Contracts (persisted/computed decision-time snapshot)</td><td><span class="badge b-full">Common Platform</span></td><td>A natural extension of Decision Reconstruction — capture the conditions an authorization was granted under, for later diffing.</td></tr>
+          <tr><td>Admissibility Diff / Governability Status composite</td><td><span class="badge b-full">Common Platform</span></td><td>Composes existing signals (health score, gates, drift, continuity) exactly as <span class="mono">getGovernanceStory()</span> already composes existing getters. Highest-leverage single addition identified in this review.</td></tr>
+          <tr><td>Reassessment Trigger entry-point UI ("report a material change")</td><td><span class="badge b-full">Common Platform</span></td><td>The taxonomy and consequence logic already work; only the human-facing form is missing.</td></tr>
+          <tr><td>Reassessment automation — detection <i>hooks</i></td><td><span class="badge b-full">Common Platform</span></td><td>A place for external signals to land as reassessment triggers.</td></tr>
+          <tr><td>&nbsp;&nbsp;↳ Actual automatic detection (model registry, CI/CD hooks)</td><td><span class="badge b-customer">Customer Extension</span></td><td>Requires integration with the customer's own infrastructure.</td></tr>
+          <tr><td>Governance-to-Runtime event-ingestion contract (schema only)</td><td><span class="badge b-full">Common Platform</span></td><td>Lets external systems report change into OMG without OMG ever becoming a runtime platform itself.</td></tr>
+          <tr><td>&nbsp;&nbsp;↳ Specific connectors (CloudWatch, Datadog, ServiceNow, Jira)</td><td><span class="badge b-odf">ODF Customization</span></td><td>Bespoke per-customer integration work, not core product.</td></tr>
+          <tr><td>Baseline in-app notification center</td><td><span class="badge b-full">Common Platform</span></td><td>Currently no delivery mechanism exists at all — even an in-app persistent list is a real gap today.</td></tr>
+          <tr><td>&nbsp;&nbsp;↳ Email/Slack/Teams delivery integration</td><td><span class="badge b-customer">Customer Extension</span></td><td>Wired to the customer's own communication tools.</td></tr>
+          <tr><td>CSV/PDF report export</td><td><span class="badge b-full">Common Platform</span></td><td>Basic enterprise hygiene — currently only one JSON button and four browser-print dialogs exist.</td></tr>
+          <tr><td>Multi-tenancy model</td><td><span class="badge b-full">Common Platform</span></td><td>Foundational prerequisite for any real multi-customer deployment; not deferrable to ODF per-customer.</td></tr>
+          <tr><td>Baseline credentialed authentication (a real password, at minimum)</td><td><span class="badge b-full">Common Platform</span></td><td>Table-stakes hygiene before any production exposure.</td></tr>
+          <tr><td>&nbsp;&nbsp;↳ Enterprise SSO/SAML integration</td><td><span class="badge b-customer">Customer Extension</span></td><td>Integrates with the customer's own identity provider.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="verdict-box" style="margin-top:20px;">
+      <b>Explicitly excluded from this plan, on purpose:</b> runtime enforcement, execution control planes, agent orchestration, or anything that would require OMG to intercept or act on live traffic. Preserving OMG's advisory/human-accountable boundary is treated here as more valuable than any capability that would cross it.
+    </div>
+  </div>
+</section>
+
+<!-- ================= RISKS ================= -->
+<section class="alt" id="risks">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Key Risks</div>
+      <h2 class="title">What would actually hurt, in priority order</h2>
+    </div>
+    <div class="risk-item"><div class="risk-sev"><span class="badge b-not">Critical</span></div><div><h4>Authentication fails open</h4><p>Login accepts any seeded email with no password and cannot fail. If this codebase were exposed beyond a trusted demo environment as-is, anyone could assume any role, including Super Admin.</p></div></div>
+    <div class="risk-item"><div class="risk-sev"><span class="badge b-not">Critical</span></div><div><h4>Backend RBAC trusts a forgeable header</h4><p><span class="mono">roles.guard.ts</span> checks <span class="mono">x-user-role</span> with no cryptographic verification — its own author documents this. Combined with the authentication gap, the two together mean the backend has no real access control today.</p></div></div>
+    <div class="risk-item"><div class="risk-sev"><span class="badge b-partial">High</span></div><div><h4>No multi-tenancy</h4><p>Cannot safely host more than one customer's data in a single deployment without building tenant isolation first.</p></div></div>
+    <div class="risk-item"><div class="risk-sev"><span class="badge b-partial">High</span></div><div><h4>Audit trail and user records are local-only in production</h4><p>The backend AuditLog table has a GET endpoint but no POST — the frontend's ~60 audit call sites never reach Neon. This undermines exactly the auditability enterprise buyers will diligence hardest.</p></div></div>
+    <div class="risk-item"><div class="risk-sev"><span class="badge b-roadmap">Medium</span></div><div><h4>No CI/CD or infrastructure-as-code</h4><p>Deployment topology is inferred only from hardcoded URLs in application code — there is no pipeline or IaC defining or automating it, risking configuration drift.</p></div></div>
+    <div class="risk-item"><div class="risk-sev"><span class="badge b-roadmap">Medium</span></div><div><h4>Two parallel readiness-scoring systems</h4><p><span class="mono">readinessFoundation.ts</span> (tiered) and <span class="mono">governanceReadinessScore.ts</span> (numeric) coexist with overlapping names — a maintainability and practitioner-communication risk, not a functional defect.</p></div></div>
+    <div class="risk-item"><div class="risk-sev"><span class="badge b-roadmap">Medium</span></div><div><h4>Zero integration surface</h4><p>OMG cannot observe or connect to anything outside itself, which caps its practical governance value for real running AI systems until a Governance-to-Runtime interface exists.</p></div></div>
+  </div>
+</section>
+
+<!-- ================= RECOMMENDATIONS ================= -->
+<section id="recommendations">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Strategic Recommendations</div>
+      <h2 class="title">In priority order, deliberately short</h2>
+    </div>
+    <div class="reco-item"><div class="reco-num">1</div><div><h4>Fix authentication before any customer-facing production exposure</h4><p>Not a "nice to have" — a blocking gap given the two Critical risks above.</p></div></div>
+    <div class="reco-item"><div class="reco-num">2</div><div><h4>Build the Governability Status composite</h4><p>Context Drift + Evidence Sufficiency + Authority Currency + Admissibility signals, composed the same way <span class="mono">getGovernanceStory()</span> already composes existing data. Highest-leverage, lowest-cost addition available.</p></div></div>
+    <div class="reco-item"><div class="reco-num">3</div><div><h4>Introduce a configuration layer for hardcoded thresholds</h4><p>Reauthorization windows, evidence minimums, mandatory authority fields — currently hardcoded constants, blocking any real per-customer configurability claim.</p></div></div>
+    <div class="reco-item"><div class="reco-num">4</div><div><h4>Define a Governance-to-Runtime event-ingestion contract</h4><p>Lets customers and ODF wire in real signals without OMG ever becoming a runtime platform itself.</p></div></div>
+    <div class="reco-item"><div class="reco-num">5</div><div><h4>Resolve multi-tenancy and backend audit/user persistence gaps</h4><p>Both are prerequisites before any multi-customer commercial deployment — not optional polish.</p></div></div>
+    <div class="reco-item"><div class="reco-num">6</div><div><h4>Do not build runtime enforcement, execution control, or agent orchestration into OMG core</h4><p>Preserve the advisory/human-accountable boundary — it is OMG's most distinctive and defensible architectural property, confirmed consistent across every engine reviewed in this and prior sessions.</p></div></div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    This assessment is evidence-only: every classification above traces to a specific file and line in the OMG codebase, verified by direct reading and exhaustive search, not inference from naming or intent. No code was modified in the course of this review.
+    <br><a class="back-to-top" href="#exec-summary">↑ Back to top</a>
+  </div>
+</footer>
+
+</body>
+</html>

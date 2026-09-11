@@ -80,6 +80,9 @@ import { RbacAdministrationPage } from './pages/RbacAdministrationPage';
 import { OmgOverviewPage } from './pages/OmgOverviewPage';
 import { FutureModulePage } from './pages/FutureModulePage';
 import { ReleaseNotesPage } from './pages/ReleaseNotesPage';
+import { EnvironmentManagementPage } from './pages/EnvironmentManagementPage';
+import { TenantManagementPage } from './pages/TenantManagementPage';
+import { CustomerWorkspaceFoundationPage } from './pages/CustomerWorkspaceFoundationPage';
 import { FUTURE_MODULES } from './config/navigation';
 
 // Phase 9 Pages — Executive Governance Hub & Policy Governance
@@ -295,6 +298,9 @@ const GOVERNED_ROUTES: { path: string; element: React.ReactNode }[] = [
   { path: '/users', element: <UserManagementPage /> },
   { path: '/rbac', element: <RbacAdministrationPage /> },
   { path: '/release-notes', element: <ReleaseNotesPage /> },
+  { path: '/environment-management', element: <EnvironmentManagementPage /> },
+  { path: '/tenant-management', element: <TenantManagementPage /> },
+  { path: '/customer-workspace', element: <CustomerWorkspaceFoundationPage /> },
 ];
 
 /**

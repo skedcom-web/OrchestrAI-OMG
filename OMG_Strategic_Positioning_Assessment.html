@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OMG Strategic Positioning Assessment</title>
+<style>
+:root{
+  --bg:#f5f7fb; --surface:#ffffff; --surface-alt:#eef2f8; --border:#d9e1ec; --border-strong:#b9c6db;
+  --text:#141d2e; --text-muted:#54627a; --text-faint:#8492a8;
+  --accent:#1f4e79; --accent-dark:#0f2c47; --accent-light:#e6eef7;
+  --core-full:#166a3f; --core-full-bg:#e2f5ea; --core-full-border:#a9dcc0;
+  --core-partial:#96650a; --core-partial-bg:#fbf0d9; --core-partial-border:#edcf8f;
+  --config:#0d7a80; --config-bg:#dff3f4; --config-border:#a9dfe1;
+  --odf:#4a3f9e; --odf-bg:#eae7f9; --odf-border:#c7bdec;
+  --customer:#8a3f8e; --customer-bg:#f6e7f5; --customer-border:#e0bcdd;
+  --roadmap:#2a5aa8; --roadmap-bg:#e6edfa; --roadmap-border:#b9cbef;
+  --outscope:#5b6472; --outscope-bg:#eef1f5; --outscope-border:#ccd3dd;
+  --shadow: 0 1px 3px rgba(20,29,46,0.06), 0 8px 24px rgba(20,29,46,0.05);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1520; --surface:#161f30; --surface-alt:#1c2740; --border:#2a3852; --border-strong:#3a4b6b;
+    --text:#e7ecf5; --text-muted:#a9b6cc; --text-faint:#7c8aa3;
+    --accent:#6ea3d8; --accent-dark:#9dc3ec; --accent-light:#1c3350;
+    --core-full:#6fd39c; --core-full-bg:#123526; --core-full-border:#1e5b3e;
+    --core-partial:#eec877; --core-partial-bg:#3a2e0e; --core-partial-border:#6b5219;
+    --config:#6fd6da; --config-bg:#0e2f31; --config-border:#195356;
+    --odf:#b3a8ee; --odf-bg:#241f42; --odf-border:#3d3470;
+    --customer:#e0a8dd; --customer-bg:#361f34; --customer-border:#5c355a;
+    --roadmap:#93b7ee; --roadmap-bg:#152744; --roadmap-border:#26426e;
+    --outscope:#a6b0c2; --outscope-bg:#1c222e; --outscope-border:#333c4d;
+    --shadow: 0 1px 3px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.3);
+  }
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{margin:0; background:var(--bg); color:var(--text); font-family:"Segoe UI","Helvetica Neue",Arial,sans-serif; font-size:14.5px; line-height:1.62;}
+h1,h2,h3,h4{font-family:"Segoe UI",Arial,sans-serif; color:var(--accent-dark); font-weight:800; text-wrap:balance;}
+p{margin:0 0 10px 0;}
+a{color:var(--accent);}
+.wrap{max-width:1180px; margin:0 auto; padding:0 24px;}
+
+.cover{background:linear-gradient(160deg, var(--accent-dark) 0%, var(--accent) 100%); color:#f2f6fb; padding:60px 0 42px 0;}
+.cover .kicker{font-size:11.5px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:#bcd4ec; margin-bottom:14px;}
+.cover h1{color:#ffffff; font-size:31px; margin:0 0 10px 0; line-height:1.24;}
+.cover .subtitle{color:#d9e7f5; font-size:15px; max-width:840px; margin-bottom:18px;}
+.cover .not-box{background:rgba(0,0,0,0.18); border:1px solid rgba(255,255,255,0.2); border-radius:10px; padding:14px 18px; margin-top:16px; font-size:13px; color:#eaf2fa; max-width:840px;}
+.cover .not-box b{color:#ffd9a0;}
+.cover .meta-row{display:flex; flex-wrap:wrap; gap:10px; margin-top:16px;}
+.cover .meta-chip{background:rgba(255,255,255,0.10); border:1px solid rgba(255,255,255,0.22); border-radius:8px; padding:8px 14px; font-size:12.3px; color:#eaf2fa;}
+.cover .meta-chip b{color:#ffffff;}
+
+.topnav{position:sticky; top:0; z-index:50; background:var(--surface); border-bottom:1px solid var(--border); box-shadow:var(--shadow);}
+.topnav .wrap{display:flex; align-items:center; gap:2px; overflow-x:auto; padding:0 24px; flex-wrap:nowrap;}
+.topnav a{white-space:nowrap; display:inline-block; padding:13px 12px; font-size:12.1px; font-weight:700; color:var(--text-muted); text-decoration:none; border-bottom:3px solid transparent;}
+.topnav a:hover{color:var(--accent); border-bottom-color:var(--border-strong);}
+.topnav .brand{font-weight:800; color:var(--accent-dark); padding-right:14px; border-right:1px solid var(--border); margin-right:6px; white-space:nowrap; flex:none;}
+
+section{padding:44px 0;}
+section.alt{background:var(--surface-alt);}
+.section-head{margin-bottom:26px; max-width:900px;}
+.eyebrow{font-size:11px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:var(--accent); margin-bottom:8px;}
+h2.title{font-size:24px; margin:0 0 8px 0;}
+.section-sub{color:var(--text-muted); font-size:14px;}
+
+.card{background:var(--surface); border:1px solid var(--border); border-radius:12px; box-shadow:var(--shadow); padding:22px 24px;}
+.grid-2{display:grid; grid-template-columns:1fr 1fr; gap:18px;}
+.grid-3{display:grid; grid-template-columns:repeat(3,1fr); gap:16px;}
+.grid-5{display:grid; grid-template-columns:repeat(5,1fr); gap:12px;}
+@media(max-width:900px){.grid-2,.grid-3{grid-template-columns:1fr;} .grid-5{grid-template-columns:repeat(2,1fr);}}
+
+.badge{display:inline-flex; align-items:center; gap:5px; font-size:10.4px; font-weight:800; letter-spacing:.02em; text-transform:uppercase; padding:4px 10px; border-radius:999px; border:1px solid; white-space:nowrap;}
+.b-1{color:var(--core-full); background:var(--core-full-bg); border-color:var(--core-full-border);}
+.b-2{color:var(--core-partial); background:var(--core-partial-bg); border-color:var(--core-partial-border);}
+.b-3{color:var(--config); background:var(--config-bg); border-color:var(--config-border);}
+.b-4{color:var(--odf); background:var(--odf-bg); border-color:var(--odf-border);}
+.b-5{color:var(--customer); background:var(--customer-bg); border-color:var(--customer-border);}
+.b-6{color:var(--roadmap); background:var(--roadmap-bg); border-color:var(--roadmap-border);}
+.b-7{color:var(--outscope); background:var(--outscope-bg); border-color:var(--outscope-border);}
+
+.legend{display:flex; flex-wrap:wrap; gap:8px; margin:14px 0 4px 0;}
+.legend .badge{padding:5px 11px; font-size:10px;}
+
+.stat-row{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin:22px 0;}
+@media(max-width:900px){.stat-row{grid-template-columns:repeat(2,1fr);}}
+.stat{background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px 14px; text-align:center; box-shadow:var(--shadow);}
+.stat .num{font-size:25px; font-weight:800; color:var(--accent-dark); font-variant-numeric:tabular-nums;}
+.stat .lbl{font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-muted); margin-top:4px; font-weight:700;}
+
+.verdict-box{background:var(--accent-light); border:1px solid var(--border-strong); border-left:5px solid var(--accent); border-radius:10px; padding:20px 22px; margin:20px 0; font-size:15px;}
+.verdict-box b{color:var(--accent-dark);}
+.pull-quote{border-left:4px solid var(--accent); background:var(--surface); border-radius:0 10px 10px 0; padding:14px 20px; margin:16px 0; font-style:italic; color:var(--text-muted); font-size:14px;}
+.rule-box{background:var(--core-partial-bg); border:1px solid var(--core-partial-border); border-left:5px solid var(--core-partial); border-radius:10px; padding:16px 20px; margin:16px 0; font-size:13.5px; color:var(--text);}
+.rule-box b{color:var(--core-partial);}
+
+table{width:100%; border-collapse:collapse; font-size:12.7px; background:var(--surface); border-radius:10px; overflow:hidden;}
+.table-wrap{overflow-x:auto; border:1px solid var(--border); border-radius:10px; box-shadow:var(--shadow);}
+th{background:var(--accent-dark); color:#eef4fb; text-align:left; padding:10px 12px; font-weight:700; font-size:11.3px; text-transform:uppercase; letter-spacing:.03em;}
+td{padding:10px 12px; border-top:1px solid var(--border); vertical-align:top;}
+tr:nth-child(even) td{background:var(--surface-alt);}
+.mono{font-family:"Consolas","Courier New",monospace; font-size:11.6px; background:var(--surface-alt); padding:1px 5px; border-radius:4px;}
+
+.scope-section{margin-bottom:26px;}
+.scope-section h3{display:flex; align-items:center; gap:10px; font-size:16.5px; margin-bottom:6px;}
+.scope-letter{width:30px; height:30px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:800; color:#fff; flex:none; font-size:14px;}
+
+.qcard{background:var(--surface); border:1px solid var(--border); border-radius:12px; box-shadow:var(--shadow); padding:20px 22px; margin-bottom:16px;}
+.qcard-head{display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:10px;}
+.qcard h4{font-size:15px; margin:0;}
+.qfields{display:grid; grid-template-columns:1fr 1fr; gap:8px 22px; margin-top:12px;}
+@media(max-width:800px){.qfields{grid-template-columns:1fr;}}
+.qfield .flabel{font-size:10.2px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); margin-bottom:3px;}
+.qfield .fval{font-size:12.8px; color:var(--text);}
+.qfield.full-row{grid-column:1/-1;}
+
+.practitioner-card{background:var(--surface); border:1px solid var(--border); border-radius:12px; box-shadow:var(--shadow); padding:22px 24px; margin-bottom:20px;}
+.practitioner-card h3{margin:0 0 4px 0;}
+.practitioner-card .focus-tag{font-size:12px; color:var(--text-muted); margin-bottom:14px;}
+
+.item-list{display:flex; flex-direction:column; gap:10px;}
+.item-row{display:flex; gap:14px; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px 16px; box-shadow:var(--shadow); align-items:flex-start;}
+.item-row .item-badge{flex:none; margin-top:2px;}
+.item-row h4{margin:0 0 4px 0; font-size:13.8px;}
+.item-row p{margin:0; font-size:13px; color:var(--text-muted);}
+
+.reco-item{display:flex; gap:14px; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px 16px; margin-bottom:10px; box-shadow:var(--shadow);}
+.reco-num{flex:none; width:30px; height:30px; border-radius:8px; background:var(--accent); color:#fff; font-weight:800; display:flex; align-items:center; justify-content:center; font-size:13px;}
+.reco-item h4{margin:0 0 4px 0; font-size:14px;}
+.reco-item p{margin:0; font-size:13px; color:var(--text-muted);}
+
+footer{padding:30px 0 60px 0; color:var(--text-faint); font-size:12px; text-align:center;}
+.back-to-top{display:inline-block; margin-top:10px; font-size:12px; color:var(--accent); text-decoration:none; font-weight:700;}
+
+@media print{
+  .topnav{display:none;}
+  .cover{background:var(--accent-dark) !important; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
+  section{padding:18px 0; break-inside:avoid-page;}
+  .card, .qcard, table, .practitioner-card{break-inside:avoid;}
+  body{font-size:11.5px;}
+  a{text-decoration:none; color:inherit;}
+}
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <div class="wrap">
+    <div class="kicker">ODF Analysis Directive</div>
+    <h1>OMG Strategic Positioning Assessment</h1>
+    <div class="subtitle">An honest evaluation of OMG against its intended mission, current maturity stage, and ODF delivery model — not against a hypothetical enterprise-SaaS or runtime-execution standard OMG never claimed.</div>
+    <div class="not-box"><b>This is not an enterprise readiness audit.</b> OMG is not scored against SOC2, ISO 27001, SSO, MFA, production-scale deployment, penetration testing, runtime enforcement, or multi-tenancy — none of these are part of OMG's stated scope today. Capabilities that are intentionally outside that scope are identified as such, not penalized as defects.</div>
+    <div class="meta-row">
+      <div class="meta-chip"><b>Frame:</b> Strategic positioning, not enterprise readiness</div>
+      <div class="meta-chip"><b>Delivery model:</b> 4-layer ODF model (Common → Configurable → ODF Extension → Customer-Specific)</div>
+      <div class="meta-chip"><b>Date:</b> 11 September 2026</div>
+    </div>
+  </div>
+</div>
+
+<nav class="topnav">
+  <div class="wrap">
+    <span class="brand">OMG · Positioning</span>
+    <a href="#exec-summary">Executive Summary</a>
+    <a href="#positioning">Strategic Positioning</a>
+    <a href="#boundaries">Scope Boundaries</a>
+    <a href="#layers">Delivery Layers</a>
+    <a href="#practitioners">Practitioner Feedback</a>
+    <a href="#true-gaps">True Gaps</a>
+    <a href="#non-gaps">Intentional Non-Gaps</a>
+    <a href="#evolution">Future Evolution</a>
+    <a href="#priorities">Release Priorities</a>
+    <a href="#final">Final Assessment</a>
+  </div>
+</nav>
+
+<!-- ============ 1. EXECUTIVE SUMMARY ============ -->
+<section id="exec-summary">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">1 · Executive Summary</div>
+      <h2 class="title">Evaluated against its own mission, not a borrowed one</h2>
+    </div>
+
+    <div class="verdict-box">
+      Assessed on its own terms, <b>OMG is a mature and coherent Governance Intelligence, Continuity, Configuration, and Evidence &amp; Traceability platform.</b> Its governance domain modeling — continuity, reassessment, evidence, findings, corrective actions, certification, readiness, the reasoning engine, Governance Studio, the Policy Engine — is real, deep, and internally consistent, verified directly against code. The current public deployment's seeded persona access and demo-grade login are not a security failure; they are the correct implementation of a stated design goal: letting evaluators explore every persona and governance workflow without deployment friction. Judged against that goal, the demonstration environment succeeds.
+    </div>
+
+    <p>Where this assessment differs sharply from a conventional audit: most of what would read as "critical gaps" in an enterprise-readiness review — no built-in SSO, no runtime enforcement, no multi-tenancy, no AI-gateway execution interception — are <b>not gaps at all</b> once measured against what OMG says it is. OMG explicitly is not an IAM platform, not a runtime execution platform, not an AI gateway or broker, and not a workflow orchestration engine. Their absence is the correct, intentional shape of the product, with a clear delivery path already defined by the ODF model itself (Layer 3/4) for exactly the moment a real customer needs them.</p>
+
+    <div class="stat-row">
+      <div class="stat"><div class="num">7</div><div class="lbl">true gaps, all inside stated scope</div></div>
+      <div class="stat"><div class="num">9</div><div class="lbl">intentional non-gaps identified</div></div>
+      <div class="stat"><div class="num">3</div><div class="lbl">practitioners' feedback fully reclassified</div></div>
+      <div class="stat"><div class="num">4</div><div class="lbl">ODF delivery layers applied throughout</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 2. STRATEGIC POSITIONING ============ -->
+<section class="alt" id="positioning">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">2 · OMG Strategic Positioning</div>
+      <h2 class="title">What OMG is, stated plainly, and verified against code</h2>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <h4 style="margin-top:0; color:var(--core-full);">OMG is, and code confirms it</h4>
+        <p><b>A Governance Intelligence Layer</b> — real reasoning engines (conditions → policy violations → outcome ladder → recommended actions), all explainable, all advisory.<br><br>
+        <b>A Governance Continuity Platform</b> — live, computed reauthorization status and a 13-type reassessment trigger taxonomy with real downstream consequences.<br><br>
+        <b>A Governance Configuration Platform</b> — Governance Studio (enable/disable conditions, outcomes, action rules; author policies and compliance packs) is real, interactive, and RBAC-gated.<br><br>
+        <b>A Governance Evidence &amp; Traceability Platform</b> — Evidence Registry, Findings, Corrective Actions, Certification lifecycle, Decision Reconstruction, and the Governance Journey Explorer are all real and verified against seeded data.<br><br>
+        <b>A Governance Operating System</b>(loosely) — in the sense of coordinating governance activity across 8 domains and ~106 pages through one consistent data and reasoning model.</p>
+      </div>
+      <div class="card">
+        <h4 style="margin-top:0; color:var(--outscope);">OMG is not, and does not claim to be</h4>
+        <p><b>A runtime execution platform</b> — zero code touches a running agent, model, or tool process.<br><br>
+        <b>An AI gateway or broker</b> — no execution-request interception point exists anywhere.<br><br>
+        <b>An IAM platform</b> — no identity verification; RBAC is a governance-relevant permission model, not an identity system.<br><br>
+        <b>A SIEM platform</b> — no telemetry ingestion, no live monitoring of external systems.<br><br>
+        <b>A workflow orchestration engine</b> — each governance process (decision, certification, kill-switch) is its own bespoke, purpose-built logic, not instances of a generic engine, by design.<br><br>
+        <b>A cloud platform or production-ready SaaS offering</b> — the current deployment is an intentional demonstration/evaluation environment.</p>
+      </div>
+    </div>
+    <div class="pull-quote">Every capability marked absent later in this report is checked first against this list. If it belongs to the right-hand column, its absence is evidence OMG is correctly positioned — not evidence it is incomplete.</div>
+  </div>
+</section>
+
+<!-- ============ 3. SCOPE BOUNDARIES ============ -->
+<section id="boundaries">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">3 · OMG Scope Boundaries</div>
+      <h2 class="title">The demonstration environment is a design decision, not a shortfall</h2>
+    </div>
+    <div class="card">
+      <p>The current public deployment's seeded, persona-based access is explicitly the correct implementation of a stated goal: allow evaluators to explore all personas, review governance workflows, inspect evidence, inspect continuity, inspect traceability, and validate capabilities — <b>without deployment friction.</b> A credentialed login, tenant provisioning, or SSO handshake in front of that experience would work directly against this goal, not toward it.</p>
+      <p style="margin-bottom:0;">This reframes several previously-flagged items. Frictionless persona access, a single shared demo dataset, and the absence of tenant isolation are not defects to fix inside the evaluation environment — they are the mechanism by which the evaluation environment does its job. The scope boundary that matters is: <b>which of these choices stay true once a real customer's production deployment is being built</b> — and for those, the ODF delivery model below already defines exactly who does that work and when.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 4. DELIVERY LAYERS ============ -->
+<section class="alt" id="layers">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">4 · Common vs. Configurable vs. ODF Extension vs. Customer Responsibility</div>
+      <h2 class="title">The ODF four-layer delivery model, populated with verified capabilities</h2>
+      <p class="section-sub">Only real, code-verified capabilities appear in Layers 1 and 2. Layers 3 and 4 describe where the remaining work correctly belongs — not what is missing from Layer 1.</p>
+    </div>
+
+    <div class="scope-section">
+      <h3><span class="scope-letter" style="background:var(--core-full);">1</span> Common OMG Platform — standard for every customer</h3>
+      <div class="card">
+        <p>Governance Continuity (reauthorization status) · Reassessment taxonomy + automatic state consequence · Governance Journey Explorer, Decision Reconstruction, Governance Story, Governance Value metrics · Evidence Registry, Findings, Corrective Actions, Certification issue/renew/revoke workflow · Governance Readiness (per-asset and portfolio-wide) · Executive Dashboards · Governance Reasoning Engine and its Human Decision Layer (Accept/Reject/Defer) · the RBAC action-key permission model · a dual-mode data architecture (localStorage evaluation mode / Postgres+NestJS production mode) with a working migration utility · the Kill Switch mechanism as a human-gated, audited control · the local Audit Trail.</p>
+      </div>
+    </div>
+
+    <div class="scope-section">
+      <h3><span class="scope-letter" style="background:var(--config);">2</span> Configurable OMG Platform — per-customer, no custom development</h3>
+      <div class="card">
+        <p>Governance Studio: enable/disable individual conditions, outcomes, and action rules; author and edit Policies and Policy Mappings; the Compliance Pack Builder (Regulatory Source → Requirement → Obligation → Control → Policy); Customer Governance Profile activation. This is genuinely real and interactive today — not a mockup.</p>
+      </div>
+    </div>
+
+    <div class="scope-section">
+      <h3><span class="scope-letter" style="background:var(--odf);">3</span> ODF Implementation Extensions — delivered jointly during onboarding</h3>
+      <div class="card">
+        <p>Integrations (identity provider binding, monitoring/ITSM connectors, notification delivery to the customer's own tools) · production deployment engineering (CI/CD, IaC, environment provisioning) for a specific customer's environment · organization-specific governance process content authored into OMG's existing generic structures · regulatory interpretation for a customer's specific obligations · operating-model alignment (mapping OMG's roles onto the customer's real org chart) · multi-step, organization-specific approval chain configuration.</p>
+      </div>
+    </div>
+
+    <div class="scope-section">
+      <h3><span class="scope-letter" style="background:var(--customer);">4</span> Customer-Specific Implementations — intentionally outside OMG core</h3>
+      <div class="card">
+        <p>Runtime enforcement and execution control · customer control planes and orchestration infrastructure · organization-specific authority structures beyond what OMG's descriptive profile fields capture · sector-specific approval models where they require infrastructure OMG doesn't own · the customer's own execution infrastructure and identity provider. These stay outside OMG core because building them would require OMG to become a fundamentally different kind of system (a runtime/IAM/orchestration platform) — not because they were overlooked.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 5. PRACTITIONER FEEDBACK ============ -->
+<section id="practitioners">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">5 · Analysis of Practitioner Feedback</div>
+      <h2 class="title">Every observation, reclassified against the correct standard</h2>
+    </div>
+    <div class="legend">
+      <span class="badge b-1">1 · Already in Core</span>
+      <span class="badge b-2">2 · Partial in Core</span>
+      <span class="badge b-3">3 · Via Configuration</span>
+      <span class="badge b-4">4 · Via ODF Extension</span>
+      <span class="badge b-5">5 · Customer Responsibility</span>
+      <span class="badge b-6">6 · Future Evolution</span>
+      <span class="badge b-7">7 · Outside OMG Scope</span>
+    </div>
+
+    <div class="rule-box"><b>Critical rule applied throughout this section:</b> an item is only called a gap after first asking whether it belongs in core, in configuration, in ODF implementation, or in customer responsibility. Several items below carry two classifications — one for the part that is genuinely core, one for the part that correctly belongs elsewhere.</div>
+
+    <div class="practitioner-card">
+      <h3>Szilvia Földesné Ambrus</h3>
+      <div class="focus-tag">Continuous Governability · Runtime Revalidation · Authority Revalidation · Evidence Sufficiency Validation · Admissibility Revalidation · Context-Aware Governance</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th style="width:22%;">Observation</th><th style="width:20%;">Classification</th><th>Reasoning</th></tr></thead>
+          <tbody>
+            <tr><td>Continuous Governability</td><td><span class="badge b-2">Partial in Core</span> <span class="badge b-6">Future Evolution</span></td><td>Date-based continuity is real and live. A full composite "is this still governable" verdict does not exist — but this sits squarely inside OMG's stated Continuity/Intelligence mission, so it is a genuine, in-scope evolution opportunity, not a boundary issue.</td></tr>
+            <tr><td>Runtime Revalidation</td><td><span class="badge b-7">Outside Scope</span></td><td>Revalidating a <i>live execution's</i> actual runtime behavior requires OMG to observe running systems — that is the AI-gateway/runtime-platform role OMG explicitly does not hold.</td></tr>
+            <tr><td>Authority Revalidation</td><td><span class="badge b-2">Partial in Core</span> <span class="badge b-5">Customer Resp.</span></td><td>Re-deriving "is this still the right accountable owner" from OMG's own data is a legitimate core evolution. Verifying the person's real-world identity/role against a directory is IAM territory — customer/ODF responsibility.</td></tr>
+            <tr><td>Evidence Sufficiency Validation</td><td><span class="badge b-2">Partial in Core</span> <span class="badge b-6">Future Evolution</span></td><td>Evidence &amp; Traceability is one of OMG's five stated pillars. Presence/expiry checking exists; a sufficiency bar does not yet — this is the clearest true, in-scope gap in the entire assessment.</td></tr>
+            <tr><td>Admissibility Revalidation</td><td><span class="badge b-6">Future Evolution</span></td><td>A natural composition of continuity + evidence + intelligence signals OMG already computes — in scope, not yet built.</td></tr>
+            <tr><td>Context-Aware Governance</td><td><span class="badge b-2">Partial in Core</span> <span class="badge b-4">Via ODF Extension</span></td><td>The 13-category change taxonomy is real and in core. Automatically detecting infrastructure-level change (a model registry update, a CI/CD event) requires integration with the customer's own systems — ODF onboarding work.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="practitioner-card">
+      <h3>Kari Hyötylä</h3>
+      <div class="focus-tag">Governance State · Execution Request · Current Condition Validation · Authorization Decision · Runtime Effect Validation · Evidence of Effect</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th style="width:22%;">Observation</th><th style="width:20%;">Classification</th><th>Reasoning</th></tr></thead>
+          <tbody>
+            <tr><td>Governance State</td><td><span class="badge b-1">Already in Core</span></td><td>The governance state model is real, live, and central to the platform.</td></tr>
+            <tr><td>Execution Request</td><td><span class="badge b-7">Outside Scope</span></td><td>This concept requires OMG to sit inside a live execution path and evaluate individual requests — precisely the AI-gateway/broker role OMG explicitly disclaims. Its absence is the clearest example in this whole review of a correctly-drawn boundary, not a missing feature.</td></tr>
+            <tr><td>Current Condition Validation</td><td><span class="badge b-2">Partial in Core</span></td><td>Readiness, gates, and drift genuinely validate current state against governance criteria on demand — just not triggered by a runtime event, since no such event exists in OMG's model (correctly, per the boundary above).</td></tr>
+            <tr><td>Authorization Decision</td><td><span class="badge b-1">Already in Core</span></td><td>Real, human-attributed, durable decision recording exists and works. It is a point-in-time governance decision, not a per-execution-request authorization — the latter would only make sense if Execution Request were in scope, which it correctly is not.</td></tr>
+            <tr><td>Runtime Effect Validation</td><td><span class="badge b-7">Outside Scope</span></td><td>Validating what a live system actually did requires runtime telemetry ingestion — a capability that would turn OMG into a monitoring/SIEM-adjacent platform, explicitly not its stated position.</td></tr>
+            <tr><td>Evidence of Effect</td><td><span class="badge b-1">Already in Core</span> <em>(general)</em> / <span class="badge b-7">Outside Scope</span> <em>(runtime-specific)</em></td><td>Evidence of governance activity (assessments, reports, decisions) is core and real. Evidence of a specific live execution's actual runtime output is a different, out-of-scope capability requiring telemetry integration.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="margin-top:14px; font-size:13px; color:var(--text-muted);"><b>Reading across this cluster:</b> almost every item Kari raises that looked like a "gap" in a runtime-governance frame is, once measured against OMG's actual stated position, <b>evidence the boundary is being held correctly.</b> OMG governs before and around execution, not during it — and does not claim otherwise.</p>
+    </div>
+
+    <div class="practitioner-card">
+      <h3>Chris Kechagias</h3>
+      <div class="focus-tag">Selected findings reclassified from the prior enterprise-readiness framing — full 18-item detail in that companion report</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th style="width:24%;">Observation</th><th style="width:20%;">Classification</th><th>Reasoning</th></tr></thead>
+          <tbody>
+            <tr><td>Authentication (seeded persona access)</td><td><span class="badge b-7">Outside Scope</span> <em>(for eval env)</em> / <span class="badge b-4">Via ODF Extension</span> <em>(for production)</em></td><td>Correct by design for the evaluation environment's stated purpose. Real credential binding for a production customer deployment is identity-provider integration — ODF onboarding work, since OMG is explicitly not an IAM platform.</td></tr>
+            <tr><td>Backend role-header trust</td><td><span class="badge b-1">Already in Core</span> <em>(RBAC model)</em> / <span class="badge b-5">Customer Resp.</span> <em>(identity binding)</em></td><td>The ~130-key action/role permission model is real, thorough, and correctly a core capability. Cryptographically binding a role claim to a verified identity depends on the customer's own IAM — not something OMG should build itself.</td></tr>
+            <tr><td>No built-in integrations (SSO, webhooks, monitoring connectors)</td><td><span class="badge b-4">Via ODF Extension</span></td><td>This is the named, expected shape of Layer 3 in the delivery model itself — its current absence is the model working as intended, not a shortfall.</td></tr>
+            <tr><td>No multi-tenancy</td><td><span class="badge b-7">Outside Current Scope</span></td><td>Not part of OMG's five stated pillars. Only becomes a true gap if/when OMG's positioning explicitly expands to multi-tenant SaaS — a positioning decision, not a code defect.</td></tr>
+            <tr><td>No generic workflow orchestration engine</td><td><span class="badge b-7">Outside Scope</span></td><td>OMG explicitly is not a workflow orchestration engine; bespoke per-process logic is the correct architecture for what OMG actually does.</td></tr>
+            <tr><td>No CI/CD / infrastructure-as-code</td><td><span class="badge b-4">Via ODF Extension</span></td><td>Appropriate for a demonstration environment; production deployment engineering is joint onboarding work per customer.</td></tr>
+            <tr><td>Evidence Sufficiency (presence-only check)</td><td><span class="badge b-2">Partial in Core</span> <span class="badge b-6">Future Evolution</span></td><td>Same finding as under Szilvia — this is the one item in the Kechagias review that survives as a genuine in-scope gap.</td></tr>
+            <tr><td>End-to-End Governance Demonstration</td><td><span class="badge b-1">Already in Core</span></td><td>Directly fulfills the evaluation environment's stated purpose — OMG's strongest, most on-mission asset.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 6. TRUE PRODUCT GAPS ============ -->
+<section class="alt" id="true-gaps">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">6 · True Product Gaps</div>
+      <h2 class="title">Real, in-scope gaps — after applying the critical rule</h2>
+      <p class="section-sub">Short list, by design. Everything here sits inside OMG's own stated mission; nothing here required borrowing an enterprise-SaaS or runtime-platform standard to identify.</p>
+    </div>
+    <div class="item-list">
+      <div class="item-row"><span class="badge b-2 item-badge">Partial</span><div><h4>Evidence Sufficiency validation</h4><p>Presence and expiry are checked; quantity, type-matching, and a true sufficiency bar are not — directly inside the stated Evidence &amp; Traceability Platform mission.</p></div></div>
+      <div class="item-row"><span class="badge b-2 item-badge">Partial</span><div><h4>Authority Currency re-derivation</h4><p>Authority completeness is counted (presence of a name), never re-derived as still-current from OMG's own data — inside the Continuity/Intelligence mission, distinct from identity verification.</p></div></div>
+      <div class="item-row"><span class="badge b-6 item-badge">Evolution</span><div><h4>No composite Governability/Admissibility Status</h4><p>Every input signal it needs (health score, gates, drift, continuity) already exists; nothing composes them into one live verdict.</p></div></div>
+      <div class="item-row"><span class="badge b-2 item-badge">Partial</span><div><h4>Reassessment trigger entry point is unreachable</h4><p>The taxonomy and automatic state-flip both work correctly; no human-facing form was found to actually file a trigger.</p></div></div>
+      <div class="item-row"><span class="badge b-6 item-badge">Evolution</span><div><h4>No real-time governance alert generation</h4><p>"Governance Alerts" are static seed data with no generator function — a genuine gap in the Governance Intelligence Layer's own stated real-time-surfacing role. (Delivery of those alerts to email/Slack is correctly ODF/customer territory — only in-app generation is core.)</p></div></div>
+      <div class="item-row"><span class="badge b-6 item-badge">Evolution</span><div><h4>No CSV/PDF export for governance reports</h4><p>Seven real cross-domain reports exist with no way to extract them beyond one JSON button and four browser print dialogs — inside the stated Evidence &amp; Traceability mission's natural scope.</p></div></div>
+      <div class="item-row"><span class="badge b-2 item-badge">Partial</span><div><h4>Two parallel readiness-scoring systems coexist</h4><p>A tiered (Ready/Partially Ready/Not Ready) system and a separate numeric-score system overlap in naming and concept — an internal coherence gap inside the Governance Intelligence Layer, worth resolving on its own merits.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 7. INTENTIONAL NON-GAPS ============ -->
+<section id="non-gaps">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">7 · Intentional Non-Gaps</div>
+      <h2 class="title">Correctly absent — do not chase these</h2>
+      <p class="section-sub">Each of these was flagged as a "critical gap" in a conventional enterprise-readiness frame. Measured against OMG's actual mission, each is the boundary working as intended.</p>
+    </div>
+    <div class="item-list">
+      <div class="item-row"><span class="badge b-7 item-badge">Scope</span><div><h4>No runtime enforcement or execution control</h4><p>Matches OMG's explicit non-positioning exactly; also a Layer 4 example in the ODF delivery model itself.</p></div></div>
+      <div class="item-row"><span class="badge b-7 item-badge">Scope</span><div><h4>No AI-gateway / execution-request interception</h4><p>The clearest example in this review — Kari's "Execution Request" concern describes a role OMG explicitly does not hold.</p></div></div>
+      <div class="item-row"><span class="badge b-4 item-badge">ODF</span><div><h4>No built-in SSO, webhooks, or third-party integrations</h4><p>Named verbatim as Layer 3 ODF Implementation Extension work — its current absence is the delivery model functioning correctly, not a missing feature.</p></div></div>
+      <div class="item-row"><span class="badge b-5 item-badge">Customer</span><div><h4>No built-in identity verification / IAM</h4><p>OMG explicitly is not an IAM platform; identity binding is customer responsibility, delivered via ODF onboarding.</p></div></div>
+      <div class="item-row"><span class="badge b-7 item-badge">Scope</span><div><h4>No multi-tenancy</h4><p>Not part of OMG's five stated pillars today — only becomes a real gap if OMG's positioning changes.</p></div></div>
+      <div class="item-row"><span class="badge b-7 item-badge">Scope</span><div><h4>No generic workflow orchestration engine</h4><p>OMG explicitly is not a workflow orchestration engine; bespoke per-process logic is the deliberate, correct shape.</p></div></div>
+      <div class="item-row"><span class="badge b-7 item-badge">Scope</span><div><h4>Seeded persona-switcher instead of credentialed login</h4><p>Precisely fulfills the stated goal of frictionless evaluation across every persona.</p></div></div>
+      <div class="item-row"><span class="badge b-4 item-badge">ODF</span><div><h4>No production CI/CD or infrastructure-as-code</h4><p>Appropriate for a demonstration/evaluation environment; production deployment engineering is per-customer ODF work.</p></div></div>
+      <div class="item-row"><span class="badge b-7 item-badge">Scope</span><div><h4>No tenant/platform settings management</h4><p>OMG is not positioned as a cloud platform; the governance configuration surface (Studio + Policy Registry) is the correct configuration layer, and it is real.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 8. FUTURE EVOLUTION ============ -->
+<section class="alt" id="evolution">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">8 · Future Evolution Opportunities</div>
+      <h2 class="title">Opportunities, not obligations</h2>
+      <p class="section-sub">Distinct from Section 6: these strengthen OMG's existing mission rather than close a defect.</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th style="width:30%;">Opportunity</th><th style="width:18%;">Layer</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td>Governability/Admissibility Status composite</td><td><span class="badge b-1">Common Platform</span></td><td>Composes existing signals into one live, explainable verdict — the single highest-leverage addition identified.</td></tr>
+          <tr><td>Evidence sufficiency scoring engine</td><td><span class="badge b-1">Common Platform</span></td><td>Directly strengthens the stated Evidence &amp; Traceability Platform claim.</td></tr>
+          <tr><td>Sufficiency/threshold values (per classification)</td><td><span class="badge b-3">Configurable Platform</span></td><td>Same lookup-table pattern already proven elsewhere in OMG's config.</td></tr>
+          <tr><td>Authority currency re-derivation (from OMG's own data)</td><td><span class="badge b-1">Common Platform</span></td><td>Strengthens Continuity/Intelligence without touching identity/IAM territory.</td></tr>
+          <tr><td>Reassessment "report a material change" entry point</td><td><span class="badge b-1">Common Platform</span></td><td>The logic already works; only the human-facing form is missing.</td></tr>
+          <tr><td>Real-time in-app governance alert generation</td><td><span class="badge b-1">Common Platform</span></td><td>Fulfills the Intelligence Layer's own real-time-surfacing role.</td></tr>
+          <tr><td>Alert delivery integration (email/Slack/Teams)</td><td><span class="badge b-4">ODF Extension</span></td><td>Wired to the customer's own communication tools during onboarding.</td></tr>
+          <tr><td>CSV/PDF export for governance reports</td><td><span class="badge b-1">Common Platform</span></td><td>Basic extraction capability consistent with the Evidence &amp; Traceability mission.</td></tr>
+          <tr><td>Resolve the two-readiness-system naming overlap</td><td><span class="badge b-1">Common Platform</span></td><td>Internal coherence improvement — no external dependency.</td></tr>
+          <tr><td>A documented Governance-to-Runtime event contract (optional, future)</td><td><span class="badge b-1">Common Platform</span> <em>(contract only)</em></td><td>If OMG ever wants to accept external signals, a schema lets it do so without becoming a runtime platform itself. Presented as optional, not required — resist scope creep here.</td></tr>
+          <tr><td>Identity provider integration for a specific customer</td><td><span class="badge b-4">ODF Extension</span></td><td>Delivered jointly at onboarding, per customer, using their real IdP.</td></tr>
+          <tr><td>Production deployment automation (CI/CD, IaC)</td><td><span class="badge b-4">ODF Extension</span></td><td>Built when a specific customer's production deployment is being stood up.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 9. RELEASE PRIORITIES ============ -->
+<section id="priorities">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">9 · Recommended Release Priorities</div>
+      <h2 class="title">In order — deliberately short</h2>
+    </div>
+    <div class="reco-item"><div class="reco-num">1</div><div><h4>Reassessment "report a material change" entry point</h4><p>Cheap, closes a real gap, and the logic behind it already works end to end.</p></div></div>
+    <div class="reco-item"><div class="reco-num">2</div><div><h4>Evidence sufficiency scoring engine</h4><p>The single most defensible investment — it directly strengthens a pillar OMG already claims as core.</p></div></div>
+    <div class="reco-item"><div class="reco-num">3</div><div><h4>Authority currency re-derivation + Governability Status composite</h4><p>Ties directly to Szilvia's challenge, which this review confirms is genuinely in scope — not a runtime-governance detour.</p></div></div>
+    <div class="reco-item"><div class="reco-num">4</div><div><h4>Real-time in-app governance alert generation</h4><p>Turns "Governance Alerts" from static seed data into a working intelligence-surfacing feature.</p></div></div>
+    <div class="reco-item"><div class="reco-num">5</div><div><h4>CSV/PDF export for the existing seven governance reports</h4><p>Low effort, closes a real and visible extraction gap.</p></div></div>
+    <div class="reco-item"><div class="reco-num">6</div><div><h4>Resolve the two-readiness-system overlap</h4><p>Engineering hygiene — improves internal coherence with no external dependency.</p></div></div>
+    <div class="reco-item"><div class="reco-num">7</div><div><h4>Only when a real customer commits: identity binding, integrations, deployment automation</h4><p>Explicitly sequenced as ODF onboarding work, triggered by actual customer need — not built speculatively ahead of demand.</p></div></div>
+  </div>
+</section>
+
+<!-- ============ 10. FINAL ASSESSMENT ============ -->
+<section class="alt" id="final">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">10 · Final Strategic Assessment</div>
+      <h2 class="title">The honest verdict</h2>
+    </div>
+    <div class="verdict-box">
+      OMG is exactly what it claims to be: a governance intelligence, continuity, configuration, and evidence &amp; traceability platform, currently and appropriately presented as a demonstration/evaluation environment. Its real gaps are narrow, concentrated, and sit entirely inside its own stated mission — evidence sufficiency, authority currency, and a missing composite admissibility verdict, all of which are natural next steps for a Continuity and Intelligence platform, not signs of an incomplete product. Nearly everything a conventional enterprise-readiness or runtime-governance lens would flag as "critical" — identity federation, runtime enforcement, multi-tenancy, AI-gateway execution interception — is, once checked against what OMG actually says it is, evidence that its architectural boundary is being held with unusual discipline.
+    </div>
+    <div class="pull-quote">The risk worth naming plainly: the temptation to chase Kari's and Szilvia's runtime-adjacent language into building execution interception, identity verification, or enforcement into OMG core. Every one of those would trade OMG's most defensible property — a clean, advisory, human-accountable boundary — for a capability that belongs, correctly, to the customer's own runtime environment or identity provider, delivered through ODF, not built into the product.</div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    This assessment applies the critical rule throughout: absence was never treated as a gap until first checked against OMG's stated core, configuration, ODF, and customer-responsibility layers. No code was modified in the course of this review.
+    <br><a class="back-to-top" href="#exec-summary">↑ Back to top</a>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -446,6 +446,46 @@ export const OmgOverviewPage: React.FC = () => {
         <GovernanceContinuity />
       </section>
 
+      {/* ============== PLATFORM FOUNDATION — ROADMAP HIGHLIGHTS ============== */}
+      <section className="flex flex-col gap-4">
+        <SectionHeader
+          eyebrow="Roadmap Foundation"
+          title="Platform Foundation for What Comes Next"
+          subtitle="Release 15-17 lays the architecture for future environments, tenants and customer workspaces — without changing anything about today's seeded demo experience."
+          icon="🧱"
+        />
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {[
+            { icon: '🧪', title: 'Environment Foundation', desc: 'DEV / QA / PROD architecture, ready before production ever needs it.', path: '/environment-management' },
+            { icon: '🏢', title: 'Tenant Foundation', desc: 'The seam for future multi-tenant customer onboarding.', path: '/tenant-management' },
+            { icon: '🗃️', title: 'Customer Workspace Foundation', desc: 'Where common platform capability ends and ODF customization begins.', path: '/customer-workspace' },
+          ].map(item => (
+            <div
+              key={item.path}
+              className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4 flex flex-col gap-2.5"
+            >
+              <span
+                data-noglass
+                className="w-10 h-10 grid place-items-center rounded-xl text-[18px] bg-[var(--accent-light)] border border-[var(--accent-border)]"
+                aria-hidden
+              >
+                {item.icon}
+              </span>
+              <div className="min-w-0 flex-1">
+                <h3 className="text-[13px] font-bold text-[var(--text-primary)]">{item.title}</h3>
+                <p className="text-[11.5px] text-[var(--text-secondary)] mt-1 leading-relaxed">{item.desc}</p>
+              </div>
+              <button
+                onClick={() => navigate(item.path)}
+                className="self-start text-[11px] font-bold text-[var(--accent-primary)] hover:underline cursor-pointer"
+              >
+                Explore →
+              </button>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* ============== SECTION 5 — GUIDED TOUR ============== */}
       <section
         className="rounded-2xl border border-[var(--border-color)] p-5 sm:p-6 flex flex-col md:flex-row md:items-center gap-5"

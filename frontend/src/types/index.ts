@@ -2100,3 +2100,78 @@ export interface ExecutiveViewDefinition {
   /** Ordered section keys rendered for this view. */
   sections: string[];
 }
+
+/* ==================== Release 15 — Environment Foundation ================ */
+
+export type EnvironmentTier = 'DEV' | 'QA' | 'PROD';
+export type EnvironmentRecordStatus = 'Active' | 'Planned';
+export type EnvironmentSeedStatus = 'Fully Seeded' | 'Not Yet Seeded' | 'Not Applicable';
+export type EnvironmentHealth = 'Healthy' | 'Not Provisioned';
+
+export interface EnvironmentRecord {
+  id: string;
+  tier: EnvironmentTier;
+  name: string;
+  status: EnvironmentRecordStatus;
+  description: string;
+  seedStatus: EnvironmentSeedStatus;
+  health: EnvironmentHealth;
+  createdAt: string;
+}
+
+/* ====================== Release 16 — Tenant Foundation =================== */
+
+export type TenantRecordStatus = 'Active' | 'Planned';
+
+export interface TenantRecord {
+  id: string;
+  name: string;
+  status: TenantRecordStatus;
+  description: string;
+  industry: string;
+  environmentTier: EnvironmentTier;
+  createdAt: string;
+}
+
+/* ============== Release 17 — Customer Workspace Foundation =============== */
+
+export type CustomerWorkspaceStatus = 'Active' | 'Planned';
+export type CustomerReadinessStatus = 'Ready' | 'Partially Ready' | 'Not Ready';
+export type CustomerExtensionCategory = 'Integration' | 'Workflow' | 'Regulatory Pack' | 'Reporting' | 'Identity';
+export type CustomerExtensionDeliveryLayer = 'ODF Implementation' | 'Customer-Specific';
+export type CustomerBlueprintStatus = 'Draft' | 'Proposed' | 'Reference';
+export type CustomerConfigurationStatus = 'Configured' | 'Not Configured';
+
+export interface CustomerWorkspaceRecord {
+  id: string;
+  name: string;
+  industry: string;
+  status: CustomerWorkspaceStatus;
+  description: string;
+  tenantId?: string;
+  createdAt: string;
+}
+
+export interface CustomerExtensionCatalogEntry {
+  id: string;
+  name: string;
+  category: CustomerExtensionCategory;
+  description: string;
+  deliveryLayer: CustomerExtensionDeliveryLayer;
+}
+
+export interface CustomerSolutionBlueprint {
+  id: string;
+  workspaceId: string;
+  name: string;
+  summary: string;
+  status: CustomerBlueprintStatus;
+}
+
+export interface CustomerConfigurationEntry {
+  id: string;
+  workspaceId: string;
+  configArea: string;
+  description: string;
+  status: CustomerConfigurationStatus;
+}

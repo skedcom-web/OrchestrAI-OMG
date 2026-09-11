@@ -118,7 +118,11 @@ export type ActionKey =
    * over-permissioning ordinary CRUD. */
   | 'killSwitch:engage'
   | 'killSwitch:release'
-  | 'override:record';
+  | 'override:record'
+  /** Release 15 — Environment Foundation. No backend endpoint exists (the
+   * selector previews metadata only, it never switches a real data source),
+   * so this is scoped as tightly as the kill-switch controls above. */
+  | 'environment:switch';
 
 /** Mirrors backend/src/app.controller.ts's @Roles() grants exactly, endpoint by endpoint. */
 export const ROLE_ACTION_MATRIX: Record<ActionKey, UserRole[]> = {
@@ -252,6 +256,8 @@ export const ROLE_ACTION_MATRIX: Record<ActionKey, UserRole[]> = {
   'killSwitch:engage': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER'],
   'killSwitch:release': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER'],
   'override:record': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER'],
+
+  'environment:switch': ['SUPER_ADMIN'],
 };
 
 export const ALL_ROLES: UserRole[] = [

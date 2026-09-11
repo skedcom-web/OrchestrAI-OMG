@@ -606,6 +606,14 @@ export const NAV_DOMAINS: NavDomain[] = [
           { path: '/release-notes', label: 'Product Release Notes', icon: '🗞️', description: 'How OMG evolved — governance capabilities added release by release, moved out of everyday navigation so it never gets in the way of governance work.', keywords: ['release', 'release notes', 'version', 'changelog', 'evolution', 'history', 'timeline'] },
         ],
       },
+      {
+        label: 'Platform Foundation',
+        modules: [
+          { path: '/environment-management', label: 'Environment Management', icon: '🧪', description: 'Foundation for future DEV / QA / PROD environment separation — registry, selector and health indicators.', keywords: ['environment', 'dev', 'qa', 'prod', 'foundation', 'release 15'] },
+          { path: '/tenant-management', label: 'Tenant Registry', icon: '🏢', description: 'Foundation for future customer onboarding — tenant registry, metadata and context service.', keywords: ['tenant', 'multi-tenant', 'foundation', 'release 16'] },
+          { path: '/customer-workspace', label: 'Customer Workspace Foundation', icon: '🗃️', description: 'Separates common platform capability from customer-specific extensions — workspace registry, configuration layer, extension catalog, solution blueprints and readiness.', keywords: ['customer workspace', 'odf', 'extension', 'blueprint', 'foundation', 'release 17'] },
+        ],
+      },
     ],
   }),
 ];

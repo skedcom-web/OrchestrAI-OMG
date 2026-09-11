@@ -766,6 +766,33 @@ export const TOUR_STEPS: TourStep[] = [
     why: 'Releases matter because governance capability is not static — practitioner feedback, audit observations and real governance gaps become new capability over time, through the OrchestrAI Delivery Framework (ODF). Seeing that history builds confidence that the platform keeps closing real gaps, not just adding features.',
     look: 'The current release is marked; every earlier release lists exactly what it added, in the order it shipped — the same order the underlying governance model matured.',
   },
+  {
+    n: 53,
+    title: 'Environment Management',
+    path: '/environment-management',
+    icon: '🧪',
+    what: 'Foundation for future DEV / QA / PROD environment separation — a registry, a Super-Admin-only selector and health indicators, built without touching how the app runs today.',
+    why: 'Productionizing OMG later should not require redesigning it. Laying the environment architecture now — before it is load-bearing — means DEV, QA and PROD can separate cleanly when a real customer needs it.',
+    look: 'Only DEV is Active and Fully Seeded; QA and PROD are visibly Planned and Not Provisioned — nothing here pretends more exists than actually does.',
+  },
+  {
+    n: 54,
+    title: 'Tenant Registry',
+    path: '/tenant-management',
+    icon: '🏢',
+    what: 'Foundation for future customer onboarding — a tenant registry and a Tenant Context Service, alongside illustrative sample tenants Bank Alpha and Insurance Beta.',
+    why: 'Multi-tenant isolation is a future capability, not today\'s. Preparing the data architecture now avoids a rebuild later, while today\'s single shared Demo Tenant keeps working exactly as it does now.',
+    look: 'The Tenant Context Service always resolves to the Demo Tenant — the two illustrative tenants are clearly marked Planned, for demonstration only.',
+  },
+  {
+    n: 55,
+    title: 'Customer Workspace Foundation',
+    path: '/customer-workspace',
+    icon: '🗃️',
+    what: 'The seam between common OMG platform capability and customer-specific extensions — a workspace registry, configuration layer, extension catalog, solution blueprints and a readiness dashboard, illustrated with Banking, Insurance and Telecom.',
+    why: 'ODF-driven customization needs a real place to plug into. This release draws that boundary explicitly, so customer-specific work never has to be forced into platform code.',
+    look: 'Every extension in the catalog is labeled ODF Implementation or Customer-Specific — the boundary is visible, not assumed.',
+  },
 ];
 
 /* ================== Section 5b — five named guided tours ================= */
@@ -791,7 +818,7 @@ export const GUIDED_TOURS: GuidedTourDefinition[] = [
     name: 'Executive Overview',
     description: 'Governance health, readiness, certifications, findings and evidence coverage, in ten minutes.',
     icon: '🏛️',
-    stepTitles: ['Executive Dashboard', 'Governance Health', 'Readiness Center', 'Certification Governance', 'Findings', 'Evidence Registry', 'Governance Reports', 'Product Release Notes'],
+    stepTitles: ['Executive Dashboard', 'Governance Health', 'Readiness Center', 'Certification Governance', 'Findings', 'Evidence Registry', 'Governance Reports', 'Product Release Notes', 'Environment Management', 'Tenant Registry', 'Customer Workspace Foundation'],
   },
   {
     id: 'governance-lifecycle',
