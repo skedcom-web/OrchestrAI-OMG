@@ -21,14 +21,18 @@ export type GovernanceStatus =
   | 'Production'
   | 'Retirement';
 
-export type UserRole = 
+export type UserRole =
   | 'SUPER_ADMIN'
   | 'GOVERNANCE_ADMIN'
   | 'RISK_OFFICER'
   | 'BUSINESS_OWNER'
   | 'VALIDATOR'
   | 'AUDITOR'
-  | 'VIEWER';
+  | 'VIEWER'
+  /** Release 18.1 — a Platform User role (OrchestrAI staff), distinct from
+   * the seeded demo/evaluation personas above. No demo login card exists
+   * for it yet — defined for RBAC completeness ahead of that need. */
+  | 'PLATFORM_ADMIN';
 
 export type OwnershipRoleType = 
   | 'businessOwner'
@@ -364,6 +368,10 @@ export interface ReassessmentTrigger {
   owner: string;
   status: ReassessmentTriggerStatus;
   comments: string;
+  /** Release 18.1 — Workspace Isolation Layer. Optional: unset for existing shared demo records. */
+  workspaceId?: string;
+  tenantId?: string;
+  environmentId?: string;
 }
 
 /**
@@ -632,6 +640,10 @@ export interface EvidenceRecord {
   entityName?: string;
   ownership: EvidenceOwnership;
   traceability?: EvidenceTraceability;
+  /** Release 18.1 — Workspace Isolation Layer. Optional: unset for existing shared demo records. */
+  workspaceId?: string;
+  tenantId?: string;
+  environmentId?: string;
 }
 
 /** Capability 7 — Evidence Timeline event. */
@@ -1096,6 +1108,10 @@ export interface AIAsset {
   /** R20.1 — Governance Continuity hardening. Reused by every asset, not agent-specific. */
   approvalDate?: string;
   reviewFrequency?: ReviewFrequency;
+  /** Release 18.1 — Workspace Isolation Layer. Optional: unset for existing shared demo records. */
+  workspaceId?: string;
+  tenantId?: string;
+  environmentId?: string;
 }
 
 /** R20.1 — Governance Continuity hardening. */
@@ -1283,11 +1299,15 @@ export interface AuditLog {
   userName: string;
   userRole: string;
   action: string;
-  entityType: 'Asset' | 'User' | 'Ownership' | 'Risk' | 'Decision' | 'Validation' | 'Evidence' | 'Finding' | 'DecisionPackage' | 'ComplianceAssessment' | 'CompliancePackage' | 'KillSwitch' | 'Override' | 'Incident' | 'Retirement' | 'ScheduledReview' | 'CorrectiveAction' | 'GovernanceReviewPackage' | 'Policy' | 'PolicyMapping' | 'PolicyViolation' | 'ExecutiveReport' | 'ChangeRequest' | 'StateTransition' | 'ReassessmentTrigger' | 'GovernanceReauthorizationRecord' | 'EvidenceRecord' | 'Model' | 'KnowledgeAsset' | 'Prompt' | 'Tool' | 'AgentToolGrant' | 'GovernanceControl' | 'ControlAttachment' | 'ControlTestResult' | 'CertificationProgram' | 'CertificationRecord' | 'CertificationEvidence' | 'GovernabilityConfigEntry';
+  entityType: 'Asset' | 'User' | 'Ownership' | 'Risk' | 'Decision' | 'Validation' | 'Evidence' | 'Finding' | 'DecisionPackage' | 'ComplianceAssessment' | 'CompliancePackage' | 'KillSwitch' | 'Override' | 'Incident' | 'Retirement' | 'ScheduledReview' | 'CorrectiveAction' | 'GovernanceReviewPackage' | 'Policy' | 'PolicyMapping' | 'PolicyViolation' | 'ExecutiveReport' | 'ChangeRequest' | 'StateTransition' | 'ReassessmentTrigger' | 'GovernanceReauthorizationRecord' | 'EvidenceRecord' | 'Model' | 'KnowledgeAsset' | 'Prompt' | 'Tool' | 'AgentToolGrant' | 'GovernanceControl' | 'ControlAttachment' | 'ControlTestResult' | 'CertificationProgram' | 'CertificationRecord' | 'CertificationEvidence' | 'GovernabilityConfigEntry' | 'Workspace' | 'WorkspaceUser';
   entityId: string;
   entityName: string;
   details: string;
   ipAddress?: string;
+  /** Release 18.1 — Workspace Isolation Layer. Optional: unset for existing shared demo records. */
+  workspaceId?: string;
+  tenantId?: string;
+  environmentId?: string;
 }
 
 /** R20.1 — Executive Dashboard Enhancements (Part 4). */
@@ -1483,6 +1503,10 @@ export interface Finding {
   reportedDate: string;
   description: string;
   resolutionNotes?: string;
+  /** Release 18.1 — Workspace Isolation Layer. Optional: unset for existing shared demo records. */
+  workspaceId?: string;
+  tenantId?: string;
+  environmentId?: string;
 }
 
 // ------------------- PHASE 4 TYPES -------------------
@@ -1767,6 +1791,10 @@ export interface GovernanceAlert {
   createdAt: string;
   message: string;
   resolutionPath: string;
+  /** Release 18.1 — Workspace Isolation Layer. Optional: unset for existing shared demo records. */
+  workspaceId?: string;
+  tenantId?: string;
+  environmentId?: string;
 }
 
 export type ReviewType = 'Monthly Review' | 'Quarterly Review' | 'Semiannual Review' | 'Annual Review' | 'Ad Hoc Review' | 'Incident Review' | 'Executive Review';
@@ -2274,4 +2302,53 @@ export interface RevalidationResult {
   steps: RevalidationStep[];
   recommendation: RevalidationRecommendation;
   reasons: string[];
+}
+
+/* ================================================================
+ * Release 18.1 — Workspace Enablement Patch.
+ *
+ * Transforms OMG from a single shared demonstration dataset into a
+ * customer-isolated evaluation platform, while leaving the existing seeded
+ * demo personas and the rest of OMG's ~110 pages completely unchanged —
+ * they continue to operate on the shared demo dataset exactly as before.
+ * Isolation here is real data tagging and UI-level filtering scoped to the
+ * new Workspace Login → Workspace Dashboard surface, not a retrofit of
+ * every existing page's data access — that would be the "major
+ * architectural rework" every release since 15 has explicitly avoided.
+ * ================================================================ */
+
+export type WorkspaceStatus = 'Active' | 'Suspended' | 'Archived';
+
+export interface Workspace {
+  id: string;
+  name: string;
+  status: WorkspaceStatus;
+  tenantId: string;
+  environmentTier: EnvironmentTier;
+  createdAt: string;
+  createdBy: string;
+}
+
+export type WorkspaceUserStatus = 'Active' | 'Disabled' | 'Invited';
+export type WorkspaceUserRole = 'Workspace Owner';
+
+export interface WorkspaceUser {
+  id: string;
+  workspaceId: string;
+  name: string;
+  email: string;
+  /**
+   * DEMO-ONLY credential, by explicit product decision. Stored and compared
+   * in plaintext, client-side, with no hashing, no backend verification, and
+   * no session token — this is NOT real authentication and must never be
+   * treated as one. It exists only so a workspace evaluator can resolve into
+   * their own workspace context. Real credential verification for any
+   * production deployment belongs to the customer's own identity provider,
+   * delivered through ODF — never a password OMG itself verifies.
+   */
+  password: string;
+  role: WorkspaceUserRole;
+  status: WorkspaceUserStatus;
+  createdAt: string;
+  invitedAt?: string;
 }

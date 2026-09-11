@@ -35,6 +35,9 @@ import type {
   GovernabilityResult,
   GovernabilityConfigEntry,
   RevalidationResult,
+  Workspace,
+  WorkspaceStatus,
+  WorkspaceUser,
   RevalidationStep,
   EvidenceRecord,
   EvidenceTimelineEvent,
@@ -102,6 +105,8 @@ import {
   INITIAL_RETIREMENT_RECORDS,
   INITIAL_GOVERNANCE_ALERTS,
   INITIAL_GOVERNABILITY_CONFIG,
+  INITIAL_WORKSPACES,
+  INITIAL_WORKSPACE_USERS,
   INITIAL_SCHEDULED_REVIEWS,
   INITIAL_CORRECTIVE_ACTIONS,
   INITIAL_REASSESSMENT_TRIGGERS,
@@ -261,6 +266,8 @@ const STORAGE_KEYS = {
   CONSENSUS_ASSESSMENTS: 'omg_consensus_assessments_gacf2',
   CONFIDENCE_ASSESSMENTS: 'omg_confidence_assessments_gacf2',
   GOVERNABILITY_CONFIG: 'omg_governability_config_r18',
+  WORKSPACES: 'omg_workspaces_r18_1',
+  WORKSPACE_USERS: 'omg_workspace_users_r18_1',
 };
 
 function getItem<T>(key: string, defaultData: T): T {
@@ -290,7 +297,9 @@ export function addAuditLog(
   entityType: AuditLog['entityType'],
   entityId: string,
   entityName: string,
-  details: string
+  details: string,
+  /** Release 18.1 — Workspace Isolation Layer. Optional and additive: every existing call site is unaffected. */
+  workspaceScope?: { workspaceId?: string; tenantId?: string; environmentId?: string }
 ): AuditLog {
   const logs = getItem<AuditLog[]>(STORAGE_KEYS.AUDIT_LOGS, INITIAL_AUDIT_LOGS);
   const now = new Date();
@@ -308,6 +317,9 @@ export function addAuditLog(
     entityName,
     details,
     ipAddress: '127.0.0.1 (Local)',
+    workspaceId: workspaceScope?.workspaceId,
+    tenantId: workspaceScope?.tenantId,
+    environmentId: workspaceScope?.environmentId,
   };
 
   const updatedLogs = [newLog, ...logs];
@@ -461,6 +473,11 @@ export async function saveAsset(assetData: Partial<AIAsset>): Promise<AIAsset> {
     updatedAt: now,
     decisionOutcome: 'PENDING',
     tags: assetData.tags || [],
+    // Release 18.1 — Workspace Isolation Layer. Must be copied explicitly:
+    // this object is a field-by-field literal, not a spread of assetData.
+    workspaceId: assetData.workspaceId,
+    tenantId: assetData.tenantId,
+    environmentId: assetData.environmentId,
   };
 
   assetsCache = [draftAsset, ...assetsCache];
@@ -804,6 +821,11 @@ export function saveFinding(findingData: Partial<Finding>): Finding {
     reportedBy: findingData.reportedBy || 'Dr. Aris Thorne',
     reportedDate: now,
     description: findingData.description || '',
+    // Release 18.1 — Workspace Isolation Layer. Must be copied explicitly:
+    // this object is a field-by-field literal, not a spread of findingData.
+    workspaceId: findingData.workspaceId,
+    tenantId: findingData.tenantId,
+    environmentId: findingData.environmentId,
   };
 
   const updated = [newFinding, ...findings];
@@ -1953,6 +1975,11 @@ export async function saveReassessmentTrigger(data: Partial<ReassessmentTrigger>
     owner: data.owner || 'David Chen (Governance Admin)',
     status: data.status || 'Open',
     comments: data.comments || '',
+    // Release 18.1 — Workspace Isolation Layer. Must be copied explicitly:
+    // this object is a field-by-field literal, not a spread of data.
+    workspaceId: data.workspaceId ?? asset?.workspaceId,
+    tenantId: data.tenantId ?? asset?.tenantId,
+    environmentId: data.environmentId ?? asset?.environmentId,
   };
 
   triggersCache = [draftTrigger, ...triggersCache];
@@ -2104,6 +2131,11 @@ export async function saveEvidenceRecord(data: Partial<EvidenceRecord>): Promise
     entityName: isPolymorphic ? (data.entityName || data.entityId) : undefined,
     ownership: data.ownership || { evidenceOwner: 'Unassigned' },
     traceability: data.traceability,
+    // Release 18.1 — Workspace Isolation Layer. Must be copied explicitly:
+    // this object is a field-by-field literal, not a spread of data.
+    workspaceId: data.workspaceId ?? asset?.workspaceId,
+    tenantId: data.tenantId ?? asset?.tenantId,
+    environmentId: data.environmentId ?? asset?.environmentId,
   };
 
   evidenceCache = [draftRecord, ...evidenceCache];
@@ -4374,6 +4406,154 @@ export function computeRevalidation(assetId: string, contextChange: string): Rev
   const recommendation: RevalidationResult['recommendation'] = steps.some(s => s.status === 'Failed') ? 'Remain Stopped' : 'Continue';
 
   return { assetId: asset.id, assetName: asset.name, contextChange, steps, recommendation, reasons: governability.reasons };
+}
+
+// --- RELEASE 18.1 — WORKSPACE ENABLEMENT PATCH ---
+
+let workspacesCache: Workspace[] = getItem<Workspace[]>(STORAGE_KEYS.WORKSPACES, INITIAL_WORKSPACES);
+function persistWorkspacesCache() { setItem(STORAGE_KEYS.WORKSPACES, workspacesCache); }
+
+let workspaceUsersCache: WorkspaceUser[] = getItem<WorkspaceUser[]>(STORAGE_KEYS.WORKSPACE_USERS, INITIAL_WORKSPACE_USERS);
+function persistWorkspaceUsersCache() { setItem(STORAGE_KEYS.WORKSPACE_USERS, workspaceUsersCache); }
+
+/** Module 1 — Workspace Directory. */
+export function getWorkspaces(): Workspace[] {
+  return workspacesCache;
+}
+
+export function getWorkspaceById(id: string): Workspace | undefined {
+  return workspacesCache.find(w => w.id === id);
+}
+
+export function saveWorkspace(data: Partial<Workspace>, actorName: string): Workspace {
+  if (data.id) {
+    const idx = workspacesCache.findIndex(w => w.id === data.id);
+    if (idx !== -1) {
+      const updated: Workspace = { ...workspacesCache[idx], ...data };
+      workspacesCache = [...workspacesCache];
+      workspacesCache[idx] = updated;
+      persistWorkspacesCache();
+      addAuditLog('usr-1', actorName, 'SUPER_ADMIN', 'WORKSPACE_UPDATED', 'Workspace', updated.id, updated.name, `Workspace "${updated.name}" updated.`);
+      return updated;
+    }
+  }
+  const created: Workspace = {
+    id: `wks-${Date.now().toString().slice(-6)}`,
+    name: data.name || 'New Workspace',
+    status: 'Active',
+    tenantId: data.tenantId || 'tnt-demo',
+    environmentTier: data.environmentTier || 'DEV',
+    createdAt: new Date().toISOString().split('T')[0],
+    createdBy: actorName,
+  };
+  workspacesCache = [created, ...workspacesCache];
+  persistWorkspacesCache();
+  addAuditLog('usr-1', actorName, 'SUPER_ADMIN', 'WORKSPACE_CREATED', 'Workspace', created.id, created.name, `Workspace "${created.name}" created.`);
+  return created;
+}
+
+function setWorkspaceStatus(id: string, status: WorkspaceStatus, actorName: string, action: string): Workspace | null {
+  const idx = workspacesCache.findIndex(w => w.id === id);
+  if (idx === -1) return null;
+  const updated: Workspace = { ...workspacesCache[idx], status };
+  workspacesCache = [...workspacesCache];
+  workspacesCache[idx] = updated;
+  persistWorkspacesCache();
+  addAuditLog('usr-1', actorName, 'SUPER_ADMIN', action, 'Workspace', updated.id, updated.name, `Workspace "${updated.name}" set to ${status}.`);
+  return updated;
+}
+
+export function suspendWorkspace(id: string, actorName: string): Workspace | null { return setWorkspaceStatus(id, 'Suspended', actorName, 'WORKSPACE_SUSPENDED'); }
+export function reactivateWorkspace(id: string, actorName: string): Workspace | null { return setWorkspaceStatus(id, 'Active', actorName, 'WORKSPACE_REACTIVATED'); }
+export function archiveWorkspace(id: string, actorName: string): Workspace | null { return setWorkspaceStatus(id, 'Archived', actorName, 'WORKSPACE_ARCHIVED'); }
+
+/** Module 2 — Workspace User Administration. */
+export function getWorkspaceUsers(workspaceId?: string): WorkspaceUser[] {
+  return workspaceId ? workspaceUsersCache.filter(u => u.workspaceId === workspaceId) : workspaceUsersCache;
+}
+
+export function saveWorkspaceUser(data: Partial<WorkspaceUser>, actorName: string): WorkspaceUser {
+  const created: WorkspaceUser = {
+    id: `wku-${Date.now().toString().slice(-6)}`,
+    workspaceId: data.workspaceId || '',
+    name: data.name || 'New User',
+    email: data.email || '',
+    password: data.password || 'demo1234',
+    role: 'Workspace Owner',
+    status: 'Active',
+    createdAt: new Date().toISOString().split('T')[0],
+  };
+  workspaceUsersCache = [created, ...workspaceUsersCache];
+  persistWorkspaceUsersCache();
+  addAuditLog('usr-1', actorName, 'SUPER_ADMIN', 'WORKSPACE_USER_CREATED', 'WorkspaceUser', created.id, created.name, `Workspace user "${created.email}" created for workspace ${created.workspaceId}.`);
+  return created;
+}
+
+export function resetWorkspaceUserPassword(id: string, newPassword: string, actorName: string): WorkspaceUser | null {
+  const idx = workspaceUsersCache.findIndex(u => u.id === id);
+  if (idx === -1) return null;
+  const updated: WorkspaceUser = { ...workspaceUsersCache[idx], password: newPassword };
+  workspaceUsersCache = [...workspaceUsersCache];
+  workspaceUsersCache[idx] = updated;
+  persistWorkspaceUsersCache();
+  // Never write the credential itself into the audit trail.
+  addAuditLog('usr-1', actorName, 'SUPER_ADMIN', 'WORKSPACE_USER_PASSWORD_RESET', 'WorkspaceUser', updated.id, updated.name, `Password reset for workspace user "${updated.email}".`);
+  return updated;
+}
+
+function setWorkspaceUserStatus(id: string, status: WorkspaceUser['status'], actorName: string, action: string): WorkspaceUser | null {
+  const idx = workspaceUsersCache.findIndex(u => u.id === id);
+  if (idx === -1) return null;
+  const updated: WorkspaceUser = { ...workspaceUsersCache[idx], status };
+  workspaceUsersCache = [...workspaceUsersCache];
+  workspaceUsersCache[idx] = updated;
+  persistWorkspaceUsersCache();
+  addAuditLog('usr-1', actorName, 'SUPER_ADMIN', action, 'WorkspaceUser', updated.id, updated.name, `Workspace user "${updated.email}" set to ${status}.`);
+  return updated;
+}
+
+export function disableWorkspaceUser(id: string, actorName: string): WorkspaceUser | null { return setWorkspaceUserStatus(id, 'Disabled', actorName, 'WORKSPACE_USER_DISABLED'); }
+export function enableWorkspaceUser(id: string, actorName: string): WorkspaceUser | null { return setWorkspaceUserStatus(id, 'Active', actorName, 'WORKSPACE_USER_ENABLED'); }
+/** No real email is sent — this only marks the record so the Directory reflects an invitation was issued. */
+export function sendWorkspaceInvitation(id: string, actorName: string): WorkspaceUser | null {
+  const idx = workspaceUsersCache.findIndex(u => u.id === id);
+  if (idx === -1) return null;
+  const updated: WorkspaceUser = { ...workspaceUsersCache[idx], status: 'Invited', invitedAt: new Date().toISOString() };
+  workspaceUsersCache = [...workspaceUsersCache];
+  workspaceUsersCache[idx] = updated;
+  persistWorkspaceUsersCache();
+  addAuditLog('usr-1', actorName, 'SUPER_ADMIN', 'WORKSPACE_USER_INVITED', 'WorkspaceUser', updated.id, updated.name, `Invitation recorded for workspace user "${updated.email}" (no email is actually sent).`);
+  return updated;
+}
+
+/**
+ * Module 3 — Workspace Login. DEMO-ONLY credential check: plaintext
+ * comparison, no hashing, no session token, no backend call. See the
+ * WorkspaceUser.password doc comment in types/index.ts.
+ */
+export function authenticateWorkspaceUser(email: string, password: string): { workspace: Workspace; user: WorkspaceUser } | null {
+  const user = workspaceUsersCache.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password && u.status === 'Active');
+  if (!user) return null;
+  const workspace = workspacesCache.find(w => w.id === user.workspaceId && w.status === 'Active');
+  if (!workspace) return null;
+  return { workspace, user };
+}
+
+/** Module 5/6 — records tagged to this workspace only. Existing shared demo records (workspaceId unset) never appear here. */
+export function getWorkspaceAssets(workspaceId: string): AIAsset[] {
+  return assetsCache.filter(a => a.workspaceId === workspaceId);
+}
+export function getWorkspaceEvidenceRecords(workspaceId: string): EvidenceRecord[] {
+  return getEvidenceRecords().filter(e => e.workspaceId === workspaceId);
+}
+export function getWorkspaceFindings(workspaceId: string): Finding[] {
+  return getFindings().filter(f => f.workspaceId === workspaceId);
+}
+export function getWorkspaceGovernanceAlerts(workspaceId: string): GovernanceAlert[] {
+  return getGovernanceAlerts().filter(a => a.workspaceId === workspaceId);
+}
+export function getWorkspaceReassessmentTriggers(workspaceId: string): ReassessmentTrigger[] {
+  return getReassessmentTriggers().filter(t => t.workspaceId === workspaceId);
 }
 
 export function getGovernanceOutcomeForAsset(assetId: string): GovernanceOutcome | null {

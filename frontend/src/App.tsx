@@ -82,6 +82,9 @@ import { FutureModulePage } from './pages/FutureModulePage';
 import { ReleaseNotesPage } from './pages/ReleaseNotesPage';
 import { GovernabilityDashboardPage } from './pages/GovernabilityDashboardPage';
 import { GovernabilityStudioPage } from './pages/GovernabilityStudioPage';
+import { WorkspaceDirectoryPage } from './pages/WorkspaceDirectoryPage';
+import { WorkspaceUserAdministrationPage } from './pages/WorkspaceUserAdministrationPage';
+import { WorkspaceDashboardPage } from './pages/WorkspaceDashboardPage';
 import { EnvironmentManagementPage } from './pages/EnvironmentManagementPage';
 import { TenantManagementPage } from './pages/TenantManagementPage';
 import { CustomerWorkspaceFoundationPage } from './pages/CustomerWorkspaceFoundationPage';
@@ -252,6 +255,9 @@ const GOVERNED_ROUTES: { path: string; element: React.ReactNode }[] = [
   { path: '/governance-studio', element: <GovernanceIntelligenceStudioPage /> },
   { path: '/governability-dashboard', element: <GovernabilityDashboardPage /> },
   { path: '/governability-studio', element: <GovernabilityStudioPage /> },
+  { path: '/workspace-directory', element: <WorkspaceDirectoryPage /> },
+  { path: '/workspace-user-administration', element: <WorkspaceUserAdministrationPage /> },
+  { path: '/workspace-dashboard', element: <WorkspaceDashboardPage /> },
   { path: '/regulatory-applicability', element: <RegulatoryApplicabilityPage /> },
   { path: '/cross-framework-mapping', element: <CrossFrameworkMappingPage /> },
   { path: '/compliance-impact-analysis', element: <ComplianceImpactAnalysisPage /> },

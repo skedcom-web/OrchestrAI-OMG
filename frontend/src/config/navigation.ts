@@ -427,6 +427,7 @@ export const NAV_DOMAINS: NavDomain[] = [
             keyArtifacts: ['Governability status', 'Evidence Sufficiency result', 'Authority Currency result', 'Admissibility outcome', 'Revalidation result'],
           } },
           { path: '/governability-studio', label: 'Governability Studio', icon: '⚙️', description: 'Configure Evidence Thresholds, Authority Review Periods, Admissibility Rules, Reassessment Rules and Escalation Rules — every change versioned, audited and traceable.', keywords: ['governability studio', 'evidence threshold', 'authority review period', 'admissibility rule', 'escalation rule', 'configuration'] },
+          { path: '/workspace-dashboard', label: 'Workspace Dashboard', icon: '🗂️', description: 'For a signed-in workspace evaluation session — asset count, Governability, Evidence Sufficiency, Authority Currency, reassessment alerts and findings, scoped to that workspace only.', keywords: ['workspace dashboard', 'workspace login', 'customer evaluation', 'isolated'] },
         ],
       },
     ],
@@ -624,6 +625,13 @@ export const NAV_DOMAINS: NavDomain[] = [
           { path: '/environment-management', label: 'Environment Management', icon: '🧪', description: 'Foundation for future DEV / QA / PROD environment separation — registry, selector and health indicators.', keywords: ['environment', 'dev', 'qa', 'prod', 'foundation', 'release 15'] },
           { path: '/tenant-management', label: 'Tenant Registry', icon: '🏢', description: 'Foundation for future customer onboarding — tenant registry, metadata and context service.', keywords: ['tenant', 'multi-tenant', 'foundation', 'release 16'] },
           { path: '/customer-workspace', label: 'Customer Workspace Foundation', icon: '🗃️', description: 'Separates common platform capability from customer-specific extensions — workspace registry, configuration layer, extension catalog, solution blueprints and readiness.', keywords: ['customer workspace', 'odf', 'extension', 'blueprint', 'foundation', 'release 17'] },
+        ],
+      },
+      {
+        label: 'Workspace Enablement',
+        modules: [
+          { path: '/workspace-directory', label: 'Workspace Directory', icon: '🗄️', description: 'Create, suspend, reactivate and archive isolated customer evaluation workspaces. Platform administration only.', keywords: ['workspace directory', 'customer isolation', 'platform administration', 'release 18.1'] },
+          { path: '/workspace-user-administration', label: 'Workspace User Administration', icon: '🔑', description: 'Provision Workspace Owner accounts, reset credentials, and send invitations. Platform administration only.', keywords: ['workspace user', 'provision', 'reset password', 'invitation', 'platform administration', 'release 18.1'] },
         ],
       },
     ],

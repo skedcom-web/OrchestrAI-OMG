@@ -125,7 +125,13 @@ export type ActionKey =
   | 'environment:switch'
   /** Release 18 — Governability Studio. Config edits are versioned/audited
    * client-side only (no backend endpoint yet), same scoping rationale. */
-  | 'governabilityConfig:edit';
+  | 'governabilityConfig:edit'
+  /** Release 18.1 — Workspace Enablement Patch. Platform administration only. */
+  | 'workspace:create'
+  | 'workspace:edit'
+  | 'workspace:suspend'
+  | 'workspaceUser:create'
+  | 'workspaceUser:manage';
 
 /** Mirrors backend/src/app.controller.ts's @Roles() grants exactly, endpoint by endpoint. */
 export const ROLE_ACTION_MATRIX: Record<ActionKey, UserRole[]> = {
@@ -263,6 +269,12 @@ export const ROLE_ACTION_MATRIX: Record<ActionKey, UserRole[]> = {
   'environment:switch': ['SUPER_ADMIN'],
 
   'governabilityConfig:edit': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
+
+  'workspace:create': ['SUPER_ADMIN', 'PLATFORM_ADMIN'],
+  'workspace:edit': ['SUPER_ADMIN', 'PLATFORM_ADMIN'],
+  'workspace:suspend': ['SUPER_ADMIN', 'PLATFORM_ADMIN'],
+  'workspaceUser:create': ['SUPER_ADMIN', 'PLATFORM_ADMIN'],
+  'workspaceUser:manage': ['SUPER_ADMIN', 'PLATFORM_ADMIN'],
 };
 
 export const ALL_ROLES: UserRole[] = [
@@ -273,6 +285,7 @@ export const ALL_ROLES: UserRole[] = [
   'VALIDATOR',
   'AUDITOR',
   'VIEWER',
+  'PLATFORM_ADMIN',
 ];
 
 /** Auditor and Viewer are never granted a write role on any backend endpoint — verified across all ~46 write endpoints. */
@@ -288,6 +301,7 @@ const ROLE_LABELS: Record<UserRole, string> = {
   VALIDATOR: 'Validator',
   AUDITOR: 'Auditor',
   VIEWER: 'Viewer',
+  PLATFORM_ADMIN: 'Platform Admin',
 };
 
 export function roleLabel(role: UserRole): string {

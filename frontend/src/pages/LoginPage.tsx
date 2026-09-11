@@ -7,18 +7,28 @@ import { useAuth } from '../contexts/AuthContext';
 import { DEMO_PERSONAS } from '../services/mockData';
 import type { UserRole } from '../types';
 
+type LoginMode = 'demo' | 'workspace';
+
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const { login, switchPersona } = useAuth();
-  const [email, setEmail] = useState('');
+  const { switchPersona, loginToWorkspace } = useAuth();
+  const [loginMode, setLoginMode] = useState<LoginMode>('demo');
   const [showDemoPersonas, setShowDemoPersonas] = useState(true);
   const [tourOpen, setTourOpen] = useState(false);
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  // Module 3 — Workspace Login
+  const [wsEmail, setWsEmail] = useState('');
+  const [wsPassword, setWsPassword] = useState('');
+  const [wsError, setWsError] = useState('');
+
+  const handleWorkspaceSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) return;
-    login(email);
-    navigate('/');
+    setWsError('');
+    if (loginToWorkspace(wsEmail, wsPassword)) {
+      navigate('/workspace-dashboard');
+    } else {
+      setWsError('Email or password not recognized for any active workspace.');
+    }
   };
 
   const handlePersonaClick = (role: UserRole) => {
@@ -136,82 +146,100 @@ export const LoginPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Email SSO Form */}
-            <form onSubmit={handleFormSubmit} className="flex flex-col gap-4 mt-2">
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-extrabold text-[var(--text-muted)] uppercase tracking-wider">
-                  CORPORATE EMAIL ADDRESS
-                </label>
-                <div className="relative">
-                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
-                    ✉️
-                  </span>
+            {/* Release 18.1 — Login mode toggle: Demo Persona Login vs. Workspace Login */}
+            <div className="flex rounded-xl border border-[var(--border-color)] p-1 bg-[var(--bg-sunken)]">
+              <button
+                type="button"
+                onClick={() => setLoginMode('demo')}
+                className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${loginMode === 'demo' ? 'bg-[var(--bg-card)] text-[var(--text-primary)] shadow-sm' : 'text-[var(--text-muted)]'}`}
+              >
+                Demo Persona Login
+              </button>
+              <button
+                type="button"
+                onClick={() => setLoginMode('workspace')}
+                className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${loginMode === 'workspace' ? 'bg-[var(--bg-card)] text-[var(--text-primary)] shadow-sm' : 'text-[var(--text-muted)]'}`}
+              >
+                Workspace Login
+              </button>
+            </div>
+
+            {loginMode === 'workspace' ? (
+              <form onSubmit={handleWorkspaceSubmit} className="flex flex-col gap-4 mt-1">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-extrabold text-[var(--text-muted)] uppercase tracking-wider">EMAIL</label>
                   <input
                     type="email"
                     required
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
-                    placeholder="officer@enterprise-bank.com"
-                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-[var(--bg-input)] text-[var(--text-primary)] border border-[var(--border-color)] text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                    value={wsEmail}
+                    onChange={e => setWsEmail(e.target.value)}
+                    placeholder="chris@company.com"
+                    className="w-full px-4 py-3 rounded-xl bg-[var(--bg-input)] text-[var(--text-primary)] border border-[var(--border-color)] text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
                   />
                 </div>
-              </div>
-
-              <button
-                type="submit"
-                className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold text-sm shadow-md hover:shadow-lg transition-all transform active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <span>Continue</span>
-                <span>→</span>
-              </button>
-            </form>
-
-            {/* Divider */}
-            <div className="relative my-2 flex items-center justify-center">
-              <div className="w-full border-t border-[var(--border-color)]" />
-              <span className="absolute px-3 bg-[var(--bg-card)] text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">
-                OR SEEDED DEMO ACCESS
-              </span>
-            </div>
-
-            {/* Seeded Demo Access Cards Toggle */}
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-[var(--text-primary)]">Select Demo Persona Role (1-Click)</span>
-                <button
-                  type="button"
-                  onClick={() => setShowDemoPersonas(!showDemoPersonas)}
-                  className="text-xs font-bold text-blue-500 hover:underline"
-                >
-                  {showDemoPersonas ? 'Hide Personas' : 'Show All 7 Roles'}
-                </button>
-              </div>
-
-              {showDemoPersonas && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-[220px] overflow-y-auto pr-1">
-                  {DEMO_PERSONAS.map(p => (
-                    <div
-                      key={p.role}
-                      onClick={() => handlePersonaClick(p.role)}
-                      className="p-3 rounded-xl bg-[var(--bg-badge)] border border-[var(--border-color)] hover:border-blue-500/50 hover:bg-[var(--bg-card-hover)] cursor-pointer transition-all flex items-center justify-between group shadow-2xs"
-                    >
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span className="text-lg shrink-0">{p.icon}</span>
-                        <div className="flex flex-col min-w-0">
-                          <span className="text-xs font-bold text-[var(--text-primary)] truncate group-hover:text-blue-500 transition-colors">
-                            {p.title}
-                          </span>
-                          <span className="text-[9px] text-[var(--text-muted)] truncate">{p.name}</span>
-                        </div>
-                      </div>
-                      <span className="text-[10px] font-bold text-blue-500 group-hover:translate-x-1 transition-transform">
-                        Login →
-                      </span>
-                    </div>
-                  ))}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-extrabold text-[var(--text-muted)] uppercase tracking-wider">PASSWORD</label>
+                  <input
+                    type="password"
+                    required
+                    value={wsPassword}
+                    onChange={e => setWsPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full px-4 py-3 rounded-xl bg-[var(--bg-input)] text-[var(--text-primary)] border border-[var(--border-color)] text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                  />
                 </div>
-              )}
-            </div>
+                {wsError && <p className="text-xs text-red-500 font-semibold">{wsError}</p>}
+                <button
+                  type="submit"
+                  className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold text-sm shadow-md hover:shadow-lg transition-all transform active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <span>Sign in to Workspace</span>
+                  <span>→</span>
+                </button>
+                <p className="text-[10px] text-[var(--text-muted)] leading-relaxed">
+                  Evaluation credential, not production security: try <strong>chris@company.com</strong> /{' '}
+                  <strong>demo1234</strong>. A workspace session cannot reach platform administration pages.
+                </p>
+              </form>
+            ) : (
+              <div className="flex flex-col gap-3 mt-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-[var(--text-primary)]">Select Demo Persona Role (1-Click)</span>
+                  <button
+                    type="button"
+                    onClick={() => setShowDemoPersonas(!showDemoPersonas)}
+                    className="text-xs font-bold text-blue-500 hover:underline"
+                  >
+                    {showDemoPersonas ? 'Hide Personas' : 'Show All 7 Roles'}
+                  </button>
+                </div>
+
+                {showDemoPersonas && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-[220px] overflow-y-auto pr-1">
+                    {DEMO_PERSONAS.map(p => (
+                      <div
+                        key={p.role}
+                        onClick={() => handlePersonaClick(p.role)}
+                        className="p-3 rounded-xl bg-[var(--bg-badge)] border border-[var(--border-color)] hover:border-blue-500/50 hover:bg-[var(--bg-card-hover)] cursor-pointer transition-all flex items-center justify-between group shadow-2xs"
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="text-lg shrink-0">{p.icon}</span>
+                          <div className="flex flex-col min-w-0">
+                            <span className="text-xs font-bold text-[var(--text-primary)] truncate group-hover:text-blue-500 transition-colors">
+                              {p.title}
+                            </span>
+                            <span className="text-[9px] text-[var(--text-muted)] truncate">{p.name}</span>
+                          </div>
+                        </div>
+                        <span className="text-[10px] font-bold text-blue-500 group-hover:translate-x-1 transition-transform">
+                          Login →
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Footer Disclaimer matching Reference Layout */}

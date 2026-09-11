@@ -14,6 +14,8 @@ import type {
   RetirementRecord,
   GovernanceAlert,
   GovernabilityConfigEntry,
+  Workspace,
+  WorkspaceUser,
   ScheduledReview,
   CorrectiveAction,
   ReassessmentTrigger,
@@ -144,6 +146,8 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       '/asset-lifecycle', '/rbac', '/release-notes', '/command-center',
       // Release 15-17 — Environment, Tenant & Customer Workspace Foundation
       '/environment-management', '/tenant-management', '/customer-workspace',
+      // Release 18.1 — Workspace Enablement Patch (platform administration only)
+      '/workspace-directory', '/workspace-user-administration',
       // Phase 9 — Executive Governance & Policy Governance
       '/executive-hub', '/governance-scorecards', '/executive-heatmaps', '/governance-insights',
       '/board-reporting', '/policy-management', '/policy-mapping', '/policy-violations',
@@ -192,7 +196,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       // gated individually by roleActionMatrix.ts, not by hiding the page.
       '/mapping-workspace', '/requirement-registry', '/obligation-library',
       '/governance-intelligence', '/governance-actions', '/decision-traceability', '/governance-studio',
-      '/governability-dashboard', '/governability-studio',
+      '/governability-dashboard', '/governability-studio', '/workspace-dashboard',
       '/archived-assets', '/governance-readiness',
       // OMG vNext — Governance Intelligence (Value, Drift, Health)
       '/governance-value', '/governance-drift', '/governance-health',
@@ -229,7 +233,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       // Q1 Stabilization — see note on Governance Admin above.
       '/mapping-workspace', '/requirement-registry', '/obligation-library',
       '/governance-intelligence', '/governance-actions', '/decision-traceability', '/governance-studio',
-      '/governability-dashboard', '/governability-studio',
+      '/governability-dashboard', '/governability-studio', '/workspace-dashboard',
       '/archived-assets', '/governance-readiness',
       // OMG vNext — Governance Intelligence (Value, Drift, Health)
       '/governance-value', '/governance-drift', '/governance-health',
@@ -263,7 +267,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       // Q1 Stabilization — see note on Governance Admin above.
       '/mapping-workspace', '/requirement-registry', '/obligation-library',
       '/governance-intelligence', '/governance-actions', '/decision-traceability', '/governance-studio',
-      '/governability-dashboard', '/governability-studio',
+      '/governability-dashboard', '/governability-studio', '/workspace-dashboard',
       '/archived-assets', '/governance-readiness',
       // OMG vNext — Governance Intelligence (Value, Drift, Health)
       '/governance-value', '/governance-drift', '/governance-health',
@@ -297,7 +301,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       // Q1 Stabilization — see note on Governance Admin above.
       '/mapping-workspace', '/requirement-registry', '/obligation-library',
       '/governance-intelligence', '/governance-actions', '/decision-traceability', '/governance-studio',
-      '/governability-dashboard', '/governability-studio',
+      '/governability-dashboard', '/governability-studio', '/workspace-dashboard',
       '/archived-assets', '/governance-readiness',
       // OMG vNext — Governance Intelligence (Value, Drift, Health)
       '/governance-value', '/governance-drift', '/governance-health',
@@ -333,7 +337,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       // Q1 Stabilization — see note on Governance Admin above.
       '/mapping-workspace', '/requirement-registry', '/obligation-library',
       '/governance-intelligence', '/governance-actions', '/decision-traceability', '/governance-studio',
-      '/governability-dashboard', '/governability-studio',
+      '/governability-dashboard', '/governability-studio', '/workspace-dashboard',
       '/archived-assets', '/governance-readiness',
       // OMG vNext — Governance Intelligence (Value, Drift, Health)
       '/governance-value', '/governance-drift', '/governance-health',
@@ -365,7 +369,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       // Q1 Stabilization — see note on Governance Admin above.
       '/mapping-workspace', '/requirement-registry', '/obligation-library',
       '/governance-intelligence', '/governance-actions', '/decision-traceability', '/governance-studio',
-      '/governability-dashboard', '/governability-studio',
+      '/governability-dashboard', '/governability-studio', '/workspace-dashboard',
       '/archived-assets', '/governance-readiness',
       // OMG vNext — Governance Intelligence (Value, Drift, Health)
       '/governance-value', '/governance-drift', '/governance-health',
@@ -1534,6 +1538,27 @@ export const INITIAL_GOVERNABILITY_CONFIG: GovernabilityConfigEntry[] = [
   { id: 'adm-highrisk-pause', configArea: 'Admissibility Rule', label: 'High/Critical risk with insufficient evidence recommends Pause', value: 'Enabled', version: 1, updatedAt: '2026-09-11', updatedBy: 'System Default' },
   { id: 'reass-auto-flip', configArea: 'Reassessment Rule', label: 'Open trigger on Authorized/Monitoring asset flips governance state to Reassessment Required', value: 'Enabled', version: 1, updatedAt: '2026-09-11', updatedBy: 'System Default' },
   { id: 'esc-outcome', configArea: 'Escalation Rule', label: 'Escalation Recommended outcome or expired authority recommends Escalate/Pause', value: 'Enabled', version: 1, updatedAt: '2026-09-11', updatedBy: 'System Default' },
+];
+
+/**
+ * Release 18.1 — Workspace Enablement Patch. Example workspaces from the
+ * blueprint. All Active on the DEV environment / Demo Tenant — a real
+ * production workspace would be provisioned with its own tenant/environment
+ * through ODF onboarding, not seeded here.
+ */
+export const INITIAL_WORKSPACES: Workspace[] = [
+  { id: 'wks-chris', name: 'Chris Sandbox', status: 'Active', tenantId: 'tnt-demo', environmentTier: 'DEV', createdAt: '2026-09-11', createdBy: 'Sarah Jenkins (Super Admin)' },
+  { id: 'wks-szilvia', name: 'Szilvia Sandbox', status: 'Active', tenantId: 'tnt-demo', environmentTier: 'DEV', createdAt: '2026-09-11', createdBy: 'Sarah Jenkins (Super Admin)' },
+  { id: 'wks-banking-poc', name: 'Banking POC', status: 'Active', tenantId: 'tnt-bank-alpha', environmentTier: 'DEV', createdAt: '2026-09-11', createdBy: 'Sarah Jenkins (Super Admin)' },
+  { id: 'wks-rbi-eval', name: 'RBI Evaluation Workspace', status: 'Active', tenantId: 'tnt-demo', environmentTier: 'DEV', createdAt: '2026-09-11', createdBy: 'Sarah Jenkins (Super Admin)' },
+];
+
+/** DEMO-ONLY credentials — see the doc comment on WorkspaceUser in types/index.ts. Not real authentication. */
+export const INITIAL_WORKSPACE_USERS: WorkspaceUser[] = [
+  { id: 'wku-chris', workspaceId: 'wks-chris', name: 'Chris', email: 'chris@company.com', password: 'demo1234', role: 'Workspace Owner', status: 'Active', createdAt: '2026-09-11' },
+  { id: 'wku-szilvia', workspaceId: 'wks-szilvia', name: 'Szilvia', email: 'szilvia@company.com', password: 'demo1234', role: 'Workspace Owner', status: 'Active', createdAt: '2026-09-11' },
+  { id: 'wku-desh', workspaceId: 'wks-banking-poc', name: 'Desh', email: 'desh@bankingpoc.com', password: 'demo1234', role: 'Workspace Owner', status: 'Active', createdAt: '2026-09-11' },
+  { id: 'wku-latha', workspaceId: 'wks-rbi-eval', name: 'Latha', email: 'latha@rbieval.com', password: 'demo1234', role: 'Workspace Owner', status: 'Active', createdAt: '2026-09-11' },
 ];
 
 export const INITIAL_SCHEDULED_REVIEWS: ScheduledReview[] = [
