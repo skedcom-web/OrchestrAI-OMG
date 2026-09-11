@@ -5,6 +5,39 @@ import { Topbar } from './Topbar';
 import { findModule } from '../../config/navigation';
 import { GOVERNANCE_PRINCIPLE_STATEMENT } from '../../config/landingContent';
 import { useExperience } from '../../contexts/ExperienceContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { getWorkspaceAuditTrail } from '../../services/storageService';
+
+const WORKSPACE_STATUS_TONE: Record<string, string> = {
+  Active: 'var(--status-success)', Provisioned: 'var(--text-muted)',
+  Suspended: 'var(--status-danger)', Archived: 'var(--text-muted)', Retired: 'var(--text-muted)',
+};
+
+/** Release 18.1 Patch, Module 2 — persistent across every page of a workspace session, not just the Dashboard. */
+const WorkspaceSessionBanner: React.FC = () => {
+  const { currentWorkspace, currentWorkspaceUser, currentPersona } = useAuth();
+  if (!currentWorkspace || !currentWorkspaceUser) return null;
+
+  const lastEntry = getWorkspaceAuditTrail(currentWorkspace.id)[0];
+  const lastActivity = lastEntry ? new Date(lastEntry.timestamp).toLocaleString() : 'Login only — no actions yet';
+
+  return (
+    <div
+      data-noglass
+      className="px-3 sm:px-6 py-2 border-b border-[var(--border-subtle)] flex items-center gap-x-4 gap-y-1 flex-wrap text-[11px]"
+      style={{ background: 'var(--accent-light)' }}
+    >
+      <span className="font-extrabold text-[var(--accent-primary)]">🗂️ Workspace: {currentWorkspace.name}</span>
+      <span className="text-[var(--text-secondary)]">User: <strong className="text-[var(--text-primary)]">{currentWorkspaceUser.name}</strong></span>
+      <span className="text-[var(--text-secondary)]">Persona: <strong className="text-[var(--text-primary)]">{currentPersona?.title || currentPersona?.role}</strong></span>
+      <span className="text-[var(--text-secondary)]">Env: <strong className="text-[var(--text-primary)]">{currentWorkspace.environmentTier}</strong></span>
+      <span className="inline-flex items-center gap-1 font-bold" style={{ color: WORKSPACE_STATUS_TONE[currentWorkspace.status] }}>
+        ● {currentWorkspace.status}
+      </span>
+      <span className="ml-auto text-[10px] text-[var(--text-muted)]">Last activity: {lastActivity}</span>
+    </div>
+  );
+};
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -25,6 +58,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
 
       <div className="flex-1 flex flex-col min-w-0">
         <Topbar />
+        <WorkspaceSessionBanner />
 
         {/* Module context band — tenant, domain purpose and module intent */}
         <div className="px-3 sm:px-6 py-2 border-b border-[var(--border-subtle)] bg-[var(--bg-sidebar)]/40 flex items-center gap-3 flex-wrap">

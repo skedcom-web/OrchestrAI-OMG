@@ -85,6 +85,8 @@ import { GovernabilityStudioPage } from './pages/GovernabilityStudioPage';
 import { WorkspaceDirectoryPage } from './pages/WorkspaceDirectoryPage';
 import { WorkspaceUserAdministrationPage } from './pages/WorkspaceUserAdministrationPage';
 import { WorkspaceDashboardPage } from './pages/WorkspaceDashboardPage';
+import { WorkspacePersonaLandingPage } from './pages/WorkspacePersonaLandingPage';
+import { WorkspaceAuditTrailPage } from './pages/WorkspaceAuditTrailPage';
 import { EnvironmentManagementPage } from './pages/EnvironmentManagementPage';
 import { TenantManagementPage } from './pages/TenantManagementPage';
 import { CustomerWorkspaceFoundationPage } from './pages/CustomerWorkspaceFoundationPage';
@@ -258,6 +260,8 @@ const GOVERNED_ROUTES: { path: string; element: React.ReactNode }[] = [
   { path: '/workspace-directory', element: <WorkspaceDirectoryPage /> },
   { path: '/workspace-user-administration', element: <WorkspaceUserAdministrationPage /> },
   { path: '/workspace-dashboard', element: <WorkspaceDashboardPage /> },
+  { path: '/workspace-persona-landing', element: <WorkspacePersonaLandingPage /> },
+  { path: '/workspace-audit-trail', element: <WorkspaceAuditTrailPage /> },
   { path: '/regulatory-applicability', element: <RegulatoryApplicabilityPage /> },
   { path: '/cross-framework-mapping', element: <CrossFrameworkMappingPage /> },
   { path: '/compliance-impact-analysis', element: <ComplianceImpactAnalysisPage /> },

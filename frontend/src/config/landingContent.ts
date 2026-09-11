@@ -856,9 +856,63 @@ export const TOUR_STEPS: TourStep[] = [
     why: 'Governance records that cannot leave the platform are not audit-ready. An auditor or regulator needs to take the record with them.',
     look: 'Export buttons appear in the header the moment an asset is selected — every format pulls from the exact same live data as the screen.',
   },
+  {
+    n: 63,
+    title: 'Workspace Login',
+    path: '/login',
+    icon: '🔑',
+    what: 'A second login path, alongside the seeded demo personas — email and password resolve into an isolated workspace instead of the shared demo dataset.',
+    why: 'A real evaluator brings their own AI systems to govern, not the demo\'s. Workspace Login is where that separate, isolated evaluation begins.',
+    look: 'Toggle to "Workspace Login" on the sign-in screen — try chris@company.com / demo1234, a demo-only credential, never a claim of real authentication.',
+  },
+  {
+    n: 64,
+    title: 'Persona Selection',
+    path: '/workspace-persona-landing',
+    icon: '🎭',
+    what: 'After signing into a workspace, choose a starting governance perspective — Governance Admin, Risk Officer, Business Owner, Validator, Auditor or Viewer.',
+    why: 'The same workspace looks different depending on who is evaluating it — this is the same 6-persona switcher used everywhere in OMG, surfaced once up front.',
+    look: 'Pick any lens to continue — nothing about RBAC changes, and the full switcher remains available afterward from the Topbar.',
+  },
+  {
+    n: 65,
+    title: 'Workspace Dashboard',
+    path: '/workspace-dashboard',
+    icon: '🗂️',
+    what: 'Upload an asset, create a finding, and immediately see Governability, Evidence Sufficiency and Authority Currency — scoped only to this workspace.',
+    why: 'Evaluation should feel like using the real product on real (evaluator-owned) data, not reading about someone else\'s demo.',
+    look: 'A persistent Workspace Session Banner stays visible on every page — workspace name, user, persona, environment and status, so context is never lost.',
+  },
+  {
+    n: 66,
+    title: 'Workspace Audit Trail',
+    path: '/workspace-audit-trail',
+    icon: '📋',
+    what: 'Every action taken inside the workspace — asset created, finding raised, persona changed, pack exported — with who did it, as which persona, and when.',
+    why: 'Governance accountability applies to the evaluation itself, not just to the assets being evaluated.',
+    look: 'Switch personas or upload an asset, then check back here — the entry appears immediately.',
+  },
+  {
+    n: 67,
+    title: 'Export Pack',
+    path: '/workspace-dashboard',
+    icon: '📦',
+    what: 'A workspace-wide Governance Pack — every asset, its evidence, findings, alerts, Governability results, timeline and the workspace audit trail — as JSON, CSV or PDF.',
+    why: 'An evaluation only counts if it can leave the platform — a governance team needs the record, not just the screen.',
+    look: 'Export buttons sit in the Workspace Dashboard header — every format is built from the exact same live workspace data.',
+  },
+  {
+    n: 68,
+    title: 'Clone Workspace',
+    path: '/workspace-directory',
+    icon: '🧬',
+    what: 'Duplicate a workspace — its assets, evidence, findings, alerts and reassessment triggers — into a fresh copy for a new round of testing.',
+    why: 'POC testing, regression testing, scenario comparison and governance experimentation all need a clean starting point without losing the original.',
+    look: '"Chris Sandbox" becomes "Chris Sandbox v2" — same starting data, completely independent from that point forward.',
+  },
 ];
 
-/* ================== Section 5b — six named guided tours ================= */
+/* ================== Section 5b — seven named guided tours ================= */
 
 export interface GuidedTourDefinition {
   id: string;
@@ -869,12 +923,13 @@ export interface GuidedTourDefinition {
 }
 
 /**
- * Six named tours, each a curated path through TOUR_STEPS (by title — a
+ * Seven named tours, each a curated path through TOUR_STEPS (by title — a
  * step can appear in more than one tour, e.g. Findings belongs to both the
  * Lifecycle and Audit tours). Refresh of the single 36-stop tour above into
  * named, audience-specific paths — no new step content beyond what R16–R20.1
- * actually shipped (steps 37–44); Release 18 adds the sixth, Governability
- * Intelligence, the same way.
+ * actually shipped (steps 37–44); Release 18 added the sixth, Governability
+ * Intelligence, and the Release 18.1 Patch adds the seventh, Workspace
+ * Evaluation, the same way.
  */
 export const GUIDED_TOURS: GuidedTourDefinition[] = [
   {
@@ -918,6 +973,13 @@ export const GUIDED_TOURS: GuidedTourDefinition[] = [
     description: 'Governance Continuity vs. Runtime Governability — Evidence Sufficiency, Authority Currency, Admissibility and Post-Intervention Revalidation.',
     icon: '🛡️',
     stepTitles: ['Governability Dashboard', 'Evidence Sufficiency', 'Authority Currency', 'Admissibility', 'Reassessment', 'Decision Reconstruction', 'Export Pack'],
+  },
+  {
+    id: 'workspace-evaluation',
+    name: 'Workspace Evaluation',
+    description: 'Sign into an isolated workspace, pick a governance perspective, govern your own assets, and export the record — Release 18.1 Patch.',
+    icon: '🗂️',
+    stepTitles: ['Workspace Login', 'Persona Selection', 'Workspace Dashboard', 'Workspace Audit Trail', 'Export Pack', 'Clone Workspace'],
   },
 ];
 

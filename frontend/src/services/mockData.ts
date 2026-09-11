@@ -141,13 +141,15 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       '/compliance-center', '/compliance-packs', '/regulatory-library', '/compliance-assessment', '/compliance-findings', '/compliance-dashboard',
       '/operations-center', '/kill-switch', '/override-center', '/incidents', '/operations-dashboard', '/retirement', '/governance-timeline',
       '/governance-monitoring', '/governance-alerts', '/review-calendar', '/corrective-actions', '/governance-trends',
-      '/users', '/audit-logs',
+      '/audit-logs',
       // Phase 8 — Governance Operating System
-      '/asset-lifecycle', '/rbac', '/release-notes', '/command-center',
-      // Release 15-17 — Environment, Tenant & Customer Workspace Foundation
-      '/environment-management', '/tenant-management', '/customer-workspace',
-      // Release 18.1 — Workspace Enablement Patch (platform administration only)
-      '/workspace-directory', '/workspace-user-administration',
+      '/asset-lifecycle', '/command-center',
+      // Release 18.2 — Platform Login Segregation: User Management, RBAC
+      // Administration, Environment Management, Tenant Registry, Customer
+      // Workspace Foundation, Workspace Directory, Workspace User
+      // Administration and Release Notes are platform administration now —
+      // reachable only through OMG Platform Login, never a demo persona,
+      // not even Super Admin. See PLATFORM_ADMIN_ONLY_PATHS in AuthContext.tsx.
       // Phase 9 — Executive Governance & Policy Governance
       '/executive-hub', '/governance-scorecards', '/executive-heatmaps', '/governance-insights',
       '/board-reporting', '/policy-management', '/policy-mapping', '/policy-violations',
@@ -181,9 +183,10 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       '/governance-monitoring', '/governance-alerts', '/review-calendar', '/corrective-actions', '/governance-trends',
       '/audit-logs',
       // Phase 8 — Governance Operating System
-      '/asset-lifecycle', '/release-notes', '/command-center',
-      // Release 15-17 — Environment, Tenant & Customer Workspace Foundation
-      '/environment-management', '/tenant-management', '/customer-workspace',
+      '/asset-lifecycle', '/command-center',
+      // Release 18.2 — Platform Login Segregation: Environment Management,
+      // Tenant Registry, Customer Workspace Foundation and Release Notes
+      // moved to platform administration — see the note on Super Admin above.
       // Phase 9 — Executive Governance & Policy Governance
       '/executive-hub', '/governance-scorecards', '/executive-heatmaps', '/governance-insights',
       '/board-reporting', '/policy-management', '/policy-mapping', '/policy-violations',
@@ -196,7 +199,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       // gated individually by roleActionMatrix.ts, not by hiding the page.
       '/mapping-workspace', '/requirement-registry', '/obligation-library',
       '/governance-intelligence', '/governance-actions', '/decision-traceability', '/governance-studio',
-      '/governability-dashboard', '/governability-studio', '/workspace-dashboard',
+      '/governability-dashboard', '/governability-studio', '/workspace-dashboard', '/workspace-audit-trail', '/workspace-persona-landing',
       '/archived-assets', '/governance-readiness',
       // OMG vNext — Governance Intelligence (Value, Drift, Health)
       '/governance-value', '/governance-drift', '/governance-health',
@@ -233,7 +236,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       // Q1 Stabilization — see note on Governance Admin above.
       '/mapping-workspace', '/requirement-registry', '/obligation-library',
       '/governance-intelligence', '/governance-actions', '/decision-traceability', '/governance-studio',
-      '/governability-dashboard', '/governability-studio', '/workspace-dashboard',
+      '/governability-dashboard', '/governability-studio', '/workspace-dashboard', '/workspace-audit-trail', '/workspace-persona-landing',
       '/archived-assets', '/governance-readiness',
       // OMG vNext — Governance Intelligence (Value, Drift, Health)
       '/governance-value', '/governance-drift', '/governance-health',
@@ -267,7 +270,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       // Q1 Stabilization — see note on Governance Admin above.
       '/mapping-workspace', '/requirement-registry', '/obligation-library',
       '/governance-intelligence', '/governance-actions', '/decision-traceability', '/governance-studio',
-      '/governability-dashboard', '/governability-studio', '/workspace-dashboard',
+      '/governability-dashboard', '/governability-studio', '/workspace-dashboard', '/workspace-audit-trail', '/workspace-persona-landing',
       '/archived-assets', '/governance-readiness',
       // OMG vNext — Governance Intelligence (Value, Drift, Health)
       '/governance-value', '/governance-drift', '/governance-health',
@@ -301,7 +304,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       // Q1 Stabilization — see note on Governance Admin above.
       '/mapping-workspace', '/requirement-registry', '/obligation-library',
       '/governance-intelligence', '/governance-actions', '/decision-traceability', '/governance-studio',
-      '/governability-dashboard', '/governability-studio', '/workspace-dashboard',
+      '/governability-dashboard', '/governability-studio', '/workspace-dashboard', '/workspace-audit-trail', '/workspace-persona-landing',
       '/archived-assets', '/governance-readiness',
       // OMG vNext — Governance Intelligence (Value, Drift, Health)
       '/governance-value', '/governance-drift', '/governance-health',
@@ -328,7 +331,9 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       '/operations-center', '/kill-switch', '/override-center', '/incidents', '/operations-dashboard', '/retirement', '/governance-timeline',
       '/governance-monitoring', '/governance-alerts', '/review-calendar', '/corrective-actions', '/governance-trends', '/audit-logs',
       // Phase 8 — Governance Operating System
-      '/asset-lifecycle', '/rbac', '/command-center',
+      '/asset-lifecycle', '/command-center',
+      // Release 18.2 — Platform Login Segregation: RBAC Administration moved
+      // to platform administration.
       // Phase 9 — Executive Governance & Policy Governance
       '/executive-hub', '/governance-scorecards', '/executive-heatmaps', '/governance-insights',
       '/board-reporting', '/policy-management', '/policy-mapping', '/policy-violations',
@@ -337,7 +342,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       // Q1 Stabilization — see note on Governance Admin above.
       '/mapping-workspace', '/requirement-registry', '/obligation-library',
       '/governance-intelligence', '/governance-actions', '/decision-traceability', '/governance-studio',
-      '/governability-dashboard', '/governability-studio', '/workspace-dashboard',
+      '/governability-dashboard', '/governability-studio', '/workspace-dashboard', '/workspace-audit-trail', '/workspace-persona-landing',
       '/archived-assets', '/governance-readiness',
       // OMG vNext — Governance Intelligence (Value, Drift, Health)
       '/governance-value', '/governance-drift', '/governance-health',
@@ -369,7 +374,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       // Q1 Stabilization — see note on Governance Admin above.
       '/mapping-workspace', '/requirement-registry', '/obligation-library',
       '/governance-intelligence', '/governance-actions', '/decision-traceability', '/governance-studio',
-      '/governability-dashboard', '/governability-studio', '/workspace-dashboard',
+      '/governability-dashboard', '/governability-studio', '/workspace-dashboard', '/workspace-audit-trail', '/workspace-persona-landing',
       '/archived-assets', '/governance-readiness',
       // OMG vNext — Governance Intelligence (Value, Drift, Health)
       '/governance-value', '/governance-drift', '/governance-health',

@@ -156,7 +156,6 @@ const RELEASE_HISTORY: ReleaseEntry[] = [
     version: 'Release 18',
     date: '2026',
     title: 'Governability Foundation & Governance Intelligence Enhancement',
-    current: true,
     highlights: [
       'Governability Engine (Governable / Governable With Conditions / Review Required / Governance Attention Required / Not Governable)',
       'Evidence Sufficiency Engine (Availability, Recency, Completeness, Relevance, Context Alignment)',
@@ -168,6 +167,32 @@ const RELEASE_HISTORY: ReleaseEntry[] = [
       'Governance Export Pack (JSON, CSV, Print/PDF)',
       'Governability Studio — versioned, audited Evidence Thresholds, Authority Review Periods, Admissibility Rules, Reassessment Rules and Escalation Rules',
       'Post-Intervention Revalidation flow',
+    ],
+  },
+  {
+    version: 'Release 18.1 Patch',
+    date: '2026',
+    title: 'Workspace Evaluation Experience Enhancement',
+    highlights: [
+      'Workspace Persona Landing — choose a starting governance perspective right after Workspace Login',
+      'Workspace Session Banner — workspace name, status, user, persona, environment and last activity, visible on every page',
+      'Workspace Audit Trail — Created Asset, Created Finding, Changed Persona, Exported Governance Pack and Cloned Workspace, each tied to the actual active persona',
+      'Workspace Governance Export Pack — assets, evidence, findings, alerts, Governability results and the audit trail, as JSON, CSV or Print/PDF',
+      'Workspace Clone Capability — duplicate a workspace and its records for POC testing, regression testing or scenario comparison',
+      'Workspace Lifecycle Hardening — Provisioned, Active, Suspended, Archived and the new Retired governance-closure state, with Archived/Retired enforced as read-only',
+    ],
+  },
+  {
+    version: 'Release 18.2',
+    date: '2026',
+    title: 'Platform Login Segregation & Access Boundary Correction',
+    current: true,
+    highlights: [
+      'Dedicated OrchestrAI OMG Platform Login — the only session type that reaches platform administration',
+      'Corrected architecture flaw: Demo Persona Login, even as Super Admin, is no longer platform administration',
+      'Three genuinely distinct session types — PLATFORM, DEMO, WORKSPACE — checked before any persona or role logic runs',
+      'canAccessPlatformAdministration() central helper, applied to Environment Management, Tenant Registry, Customer Workspace Foundation, Workspace Directory, Workspace User Administration, User Management, RBAC Administration and Release Notes',
+      'Session-aware navigation — Platform sessions see platform administration, workspace administration and governance modules; Demo sessions see governance modules only; Workspace sessions see workspace and governance modules, never platform administration, regardless of persona lens',
     ],
   },
 ];

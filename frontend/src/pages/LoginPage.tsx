@@ -7,16 +7,16 @@ import { useAuth } from '../contexts/AuthContext';
 import { DEMO_PERSONAS } from '../services/mockData';
 import type { UserRole } from '../types';
 
-type LoginMode = 'demo' | 'workspace';
+type LoginMode = 'demo' | 'workspace' | 'platform';
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const { switchPersona, loginToWorkspace } = useAuth();
+  const { login, loginToWorkspace, loginToPlatform } = useAuth();
   const [loginMode, setLoginMode] = useState<LoginMode>('demo');
   const [showDemoPersonas, setShowDemoPersonas] = useState(true);
   const [tourOpen, setTourOpen] = useState(false);
 
-  // Module 3 — Workspace Login
+  // Login Type 3 — Workspace Login
   const [wsEmail, setWsEmail] = useState('');
   const [wsPassword, setWsPassword] = useState('');
   const [wsError, setWsError] = useState('');
@@ -25,14 +25,32 @@ export const LoginPage: React.FC = () => {
     e.preventDefault();
     setWsError('');
     if (loginToWorkspace(wsEmail, wsPassword)) {
-      navigate('/workspace-dashboard');
+      navigate('/workspace-persona-landing');
     } else {
       setWsError('Email or password not recognized for any active workspace.');
     }
   };
 
+  // Login Type 1 — OrchestrAI OMG Platform Login
+  const [platUsername, setPlatUsername] = useState('');
+  const [platPassword, setPlatPassword] = useState('');
+  const [platError, setPlatError] = useState('');
+
+  const handlePlatformSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setPlatError('');
+    if (loginToPlatform(platUsername, platPassword)) {
+      navigate('/dashboard');
+    } else {
+      setPlatError('Incorrect platform username or password.');
+    }
+  };
+
+  // Login Type 2 — Demo Persona Login. Routed through login() (not
+  // switchPersona directly) so sessionType is always explicitly set to
+  // DEMO — a demo persona, even Super Admin, is never platform administration.
   const handlePersonaClick = (role: UserRole) => {
-    switchPersona(role);
+    login('', role);
     navigate('/');
   };
 
@@ -146,25 +164,71 @@ export const LoginPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Release 18.1 — Login mode toggle: Demo Persona Login vs. Workspace Login */}
+            {/* Release 18.2 — Login mode toggle: three genuinely distinct session types */}
             <div className="flex rounded-xl border border-[var(--border-color)] p-1 bg-[var(--bg-sunken)]">
               <button
                 type="button"
+                onClick={() => setLoginMode('platform')}
+                className={`flex-1 py-2 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${loginMode === 'platform' ? 'bg-[var(--bg-card)] text-[var(--text-primary)] shadow-sm' : 'text-[var(--text-muted)]'}`}
+              >
+                OMG Platform Login
+              </button>
+              <button
+                type="button"
                 onClick={() => setLoginMode('demo')}
-                className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${loginMode === 'demo' ? 'bg-[var(--bg-card)] text-[var(--text-primary)] shadow-sm' : 'text-[var(--text-muted)]'}`}
+                className={`flex-1 py-2 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${loginMode === 'demo' ? 'bg-[var(--bg-card)] text-[var(--text-primary)] shadow-sm' : 'text-[var(--text-muted)]'}`}
               >
                 Demo Persona Login
               </button>
               <button
                 type="button"
                 onClick={() => setLoginMode('workspace')}
-                className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${loginMode === 'workspace' ? 'bg-[var(--bg-card)] text-[var(--text-primary)] shadow-sm' : 'text-[var(--text-muted)]'}`}
+                className={`flex-1 py-2 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${loginMode === 'workspace' ? 'bg-[var(--bg-card)] text-[var(--text-primary)] shadow-sm' : 'text-[var(--text-muted)]'}`}
               >
                 Workspace Login
               </button>
             </div>
 
-            {loginMode === 'workspace' ? (
+            {loginMode === 'platform' ? (
+              <form onSubmit={handlePlatformSubmit} className="flex flex-col gap-4 mt-1">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-extrabold text-[var(--text-muted)] uppercase tracking-wider">USERNAME</label>
+                  <input
+                    type="text"
+                    required
+                    value={platUsername}
+                    onChange={e => setPlatUsername(e.target.value)}
+                    placeholder="orchestraiomg"
+                    className="w-full px-4 py-3 rounded-xl bg-[var(--bg-input)] text-[var(--text-primary)] border border-[var(--border-color)] text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-extrabold text-[var(--text-muted)] uppercase tracking-wider">PASSWORD</label>
+                  <input
+                    type="password"
+                    required
+                    value={platPassword}
+                    onChange={e => setPlatPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full px-4 py-3 rounded-xl bg-[var(--bg-input)] text-[var(--text-primary)] border border-[var(--border-color)] text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                  />
+                </div>
+                {platError && <p className="text-xs text-red-500 font-semibold">{platError}</p>}
+                <button
+                  type="submit"
+                  className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold text-sm shadow-md hover:shadow-lg transition-all transform active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <span>Sign in to OMG Platform</span>
+                  <span>→</span>
+                </button>
+                <p className="text-[10px] text-[var(--text-muted)] leading-relaxed">
+                  OrchestrAI staff only — the only session type that reaches platform administration
+                  (User Management, RBAC, Environment Management, Tenant Registry, Workspace Directory,
+                  Workspace User Administration, Release Notes). A demo-only hardcoded credential, not
+                  production security.
+                </p>
+              </form>
+            ) : loginMode === 'workspace' ? (
               <form onSubmit={handleWorkspaceSubmit} className="flex flex-col gap-4 mt-1">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[10px] font-extrabold text-[var(--text-muted)] uppercase tracking-wider">EMAIL</label>

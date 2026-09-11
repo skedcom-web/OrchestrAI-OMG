@@ -428,6 +428,8 @@ export const NAV_DOMAINS: NavDomain[] = [
           } },
           { path: '/governability-studio', label: 'Governability Studio', icon: '⚙️', description: 'Configure Evidence Thresholds, Authority Review Periods, Admissibility Rules, Reassessment Rules and Escalation Rules — every change versioned, audited and traceable.', keywords: ['governability studio', 'evidence threshold', 'authority review period', 'admissibility rule', 'escalation rule', 'configuration'] },
           { path: '/workspace-dashboard', label: 'Workspace Dashboard', icon: '🗂️', description: 'For a signed-in workspace evaluation session — asset count, Governability, Evidence Sufficiency, Authority Currency, reassessment alerts and findings, scoped to that workspace only.', keywords: ['workspace dashboard', 'workspace login', 'customer evaluation', 'isolated'] },
+          { path: '/workspace-audit-trail', label: 'Workspace Audit Trail', icon: '📋', description: 'Every governance action taken inside the current workspace — who did it, as which persona, and when.', keywords: ['workspace audit trail', 'accountability', 'traceability', 'release 18.1 patch'] },
+          { path: '/workspace-persona-landing', label: 'Choose Governance Perspective', icon: '🎭', description: 'Pick a starting evaluation lens for the current workspace session — Governance Admin, Risk Officer, Business Owner, Validator, Auditor or Viewer.', keywords: ['persona landing', 'perspective', 'evaluation lens', 'release 18.1 patch'] },
         ],
       },
     ],

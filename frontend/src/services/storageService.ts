@@ -38,6 +38,7 @@ import type {
   Workspace,
   WorkspaceStatus,
   WorkspaceUser,
+  WorkspaceAuditEntry,
   RevalidationStep,
   EvidenceRecord,
   EvidenceTimelineEvent,
@@ -268,6 +269,7 @@ const STORAGE_KEYS = {
   GOVERNABILITY_CONFIG: 'omg_governability_config_r18',
   WORKSPACES: 'omg_workspaces_r18_1',
   WORKSPACE_USERS: 'omg_workspace_users_r18_1',
+  WORKSPACE_AUDIT_TRAIL: 'omg_workspace_audit_trail_r18_1_patch',
 };
 
 function getItem<T>(key: string, defaultData: T): T {
@@ -4466,6 +4468,8 @@ function setWorkspaceStatus(id: string, status: WorkspaceStatus, actorName: stri
 export function suspendWorkspace(id: string, actorName: string): Workspace | null { return setWorkspaceStatus(id, 'Suspended', actorName, 'WORKSPACE_SUSPENDED'); }
 export function reactivateWorkspace(id: string, actorName: string): Workspace | null { return setWorkspaceStatus(id, 'Active', actorName, 'WORKSPACE_REACTIVATED'); }
 export function archiveWorkspace(id: string, actorName: string): Workspace | null { return setWorkspaceStatus(id, 'Archived', actorName, 'WORKSPACE_ARCHIVED'); }
+/** Release 18.1 Patch, Module 6 — governance closure state, retained for historical reference. */
+export function retireWorkspace(id: string, actorName: string): Workspace | null { return setWorkspaceStatus(id, 'Retired', actorName, 'WORKSPACE_RETIRED'); }
 
 /** Module 2 — Workspace User Administration. */
 export function getWorkspaceUsers(workspaceId?: string): WorkspaceUser[] {
@@ -4531,12 +4535,20 @@ export function sendWorkspaceInvitation(id: string, actorName: string): Workspac
  * comparison, no hashing, no session token, no backend call. See the
  * WorkspaceUser.password doc comment in types/index.ts.
  */
+/** Release 18.1 Patch, Module 6 — Active and Archived/Retired all permit login (the latter two for historical viewing only); Suspended and Provisioned block it entirely. */
+const LOGIN_PERMITTED_STATUSES = new Set<WorkspaceStatus>(['Active', 'Archived', 'Retired']);
+
 export function authenticateWorkspaceUser(email: string, password: string): { workspace: Workspace; user: WorkspaceUser } | null {
   const user = workspaceUsersCache.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password && u.status === 'Active');
   if (!user) return null;
-  const workspace = workspacesCache.find(w => w.id === user.workspaceId && w.status === 'Active');
+  const workspace = workspacesCache.find(w => w.id === user.workspaceId && LOGIN_PERMITTED_STATUSES.has(w.status));
   if (!workspace) return null;
   return { workspace, user };
+}
+
+/** A workspace not in Active status is read-only — Archived/Retired for historical reference, Suspended/Provisioned block login before this even matters. */
+export function isWorkspaceReadOnly(workspace: Workspace): boolean {
+  return workspace.status !== 'Active';
 }
 
 /** Module 5/6 — records tagged to this workspace only. Existing shared demo records (workspaceId unset) never appear here. */
@@ -4554,6 +4566,91 @@ export function getWorkspaceGovernanceAlerts(workspaceId: string): GovernanceAle
 }
 export function getWorkspaceReassessmentTriggers(workspaceId: string): ReassessmentTrigger[] {
   return getReassessmentTriggers().filter(t => t.workspaceId === workspaceId);
+}
+
+// --- RELEASE 18.1 PATCH — WORKSPACE EVALUATION EXPERIENCE ENHANCEMENT ---
+
+/**
+ * Module 3 — Workspace Audit Trail. Deliberately separate from the
+ * platform-wide AuditLog: this trail always records the *actual* active
+ * persona at the time of the action, which the generic AuditLog's
+ * per-caller-hardcoded userRole cannot guarantee.
+ */
+let workspaceAuditCache: WorkspaceAuditEntry[] = getItem<WorkspaceAuditEntry[]>(STORAGE_KEYS.WORKSPACE_AUDIT_TRAIL, []);
+function persistWorkspaceAuditCache() { setItem(STORAGE_KEYS.WORKSPACE_AUDIT_TRAIL, workspaceAuditCache); }
+
+export function addWorkspaceAuditEntry(entry: Omit<WorkspaceAuditEntry, 'id' | 'timestamp'>): WorkspaceAuditEntry {
+  const created: WorkspaceAuditEntry = { ...entry, id: `wau-${Date.now().toString().slice(-6)}`, timestamp: new Date().toISOString() };
+  workspaceAuditCache = [created, ...workspaceAuditCache];
+  persistWorkspaceAuditCache();
+  return created;
+}
+
+export function getWorkspaceAuditTrail(workspaceId: string): WorkspaceAuditEntry[] {
+  return workspaceAuditCache.filter(e => e.workspaceId === workspaceId);
+}
+
+/**
+ * Module 5 — Workspace Clone Capability. Deep-copies every record tagged to
+ * the source workspace (Assets, Evidence, Findings, Alerts, Reassessment
+ * Triggers) with fresh ids remapped onto the new workspace and its cloned
+ * assets, plus the workspace's own tenant/environment configuration.
+ * Governability Data itself is never stored (Release 18's engines are
+ * computed live), so cloning the records that drive it is sufficient — the
+ * clone's Governability results are simply recomputed against its own copy.
+ */
+export function cloneWorkspace(sourceWorkspaceId: string, actorName: string): Workspace | null {
+  const source = workspacesCache.find(w => w.id === sourceWorkspaceId);
+  if (!source) return null;
+
+  const existingClones = workspacesCache.filter(w => w.name.startsWith(source.name)).length;
+  const cloned: Workspace = {
+    id: `wks-${Date.now().toString().slice(-6)}`,
+    name: `${source.name} v${existingClones + 1}`,
+    status: 'Active',
+    tenantId: source.tenantId,
+    environmentTier: source.environmentTier,
+    createdAt: new Date().toISOString().split('T')[0],
+    createdBy: actorName,
+  };
+  workspacesCache = [cloned, ...workspacesCache];
+  persistWorkspacesCache();
+
+  const assetIdMap = new Map<string, string>();
+  const sourceAssets = getWorkspaceAssets(sourceWorkspaceId);
+  sourceAssets.forEach((asset, i) => {
+    const newId = `local-${Date.now()}-${i}`;
+    assetIdMap.set(asset.id, newId);
+    assetsCache = [{ ...asset, id: newId, workspaceId: cloned.id }, ...assetsCache];
+  });
+  persistAssetsCache();
+
+  const clonedEvidence = getWorkspaceEvidenceRecords(sourceWorkspaceId).map((e, i) => ({
+    ...e, id: `local-${Date.now()}-evd-${i}`, workspaceId: cloned.id,
+    assetId: e.assetId ? assetIdMap.get(e.assetId) || e.assetId : e.assetId,
+  }));
+  if (clonedEvidence.length > 0) { evidenceCache = [...clonedEvidence, ...evidenceCache]; persistEvidenceCache(); }
+
+  const clonedFindings = getWorkspaceFindings(sourceWorkspaceId).map((f, i) => ({
+    ...f, id: `fnd-clone-${Date.now()}-${i}`, workspaceId: cloned.id,
+    assetId: assetIdMap.get(f.assetId) || f.assetId,
+  }));
+  if (clonedFindings.length > 0) setItem(STORAGE_KEYS.FINDINGS, [...clonedFindings, ...getFindings()]);
+
+  const clonedAlerts = getWorkspaceGovernanceAlerts(sourceWorkspaceId).map((a, i) => ({
+    ...a, id: `alt-clone-${Date.now()}-${i}`, workspaceId: cloned.id,
+    assetId: assetIdMap.get(a.assetId) || a.assetId,
+  }));
+  if (clonedAlerts.length > 0) setItem(STORAGE_KEYS.ALERTS, [...clonedAlerts, ...getGovernanceAlerts()]);
+
+  const clonedTriggers = getWorkspaceReassessmentTriggers(sourceWorkspaceId).map((t, i) => ({
+    ...t, id: `local-clone-${Date.now()}-${i}`, workspaceId: cloned.id,
+    assetId: assetIdMap.get(t.assetId) || t.assetId,
+  }));
+  if (clonedTriggers.length > 0) { triggersCache = [...clonedTriggers, ...triggersCache]; persistTriggersCache(); }
+
+  addAuditLog('usr-1', actorName, 'SUPER_ADMIN', 'WORKSPACE_CLONED', 'Workspace', cloned.id, cloned.name, `Cloned from "${source.name}" — ${sourceAssets.length} asset(s), ${clonedEvidence.length} evidence record(s), ${clonedFindings.length} finding(s), ${clonedTriggers.length} trigger(s).`);
+  return cloned;
 }
 
 export function getGovernanceOutcomeForAsset(assetId: string): GovernanceOutcome | null {

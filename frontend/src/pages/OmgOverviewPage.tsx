@@ -154,7 +154,7 @@ export const OmgOverviewPage: React.FC = () => {
             </div>
 
             <p className="text-[11px] text-[var(--text-muted)]">
-              Six guided tours, built for how you'll actually use OMG — no training required.
+              Seven guided tours, built for how you'll actually use OMG — no training required.
             </p>
           </div>
 
@@ -488,6 +488,31 @@ export const OmgOverviewPage: React.FC = () => {
         </div>
       </section>
 
+      {/* ============== SECTION 4C — WORKSPACE EVALUATION CAPABILITY ============== */}
+      <section className="flex flex-col gap-4">
+        <SectionHeader
+          eyebrow="Section 4C · Release 18.1 Patch"
+          title="Workspace Evaluation Capability"
+          subtitle="A separate, isolated space where an evaluator brings their own AI systems and governs them — without touching the shared demo dataset."
+          icon="🗂️"
+        />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+          {[
+            { icon: '🔑', title: 'Workspace Login', desc: 'Email and password resolve into your own isolated workspace context — separate from the demo persona picker.' },
+            { icon: '🎭', title: 'Persona Testing', desc: 'Evaluate the same workspace from Governance Admin, Risk Officer, Business Owner, Validator, Auditor or Viewer.' },
+            { icon: '🧱', title: 'Workspace Isolation', desc: 'Assets, evidence, findings and alerts you create are tagged to your workspace and invisible to any other workspace.' },
+            { icon: '🛡️', title: 'Governance Evaluation', desc: 'Upload an asset and immediately see its Governability, Evidence Sufficiency and Authority Currency.' },
+            { icon: '📦', title: 'Export Capability', desc: 'A workspace-wide Governance Pack — assets, evidence, findings, timelines and audit trail — as JSON, CSV or PDF.' },
+          ].map(item => (
+            <div key={item.title} className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4 flex flex-col gap-2">
+              <span data-noglass className="w-10 h-10 grid place-items-center rounded-xl text-[18px] bg-[var(--accent-light)] border border-[var(--accent-border)]" aria-hidden>{item.icon}</span>
+              <h3 className="text-[13px] font-bold text-[var(--text-primary)]">{item.title}</h3>
+              <p className="text-[11.5px] text-[var(--text-secondary)] leading-relaxed">{item.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* ============== PLATFORM FOUNDATION — ROADMAP HIGHLIGHTS ============== */}
       <section className="flex flex-col gap-4">
         <SectionHeader
@@ -541,10 +566,10 @@ export const OmgOverviewPage: React.FC = () => {
             Take the Guided Tour
           </h2>
           <p className="text-[12.5px] text-[var(--text-secondary)] mt-1.5 leading-relaxed max-w-2xl">
-            Six named tours, each built for a different reason you're here: Executive Overview,
+            Seven named tours, each built for a different reason you're here: Executive Overview,
             Governance Lifecycle, Agent Governance, Audit & Assurance, Governance
-            Intelligence, and Governability Intelligence. Pick the one that matches what you need,
-            and every stop explains what the module is, why it exists and what to look at — and
+            Intelligence, Governability Intelligence, and Workspace Evaluation. Pick the one that
+            matches what you need, and every stop explains what the module is, why it exists and what to look at — and
             can take you straight there.
           </p>
         </div>

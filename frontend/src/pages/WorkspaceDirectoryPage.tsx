@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card } from '../components/ui/Card';
 import { Select } from '../components/ui/Select';
 import { useAuth } from '../contexts/AuthContext';
-import { getWorkspaces, saveWorkspace, suspendWorkspace, reactivateWorkspace, archiveWorkspace } from '../services/storageService';
+import { getWorkspaces, saveWorkspace, suspendWorkspace, reactivateWorkspace, archiveWorkspace, retireWorkspace, cloneWorkspace } from '../services/storageService';
 import { getTenants } from '../config/tenantFoundation';
 import type { EnvironmentTier } from '../types';
 
@@ -15,7 +15,10 @@ const Pill: React.FC<{ children: React.ReactNode; tone?: string }> = ({ children
   </span>
 );
 
-const STATUS_TONE: Record<string, string> = { Active: 'var(--status-success)', Suspended: 'var(--status-warning)', Archived: 'var(--text-muted)' };
+const STATUS_TONE: Record<string, string> = {
+  Provisioned: 'var(--text-muted)', Active: 'var(--status-success)', Suspended: 'var(--status-warning)',
+  Archived: 'var(--text-muted)', Retired: 'var(--text-muted)',
+};
 
 export const WorkspaceDirectoryPage: React.FC = () => {
   const { currentUser, canPerform } = useAuth();
@@ -92,16 +95,20 @@ export const WorkspaceDirectoryPage: React.FC = () => {
                 <p className="text-[11px] text-[var(--text-muted)] mt-1">Created {ws.createdAt} by {ws.createdBy}</p>
               </div>
               {canManage && (
-                <div className="flex items-center gap-1.5 shrink-0">
-                  {ws.status !== 'Suspended' && ws.status !== 'Archived' && (
+                <div className="flex items-center gap-1.5 shrink-0 flex-wrap">
+                  {(ws.status === 'Provisioned' || ws.status === 'Suspended' || ws.status === 'Archived') && (
+                    <button onClick={() => { reactivateWorkspace(ws.id, actor); refresh(); }} className="text-[11px] font-bold text-[var(--status-success)] hover:underline cursor-pointer">{ws.status === 'Provisioned' ? 'Activate' : 'Reactivate'}</button>
+                  )}
+                  {ws.status === 'Active' && (
                     <button onClick={() => { suspendWorkspace(ws.id, actor); refresh(); }} className="text-[11px] font-bold text-[var(--status-warning)] hover:underline cursor-pointer">Suspend</button>
                   )}
-                  {ws.status === 'Suspended' && (
-                    <button onClick={() => { reactivateWorkspace(ws.id, actor); refresh(); }} className="text-[11px] font-bold text-[var(--status-success)] hover:underline cursor-pointer">Reactivate</button>
-                  )}
-                  {ws.status !== 'Archived' && (
+                  {ws.status !== 'Archived' && ws.status !== 'Retired' && (
                     <button onClick={() => { archiveWorkspace(ws.id, actor); refresh(); }} className="text-[11px] font-bold text-[var(--text-muted)] hover:underline cursor-pointer">Archive</button>
                   )}
+                  {ws.status !== 'Retired' && (
+                    <button onClick={() => { if (confirm(`Retire "${ws.name}"? This is a governance closure state — records are retained for historical reference.`)) { retireWorkspace(ws.id, actor); refresh(); } }} className="text-[11px] font-bold text-[var(--status-danger)] hover:underline cursor-pointer">Retire</button>
+                  )}
+                  <button onClick={() => { cloneWorkspace(ws.id, actor); refresh(); }} className="text-[11px] font-bold text-[var(--accent-primary)] hover:underline cursor-pointer">Clone</button>
                 </div>
               )}
             </div>

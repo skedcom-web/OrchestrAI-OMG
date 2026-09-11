@@ -2317,7 +2317,15 @@ export interface RevalidationResult {
  * architectural rework" every release since 15 has explicitly avoided.
  * ================================================================ */
 
-export type WorkspaceStatus = 'Active' | 'Suspended' | 'Archived';
+/**
+ * Release 18.1 Patch — Module 6, Workspace Lifecycle Hardening.
+ * Provisioned: created but not yet opened for login (blocks login, like Suspended).
+ * Active: full read/write.
+ * Suspended: blocks login entirely; all records preserved.
+ * Archived: login allowed for historical viewing; writes blocked (read-only).
+ * Retired: governance closure state; login allowed for historical reference; writes blocked, same as Archived.
+ */
+export type WorkspaceStatus = 'Provisioned' | 'Active' | 'Suspended' | 'Archived' | 'Retired';
 
 export interface Workspace {
   id: string;
@@ -2327,6 +2335,23 @@ export interface Workspace {
   environmentTier: EnvironmentTier;
   createdAt: string;
   createdBy: string;
+}
+
+/** Release 18.1 Patch — Module 3, Workspace Audit Trail. A dedicated, workspace-scoped trail distinct from the platform-wide AuditLog, so Persona is always the actual active lens, not a hardcoded actor role. */
+export type WorkspaceAuditAction =
+  | 'Created Asset' | 'Uploaded Evidence' | 'Created Finding' | 'Triggered Reassessment'
+  | 'Exported Governance Pack' | 'Changed Persona' | 'Cloned Workspace';
+
+export interface WorkspaceAuditEntry {
+  id: string;
+  workspaceId: string;
+  workspaceName: string;
+  userName: string;
+  persona: UserRole;
+  action: WorkspaceAuditAction;
+  entityType: string;
+  entityName: string;
+  timestamp: string;
 }
 
 export type WorkspaceUserStatus = 'Active' | 'Disabled' | 'Invited';
