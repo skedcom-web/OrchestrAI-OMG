@@ -75,7 +75,7 @@ export const DashboardPage: React.FC = () => {
       <div>
         <h2 className="text-xs font-extrabold uppercase tracking-wider text-[var(--text-muted)] mb-3">Governance Command Center</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-          <MetricCard title="Total Governed Entities" value={kpis.totalGovernedEntities} icon={<span className="text-lg">🗂️</span>} />
+          <MetricCard title="Total Entities Under Governance" value={kpis.totalGovernedEntities} icon={<span className="text-lg">🗂️</span>} />
           <MetricCard title="Governance Readiness" value={`${kpis.governanceReadinessScorePct}%`} icon={<span className="text-lg">🛡️</span>} trendType={kpis.governanceReadinessScorePct >= 70 ? 'positive' : kpis.governanceReadinessScorePct >= 40 ? 'neutral' : 'negative'} />
           <MetricCard title="Evidence Completeness" value={`${kpis.evidenceCompletenessPct}%`} icon={<span className="text-lg">🧾</span>} trendType={kpis.evidenceCompletenessPct >= 70 ? 'positive' : kpis.evidenceCompletenessPct >= 40 ? 'neutral' : 'negative'} />
           <MetricCard title="Approval Backlog" value={kpis.approvalBacklog} icon={<span className="text-lg">⏳</span>} trendType={kpis.approvalBacklog === 0 ? 'positive' : 'negative'} />
@@ -190,7 +190,7 @@ export const DashboardPage: React.FC = () => {
       {/* KPI Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard
-          title="Total Governed AI Assets"
+          title="Total Registered AI Assets"
           value={metrics.totalAssets}
           subtitle="Enterprise Inventory"
           trend="100% Registry Coverage"

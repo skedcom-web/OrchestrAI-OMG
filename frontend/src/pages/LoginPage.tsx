@@ -123,7 +123,7 @@ export const LoginPage: React.FC = () => {
             <div className="p-5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 grid grid-cols-2 gap-4">
               <div>
                 <span className="text-[10px] font-extrabold uppercase tracking-widest text-blue-200">
-                  GOVERNED ASSETS
+                  MANAGED AI ASSETS
                 </span>
                 <p className="text-2xl font-black text-white mt-0.5">9 Asset Classes</p>
                 <span className="text-[10px] text-cyan-300 font-semibold">100% Visibility</span>

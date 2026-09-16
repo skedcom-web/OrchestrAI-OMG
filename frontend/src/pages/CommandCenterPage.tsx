@@ -199,7 +199,7 @@ export const CommandCenterPage: React.FC = () => {
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 stagger">
           <KpiCard
-            label="Total Governed Assets"
+            label="Total Assets Under Governance"
             value={kpis.totalGovernedAssets}
             caption="Registered across the enterprise"
             icon="🗂️"

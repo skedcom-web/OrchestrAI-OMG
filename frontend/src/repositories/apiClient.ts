@@ -7,7 +7,7 @@
  * React tree and can't call useAuth() directly.
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://orchestrai-omg.onrender.com/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://orchestrai-omg.vercel.app/api';
 
 /**
  * Mirrors AuthContext's own default: it falls back to INITIAL_USERS[0]

@@ -1570,19 +1570,29 @@ export const INITIAL_WORKSPACE_USERS: WorkspaceUser[] = [
 ];
 
 /**
- * Release 19 — Governance Authority, Governance Position & Reauthorisation
- * Framework. Demo data deliberately mirrors the blueprint's own example
- * (Business Owner, Delegation Ref GOV-2026-0xx, Authority Source: AI
- * Governance Committee) against the two flagship demo assets already used
- * throughout OMG's governance narrative:
- *  - ast-101 (Fraud Detection Sentinel Agent) — clean: active provenance,
- *    valid reliance basis, an Active AGP -> demonstrates "Governed".
- *  - ast-106 (Enterprise Portfolio Multi-Agent System) — troubled: no
- *    recorded review date already made its Authority Currency "Expired";
- *    this release adds a broken reliance element and a superseded AGP on
- *    top of that -> demonstrates "Governance Invalid" / "Suspend Governance
- *    Position", the exact material-change-forces-reauthorisation story the
- *    blueprint asks the demo data to tell.
+ * Release 19.2 — Practitioner Demonstration Dataset (Certification
+ * Remediation). Every record below is keyed to a real, stable asset NAME —
+ * never a hardcoded id — because production's actual asset ids are Neon-
+ * generated UUIDs that differ per environment/reseed. storageService.ts's
+ * reconcileGovernanceSeedAssetReferences() resolves assetId -> the current
+ * real id by name on every successful sync; the assetId values below are
+ * placeholders that only matter for local/offline fallback (they match
+ * this same file's INITIAL_ASSETS local ids where one exists).
+ *
+ * Six real, already-existing tenant assets, one per canonical Unified
+ * Governance State, so a reviewer can see all six without any asset
+ * needing to be invented:
+ *  - Fraud Detection Sentinel Agent         -> Governed
+ *  - Customer Concierge Copilot             -> Conditionally Governed
+ *  - Retail Credit Scoring Engine           -> Governance At Risk
+ *  - AML Regulatory Intelligence RAG        -> Pending Reauthorisation
+ *  - Enterprise Portfolio Multi-Agent System -> Governance Invalid
+ *  - QA Audit Test Asset                    -> Retired
+ *
+ * Note: the first four assets' governance state also depends on their real
+ * Neon lastReviewDate (Release 18's Authority Currency engine reads that
+ * field directly, unrelated to this seed layer) — aligned once via
+ * backend/scripts/align-practitioner-demo-assets.js, not by this file.
  */
 export const INITIAL_AUTHORITY_PROVENANCE_RECORDS: AuthorityProvenanceRecord[] = [
   {
@@ -1593,10 +1603,38 @@ export const INITIAL_AUTHORITY_PROVENANCE_RECORDS: AuthorityProvenanceRecord[] =
     createdAt: '2026-01-01', createdBy: 'David Chen (Governance Admin)',
   },
   {
+    id: 'aprov-103-01', assetId: 'ast-103', assetName: 'Customer Concierge Copilot',
+    authorityRole: 'accountableOwner', holderName: 'Marcus Vance',
+    authoritySource: 'AI Governance Committee', delegationRef: 'GOV-2026-021',
+    effectiveDate: '2026-06-01', expiryDate: '2026-12-31', status: 'Active',
+    createdAt: '2026-06-01', createdBy: 'David Chen (Governance Admin)',
+  },
+  {
+    id: 'aprov-102-01', assetId: 'ast-102', assetName: 'Retail Credit Scoring Engine',
+    authorityRole: 'accountableOwner', holderName: 'Marcus Vance',
+    authoritySource: 'AI Governance Committee', delegationRef: 'GOV-2026-017',
+    effectiveDate: '2026-03-01', expiryDate: '2026-12-31', status: 'Active',
+    createdAt: '2026-03-01', createdBy: 'David Chen (Governance Admin)',
+  },
+  {
+    id: 'aprov-104-01', assetId: 'ast-104', assetName: 'AML Regulatory Intelligence RAG',
+    authorityRole: 'accountableOwner', holderName: 'David Chen',
+    authoritySource: 'AI Governance Committee', delegationRef: 'GOV-2026-023',
+    effectiveDate: '2026-06-01', expiryDate: '2026-12-31', status: 'Active',
+    createdAt: '2026-06-01', createdBy: 'David Chen (Governance Admin)',
+  },
+  {
     id: 'aprov-106-01', assetId: 'ast-106', assetName: 'Enterprise Portfolio Multi-Agent System',
     authorityRole: 'accountableOwner', holderName: 'Marcus Vance',
     authoritySource: 'AI Governance Committee', delegationRef: 'GOV-2026-009',
     effectiveDate: '2026-01-01', expiryDate: '2026-06-30', status: 'Expired',
+    createdAt: '2026-01-01', createdBy: 'David Chen (Governance Admin)',
+  },
+  {
+    id: 'aprov-qa-01', assetId: 'ast-qa-test', assetName: 'QA Audit Test Asset',
+    authorityRole: 'accountableOwner', holderName: 'Sarah Jenkins',
+    authoritySource: 'AI Governance Committee', delegationRef: 'GOV-2026-005',
+    effectiveDate: '2026-01-01', expiryDate: '2026-06-01', status: 'Superseded',
     createdAt: '2026-01-01', createdBy: 'David Chen (Governance Admin)',
   },
 ];
@@ -1611,6 +1649,22 @@ export const INITIAL_GOVERNANCE_RELIANCE_ELEMENTS: GovernanceRelianceElement[] =
     id: 'rel-101-02', assetId: 'ast-101', assetName: 'Fraud Detection Sentinel Agent',
     elementType: 'Required Control', description: 'Monitoring Operational for behavior-drift alerts',
     status: 'Valid', lastVerifiedAt: '2026-08-20', createdAt: '2026-01-15',
+  },
+  {
+    id: 'rel-103-01', assetId: 'ast-103', assetName: 'Customer Concierge Copilot',
+    elementType: 'Required Control', description: 'Customer Conversation Monitoring Coverage',
+    status: 'Degraded', notes: 'Sampling coverage dropped from 100% to 40% after the last monitoring vendor migration; escalated, not yet restored.',
+    lastVerifiedAt: '2026-09-10', createdAt: '2026-06-01',
+  },
+  {
+    id: 'rel-102-01', assetId: 'ast-102', assetName: 'Retail Credit Scoring Engine',
+    elementType: 'Required Evidence', description: 'Fair Lending Bias Test Results Current',
+    status: 'Valid', lastVerifiedAt: '2026-08-01', createdAt: '2026-03-01',
+  },
+  {
+    id: 'rel-104-01', assetId: 'ast-104', assetName: 'AML Regulatory Intelligence RAG',
+    elementType: 'Regulatory Dependency', description: 'Regulatory Knowledge Base Current to Latest Filing Cycle',
+    status: 'Valid', lastVerifiedAt: '2026-09-01', createdAt: '2026-06-01',
   },
   {
     id: 'rel-106-01', assetId: 'ast-106', assetName: 'Enterprise Portfolio Multi-Agent System',
@@ -1633,6 +1687,31 @@ export const INITIAL_AUTHORISED_GOVERNANCE_POSITIONS: AuthorisedGovernancePositi
     createdAt: '2026-01-15', createdBy: 'David Chen (Governance Admin)',
   },
   {
+    id: 'agp-103-01', assetId: 'ast-103', assetName: 'Customer Concierge Copilot',
+    authorisedGovernanceState: 'Monitoring',
+    conditions: ['Human-in-the-loop review remains available for escalated conversations'],
+    obligations: ['Restore full conversation monitoring coverage within 30 days of a degradation'],
+    assumptions: ['Monitoring vendor migration is a temporary condition, not a permanent reduction in coverage'],
+    relianceElementIds: ['rel-103-01'],
+    authorityReferenceIds: ['aprov-103-01'],
+    validFrom: '2026-06-01', validUntil: '2026-12-31', status: 'Active',
+    createdAt: '2026-06-01', createdBy: 'David Chen (Governance Admin)',
+  },
+  {
+    id: 'agp-102-01', assetId: 'ast-102', assetName: 'Retail Credit Scoring Engine',
+    authorisedGovernanceState: 'Conditional GO',
+    conditions: ['Fair lending bias testing performed each release cycle', 'Human sign-off required above the auto-decision threshold'],
+    obligations: ['Refresh authority review before the current review period lapses'],
+    assumptions: ['Underlying credit bureau data feed composition remains materially unchanged'],
+    relianceElementIds: ['rel-102-01'],
+    authorityReferenceIds: ['aprov-102-01'],
+    validFrom: '2026-03-01', validUntil: '2026-12-31', status: 'Active',
+    createdAt: '2026-03-01', createdBy: 'David Chen (Governance Admin)',
+  },
+  // Deliberately no Authorised Governance Position for AML Regulatory
+  // Intelligence RAG — this is the intentional driver of its "Pending
+  // Reauthorisation" state (see the accompanying open ReassessmentTrigger).
+  {
     id: 'agp-106-01', assetId: 'ast-106', assetName: 'Enterprise Portfolio Multi-Agent System',
     authorisedGovernanceState: 'No GO',
     conditions: ['Trade execution limited to the configured risk band', 'Human sign-off required above the Portfolio Rebalancing Directive threshold'],
@@ -1640,7 +1719,7 @@ export const INITIAL_AUTHORISED_GOVERNANCE_POSITIONS: AuthorisedGovernancePositi
     assumptions: ['Vendor certification for the trade execution model remains valid'],
     relianceElementIds: ['rel-106-01'],
     authorityReferenceIds: ['aprov-106-01'],
-    validFrom: '2026-07-01', validUntil: '2026-08-04', status: 'Superseded',
+    validFrom: '2026-07-01', validUntil: '2026-08-04', status: 'Suspended',
     createdAt: '2026-07-01', createdBy: 'David Chen (Governance Admin)',
   },
 ];

@@ -181,7 +181,7 @@ export const OmgOverviewPage: React.FC = () => {
             </p>
             <div className="grid grid-cols-2 gap-3 mt-3">
               {[
-                ['Governed assets', metrics.totalAssets, 'var(--accent-primary)'],
+                ['Assets under governance', metrics.totalAssets, 'var(--accent-primary)'],
                 ['Approved for production', metrics.decisionBreakdown.GO, 'var(--status-success)'],
                 ['High & critical risk', metrics.riskBreakdown.High + metrics.riskBreakdown.Critical, 'var(--status-danger)'],
                 ['Governance health', `${metrics.tenantGovernanceHealthScore}%`, 'var(--status-info)'],

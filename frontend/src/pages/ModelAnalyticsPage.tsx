@@ -34,7 +34,7 @@ export const ModelAnalyticsPage: React.FC = () => {
       />
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <Card className="!p-4"><p className="text-2xl font-extrabold tnum text-[var(--text-primary)]">{models.length}</p><p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] mt-1">Governed Models</p></Card>
+        <Card className="!p-4"><p className="text-2xl font-extrabold tnum text-[var(--text-primary)]">{models.length}</p><p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] mt-1">Registered Models</p></Card>
         <Card className="!p-4"><p className="text-2xl font-extrabold tnum text-[var(--accent-primary)]">{shared.length}</p><p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] mt-1">Shared Across Assets</p></Card>
         <Card className="!p-4"><p className="text-2xl font-extrabold tnum" style={{ color: 'var(--status-danger)' }}>{driftCount}</p><p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] mt-1">Drift Flagged</p></Card>
         <Card className="!p-4"><p className="text-2xl font-extrabold tnum" style={{ color: 'var(--status-success)' }}>{models.filter(m => m.decisionOutcome === 'GO').length}</p><p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] mt-1">Approved (GO)</p></Card>

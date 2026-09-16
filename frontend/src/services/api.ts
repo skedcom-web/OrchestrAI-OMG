@@ -1,6 +1,6 @@
 // Production API Service connecting Frontend to Render Backend & Neon Cloud DB
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://orchestrai-omg.onrender.com/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://orchestrai-omg.vercel.app/api';
 
 export async function fetchHealth() {
   try {

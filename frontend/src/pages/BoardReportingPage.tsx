@@ -178,7 +178,7 @@ export const BoardReportingPage: React.FC = () => {
                   <KpiCard
                     label="AI Inventory"
                     value={activeExecutive.inventory.totalAssets}
-                    caption="Governed assets"
+                    caption="Assets under governance"
                     tone="accent"
                   />
                   <KpiCard

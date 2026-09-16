@@ -4923,6 +4923,60 @@ export function getGovernancePositionContractsForAsset(assetId: string): Governa
   return governancePositionContractsCache.filter(c => c.assetId === assetId);
 }
 
+/**
+ * Release 19.2 — Production Data Alignment (Certification Remediation).
+ *
+ * Root cause of the "no authority provenance recorded" finding: Release 19's
+ * seed constants hardcode assetId to local mockData.ts values ('ast-101',
+ * 'ast-106', ...). Production's assetsCache is replaced by real Neon rows
+ * with generated UUIDs once the sync above completes, so those hardcoded
+ * ids never match anything real.
+ *
+ * Fix: every Release 19 record already carries `assetName` — a stable
+ * business identifier that IS preserved across environments and
+ * redeployments (it is, after all, the same demo asset by name in every
+ * environment). This function re-resolves assetId by name against whatever
+ * assets are currently loaded, every time a sync succeeds — self-healing,
+ * no hardcoded ids, no new stored field, no new governance concept.
+ *
+ * A record whose assetName has no current match is left alone (its old
+ * assetId stays, inert) rather than deleted — never destructive.
+ *
+ * Also covers ValidationRecord (pre-existing since Release 1, unrelated to
+ * Release 19) — discovered during this remediation to carry the exact same
+ * defect: getValidations() reads straight from localStorage and is never
+ * synced from Neon at all, so its seed data was equally hardcoded to
+ * 'ast-101' and never reachable from a real asset. Same fix, same reason:
+ * it already carries assetName, so it is remapped here too rather than
+ * left as a second, un-remediated instance of the identical root cause.
+ */
+function reconcileGovernanceSeedAssetReferences(): void {
+  const realIdByName = new Map(assetsCache.map(a => [a.name, a.id]));
+  let touched = false;
+
+  const remap = <T extends { assetId: string; assetName: string }>(records: T[]): T[] =>
+    records.map(r => {
+      const realId = realIdByName.get(r.assetName);
+      if (realId && r.assetId !== realId) { touched = true; return { ...r, assetId: realId }; }
+      return r;
+    });
+
+  authorityProvenanceCache = remap(authorityProvenanceCache);
+  relianceElementsCache = remap(relianceElementsCache);
+  agpCache = remap(agpCache);
+  governancePositionContractsCache = remap(governancePositionContractsCache);
+
+  const validations = remap(getValidations());
+  if (touched) setItem(STORAGE_KEYS.VALIDATIONS, validations);
+
+  if (touched) {
+    persistAuthorityProvenanceCache();
+    persistRelianceElementsCache();
+    persistAgpCache();
+    persistGovernancePositionContractsCache();
+  }
+}
+
 // --- RELEASE 8 — GOVERNANCE INTELLIGENCE ENGINE (ACTIONS EDITION) ---
 // The bridge between Governance Intelligence and Governance Execution:
 // Outcome -> Recommended Action, with a human Accept / Reject / Defer
@@ -5943,6 +5997,18 @@ export function bootstrapPersistence(options?: { force?: boolean }): Promise<voi
 
       assetsCache = assets.map(normalizeAsset);
       persistAssetsCache();
+
+      // Release 19.2 — Production Data Alignment. Release 19's seed records
+      // (Authority Provenance, Reliance Basis, Authorised Governance
+      // Position) were authored against local mockData.ts asset ids
+      // ('ast-101' etc.), which never exist once real Neon-generated UUIDs
+      // load. Every one of those records already carries assetName as a
+      // stable business identifier, so this re-attaches each record to
+      // whichever *currently loaded* real asset shares that name — no new
+      // field, no new concept, just resolving a soft reference every time
+      // real asset data arrives. Self-healing: runs on every successful
+      // sync, so it survives redeployment and any reseeding of Neon.
+      reconcileGovernanceSeedAssetReferences();
 
       evidenceCache = evidence.map(e => ({ ...e, assetName: (e.assetId ? assetNameById.get(e.assetId) : undefined) || e.assetName }));
       persistEvidenceCache();
