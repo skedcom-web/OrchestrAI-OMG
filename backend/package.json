@@ -7,6 +7,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "build": "prisma generate && nest build",
+    "postinstall": "prisma generate",
     "format": "prettier --write \"src/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
@@ -23,6 +24,7 @@
     "@nestjs/platform-express": "^11.0.0",
     "@prisma/client": "^6.3.0",
     "dotenv": "^16.4.7",
+    "express": "^5.0.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1"
   },
@@ -34,6 +36,7 @@
     "@types/jest": "^30.0.0",
     "@types/node": "^22.0.0",
     "@types/supertest": "^7.2.1",
+    "@vercel/node": "^5.1.14",
     "jest": "^30.4.2",
     "prisma": "^6.3.0",
     "supertest": "^7.2.2",
