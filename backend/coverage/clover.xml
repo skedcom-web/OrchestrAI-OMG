@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1788873081859" clover="3.2.0">
-  <project timestamp="1788873081860" name="All files">
-    <metrics statements="572" coveredstatements="285" conditionals="267" coveredconditionals="31" methods="181" coveredmethods="54" elements="1020" coveredelements="370" complexity="0" loc="572" ncloc="572" packages="3" files="7" classes="7"/>
+<coverage generated="1789545818790" clover="3.2.0">
+  <project timestamp="1789545818790" name="All files">
+    <metrics statements="577" coveredstatements="285" conditionals="267" coveredconditionals="31" methods="183" coveredmethods="54" elements="1027" coveredelements="370" complexity="0" loc="577" ncloc="577" packages="3" files="8" classes="8"/>
     <package name="src">
-      <metrics statements="529" coveredstatements="245" conditionals="256" coveredconditionals="22" methods="175" coveredmethods="48"/>
+      <metrics statements="534" coveredstatements="245" conditionals="256" coveredconditionals="22" methods="177" coveredmethods="48"/>
       <file name="app.controller.ts" path="C:\Users\VT348\Documents\GitHub\OrchestrAI OMG\backend\src\app.controller.ts">
         <metrics statements="507" coveredstatements="236" conditionals="250" coveredconditionals="22" methods="170" coveredmethods="46"/>
         <line num="1" count="6" type="stmt"/>
@@ -521,21 +521,29 @@
         <line num="3" count="6" type="stmt"/>
         <line num="10" count="6" type="stmt"/>
       </file>
-      <file name="main.ts" path="C:\Users\VT348\Documents\GitHub\OrchestrAI OMG\backend\src\main.ts">
-        <metrics statements="13" coveredstatements="0" conditionals="6" coveredconditionals="0" methods="3" coveredmethods="0"/>
-        <line num="1" count="0" type="stmt"/>
-        <line num="2" count="0" type="stmt"/>
-        <line num="10" count="0" type="stmt"/>
+      <file name="cors.config.ts" path="C:\Users\VT348\Documents\GitHub\OrchestrAI OMG\backend\src\cors.config.ts">
+        <metrics statements="8" coveredstatements="0" conditionals="4" coveredconditionals="0" methods="4" coveredmethods="0"/>
+        <line num="9" count="0" type="stmt"/>
+        <line num="15" count="0" type="stmt"/>
+        <line num="16" count="0" type="cond" truecount="0" falsecount="2"/>
         <line num="17" count="0" type="stmt"/>
-        <line num="19" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="20" count="0" type="stmt"/>
+        <line num="21" count="0" type="stmt"/>
+        <line num="22" count="0" type="stmt"/>
         <line num="23" count="0" type="stmt"/>
         <line num="30" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="38" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="39" count="0" type="stmt"/>
-        <line num="40" count="0" type="stmt"/>
-        <line num="41" count="0" type="stmt"/>
-        <line num="43" count="0" type="stmt"/>
+      </file>
+      <file name="main.ts" path="C:\Users\VT348\Documents\GitHub\OrchestrAI OMG\backend\src\main.ts">
+        <metrics statements="10" coveredstatements="0" conditionals="2" coveredconditionals="0" methods="1" coveredmethods="0"/>
+        <line num="1" count="0" type="stmt"/>
+        <line num="2" count="0" type="stmt"/>
+        <line num="3" count="0" type="stmt"/>
+        <line num="12" count="0" type="stmt"/>
+        <line num="14" count="0" type="stmt"/>
+        <line num="16" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="17" count="0" type="stmt"/>
+        <line num="18" count="0" type="stmt"/>
+        <line num="19" count="0" type="stmt"/>
+        <line num="21" count="0" type="stmt"/>
       </file>
       <file name="prisma.service.ts" path="C:\Users\VT348\Documents\GitHub\OrchestrAI OMG\backend\src\prisma.service.ts">
         <metrics statements="5" coveredstatements="5" conditionals="0" coveredconditionals="0" methods="2" coveredmethods="2"/>
