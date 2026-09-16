@@ -89,7 +89,17 @@ import type {
   ConfidenceAssessment,
   DecisionReconstruction,
   GovernanceStorySummary,
-  GovernanceValueSummary
+  GovernanceValueSummary,
+  AuthorityProvenanceRecord,
+  AuthorityProvenanceResult,
+  GovernanceRelianceElement,
+  RelianceBasisResult,
+  AuthorisedGovernancePosition,
+  UnifiedGovernanceStateResult,
+  ReauthorisationResult,
+  GovernancePositionContract,
+  GovernanceContinuitySignal,
+  GovernanceStateHistoryEntry
 } from '../types';
 import {
   INITIAL_ASSETS,
@@ -131,7 +141,10 @@ import {
   INITIAL_OBLIGATION_EVIDENCE_MAPPINGS,
   INITIAL_GOVERNANCE_POLICIES,
   INITIAL_GOVERNANCE_FINDINGS,
-  INITIAL_RECOMMENDED_ACTIONS
+  INITIAL_RECOMMENDED_ACTIONS,
+  INITIAL_AUTHORITY_PROVENANCE_RECORDS,
+  INITIAL_GOVERNANCE_RELIANCE_ELEMENTS,
+  INITIAL_AUTHORISED_GOVERNANCE_POSITIONS
 } from './mockData';
 import { getAuthorityMatrixEntry, defaultAuthorityProfile, authorityProfileCompleteness } from '../config/governanceAuthority';
 import { defaultGovernanceState, computeReauthorizationStatus } from '../config/governanceContinuity';
@@ -158,8 +171,13 @@ import {
 } from '../config/governanceReasoningEngine';
 import { generateActionDrafts } from '../config/governanceActionsEngine';
 import { computeGovernability, type GovernabilityConfigOverrides } from '../config/governabilityEngine';
+import { computeAuthorityCurrency, DEFAULT_AUTHORITY_REVIEW_PERIOD_DAYS, DEFAULT_AUTHORITY_WARNING_PERIOD_DAYS } from '../config/authorityCurrencyEngine';
 import { DEFAULT_EVIDENCE_COMPLETENESS_MINIMUMS } from '../config/evidenceSufficiencyEngine';
-import { DEFAULT_AUTHORITY_REVIEW_PERIOD_DAYS, DEFAULT_AUTHORITY_WARNING_PERIOD_DAYS } from '../config/authorityCurrencyEngine';
+import { computeAuthorityProvenance } from '../config/authorityProvenanceEngine';
+import { computeRelianceBasis } from '../config/relianceBasisEngine';
+import { computeReauthorisation } from '../config/reauthorisationEngine';
+import { buildGovernancePositionContract } from '../config/governancePositionContract';
+import { resolveGovernanceState } from '../config/governanceStateResolutionLayer';
 import { buildDecisionTrace } from '../config/decisionTraceabilityEngine';
 import type { DecisionTrace } from '../config/decisionTraceabilityEngine';
 import { apiAssetRepository, apiEvidenceRepository, apiGovernanceRepository, apiModelRepository, apiKnowledgeAssetRepository, apiPromptRepository, apiToolRepository, apiAgentToolGrantRepository, apiGovernanceControlRepository, apiCertificationProgramRepository, apiCertificationRecordRepository } from '../repositories/apiRepositories';
@@ -270,6 +288,11 @@ const STORAGE_KEYS = {
   WORKSPACES: 'omg_workspaces_r18_1',
   WORKSPACE_USERS: 'omg_workspace_users_r18_1',
   WORKSPACE_AUDIT_TRAIL: 'omg_workspace_audit_trail_r18_1_patch',
+  AUTHORITY_PROVENANCE_RECORDS: 'omg_authority_provenance_records_r19',
+  GOVERNANCE_RELIANCE_ELEMENTS: 'omg_governance_reliance_elements_r19',
+  AUTHORISED_GOVERNANCE_POSITIONS: 'omg_authorised_governance_positions_r19',
+  GOVERNANCE_POSITION_CONTRACTS: 'omg_governance_position_contracts_r19',
+  GOVERNANCE_STATE_HISTORY: 'omg_governance_state_history_r19_1',
 };
 
 function getItem<T>(key: string, defaultData: T): T {
@@ -2016,6 +2039,8 @@ export async function saveReassessmentTrigger(data: Partial<ReassessmentTrigger>
     draftTrigger.assetName,
     `Raised ${draftTrigger.triggerType} trigger for ${draftTrigger.assetName} (${draftTrigger.severity})`
   );
+
+  if (asset) recordGovernanceStateIfChanged(asset.id, `${draftTrigger.triggerType} trigger raised`, 'Reassessment Trigger Framework');
 
   const { id: _draftId, ...payload } = draftTrigger;
   const created = { ...(await apiGovernanceRepository.createGovernanceRecord('trigger', payload) as ReassessmentTrigger), assetName: draftTrigger.assetName };
@@ -4662,6 +4687,240 @@ export function getGovernanceOutcomeForAsset(assetId: string): GovernanceOutcome
 export function getAllGovernanceOutcomes(): GovernanceOutcome[] {
   const disabled = getDisabledOutcomes();
   return assetsCache.map(a => computeGovernanceOutcome(a, getGovernanceConditionsForAsset(a.id), getPolicyViolationsForAsset(a.id), getGovernanceFindingsForAsset(a.id), disabled));
+}
+
+// --- RELEASE 19 — GOVERNANCE AUTHORITY, GOVERNANCE POSITION & REAUTHORISATION FRAMEWORK ---
+
+/** Domain A — Authority Provenance Registry. */
+let authorityProvenanceCache: AuthorityProvenanceRecord[] = getItem<AuthorityProvenanceRecord[]>(STORAGE_KEYS.AUTHORITY_PROVENANCE_RECORDS, INITIAL_AUTHORITY_PROVENANCE_RECORDS);
+function persistAuthorityProvenanceCache() { setItem(STORAGE_KEYS.AUTHORITY_PROVENANCE_RECORDS, authorityProvenanceCache); }
+
+export function getAuthorityProvenanceRecords(): AuthorityProvenanceRecord[] {
+  return authorityProvenanceCache;
+}
+
+export function getAuthorityProvenanceForAsset(assetId: string): AuthorityProvenanceRecord[] {
+  return authorityProvenanceCache.filter(r => r.assetId === assetId);
+}
+
+/** Recording a new authority grant never mutates a prior one — Domain A's Delegation History / Authority Lineage is preserved by superseding, not overwriting. */
+export function saveAuthorityProvenanceRecord(data: Omit<AuthorityProvenanceRecord, 'id' | 'createdAt'>): AuthorityProvenanceRecord {
+  if (data.supersedes) {
+    authorityProvenanceCache = authorityProvenanceCache.map(r =>
+      r.id === data.supersedes ? { ...r, status: 'Superseded' as const } : r
+    );
+  }
+  const created: AuthorityProvenanceRecord = { ...data, id: `aprov-${Date.now().toString().slice(-6)}`, createdAt: new Date().toISOString() };
+  authorityProvenanceCache = [created, ...authorityProvenanceCache];
+  persistAuthorityProvenanceCache();
+  addAuditLog(
+    'usr-1', data.createdBy, 'GOVERNANCE_ADMIN', 'AUTHORITY_PROVENANCE_RECORDED', 'AuthorityProvenanceRecord',
+    created.id, `${created.authorityRole} — ${created.holderName}`,
+    `Recorded ${created.status} authority for ${created.assetName}: ${created.authorityRole} = ${created.holderName} (${created.delegationRef}, source: ${created.authoritySource}).`,
+    { workspaceId: data.workspaceId, tenantId: data.tenantId, environmentId: data.environmentId }
+  );
+  recordGovernanceStateIfChanged(created.assetId, `Authority ${created.status.toLowerCase()} recorded for ${created.authorityRole}`, 'Authority Provenance Registry');
+  return created;
+}
+
+export function getAuthorityProvenanceForAssetResult(assetId: string): AuthorityProvenanceResult | null {
+  const asset = assetsCache.find(a => a.id === assetId);
+  if (!asset) return null;
+  return computeAuthorityProvenance(assetId, asset.name, authorityProvenanceCache);
+}
+
+/** Domain E — Governance Reliance Basis Registry. */
+let relianceElementsCache: GovernanceRelianceElement[] = getItem<GovernanceRelianceElement[]>(STORAGE_KEYS.GOVERNANCE_RELIANCE_ELEMENTS, INITIAL_GOVERNANCE_RELIANCE_ELEMENTS);
+function persistRelianceElementsCache() { setItem(STORAGE_KEYS.GOVERNANCE_RELIANCE_ELEMENTS, relianceElementsCache); }
+
+export function getRelianceElementsForAsset(assetId: string): GovernanceRelianceElement[] {
+  return relianceElementsCache.filter(e => e.assetId === assetId);
+}
+
+export function saveRelianceElement(data: Omit<GovernanceRelianceElement, 'id' | 'createdAt'>): GovernanceRelianceElement {
+  const created: GovernanceRelianceElement = { ...data, id: `rel-${Date.now().toString().slice(-6)}`, createdAt: new Date().toISOString() };
+  relianceElementsCache = [created, ...relianceElementsCache];
+  persistRelianceElementsCache();
+  addAuditLog(
+    'usr-1', 'David Chen (Governance Admin)', 'GOVERNANCE_ADMIN', 'RELIANCE_ELEMENT_RECORDED', 'GovernanceRelianceElement',
+    created.id, created.description,
+    `Recorded ${created.elementType} "${created.description}" for ${created.assetName}, status ${created.status}.`,
+    { workspaceId: data.workspaceId, tenantId: data.tenantId, environmentId: data.environmentId }
+  );
+  recordGovernanceStateIfChanged(created.assetId, `${created.elementType} "${created.description}" recorded as ${created.status}`, 'Governance Reliance Basis Registry');
+  return created;
+}
+
+export function updateRelianceElementStatus(id: string, status: GovernanceRelianceElement['status'], actorName: string, notes?: string): GovernanceRelianceElement | null {
+  const idx = relianceElementsCache.findIndex(e => e.id === id);
+  if (idx === -1) return null;
+  const updated: GovernanceRelianceElement = { ...relianceElementsCache[idx], status, lastVerifiedAt: new Date().toISOString(), notes: notes ?? relianceElementsCache[idx].notes };
+  const next = [...relianceElementsCache];
+  next[idx] = updated;
+  relianceElementsCache = next;
+  persistRelianceElementsCache();
+  addAuditLog('usr-1', actorName, 'GOVERNANCE_ADMIN', 'RELIANCE_ELEMENT_STATUS_UPDATED', 'GovernanceRelianceElement', updated.id, updated.description, `${updated.elementType} "${updated.description}" set to ${status}.`);
+  recordGovernanceStateIfChanged(updated.assetId, `${updated.elementType} "${updated.description}" changed to ${status}`, 'Governance Reliance Basis Registry');
+  return updated;
+}
+
+export function getRelianceBasisForAsset(assetId: string): RelianceBasisResult | null {
+  const asset = assetsCache.find(a => a.id === assetId);
+  if (!asset) return null;
+  return computeRelianceBasis(assetId, asset.name, relianceElementsCache);
+}
+
+/** Domain C — Authorised Governance Position (AGP). */
+let agpCache: AuthorisedGovernancePosition[] = getItem<AuthorisedGovernancePosition[]>(STORAGE_KEYS.AUTHORISED_GOVERNANCE_POSITIONS, INITIAL_AUTHORISED_GOVERNANCE_POSITIONS);
+function persistAgpCache() { setItem(STORAGE_KEYS.AUTHORISED_GOVERNANCE_POSITIONS, agpCache); }
+
+export function getAgpsForAsset(assetId: string): AuthorisedGovernancePosition[] {
+  return agpCache.filter(p => p.assetId === assetId);
+}
+
+/** Principle 3 — Single Governance Truth: authorising a new position for an asset automatically supersedes whichever position was previously Active for it, so an asset never has more than one Active AGP at once. */
+export function saveAuthorisedGovernancePosition(data: Omit<AuthorisedGovernancePosition, 'id' | 'createdAt'>): AuthorisedGovernancePosition {
+  agpCache = agpCache.map(p =>
+    p.assetId === data.assetId && p.status === 'Active' ? { ...p, status: 'Superseded' as const } : p
+  );
+  const created: AuthorisedGovernancePosition = { ...data, id: `agp-${Date.now().toString().slice(-6)}`, createdAt: new Date().toISOString() };
+  agpCache = [created, ...agpCache];
+  persistAgpCache();
+  addAuditLog(
+    'usr-1', data.createdBy, 'GOVERNANCE_ADMIN', 'GOVERNANCE_POSITION_AUTHORISED', 'AuthorisedGovernancePosition',
+    created.id, created.assetName,
+    `Authorised governance position for ${created.assetName}: state "${created.authorisedGovernanceState}", ${created.conditions.length} condition(s), ${created.obligations.length} obligation(s).`,
+    { workspaceId: data.workspaceId, tenantId: data.tenantId, environmentId: data.environmentId }
+  );
+  recordGovernanceStateIfChanged(created.assetId, `New Authorised Governance Position: "${created.authorisedGovernanceState}"`, 'Governance Position Management');
+  return created;
+}
+
+export function getActiveAgpForAsset(assetId: string): AuthorisedGovernancePosition | null {
+  return agpCache.find(p => p.assetId === assetId && p.status === 'Active') || null;
+}
+
+/** Domain F — Reauthorisation Engine. Reads raw Governability + Reliance + Authority Currency signals directly (Release 19.1 — no longer depends on the Unified Governance State, breaking what was otherwise a circular dependency). Integrates with the existing Reassessment Engine rather than a second trigger taxonomy — open ReassessmentTrigger records are read as one input signal among several. */
+export function getReauthorisationForAsset(assetId: string): ReauthorisationResult | null {
+  const asset = assetsCache.find(a => a.id === assetId);
+  const governability = getGovernabilityForAsset(assetId);
+  const reliance = getRelianceBasisForAsset(assetId);
+  if (!asset || !governability || !reliance) return null;
+
+  const authorityCurrency = computeAuthorityCurrency(asset, DEFAULT_AUTHORITY_REVIEW_PERIOD_DAYS, DEFAULT_AUTHORITY_WARNING_PERIOD_DAYS);
+  const assetTriggers = getReassessmentTriggers().filter(t => t.assetId === assetId && (t.status === 'Open' || t.status === 'Under Review'));
+  const hasOpenReassessmentTrigger = assetTriggers.length > 0;
+  const hasOpenRegulatoryOrPolicyTrigger = assetTriggers.some(t => t.triggerType === 'Regulatory Change' || t.triggerType === 'Policy Change');
+  const hasOpenRiskEscalationTrigger = assetTriggers.some(t => t.triggerType === 'Risk Threshold Breach');
+
+  return computeReauthorisation(governability, reliance, authorityCurrency, hasOpenReassessmentTrigger, hasOpenRegulatoryOrPolicyTrigger, hasOpenRiskEscalationTrigger);
+}
+
+export function getAllReauthorisationResults(): ReauthorisationResult[] {
+  return assetsCache
+    .map(a => getReauthorisationForAsset(a.id))
+    .filter((r): r is ReauthorisationResult => !!r);
+}
+
+/** Release 19.1 — Governance State Resolution Layer. The single authoritative governance state, resolved from six raw signal providers directly (Authority Currency, Reliance Basis, Evidence Sufficiency, Admissibility, Reauthorisation, Governance Continuity) — never from a pre-composed intermediate, and never itself stored as a competing source of truth. */
+export function getUnifiedGovernanceStateForAsset(assetId: string): UnifiedGovernanceStateResult | null {
+  const asset = assetsCache.find(a => a.id === assetId);
+  const governability = getGovernabilityForAsset(assetId);
+  const reliance = getRelianceBasisForAsset(assetId);
+  const reauthorisation = getReauthorisationForAsset(assetId);
+  if (!asset || !governability || !reliance || !reauthorisation) return null;
+
+  const authorityCurrency = computeAuthorityCurrency(asset, DEFAULT_AUTHORITY_REVIEW_PERIOD_DAYS, DEFAULT_AUTHORITY_WARNING_PERIOD_DAYS);
+  const continuityDateStatus = computeReauthorizationStatus(asset.nextReviewDate);
+  const governanceContinuity: GovernanceContinuitySignal =
+    continuityDateStatus === 'Expired' ? 'Escalate' : continuityDateStatus === 'Overdue' ? 'Reassess' : 'Continue';
+
+  return resolveGovernanceState({
+    assetId: asset.id,
+    assetName: asset.name,
+    governability,
+    authorityCurrency,
+    relianceBasis: reliance,
+    evidenceSufficiency: governability.evidenceSufficiency,
+    admissibility: governability.admissibility,
+    reauthorisation,
+    governanceContinuity,
+    activeAGPStatus: getActiveAgpForAsset(assetId)?.status ?? null,
+    isRetired: asset.status === 'Retirement',
+  });
+}
+
+export function getAllUnifiedGovernanceStates(): UnifiedGovernanceStateResult[] {
+  return assetsCache
+    .map(a => getUnifiedGovernanceStateForAsset(a.id))
+    .filter((r): r is UnifiedGovernanceStateResult => !!r);
+}
+
+/**
+ * Release 19.1 — Governance State History. Deliberately NOT written from
+ * the read-only getters above (a "get" must stay a pure computation, the
+ * same discipline every engine in this codebase already follows) — instead
+ * every Release 19 mutation calls this immediately after it changes
+ * underlying data, so a history entry is recorded only on a genuine
+ * transition, never on every render.
+ */
+let governanceStateHistoryCache: GovernanceStateHistoryEntry[] = getItem<GovernanceStateHistoryEntry[]>(STORAGE_KEYS.GOVERNANCE_STATE_HISTORY, []);
+function persistGovernanceStateHistoryCache() { setItem(STORAGE_KEYS.GOVERNANCE_STATE_HISTORY, governanceStateHistoryCache); }
+
+export function getGovernanceStateHistoryForAsset(assetId: string): GovernanceStateHistoryEntry[] {
+  return governanceStateHistoryCache.filter(h => h.assetId === assetId);
+}
+
+export function recordGovernanceStateIfChanged(assetId: string, triggeringEvent: string, triggeringEngine: string): void {
+  const asset = assetsCache.find(a => a.id === assetId);
+  const current = getUnifiedGovernanceStateForAsset(assetId);
+  if (!asset || !current) return;
+
+  const lastForAsset = governanceStateHistoryCache.find(h => h.assetId === assetId);
+  const previousState = lastForAsset ? lastForAsset.newState : null;
+  if (previousState === current.state) return; // no transition — nothing to record
+
+  const entry: GovernanceStateHistoryEntry = {
+    id: `gsh-${Date.now().toString().slice(-6)}`,
+    assetId,
+    assetName: asset.name,
+    previousState,
+    newState: current.state,
+    triggeringEvent,
+    triggeringEngine,
+    timestamp: new Date().toISOString(),
+  };
+  governanceStateHistoryCache = [entry, ...governanceStateHistoryCache];
+  persistGovernanceStateHistoryCache();
+  addAuditLog(
+    'usr-1', triggeringEngine, 'GOVERNANCE_ADMIN', 'GOVERNANCE_STATE_TRANSITION', 'GovernanceStateHistoryEntry',
+    entry.id, asset.name,
+    `Governance state for ${asset.name} moved from ${previousState || '(none)'} to ${current.state}, triggered by ${triggeringEngine}: ${triggeringEvent}.`
+  );
+}
+
+/** Domain G — Governance Position Contract. A data package only; runtime implementation of anything in it remains entirely external to OMG. */
+let governancePositionContractsCache: GovernancePositionContract[] = getItem<GovernancePositionContract[]>(STORAGE_KEYS.GOVERNANCE_POSITION_CONTRACTS, []);
+function persistGovernancePositionContractsCache() { setItem(STORAGE_KEYS.GOVERNANCE_POSITION_CONTRACTS, governancePositionContractsCache); }
+
+export function issueGovernancePositionContract(agpId: string, issuedBy: string): GovernancePositionContract | null {
+  const agp = agpCache.find(p => p.id === agpId);
+  if (!agp) return null;
+  const built = buildGovernancePositionContract(agp, issuedBy);
+  const created: GovernancePositionContract = { ...built, id: `gpc-${Date.now().toString().slice(-6)}` };
+  governancePositionContractsCache = [created, ...governancePositionContractsCache];
+  persistGovernancePositionContractsCache();
+  addAuditLog(
+    'usr-1', issuedBy, 'GOVERNANCE_ADMIN', 'GOVERNANCE_POSITION_CONTRACT_ISSUED', 'GovernancePositionContract',
+    created.id, created.assetName,
+    `Issued a Governance Position Contract for ${created.assetName} from position ${agp.id} — for external/downstream consumption only, no runtime effect within OMG.`,
+    { workspaceId: agp.workspaceId, tenantId: agp.tenantId, environmentId: agp.environmentId }
+  );
+  return created;
+}
+
+export function getGovernancePositionContractsForAsset(assetId: string): GovernancePositionContract[] {
+  return governancePositionContractsCache.filter(c => c.assetId === assetId);
 }
 
 // --- RELEASE 8 — GOVERNANCE INTELLIGENCE ENGINE (ACTIONS EDITION) ---

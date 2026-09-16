@@ -39,7 +39,10 @@ import type {
   ObligationEvidenceMapping,
   GovernancePolicy,
   GovernanceFinding,
-  RecommendedAction
+  RecommendedAction,
+  AuthorityProvenanceRecord,
+  GovernanceRelianceElement,
+  AuthorisedGovernancePosition
 } from '../types';
 
 export const SEEDED_COMPLIANCE_CONTROLS: ComplianceControl[] = [
@@ -199,7 +202,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       // gated individually by roleActionMatrix.ts, not by hiding the page.
       '/mapping-workspace', '/requirement-registry', '/obligation-library',
       '/governance-intelligence', '/governance-actions', '/decision-traceability', '/governance-studio',
-      '/governability-dashboard', '/governability-studio', '/workspace-dashboard', '/workspace-audit-trail', '/workspace-persona-landing',
+      '/governability-dashboard', '/governability-studio', '/authority-provenance', '/governance-position', '/workspace-dashboard', '/workspace-audit-trail', '/workspace-persona-landing',
       '/archived-assets', '/governance-readiness',
       // OMG vNext — Governance Intelligence (Value, Drift, Health)
       '/governance-value', '/governance-drift', '/governance-health',
@@ -236,7 +239,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       // Q1 Stabilization — see note on Governance Admin above.
       '/mapping-workspace', '/requirement-registry', '/obligation-library',
       '/governance-intelligence', '/governance-actions', '/decision-traceability', '/governance-studio',
-      '/governability-dashboard', '/governability-studio', '/workspace-dashboard', '/workspace-audit-trail', '/workspace-persona-landing',
+      '/governability-dashboard', '/governability-studio', '/authority-provenance', '/governance-position', '/workspace-dashboard', '/workspace-audit-trail', '/workspace-persona-landing',
       '/archived-assets', '/governance-readiness',
       // OMG vNext — Governance Intelligence (Value, Drift, Health)
       '/governance-value', '/governance-drift', '/governance-health',
@@ -270,7 +273,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       // Q1 Stabilization — see note on Governance Admin above.
       '/mapping-workspace', '/requirement-registry', '/obligation-library',
       '/governance-intelligence', '/governance-actions', '/decision-traceability', '/governance-studio',
-      '/governability-dashboard', '/governability-studio', '/workspace-dashboard', '/workspace-audit-trail', '/workspace-persona-landing',
+      '/governability-dashboard', '/governability-studio', '/authority-provenance', '/governance-position', '/workspace-dashboard', '/workspace-audit-trail', '/workspace-persona-landing',
       '/archived-assets', '/governance-readiness',
       // OMG vNext — Governance Intelligence (Value, Drift, Health)
       '/governance-value', '/governance-drift', '/governance-health',
@@ -304,7 +307,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       // Q1 Stabilization — see note on Governance Admin above.
       '/mapping-workspace', '/requirement-registry', '/obligation-library',
       '/governance-intelligence', '/governance-actions', '/decision-traceability', '/governance-studio',
-      '/governability-dashboard', '/governability-studio', '/workspace-dashboard', '/workspace-audit-trail', '/workspace-persona-landing',
+      '/governability-dashboard', '/governability-studio', '/authority-provenance', '/governance-position', '/workspace-dashboard', '/workspace-audit-trail', '/workspace-persona-landing',
       '/archived-assets', '/governance-readiness',
       // OMG vNext — Governance Intelligence (Value, Drift, Health)
       '/governance-value', '/governance-drift', '/governance-health',
@@ -342,7 +345,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       // Q1 Stabilization — see note on Governance Admin above.
       '/mapping-workspace', '/requirement-registry', '/obligation-library',
       '/governance-intelligence', '/governance-actions', '/decision-traceability', '/governance-studio',
-      '/governability-dashboard', '/governability-studio', '/workspace-dashboard', '/workspace-audit-trail', '/workspace-persona-landing',
+      '/governability-dashboard', '/governability-studio', '/authority-provenance', '/governance-position', '/workspace-dashboard', '/workspace-audit-trail', '/workspace-persona-landing',
       '/archived-assets', '/governance-readiness',
       // OMG vNext — Governance Intelligence (Value, Drift, Health)
       '/governance-value', '/governance-drift', '/governance-health',
@@ -374,7 +377,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       // Q1 Stabilization — see note on Governance Admin above.
       '/mapping-workspace', '/requirement-registry', '/obligation-library',
       '/governance-intelligence', '/governance-actions', '/decision-traceability', '/governance-studio',
-      '/governability-dashboard', '/governability-studio', '/workspace-dashboard', '/workspace-audit-trail', '/workspace-persona-landing',
+      '/governability-dashboard', '/governability-studio', '/authority-provenance', '/governance-position', '/workspace-dashboard', '/workspace-audit-trail', '/workspace-persona-landing',
       '/archived-assets', '/governance-readiness',
       // OMG vNext — Governance Intelligence (Value, Drift, Health)
       '/governance-value', '/governance-drift', '/governance-health',
@@ -1564,6 +1567,82 @@ export const INITIAL_WORKSPACE_USERS: WorkspaceUser[] = [
   { id: 'wku-szilvia', workspaceId: 'wks-szilvia', name: 'Szilvia', email: 'szilvia@company.com', password: 'demo1234', role: 'Workspace Owner', status: 'Active', createdAt: '2026-09-11' },
   { id: 'wku-desh', workspaceId: 'wks-banking-poc', name: 'Desh', email: 'desh@bankingpoc.com', password: 'demo1234', role: 'Workspace Owner', status: 'Active', createdAt: '2026-09-11' },
   { id: 'wku-latha', workspaceId: 'wks-rbi-eval', name: 'Latha', email: 'latha@rbieval.com', password: 'demo1234', role: 'Workspace Owner', status: 'Active', createdAt: '2026-09-11' },
+];
+
+/**
+ * Release 19 — Governance Authority, Governance Position & Reauthorisation
+ * Framework. Demo data deliberately mirrors the blueprint's own example
+ * (Business Owner, Delegation Ref GOV-2026-0xx, Authority Source: AI
+ * Governance Committee) against the two flagship demo assets already used
+ * throughout OMG's governance narrative:
+ *  - ast-101 (Fraud Detection Sentinel Agent) — clean: active provenance,
+ *    valid reliance basis, an Active AGP -> demonstrates "Governed".
+ *  - ast-106 (Enterprise Portfolio Multi-Agent System) — troubled: no
+ *    recorded review date already made its Authority Currency "Expired";
+ *    this release adds a broken reliance element and a superseded AGP on
+ *    top of that -> demonstrates "Governance Invalid" / "Suspend Governance
+ *    Position", the exact material-change-forces-reauthorisation story the
+ *    blueprint asks the demo data to tell.
+ */
+export const INITIAL_AUTHORITY_PROVENANCE_RECORDS: AuthorityProvenanceRecord[] = [
+  {
+    id: 'aprov-101-01', assetId: 'ast-101', assetName: 'Fraud Detection Sentinel Agent',
+    authorityRole: 'accountableOwner', holderName: 'Marcus Vance',
+    authoritySource: 'AI Governance Committee', delegationRef: 'GOV-2026-014',
+    effectiveDate: '2026-01-01', expiryDate: '2026-12-31', status: 'Active',
+    createdAt: '2026-01-01', createdBy: 'David Chen (Governance Admin)',
+  },
+  {
+    id: 'aprov-106-01', assetId: 'ast-106', assetName: 'Enterprise Portfolio Multi-Agent System',
+    authorityRole: 'accountableOwner', holderName: 'Marcus Vance',
+    authoritySource: 'AI Governance Committee', delegationRef: 'GOV-2026-009',
+    effectiveDate: '2026-01-01', expiryDate: '2026-06-30', status: 'Expired',
+    createdAt: '2026-01-01', createdBy: 'David Chen (Governance Admin)',
+  },
+];
+
+export const INITIAL_GOVERNANCE_RELIANCE_ELEMENTS: GovernanceRelianceElement[] = [
+  {
+    id: 'rel-101-01', assetId: 'ast-101', assetName: 'Fraud Detection Sentinel Agent',
+    elementType: 'Operational Dependency', description: 'Human Review Active on every flagged case',
+    status: 'Valid', lastVerifiedAt: '2026-08-20', createdAt: '2026-01-15',
+  },
+  {
+    id: 'rel-101-02', assetId: 'ast-101', assetName: 'Fraud Detection Sentinel Agent',
+    elementType: 'Required Control', description: 'Monitoring Operational for behavior-drift alerts',
+    status: 'Valid', lastVerifiedAt: '2026-08-20', createdAt: '2026-01-15',
+  },
+  {
+    id: 'rel-106-01', assetId: 'ast-106', assetName: 'Enterprise Portfolio Multi-Agent System',
+    elementType: 'Regulatory Dependency', description: 'Vendor Certification Valid for the underlying trade execution model',
+    status: 'Broken', notes: 'Vendor certification lapsed and was not renewed before go-live was attempted.',
+    lastVerifiedAt: '2026-08-04', createdAt: '2026-07-01',
+  },
+];
+
+export const INITIAL_AUTHORISED_GOVERNANCE_POSITIONS: AuthorisedGovernancePosition[] = [
+  {
+    id: 'agp-101-01', assetId: 'ast-101', assetName: 'Fraud Detection Sentinel Agent',
+    authorisedGovernanceState: 'Monitoring',
+    conditions: ['Human Oversight required on every account-freeze recommendation', 'Monthly Review of behavior monitoring status'],
+    obligations: ['Escalate any Watchlist/Alert behavior status within 24 hours'],
+    assumptions: ['Transaction data feed remains within its documented latency bounds'],
+    relianceElementIds: ['rel-101-01', 'rel-101-02'],
+    authorityReferenceIds: ['aprov-101-01'],
+    validFrom: '2026-01-15', validUntil: '2026-12-31', status: 'Active',
+    createdAt: '2026-01-15', createdBy: 'David Chen (Governance Admin)',
+  },
+  {
+    id: 'agp-106-01', assetId: 'ast-106', assetName: 'Enterprise Portfolio Multi-Agent System',
+    authorisedGovernanceState: 'No GO',
+    conditions: ['Trade execution limited to the configured risk band', 'Human sign-off required above the Portfolio Rebalancing Directive threshold'],
+    obligations: ['Maintain current vendor certification for the underlying trade execution model'],
+    assumptions: ['Vendor certification for the trade execution model remains valid'],
+    relianceElementIds: ['rel-106-01'],
+    authorityReferenceIds: ['aprov-106-01'],
+    validFrom: '2026-07-01', validUntil: '2026-08-04', status: 'Superseded',
+    createdAt: '2026-07-01', createdBy: 'David Chen (Governance Admin)',
+  },
 ];
 
 export const INITIAL_SCHEDULED_REVIEWS: ScheduledReview[] = [

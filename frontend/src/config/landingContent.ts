@@ -910,6 +910,51 @@ export const TOUR_STEPS: TourStep[] = [
     why: 'POC testing, regression testing, scenario comparison and governance experimentation all need a clean starting point without losing the original.',
     look: '"Chris Sandbox" becomes "Chris Sandbox v2" — same starting data, completely independent from that point forward.',
   },
+  {
+    n: 69,
+    title: 'Authority Provenance',
+    path: '/authority-provenance',
+    icon: '🪪',
+    what: 'Where recorded authority actually came from — a source, a delegation reference, an effective and expiry date, and a lineage of what it superseded.',
+    why: 'OMG records and operationalizes authority; it does not create it. A named owner is a weaker claim than a traceable, currently-valid grant.',
+    look: 'Authority Current, Authority At Risk, or Authority Invalid per asset — derived from the provenance records actually on file, not a static field.',
+  },
+  {
+    n: 70,
+    title: 'Governance Position',
+    path: '/governance-position',
+    icon: '📜',
+    what: 'The Authorised Governance Position — the authorised state, its conditions, obligations and assumptions — not merely "approved", but approved subject to what.',
+    why: 'Most governance stops at the approval. A Governance Position keeps the terms of that approval alive and checkable, not implicit.',
+    look: 'Authorising a new position automatically supersedes whichever was previously Active — an asset never holds two Active positions at once.',
+  },
+  {
+    n: 71,
+    title: 'Reliance Basis',
+    path: '/governance-position',
+    icon: '🧱',
+    what: 'What a governance position actually depends on — Assumptions, Required Controls, Required Evidence, Regulatory and Operational Dependencies — each Valid, Degraded or Broken.',
+    why: 'A decision can be well-evidenced and well-authorised the day it is made and still stop being valid later, purely because something it relied on quietly broke.',
+    look: 'A Broken reliance element is exactly what turns the Enterprise Portfolio Multi-Agent System\'s Unified Governance State into "Governance Invalid".',
+  },
+  {
+    n: 72,
+    title: 'Reauthorisation',
+    path: '/governance-position',
+    icon: '🔁',
+    what: 'One Unified Governance State — Governed, Conditionally Governed, Governance At Risk, Governance Invalid, Pending Reauthorisation, or Retired — and a Continue / Reassess / Reauthorise / Suspend recommendation.',
+    why: 'Material change must force a decision to be re-earned, not merely re-processed through a workflow. Single Governance Truth means no two modules may disagree about an asset\'s standing.',
+    look: 'The recommendation cites exactly which signal — reassessment, authority, reliance, evidence, regulatory or risk — is driving it.',
+  },
+  {
+    n: 73,
+    title: 'Unified Governance State',
+    path: '/governance-position',
+    icon: '🧭',
+    what: 'The Governance State Resolution Layer (GSRL): every governance workflow ultimately resolves into a single authoritative governance state, shown on the Governance Truth Card wherever an asset appears.',
+    why: 'Findings have their own Open/In Progress/Closed status. Change requests have their own lifecycle. Governance Continuity has its own Continue/Reassess/Escalate. None of them should become, or compete to be, the platform\'s governance truth — the GSRL resolves them into one.',
+    look: 'The same Governance Truth Card renders identically on the Governance Position page, the Governability Dashboard and the Authority Provenance Registry — one truth, wherever you look.',
+  },
 ];
 
 /* ================== Section 5b — seven named guided tours ================= */
@@ -970,9 +1015,9 @@ export const GUIDED_TOURS: GuidedTourDefinition[] = [
   {
     id: 'governability-intelligence',
     name: 'Governability Intelligence',
-    description: 'Governance Continuity vs. Runtime Governability — Evidence Sufficiency, Authority Currency, Admissibility and Post-Intervention Revalidation.',
+    description: 'Governance Continuity vs. Runtime Governability — Evidence Sufficiency, Authority Currency, Admissibility, Authority Provenance, Governance Position, Reliance Basis, Reauthorisation and the one Unified Governance State they all resolve into.',
     icon: '🛡️',
-    stepTitles: ['Governability Dashboard', 'Evidence Sufficiency', 'Authority Currency', 'Admissibility', 'Reassessment', 'Decision Reconstruction', 'Export Pack'],
+    stepTitles: ['Governability Dashboard', 'Evidence Sufficiency', 'Authority Currency', 'Admissibility', 'Reassessment', 'Authority Provenance', 'Governance Position', 'Reliance Basis', 'Reauthorisation', 'Unified Governance State', 'Decision Reconstruction', 'Export Pack'],
   },
   {
     id: 'workspace-evaluation',

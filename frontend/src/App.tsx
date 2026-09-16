@@ -82,6 +82,8 @@ import { FutureModulePage } from './pages/FutureModulePage';
 import { ReleaseNotesPage } from './pages/ReleaseNotesPage';
 import { GovernabilityDashboardPage } from './pages/GovernabilityDashboardPage';
 import { GovernabilityStudioPage } from './pages/GovernabilityStudioPage';
+import { AuthorityProvenanceRegistryPage } from './pages/AuthorityProvenanceRegistryPage';
+import { GovernancePositionPage } from './pages/GovernancePositionPage';
 import { WorkspaceDirectoryPage } from './pages/WorkspaceDirectoryPage';
 import { WorkspaceUserAdministrationPage } from './pages/WorkspaceUserAdministrationPage';
 import { WorkspaceDashboardPage } from './pages/WorkspaceDashboardPage';
@@ -257,6 +259,8 @@ const GOVERNED_ROUTES: { path: string; element: React.ReactNode }[] = [
   { path: '/governance-studio', element: <GovernanceIntelligenceStudioPage /> },
   { path: '/governability-dashboard', element: <GovernabilityDashboardPage /> },
   { path: '/governability-studio', element: <GovernabilityStudioPage /> },
+  { path: '/authority-provenance', element: <AuthorityProvenanceRegistryPage /> },
+  { path: '/governance-position', element: <GovernancePositionPage /> },
   { path: '/workspace-directory', element: <WorkspaceDirectoryPage /> },
   { path: '/workspace-user-administration', element: <WorkspaceUserAdministrationPage /> },
   { path: '/workspace-dashboard', element: <WorkspaceDashboardPage /> },

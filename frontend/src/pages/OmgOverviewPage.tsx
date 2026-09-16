@@ -132,6 +132,19 @@ export const OmgOverviewPage: React.FC = () => {
               </div>
             </div>
 
+            {/* Release 19 — Governance Authority, Governance Position & Reauthorisation Framework positioning, additive to the hero above. */}
+            <div
+              data-noglass
+              className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)]/70 backdrop-blur-sm px-4 py-3.5 max-w-xl"
+            >
+              <p className="text-[13px] font-bold text-[var(--text-primary)] leading-snug">
+                OMG operationalizes and governs against authorized governance positions while preserving accountability, evidence, continuity, governability and reauthorisation.
+              </p>
+              <p className="text-[11.5px] text-[var(--text-secondary)] mt-1.5 leading-relaxed">
+                OMG records and operationalizes authority — it does not create authority, form governance, or enforce it at runtime.
+              </p>
+            </div>
+
             <p className="text-[13px] font-bold text-gradient-brand">
               Built Once. Configured Together. Governed Continuously.
             </p>

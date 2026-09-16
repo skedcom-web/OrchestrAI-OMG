@@ -1,16 +1,18 @@
 import React, { useMemo, useState } from 'react';
 import { Card } from '../components/ui/Card';
 import { Select } from '../components/ui/Select';
+import { GovernanceTruthCard } from '../components/governance/GovernanceTruthCard';
 import { useAuth } from '../contexts/AuthContext';
 import {
   getAssets,
   getAllGovernabilityResults,
+  getAllUnifiedGovernanceStates,
   getReassessmentTriggers,
   saveReassessmentTrigger,
   computeRevalidation,
 } from '../services/storageService';
 import { REASSESSMENT_TRIGGER_TYPES } from '../config/governanceContinuity';
-import type { GovernabilityStatus, ReassessmentTriggerType, RevalidationResult } from '../types';
+import type { GovernabilityStatus, ReassessmentTriggerType, RevalidationResult, UnifiedGovernanceState } from '../types';
 
 const STATUS_TONE: Record<GovernabilityStatus, string> = {
   'Governable': 'var(--status-success)',
@@ -18,6 +20,15 @@ const STATUS_TONE: Record<GovernabilityStatus, string> = {
   'Review Required': 'var(--status-warning)',
   'Governance Attention Required': 'var(--status-danger)',
   'Not Governable': 'var(--status-danger)',
+};
+
+const UNIFIED_STATE_TONE: Record<UnifiedGovernanceState, string> = {
+  'Governed': 'var(--status-success)',
+  'Conditionally Governed': 'var(--status-warning)',
+  'Governance At Risk': 'var(--status-warning)',
+  'Governance Invalid': 'var(--status-danger)',
+  'Pending Reauthorisation': 'var(--status-warning)',
+  'Retired': 'var(--text-muted)',
 };
 
 const Pill: React.FC<{ children: React.ReactNode; tone?: string }> = ({ children, tone = 'var(--text-muted)' }) => (
@@ -33,6 +44,7 @@ export const GovernabilityDashboardPage: React.FC = () => {
   const { currentUser, canPerform } = useAuth();
   const [assets] = useState(() => getAssets());
   const [results, setResults] = useState(() => getAllGovernabilityResults());
+  const [unifiedStates, setUnifiedStates] = useState(() => getAllUnifiedGovernanceStates());
   const [triggers, setTriggers] = useState(() => getReassessmentTriggers());
 
   // Module 6 — Reassessment Trigger Framework: the entry point identified as
@@ -57,6 +69,18 @@ export const GovernabilityDashboardPage: React.FC = () => {
     return counts;
   }, [results]);
 
+  // Release 19.1 — Dashboard Harmonisation: the Unified Governance State
+  // breakdown below is the one governance truth this dashboard reports;
+  // the Governability breakdown above is kept as one of its named input
+  // signals, not a second, competing status aggregation.
+  const unifiedBreakdown = useMemo(() => {
+    const counts: Record<UnifiedGovernanceState, number> = {
+      'Governed': 0, 'Conditionally Governed': 0, 'Governance At Risk': 0, 'Pending Reauthorisation': 0, 'Governance Invalid': 0, 'Retired': 0,
+    };
+    unifiedStates.forEach(s => { counts[s.state]++; });
+    return counts;
+  }, [unifiedStates]);
+
   const activeReassessments = triggers.filter(t => t.status === 'Open' || t.status === 'Under Review').length;
   const attentionRequired = breakdown['Governance Attention Required'] + breakdown['Not Governable'];
 
@@ -73,6 +97,7 @@ export const GovernabilityDashboardPage: React.FC = () => {
     });
     setTriggers(getReassessmentTriggers());
     setResults(getAllGovernabilityResults());
+    setUnifiedStates(getAllUnifiedGovernanceStates());
     setTriggerComment('');
     setFiling(false);
   };
@@ -92,14 +117,30 @@ export const GovernabilityDashboardPage: React.FC = () => {
         </p>
       </div>
 
-      {/* ============== MODULE 5 — GOVERNABILITY DASHBOARD ============== */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        {(Object.keys(breakdown) as GovernabilityStatus[]).map(status => (
-          <Card key={status} className="!p-4">
-            <p className="text-2xl font-extrabold tnum" style={{ color: STATUS_TONE[status] }}>{breakdown[status]}</p>
-            <p className="text-[10.5px] font-semibold text-[var(--text-muted)] mt-1">{status}</p>
-          </Card>
-        ))}
+      {/* ============== RELEASE 19.1 — GOVERNANCE STATE HARMONISATION: THE ONE GOVERNANCE TRUTH ============== */}
+      <div>
+        <p className="text-[10px] font-extrabold uppercase tracking-wider text-[var(--text-muted)] mb-2">Unified Governance State — the platform's one governance truth</p>
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+          {(Object.keys(unifiedBreakdown) as UnifiedGovernanceState[]).map(state => (
+            <Card key={state} className="!p-4">
+              <p className="text-2xl font-extrabold tnum" style={{ color: UNIFIED_STATE_TONE[state] }}>{unifiedBreakdown[state]}</p>
+              <p className="text-[10.5px] font-semibold text-[var(--text-muted)] mt-1">{state}</p>
+            </Card>
+          ))}
+        </div>
+      </div>
+
+      {/* ============== MODULE 5 — GOVERNABILITY DASHBOARD (one input signal to the truth above) ============== */}
+      <div>
+        <p className="text-[10px] font-extrabold uppercase tracking-wider text-[var(--text-muted)] mb-2">Governability — one signal the Unified Governance State is resolved from</p>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          {(Object.keys(breakdown) as GovernabilityStatus[]).map(status => (
+            <Card key={status} className="!p-4">
+              <p className="text-2xl font-extrabold tnum" style={{ color: STATUS_TONE[status] }}>{breakdown[status]}</p>
+              <p className="text-[10.5px] font-semibold text-[var(--text-muted)] mt-1">{status}</p>
+            </Card>
+          ))}
+        </div>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -128,6 +169,7 @@ export const GovernabilityDashboardPage: React.FC = () => {
                   <p className="text-[11px] text-[var(--text-muted)] mt-1">{r.reasons[0]}</p>
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0 flex-wrap">
+                  <GovernanceTruthCard assetId={r.assetId} compact />
                   <Pill tone={STATUS_TONE[r.status]}>{r.status}</Pill>
                   <Pill tone="var(--text-muted)">Evidence: {r.evidenceSufficiency.status}</Pill>
                   <Pill tone="var(--text-muted)">Authority: {r.authorityCurrency.status}</Pill>

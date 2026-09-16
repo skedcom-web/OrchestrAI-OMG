@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OMG × Aegis Bounded Workflow Readiness Analysis</title>
+<style>
+:root{
+  --bg:#f5f7fb; --surface:#ffffff; --surface-alt:#eef2f8; --border:#d9e1ec; --border-strong:#b9c6db;
+  --text:#141d2e; --text-muted:#54627a; --text-faint:#8492a8;
+  --accent:#1f4e79; --accent-dark:#0f2c47; --accent-light:#e6eef7;
+  --ready:#166a3f; --ready-bg:#e2f5ea; --ready-border:#a9dcc0;
+  --partial:#96650a; --partial-bg:#fbf0d9; --partial-border:#edcf8f;
+  --missing:#a3313a; --missing-bg:#fbe4e6; --missing-border:#eab3b8;
+  --dev:#4a3f9e; --dev-bg:#eae7f9; --dev-border:#c7bdec;
+  --shadow: 0 1px 3px rgba(20,29,46,0.06), 0 8px 24px rgba(20,29,46,0.05);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1520; --surface:#161f30; --surface-alt:#1c2740; --border:#2a3852; --border-strong:#3a4b6b;
+    --text:#e7ecf5; --text-muted:#a9b6cc; --text-faint:#7c8aa3;
+    --accent:#6ea3d8; --accent-dark:#9dc3ec; --accent-light:#1c3350;
+    --ready:#6fd39c; --ready-bg:#123526; --ready-border:#1e5b3e;
+    --partial:#eec877; --partial-bg:#3a2e0e; --partial-border:#6b5219;
+    --missing:#ef98a0; --missing-bg:#3a1418; --missing-border:#6b262c;
+    --dev:#b3a8ee; --dev-bg:#241f42; --dev-border:#3d3470;
+    --shadow: 0 1px 3px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.3);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f1520; --surface:#161f30; --surface-alt:#1c2740; --border:#2a3852; --border-strong:#3a4b6b;
+  --text:#e7ecf5; --text-muted:#a9b6cc; --text-faint:#7c8aa3;
+  --accent:#6ea3d8; --accent-dark:#9dc3ec; --accent-light:#1c3350;
+  --ready:#6fd39c; --ready-bg:#123526; --ready-border:#1e5b3e;
+  --partial:#eec877; --partial-bg:#3a2e0e; --partial-border:#6b5219;
+  --missing:#ef98a0; --missing-bg:#3a1418; --missing-border:#6b262c;
+  --dev:#b3a8ee; --dev-bg:#241f42; --dev-border:#3d3470;
+  --shadow: 0 1px 3px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.3);
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{margin:0; background:var(--bg); color:var(--text); font-family:"Segoe UI","Helvetica Neue",Arial,sans-serif; font-size:14.5px; line-height:1.62;}
+h1,h2,h3,h4{font-family:"Segoe UI",Arial,sans-serif; color:var(--accent-dark); font-weight:800; text-wrap:balance;}
+p{margin:0 0 10px 0;}
+a{color:var(--accent);}
+code{font-family:"Consolas","Courier New",monospace;}
+.wrap{max-width:1180px; margin:0 auto; padding:0 24px;}
+
+.cover{background:linear-gradient(160deg, var(--accent-dark) 0%, var(--accent) 100%); color:#f2f6fb; padding:56px 0 40px 0;}
+.cover .kicker{font-size:11.5px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:#bcd4ec; margin-bottom:14px;}
+.cover h1{color:#ffffff; font-size:29px; margin:0 0 10px 0; line-height:1.26;}
+.cover .subtitle{color:#d9e7f5; font-size:15px; max-width:860px; margin-bottom:16px;}
+.cover .not-box{background:rgba(0,0,0,0.18); border:1px solid rgba(255,255,255,0.2); border-radius:10px; padding:14px 18px; margin-top:14px; font-size:12.8px; color:#eaf2fa; max-width:860px;}
+.cover .not-box b{color:#ffd9a0;}
+.cover .meta-row{display:flex; flex-wrap:wrap; gap:10px; margin-top:16px;}
+.cover .meta-chip{background:rgba(255,255,255,0.10); border:1px solid rgba(255,255,255,0.22); border-radius:8px; padding:8px 14px; font-size:12.1px; color:#eaf2fa;}
+.cover .meta-chip b{color:#ffffff;}
+
+.topnav{position:sticky; top:0; z-index:50; background:var(--surface); border-bottom:1px solid var(--border); box-shadow:var(--shadow);}
+.topnav .wrap{display:flex; align-items:center; gap:2px; overflow-x:auto; padding:0 24px; flex-wrap:nowrap;}
+.topnav a{white-space:nowrap; display:inline-block; padding:13px 11px; font-size:11.8px; font-weight:700; color:var(--text-muted); text-decoration:none; border-bottom:3px solid transparent;}
+.topnav a:hover{color:var(--accent); border-bottom-color:var(--border-strong);}
+.topnav .brand{font-weight:800; color:var(--accent-dark); padding-right:14px; border-right:1px solid var(--border); margin-right:6px; white-space:nowrap; flex:none;}
+
+section{padding:42px 0;}
+section.alt{background:var(--surface-alt);}
+.section-head{margin-bottom:24px; max-width:900px;}
+.eyebrow{font-size:11px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:var(--accent); margin-bottom:8px;}
+h2.title{font-size:23px; margin:0 0 8px 0;}
+.section-sub{color:var(--text-muted); font-size:14px;}
+
+.card{background:var(--surface); border:1px solid var(--border); border-radius:12px; box-shadow:var(--shadow); padding:22px 24px;}
+.grid-2{display:grid; grid-template-columns:1fr 1fr; gap:18px;}
+.grid-3{display:grid; grid-template-columns:repeat(3,1fr); gap:16px;}
+.grid-4{display:grid; grid-template-columns:repeat(4,1fr); gap:14px;}
+@media(max-width:900px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr;}}
+
+.badge{display:inline-flex; align-items:center; gap:5px; font-size:10.3px; font-weight:800; letter-spacing:.02em; text-transform:uppercase; padding:4px 10px; border-radius:999px; border:1px solid; white-space:nowrap;}
+.b-ready{color:var(--ready); background:var(--ready-bg); border-color:var(--ready-border);}
+.b-partial{color:var(--partial); background:var(--partial-bg); border-color:var(--partial-border);}
+.b-missing{color:var(--missing); background:var(--missing-bg); border-color:var(--missing-border);}
+.b-dev{color:var(--dev); background:var(--dev-bg); border-color:var(--dev-border);}
+
+.stat-row{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin:22px 0;}
+@media(max-width:900px){.stat-row{grid-template-columns:repeat(2,1fr);}}
+.stat{background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px 14px; text-align:center; box-shadow:var(--shadow);}
+.stat .num{font-size:23px; font-weight:800; color:var(--accent-dark); font-variant-numeric:tabular-nums;}
+.stat .lbl{font-size:10.3px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-muted); margin-top:4px; font-weight:700;}
+
+.verdict-box{background:var(--accent-light); border:1px solid var(--border-strong); border-left:5px solid var(--accent); border-radius:10px; padding:20px 22px; margin:20px 0; font-size:15px;}
+.verdict-box b{color:var(--accent-dark);}
+.pull-quote{border-left:4px solid var(--accent); background:var(--surface); border-radius:0 10px 10px 0; padding:14px 20px; margin:16px 0; font-style:italic; color:var(--text-muted); font-size:14px;}
+.rule-box{background:var(--missing-bg); border:1px solid var(--missing-border); border-left:5px solid var(--missing); border-radius:10px; padding:16px 20px; margin:16px 0; font-size:13.3px; color:var(--text);}
+.rule-box b{color:var(--missing);}
+.evidence-box{background:var(--surface-alt); border:1px solid var(--border); border-left:5px solid var(--dev); border-radius:10px; padding:16px 20px; margin:16px 0; font-size:13.3px;}
+.evidence-box b{color:var(--dev);}
+
+table{width:100%; border-collapse:collapse; font-size:12.6px; background:var(--surface); border-radius:10px; overflow:hidden;}
+.table-wrap{overflow-x:auto; border:1px solid var(--border); border-radius:10px; box-shadow:var(--shadow); margin:16px 0;}
+th{background:var(--accent-dark); color:#eef4fb; text-align:left; padding:10px 12px; font-weight:700; font-size:11.1px; text-transform:uppercase; letter-spacing:.03em;}
+td{padding:10px 12px; border-top:1px solid var(--border); vertical-align:top;}
+tr:nth-child(even) td{background:var(--surface-alt);}
+.mono{font-family:"Consolas","Courier New",monospace; font-size:11.4px; background:var(--surface-alt); padding:1px 5px; border-radius:4px;}
+
+.numbered-list{counter-reset:step; list-style:none; margin:0; padding:0;}
+.numbered-list li{counter-increment:step; position:relative; padding:10px 0 10px 40px; border-top:1px solid var(--border);}
+.numbered-list li:first-child{border-top:none;}
+.numbered-list li::before{content:counter(step); position:absolute; left:0; top:9px; width:26px; height:26px; border-radius:8px; background:var(--accent); color:#fff; font-weight:800; font-size:12px; display:flex; align-items:center; justify-content:center;}
+
+.qa{margin-bottom:16px;}
+.qa .q{font-weight:800; color:var(--accent-dark); font-size:13.6px; margin-bottom:4px;}
+.qa .a{color:var(--text); font-size:13.6px;}
+
+footer{padding:30px 0 50px 0; text-align:center; color:var(--text-faint); font-size:12px;}
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <div class="wrap">
+    <div class="kicker">OMG Intellectual Analysis Engine &middot; Evidence-Based Current-State Analysis</div>
+    <h1>OMG × Aegis Bounded Workflow Readiness Analysis</h1>
+    <div class="subtitle">What information is actually required to execute the bounded workflow evaluation proposed by Javier — freezing OMG and Aegis in their current state and testing a single real workflow: Approved Agent → Material Delivery Change → Consequential Action.</div>
+    <div class="not-box">
+      <b>Scope discipline.</b> This is not a solution design, not a synthetic demo, and not a modification to OMG. Every conclusion below is grounded in a specific file and line number in the current codebase. Anything not found in code is marked <b>NOT FOUND</b> — never inferred, never assumed.
+    </div>
+    <div class="meta-row">
+      <div class="meta-chip"><b>Verdict</b> &nbsp;Ready With Data Collection</div>
+      <div class="meta-chip"><b>Codebase</b> &nbsp;OMG frontend, current state</div>
+      <div class="meta-chip"><b>Method</b> &nbsp;Grounded code inventory, no assumptions</div>
+    </div>
+  </div>
+</div>
+
+<div class="topnav">
+  <div class="wrap">
+    <span class="brand">OMG × AEGIS</span>
+    <a href="#summary">Summary</a>
+    <a href="#requirements">Javier Requirements</a>
+    <a href="#coverage">Coverage Matrix</a>
+    <a href="#readiness">Workflow Readiness</a>
+    <a href="#data">Minimum Data</a>
+    <a href="#required">Required vs Optional</a>
+    <a href="#scoring">Readiness Score</a>
+    <a href="#odf">ODF Execution Path</a>
+    <a href="#package">Information Request</a>
+    <a href="#verdict">Final Verdict</a>
+  </div>
+</div>
+
+<section id="summary">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">1 &middot; Executive Summary</div>
+      <h2 class="title">The governance-context half is built. The workflow half is split in two.</h2>
+      <p class="section-sub">Javier's proposal needs OMG to supply a governed Approved Agent, organizational context, evidence, and authority state — and to receive back a consequential action outcome for re-absorption into governance.</p>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat"><div class="num">116</div><div class="lbl">Governed Modules Registered</div></div>
+      <div class="stat"><div class="num">2</div><div class="lbl">Incompatible "GovernanceState" Models</div></div>
+      <div class="stat"><div class="num">1</div><div class="lbl">Existing Admissibility Engine</div></div>
+      <div class="stat"><div class="num">0</div><div class="lbl">References to "Aegis" in Codebase</div></div>
+    </div>
+
+    <p>OMG's actual current-state capability splits down the middle:</p>
+    <ul>
+      <li><b>Governance context</b> — asset registry, ownership, evidence, authority profile, audit trail, and a genuine computed decision-boundary via the Governability/Admissibility engines — is substantially built and wired, evidenced by working code, not aspiration.</li>
+      <li><b>Workflow / material-change</b> exists too, but as <b>two separate, non-interoperable implementations</b> of "change" — one feeding the Governability Engine, one feeding a richer Change Request/Approval module — that do not talk to each other, and neither is reachable from the customer-isolated Workspace surface.</li>
+      <li><b>Consequential Action</b> has no entity anywhere in the codebase. There is no field to hold "evidence returned from an external decisioning system." The literal string <span class="mono">"Aegis"</span> appears zero times in the repository.</li>
+    </ul>
+
+    <div class="verdict-box">
+      <b>Bottom line:</b> OMG does not need new features to attempt Javier's bounded evaluation once. It needs a small, explicit, manually-supplied information package, entered into existing general-purpose fields (evidence records, reassessment triggers, audit entries) — because no field exists that was purpose-built to hold Aegis's output. This is a data-collection gap, not an architecture-development gap, with one caveat on workspace isolation (Phase F).
+    </div>
+  </div>
+</section>
+
+<section class="alt" id="requirements">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">2 &middot; Phase A</div>
+      <h2 class="title">Javier Requirement Matrix</h2>
+      <p class="section-sub">Extracted directly from the proposal — every mandatory input, workflow component, governance component, evidence component, authority component, and decision-boundary component.</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <tr><th style="width:22%">Category</th><th style="width:33%">Purpose</th><th style="width:12%">Mandatory?</th><th>Reason</th></tr>
+        <tr><td>Frozen system state (OMG + Aegis)</td><td>Ensures the evaluation reflects current-state reality, not a moving target</td><td><span class="badge b-missing">Mandatory</span></td><td>Explicit in proposal step 1</td></tr>
+        <tr><td>One representative enterprise workflow</td><td>Bounds the evaluation to something concrete and traceable</td><td><span class="badge b-missing">Mandatory</span></td><td>Step 2; avoids a synthetic scenario</td></tr>
+        <tr><td>Preserved workflow identity</td><td>Lets both systems reference the same thing</td><td><span class="badge b-missing">Mandatory</span></td><td>Step 3</td></tr>
+        <tr><td>Preserved evidence</td><td>The substrate both systems reason over</td><td><span class="badge b-missing">Mandatory</span></td><td>Step 3</td></tr>
+        <tr><td>Preserved authority state</td><td>Determines who/what may legitimately decide</td><td><span class="badge b-missing">Mandatory</span></td><td>Step 3</td></tr>
+        <tr><td>Preserved material change</td><td>The event that makes re-evaluation necessary</td><td><span class="badge b-missing">Mandatory</span></td><td>Step 3; the pattern's middle term</td></tr>
+        <tr><td>Preserved consequential action</td><td>The thing ultimately being governed</td><td><span class="badge b-missing">Mandatory</span></td><td>Step 3; the pattern's final term</td></tr>
+        <tr><td>Shared operational reality</td><td>Both systems must encounter identical facts, not paraphrased summaries</td><td><span class="badge b-missing">Mandatory</span></td><td>Step 4</td></tr>
+        <tr><td>OMG interface: context, ownership, accountability, governance</td><td>Defines exactly what OMG contributes</td><td><span class="badge b-missing">Mandatory</span></td><td>Step 5, OMG column</td></tr>
+        <tr><td>Aegis interface: bounded reasoning, decision, action determination</td><td>Defines exactly what Aegis contributes</td><td><span class="badge b-partial">Mandatory, outside OMG scope to verify</span></td><td>Step 5, Aegis column</td></tr>
+        <tr><td>Return path: resulting evidence back into OMG</td><td>Closes the loop so governance state reflects what happened</td><td><span class="badge b-missing">Mandatory</span></td><td>Step 6</td></tr>
+        <tr><td>Approved Agent → Material Delivery Change → Consequential Action</td><td>Gives the evaluation a concrete instantiation</td><td><span class="badge b-partial">Mandatory as an example</span></td><td>Explicitly "referenced ... as a candidate"</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section id="coverage">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">3 &middot; Phase B</div>
+      <h2 class="title">OMG Coverage Matrix</h2>
+      <p class="section-sub">Every Javier requirement mapped against actual OMG capability, with file and line evidence.</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <tr><th style="width:22%">Requirement</th><th style="width:12%">Status</th><th>Evidence</th></tr>
+        <tr><td>Organizational context / asset registry</td><td><span class="badge b-ready">Covered</span></td><td><span class="mono">AIAsset</span> interface, types/index.ts:1069-1115; 116 registered modules in config/navigation.ts</td></tr>
+        <tr><td>Ownership</td><td><span class="badge b-ready">Covered</span></td><td><span class="mono">OwnershipAssignment</span> (businessOwner/technicalOwner/riskOwner/complianceOwner/approver, all <span class="mono">string</span>), types/index.ts:44-50</td></tr>
+        <tr><td>Accountability (named roles)</td><td><span class="badge b-partial">Partial</span></td><td><span class="mono">GovernanceAuthorityProfile</span> gives named role-holders as static strings (types/index.ts:279-288) but no resolvable, currently-valid authority-holder concept</td></tr>
+        <tr><td>Workflow governance (multi-step process)</td><td><span class="badge b-partial">Partial</span></td><td>No generic <span class="mono">Workflow</span> type exists. <span class="mono">LifecycleStage</span> enum exists (types/index.ts:74) but <span class="mono">AIAsset</span> doesn't use it; <span class="mono">'AI Workflow'</span> is only an <span class="mono">AssetType</span> string value (types/index.ts:10)</td></tr>
+        <tr><td>Evidence governance</td><td><span class="badge b-ready">Covered</span></td><td><span class="mono">EvidenceRecord</span> full lifecycle + ownership + traceability + timeline, types/index.ts:628-657; computed via evidenceSufficiencyEngine.ts:33</td></tr>
+        <tr><td>Lifecycle governance</td><td><span class="badge b-partial">Partial</span></td><td>Two independent, non-unified lifecycle vocabularies exist (see Phase C) — one on <span class="mono">AIAsset</span>, one in the separate Change Management module</td></tr>
+        <tr><td>Approved Agent as distinct entity</td><td><span class="badge b-partial">Partial</span></td><td>"Agent" is a value of <span class="mono">AssetType</span>, not its own entity — comment confirms: <i>"Agent collapses into Asset, since Agent is already an AssetType, not a separate table"</i> (types/index.ts:1244)</td></tr>
+        <tr><td>Material Delivery Change</td><td><span class="badge b-partial">Partial</span></td><td><span class="mono">ChangeRequest</span> exists with real impact/magnitude/approval mechanics (types/changeManagement.ts:102-133) but is disconnected from the Governability Engine</td></tr>
+        <tr><td>Consequential Action (with outcome)</td><td><span class="badge b-missing">Not Covered</span></td><td>No type anywhere named <span class="mono">Consequential*</span>; grep returns only prose in UI/config copy, never a field or type</td></tr>
+        <tr><td>Decision boundary / admissibility</td><td><span class="badge b-ready">Covered</span></td><td><span class="mono">AdmissibilityResult</span> / admissibilityEngine.ts:25-63 genuinely composes evidence + authority + material-change signal into a bounded outcome</td></tr>
+        <tr><td>Return path (evidence back into OMG)</td><td><span class="badge b-partial">Partial</span></td><td>Mechanically possible — any new <span class="mono">EvidenceRecord</span> is picked up by the next <span class="mono">computeGovernability()</span> call — but no purpose-built field for external-system evidence</td></tr>
+        <tr><td>Audit trail</td><td><span class="badge b-ready">Covered</span></td><td><span class="mono">AuditLog</span> (types/index.ts:1295-1311) and <span class="mono">WorkspaceAuditEntry</span> (types/index.ts:2340-2355), both actively written</td></tr>
+        <tr><td>External system integration (Aegis or otherwise)</td><td><span class="badge b-missing">Not Covered</span></td><td>Zero hits for "Aegis"; the only "webhook" hit is an unbuilt catalog entry, config/customerWorkspaceFoundation.ts:39</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="alt" id="readiness">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">4 &middot; Phase C</div>
+      <h2 class="title">Bounded Workflow Readiness Assessment</h2>
+      <p class="section-sub">Can OMG currently represent each element of the pattern?</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <tr><th style="width:16%">Element</th><th style="width:13%">Support</th><th>Evidence</th></tr>
+        <tr><td>Workflow</td><td><span class="badge b-missing">Missing</span></td><td>No <span class="mono">Workflow</span> interface exists. Closest are <span class="mono">LifecycleStage</span> (used by Model/KnowledgeAsset/Prompt/Tool, not AIAsset) and <span class="mono">ChangeStatus</span> (Draft→Submitted→Under Review→Approved→Implemented→Closed, types/changeManagement.ts:12-19) — scoped only to change requests</td></tr>
+        <tr><td>Actor</td><td><span class="badge b-partial">Partial</span></td><td><span class="mono">requestedBy</span>/<span class="mono">requestedByRole</span> and <span class="mono">userId</span>/<span class="mono">userName</span>/<span class="mono">userRole</span> are all free-text strings, not resolved identity records</td></tr>
+        <tr><td>Authority Holder</td><td><span class="badge b-partial">Partial</span></td><td><span class="mono">GovernanceAuthorityProfile</span> names static role-holders per asset (types/index.ts:279-288); <span class="mono">AuthorityCurrencyResult</span> computes currency purely from <span class="mono">lastReviewDate</span> vs. fixed 90/60-day windows (config/authorityCurrencyEngine.ts:19-20) — never verifies the holder is still valid or reachable</td></tr>
+        <tr><td>Material Change</td><td><span class="badge b-partial">Partial</span></td><td><span class="mono">ReassessmentTrigger</span> (simple, types/index.ts:361-375) feeds the Governability Engine; <span class="mono">ChangeRequest</span> (rich) does not. Both are asset-level, not delivery/transaction-level</td></tr>
+        <tr><td>Evidence Set</td><td><span class="badge b-ready">Existing</span></td><td><span class="mono">EvidenceRecord</span> + <span class="mono">EvidenceSufficiencyResult</span>, computed live in evidenceSufficiencyEngine.ts:33</td></tr>
+        <tr><td>Decision Boundary</td><td><span class="badge b-ready">Existing</span></td><td><span class="mono">AdmissibilityResult</span> / admissibilityEngine.ts:25-63 — the single most directly reusable capability for this evaluation</td></tr>
+        <tr><td>Consequential Action</td><td><span class="badge b-missing">Missing</span></td><td>No type exists. <span class="mono">RecommendedAction</span> (types/index.ts:998-1016) is the nearest analog but is an asset-level advisory recommendation with a <span class="mono">status</span> field, not an outcome/consequence field</td></tr>
+        <tr><td>Outcome</td><td><span class="badge b-partial">Existing for governance, not actions</span></td><td><span class="mono">GovernanceOutcome</span> (types/index.ts:978-983) captures asset-level status; no outcome record exists for a specific action or delivery</td></tr>
+        <tr><td>Audit Trail</td><td><span class="badge b-ready">Existing</span></td><td><span class="mono">AuditLog</span> + <span class="mono">WorkspaceAuditEntry</span>, actively written from real call sites (contexts/AuthContext.tsx:138; pages/WorkspaceDashboardPage.tsx:96,132,146)</td></tr>
+        <tr><td>Governance Context</td><td><span class="badge b-ready">Existing</span></td><td><span class="mono">AIAsset</span> + <span class="mono">Workspace</span>/<span class="mono">TenantRecord</span>/<span class="mono">EnvironmentRecord</span> + RBAC (8 roles, 88 ActionKeys, config/roleActionMatrix.ts)</td></tr>
+      </table>
+    </div>
+
+    <div class="rule-box">
+      <b>The architecture fact behind the "Partial" ratings on Material Change and Lifecycle:</b> two independently declared <span class="mono">GovernanceState</span> types exist with different values — <span class="mono">types/index.ts:330-338</span> (Draft / Submitted / Authorized / Monitoring / Reassessment Required / Conditional GO / No GO / Retired), used by <span class="mono">AIAsset.governanceState</span> and read by the Governability Engine — versus <span class="mono">types/changeManagement.ts:137-147</span> (Draft / Review / Approved / Production / Monitoring / Change Requested / Impact Assessment / Reassessment / Reapproved / Retirement), used only by the Change Request module's own shadow state log. <span class="mono">getCurrentGovernanceState()</span> (services/changeManagementService.ts:411) never writes back to the real <span class="mono">AIAsset.governanceState</span> field. These two systems do not talk to each other today.
+    </div>
+  </div>
+</section>
+
+<section id="data">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">5 &middot; Phase D</div>
+      <h2 class="title">Minimum Data Requirements Register</h2>
+      <p class="section-sub">Assuming no additional OMG development — what must Javier/Aegis actually supply?</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <tr><th>#</th><th>Information</th><th>Why Required</th><th>Already Stored?</th><th>Manual?</th></tr>
+        <tr><td>1</td><td>Identity of the Approved Agent</td><td>Anchors every downstream record to a real governed entity</td><td>Yes — <span class="mono">ast-101</span> "Fraud Detection Sentinel Agent" exists identically in mockData.ts:407 and changeSeedData.ts:22-23</td><td>No — pick from registry</td></tr>
+        <tr><td>2</td><td>Description/category of the material delivery change</td><td>Must map into a closed enum (<span class="mono">ReassessmentTriggerType</span>, 15 values, or <span class="mono">ChangeCategory</span>, 6 values)</td><td>Category: yes. Specific delivery instance: no</td><td>Yes — no OMG field for an individual delivery instance</td></tr>
+        <tr><td>3</td><td>Evidence artifacts to attach</td><td>Feeds <span class="mono">EvidenceSufficiencyResult</span>, one of two admissibility inputs</td><td>Container exists; content must be supplied</td><td>Yes</td></tr>
+        <tr><td>4</td><td>Authority profile completeness</td><td>Feeds <span class="mono">AuthorityCurrencyResult</span>, the second admissibility input</td><td>Container exists; values must already be populated or supplied</td><td>Only if not already populated</td></tr>
+        <tr><td>5</td><td>Aegis's decision / consequential action output</td><td>The entire point of "return evidence to OMG"</td><td>No field exists anywhere for this</td><td>Yes, entirely — free text into an existing container</td></tr>
+        <tr><td>6</td><td>Actor/attribution</td><td><span class="mono">AuditLog</span>/<span class="mono">WorkspaceAuditEntry</span> require a name/role</td><td>No external-identity concept exists</td><td>Yes</td></tr>
+        <tr><td>7</td><td>Timestamp of the event</td><td>Needed by all three record types</td><td>Format exists; value must be supplied</td><td>Yes</td></tr>
+        <tr><td>8</td><td>Workspace/tenant/environment scope</td><td>Determines visibility, if using the isolated Workspace surface</td><td>Field exists on most entities but is absent from <span class="mono">ChangeRequest</span>/<span class="mono">StateTransition</span>/<span class="mono">FiredTrigger</span> (zero hits, changeManagementService.ts)</td><td>Only if workspace isolation is required</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="alt" id="required">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">6 &middot; Phase E</div>
+      <h2 class="title">Required vs Optional Information</h2>
+      <p class="section-sub">The smallest possible package that minimizes Javier's burden while maximizing evaluation quality.</p>
+    </div>
+    <div class="grid-3">
+      <div class="card">
+        <h3 style="margin-top:0;"><span class="badge b-missing">Required</span></h3>
+        <ul>
+          <li>Chosen Approved Agent's asset ID — use an existing one (<span class="mono">ast-101</span> is present in both the asset registry and change-seed dataset)</li>
+          <li>A mapped material-change category plus free-text description of the actual delivery change</li>
+          <li>Aegis's resulting decision/reasoning, as free text</li>
+          <li>An actor name/role and a timestamp for attribution</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0;"><span class="badge b-partial">Nice-to-Have</span></h3>
+        <ul>
+          <li>Evidence artifacts beyond the minimum — improves fidelity, but the engine reports "Insufficient" rather than failing on sparse evidence</li>
+          <li>A populated <span class="mono">GovernanceAuthorityProfile</span> — if absent, the result simply reports <span class="mono">authorityExists: false</span>, itself an informative, valid result</li>
+          <li>Workspace/tenant scoping — only if the evaluation must run inside the isolated Workspace surface</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0;"><span class="badge b-ready">Not Required</span></h3>
+        <ul>
+          <li>A new asset — OMG's own seed data already contains a usable Approved Agent</li>
+          <li>Any RBAC/persona configuration — 8 roles and a full action matrix already exist</li>
+          <li>Integration credentials, API contracts, or callback endpoints with Aegis — none of that machinery exists, so none of it can be configured</li>
+          <li>A new "Consequential Action" data model — building one would violate the "no new features" constraint of this exercise</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="scoring">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">7 &middot; Phase F</div>
+      <h2 class="title">Implementation Readiness Score</h2>
+      <p class="section-sub">Overall verdict: <b>Ready With Data Collection.</b> Each capability scored individually against evidence.</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <tr><th style="width:32%">Capability</th><th style="width:16%">Score</th><th>Evidence</th></tr>
+        <tr><td>Represent an Approved Agent</td><td><span class="badge b-ready">Ready</span></td><td><span class="mono">ast-101</span> exists today, unmodified</td></tr>
+        <tr><td>Represent ownership/authority context</td><td><span class="badge b-ready">Ready</span></td><td><span class="mono">OwnershipAssignment</span>, <span class="mono">GovernanceAuthorityProfile</span> already populated in seed data</td></tr>
+        <tr><td>Represent evidence</td><td><span class="badge b-ready">Ready</span></td><td><span class="mono">EvidenceRecord</span> + evidenceSufficiencyEngine.ts are wired and computed live</td></tr>
+        <tr><td>Compute a decision boundary (admissibility)</td><td><span class="badge b-ready">Ready</span></td><td>admissibilityEngine.ts already composes evidence + authority + change-trigger signals into a bounded outcome</td></tr>
+        <tr><td>Represent the specific material delivery change</td><td><span class="badge b-partial">Ready With Data Collection</span></td><td>Category enums and containers exist; the specific delivery instance and narrative must be manually supplied</td></tr>
+        <tr><td>Represent Aegis's consequential-action determination</td><td><span class="badge b-partial">Ready With Data Collection</span></td><td>No purpose-built field exists; works as free text for a one-time evaluation. Would require development only if structured/queryable capture is needed</td></tr>
+        <tr><td>Run inside the isolated Workspace surface</td><td><span class="badge b-dev">Requires Development</span></td><td>Zero references to <span class="mono">changeManagementService</span>/<span class="mono">ChangeRequest</span> in WorkspaceDashboardPage.tsx, and zero workspace scoping anywhere in changeManagementService.ts</td></tr>
+        <tr><td>Two-way live integration with Aegis</td><td><span class="badge b-dev">Requires Development</span></td><td>No external-system record type, no "Aegis" reference, no webhook/callback implementation exists anywhere</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="alt" id="odf">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">8 &middot; Phase G</div>
+      <h2 class="title">ODF Execution Path</h2>
+      <p class="section-sub">Using only what exists today, if Javier supplies the required information.</p>
+    </div>
+    <ol class="numbered-list">
+      <li><b>Asset selection</b> — <span class="mono">/assets</span> (AI Asset Registry) surfaces <span class="mono">ast-101</span> as the Approved Agent; no new record created.</li>
+      <li><b>Material change capture</b> — a <span class="mono">ReassessmentTrigger</span> record is created, with <span class="mono">triggerType</span> mapped to the closest existing enum value and the delivery narrative placed in <span class="mono">.comments</span>.</li>
+      <li><b>Evidence attachment</b> — one or more <span class="mono">EvidenceRecord</span>s are created and linked to <span class="mono">ast-101</span> via <span class="mono">assetId</span>.</li>
+      <li><b>Governability computation</b> — <span class="mono">computeGovernability()</span> runs automatically, surfacing a <span class="mono">GovernabilityResult</span> on the Governability Dashboard — the decision boundary, visible before Aegis ever runs.</li>
+      <li><b>Aegis reasoning</b> — occurs entirely outside OMG; no code path exists for this step.</li>
+      <li><b>Return of Aegis's output</b> — recorded manually as a new <span class="mono">EvidenceRecord</span> (or <span class="mono">AuditLog</span>/<span class="mono">WorkspaceAuditEntry</span> free text) tied to <span class="mono">ast-101</span>.</li>
+      <li><b>Re-computation</b> — because the engines are "computed, not stored," the next call to <span class="mono">computeGovernability()</span> automatically reflects the new evidence — no code change required for this feedback loop.</li>
+      <li><b>Audit and export</b> — <span class="mono">AuditLog</span> records the sequence; if run inside a Workspace session, the existing Workspace Governance Export Pack could package the trail for delivery back to Javier.</li>
+    </ol>
+    <div class="evidence-box">
+      <b>Records created:</b> one <span class="mono">ReassessmentTrigger</span>, one or more <span class="mono">EvidenceRecord</span>s, one or more <span class="mono">AuditLog</span>/<span class="mono">WorkspaceAuditEntry</span> entries. No new tables, types, or engines are touched.
+    </div>
+  </div>
+</section>
+
+<section id="package">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">9 &middot; Recommended Information Request Package</div>
+      <h2 class="title">Ask Javier for exactly this, and nothing more</h2>
+    </div>
+    <ol class="numbered-list">
+      <li>Confirmation that <span class="mono">ast-101</span> (or another already-existing OMG asset) is an acceptable stand-in for the Approved Agent, or the name of a specific real asset — if it doesn't already exist in OMG, that is itself useful readiness evidence, not a blocker.</li>
+      <li>A one-paragraph description of the actual material delivery change to be evaluated, plus which existing change category it maps to.</li>
+      <li>Aegis's evidence-based decision and consequential-action determination for that change, as narrative text.</li>
+      <li>Whether the evaluation should run in OMG's shared/demo scope (fully ready today) or inside a customer-isolated Workspace (requires acknowledging the Change Request module is currently unreachable there).</li>
+    </ol>
+    <div class="rule-box">
+      <b>Do not ask Javier for:</b> API credentials, a data schema for Aegis's output, or a defined "consequential action" taxonomy — none of it can be consumed by OMG today, and requesting it would imply integration capability that does not exist.
+    </div>
+  </div>
+</section>
+
+<section class="alt" id="verdict">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">10 &middot; Final Verdict</div>
+      <h2 class="title">Executive Conclusion</h2>
+    </div>
+
+    <div class="qa">
+      <div class="q">1. What exactly is Javier asking for?</div>
+      <div class="a">A single, bounded, real (not synthetic) test of whether OMG's governance context and Aegis's decisioning can meet at a genuine interface, using one real workflow pattern, with the resulting evidence returned to OMG.</div>
+    </div>
+    <div class="qa">
+      <div class="q">2. What does OMG already have?</div>
+      <div class="a">A real governed-asset registry, ownership/authority modeling, a working evidence-sufficiency engine, and a working admissibility engine that already composes evidence + authority + change signals into a bounded decision outcome — plus a separate, more elaborate (but disconnected) Change Request/Approval module.</div>
+    </div>
+    <div class="qa">
+      <div class="q">3. What is missing?</div>
+      <div class="a">Any entity for "consequential action with outcome," any external-system integration point, and a single unified change/material-change model — two incompatible <span class="mono">GovernanceState</span> vocabularies currently exist, serving two disconnected code paths.</div>
+    </div>
+    <div class="qa">
+      <div class="q">4. What minimum information must be obtained?</div>
+      <div class="a">One existing asset, a mapped material-change category with narrative, evidence artifacts, and Aegis's decision as free text (Section 5).</div>
+    </div>
+    <div class="qa">
+      <div class="q">5. What should be requested from Javier?</div>
+      <div class="a">Exactly the four items in Section 9.</div>
+    </div>
+    <div class="qa">
+      <div class="q">6. What should NOT be requested from Javier?</div>
+      <div class="a">Integration specifications, credentials, or a formal Aegis output schema — none of it can be consumed today.</div>
+    </div>
+    <div class="qa">
+      <div class="q">7. Is a meaningful OMG ↔ Aegis evaluation achievable?</div>
+      <div class="a">Yes — as a manual, one-shot, evidence-handoff exercise using existing OMG containers, not as a live or structured integration.</div>
+    </div>
+    <div class="qa">
+      <div class="q">8. What is the recommended next step?</div>
+      <div class="a">Run exactly one instance of the pattern using <span class="mono">ast-101</span>, capturing Aegis's output as a plain-text <span class="mono">EvidenceRecord</span>, and observe whether the existing Admissibility Engine's output changes in a way both sides find meaningful — before considering any development investment.</div>
+    </div>
+
+    <div class="verdict-box">
+      <b>Final verdict: READY WITH DATA COLLECTION.</b> OMG's governance engines are real and reusable today. Aegis's contribution has nowhere purpose-built to land — it lands as free text in a container designed for something else. That is sufficient for one bounded evaluation. It is not sufficient for a repeatable integration without development.
+    </div>
+  </div>
+</section>
+
+<footer>
+  OMG Intellectual Analysis Engine &middot; Evidence-based current-state analysis &middot; No assumptions, no synthetic workflows, no future-state architecture
+</footer>
+
+</body>
+</html>

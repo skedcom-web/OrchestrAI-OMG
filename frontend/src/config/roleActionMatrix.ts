@@ -61,6 +61,11 @@ export type ActionKey =
   | 'reassessmentTrigger:create'
   | 'reassessmentTrigger:edit'
   | 'reauthorizationRecord:create'
+  | 'authorityProvenance:create'
+  | 'relianceElement:create'
+  | 'relianceElement:edit'
+  | 'governancePosition:create'
+  | 'governancePositionContract:issue'
   | 'compliancePack:create'
   | 'compliancePack:edit'
   | 'compliancePack:delete'
@@ -191,6 +196,12 @@ export const ROLE_ACTION_MATRIX: Record<ActionKey, UserRole[]> = {
 
   'reassessmentTrigger:create': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER'],
   'reassessmentTrigger:edit': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER'],
+
+  'authorityProvenance:create': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER'],
+  'relianceElement:create': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER'],
+  'relianceElement:edit': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER'],
+  'governancePosition:create': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
+  'governancePositionContract:issue': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
 
   'reauthorizationRecord:create': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
 

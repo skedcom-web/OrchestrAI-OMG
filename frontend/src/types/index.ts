@@ -1299,7 +1299,7 @@ export interface AuditLog {
   userName: string;
   userRole: string;
   action: string;
-  entityType: 'Asset' | 'User' | 'Ownership' | 'Risk' | 'Decision' | 'Validation' | 'Evidence' | 'Finding' | 'DecisionPackage' | 'ComplianceAssessment' | 'CompliancePackage' | 'KillSwitch' | 'Override' | 'Incident' | 'Retirement' | 'ScheduledReview' | 'CorrectiveAction' | 'GovernanceReviewPackage' | 'Policy' | 'PolicyMapping' | 'PolicyViolation' | 'ExecutiveReport' | 'ChangeRequest' | 'StateTransition' | 'ReassessmentTrigger' | 'GovernanceReauthorizationRecord' | 'EvidenceRecord' | 'Model' | 'KnowledgeAsset' | 'Prompt' | 'Tool' | 'AgentToolGrant' | 'GovernanceControl' | 'ControlAttachment' | 'ControlTestResult' | 'CertificationProgram' | 'CertificationRecord' | 'CertificationEvidence' | 'GovernabilityConfigEntry' | 'Workspace' | 'WorkspaceUser';
+  entityType: 'Asset' | 'User' | 'Ownership' | 'Risk' | 'Decision' | 'Validation' | 'Evidence' | 'Finding' | 'DecisionPackage' | 'ComplianceAssessment' | 'CompliancePackage' | 'KillSwitch' | 'Override' | 'Incident' | 'Retirement' | 'ScheduledReview' | 'CorrectiveAction' | 'GovernanceReviewPackage' | 'Policy' | 'PolicyMapping' | 'PolicyViolation' | 'ExecutiveReport' | 'ChangeRequest' | 'StateTransition' | 'ReassessmentTrigger' | 'GovernanceReauthorizationRecord' | 'EvidenceRecord' | 'Model' | 'KnowledgeAsset' | 'Prompt' | 'Tool' | 'AgentToolGrant' | 'GovernanceControl' | 'ControlAttachment' | 'ControlTestResult' | 'CertificationProgram' | 'CertificationRecord' | 'CertificationEvidence' | 'GovernabilityConfigEntry' | 'Workspace' | 'WorkspaceUser' | 'AuthorityProvenanceRecord' | 'GovernanceRelianceElement' | 'AuthorisedGovernancePosition' | 'GovernancePositionContract' | 'GovernanceStateHistoryEntry';
   entityId: string;
   entityName: string;
   details: string;
@@ -2376,4 +2376,231 @@ export interface WorkspaceUser {
   status: WorkspaceUserStatus;
   createdAt: string;
   invitedAt?: string;
+}
+
+/* ================================================================
+ * Release 19 — Governance Authority, Governance Position &
+ * Reauthorisation Framework.
+ *
+ * Evolves OMG from Inventory -> Assessment -> Approval -> Monitoring to
+ * Authority -> Governance Position -> Reliance Basis -> Governability ->
+ * Reauthorisation -> Continuity. OMG records and operationalizes authority;
+ * it does not create it (Principle 1). Every type below is descriptive
+ * reference data or a computed, advisory result — nothing here executes,
+ * enforces, or is itself a new source of organizational authority.
+ * ================================================================ */
+
+/* -------------------- Domain A — Authority Provenance -------------------- */
+
+/** Domain B — the authority-record lifecycle state, distinct from AuthorityCurrencyStatus (which is the *computed* re-derivation, not the recorded state). */
+export type AuthorityRecordStatus = 'Active' | 'Expired' | 'Suspended' | 'Delegated' | 'Superseded' | 'Pending Review';
+
+/**
+ * One traceable grant of authority for one authority role on one asset —
+ * e.g. "Business Owner = Marcus Vance, Delegation Ref GOV-2026-014, Authority
+ * Source: AI Governance Committee, Effective 01-Jan-2026, Expiry 31-Dec-2026."
+ * `authorityRole` names one of GovernanceAuthorityProfile's role fields
+ * (e.g. 'accountableOwner') so a provenance trail can be attached per role,
+ * not just per asset.
+ */
+export interface AuthorityProvenanceRecord {
+  id: string;
+  assetId: string;
+  assetName: string;
+  authorityRole: string;
+  holderName: string;
+  authoritySource: string;
+  delegationRef: string;
+  effectiveDate: string;
+  expiryDate?: string;
+  status: AuthorityRecordStatus;
+  /** Domain A — Superseded Authority Tracking / Delegation History / Authority Lineage: the record this one replaces, if any. */
+  supersedes?: string;
+  createdAt: string;
+  createdBy: string;
+  workspaceId?: string;
+  tenantId?: string;
+  environmentId?: string;
+}
+
+/* --------------- Domain B — Authority Currency Engine Enhancement -------- */
+
+/** The governance-facing outcome of authority provenance + currency together — distinct from, and coarser than, AuthorityCurrencyStatus. */
+export type AuthorityGovernanceOutcome = 'Authority Current' | 'Authority At Risk' | 'Authority Invalid';
+
+export interface AuthorityProvenanceResult {
+  assetId: string;
+  assetName: string;
+  outcome: AuthorityGovernanceOutcome;
+  activeRecordCount: number;
+  expiredRecordCount: number;
+  supersededRecordCount: number;
+  reasons: string[];
+}
+
+/* ---------------- Domain C — Authorised Governance Position (AGP) -------- */
+
+export type AGPStatus = 'Active' | 'Superseded' | 'Expired' | 'Suspended';
+
+/**
+ * The central governance object Release 19 introduces: what an asset was
+ * actually authorised to do, under what conditions, relying on what — not
+ * merely "approved", but approved subject to named conditions, obligations
+ * and assumptions, with a validity window and its own authority/approval
+ * references. This is what Domain G's Governance Position Contract packages
+ * for a downstream (runtime/customer) system to consume.
+ */
+export interface AuthorisedGovernancePosition {
+  id: string;
+  assetId: string;
+  assetName: string;
+  authorisedGovernanceState: string;
+  conditions: string[];
+  obligations: string[];
+  assumptions: string[];
+  /** Domain E link — the Reliance Basis elements this position depends on. */
+  relianceElementIds: string[];
+  /** Domain A link — the Authority Provenance records this position was authorised under. */
+  authorityReferenceIds: string[];
+  /** Optional link to an existing DecisionRecord, if one was recorded for this position. */
+  approvalReferenceId?: string;
+  validFrom: string;
+  validUntil?: string;
+  status: AGPStatus;
+  createdAt: string;
+  createdBy: string;
+  workspaceId?: string;
+  tenantId?: string;
+  environmentId?: string;
+}
+
+/* -------------------- Domain D — Unified Governance State ---------------- */
+
+/**
+ * Principle 3 — Single Governance Truth: the one canonical state every
+ * governed asset resolves into, composed from Governability (Release 18),
+ * the Reliance Basis (Domain E) and the active Authorised Governance
+ * Position (Domain C) — never a new independent source of truth, and
+ * scoped deliberately to this composition only (not the separate Phase 10
+ * Change Request/approval-chain module, which sits outside this blueprint).
+ */
+export type UnifiedGovernanceState = 'Governed' | 'Conditionally Governed' | 'Governance At Risk' | 'Governance Invalid' | 'Pending Reauthorisation' | 'Retired';
+
+export interface UnifiedGovernanceStateResult {
+  assetId: string;
+  assetName: string;
+  state: UnifiedGovernanceState;
+  reasons: string[];
+  sourceGovernabilityStatus: GovernabilityStatus;
+  sourceRelianceStatus: RelianceBasisStatus;
+  sourceAGPStatus: AGPStatus | null;
+  /** Release 19.1 — GSRL: every raw signal this state was resolved from, and when. */
+  signalBreakdown: GovernanceStateSignalBreakdown;
+  lastEvaluatedAt: string;
+}
+
+/* -------------- Domain E — Governance Reliance Basis Registry ------------ */
+
+export type RelianceElementType = 'Assumption' | 'Required Control' | 'Required Evidence' | 'Regulatory Dependency' | 'Operational Dependency';
+export type RelianceElementStatus = 'Valid' | 'Degraded' | 'Broken';
+
+/** One thing a governance position's continued validity depends on — e.g. "Human Review Active", "Vendor Certification Valid", "Monitoring Operational". */
+export interface GovernanceRelianceElement {
+  id: string;
+  assetId: string;
+  assetName: string;
+  elementType: RelianceElementType;
+  description: string;
+  status: RelianceElementStatus;
+  lastVerifiedAt?: string;
+  notes?: string;
+  createdAt: string;
+  workspaceId?: string;
+  tenantId?: string;
+  environmentId?: string;
+}
+
+export type RelianceBasisStatus = 'Reliance Valid' | 'Reliance Degraded' | 'Reliance Broken';
+
+export interface RelianceBasisResult {
+  assetId: string;
+  assetName: string;
+  status: RelianceBasisStatus;
+  elements: GovernanceRelianceElement[];
+  reasons: string[];
+}
+
+/* ------------------------- Domain F — Reauthorisation --------------------- */
+
+export type ReauthorisationTriggerType = 'Material Change' | 'Authority Change' | 'Reliance Failure' | 'Evidence Insufficiency' | 'Regulatory Change' | 'Policy Change' | 'Risk Escalation';
+export type ReauthorisationOutcome = 'Continue' | 'Reassess' | 'Reauthorise' | 'Suspend Governance Position';
+
+export interface ReauthorisationResult {
+  assetId: string;
+  assetName: string;
+  outcome: ReauthorisationOutcome;
+  triggerTypes: ReauthorisationTriggerType[];
+  reasons: string[];
+}
+
+/* -------------------- Domain G — Governance Position Contract ------------ */
+
+/**
+ * The standard governance handoff package Domain G calls for — everything a
+ * downstream runtime/execution system would need to know about what was
+ * authorised, subject to what, and what it must monitor and report back.
+ * Runtime implementation of any of this remains entirely external to OMG.
+ */
+export interface GovernancePositionContract {
+  id: string;
+  assetId: string;
+  assetName: string;
+  governancePositionId: string;
+  conditions: string[];
+  obligations: string[];
+  monitoringExpectations: string[];
+  reviewRequirements: string[];
+  reportingRequirements: string[];
+  issuedAt: string;
+  issuedBy: string;
+  workspaceId?: string;
+  tenantId?: string;
+  environmentId?: string;
+}
+
+/* ================================================================
+ * Release 19.1 — Governance State Harmonisation Framework.
+ *
+ * Establishes the Governance State Resolution Layer (GSRL): every
+ * governance-related engine becomes a signal PROVIDER, never itself the
+ * authoritative governance truth. Local workflow states (Findings' Open/In
+ * Progress/Closed, the separate Change Request lifecycle, etc.) are
+ * explicitly left untouched (Non-Goal: "Replace local workflow states") —
+ * this release only harmonises *interpretation*, layering one resolved
+ * truth on top of signals that already exist, never replacing them.
+ * ================================================================ */
+
+/** Governance Continuity Engine's signal to the GSRL, mapped from the existing date-based ReauthorizationStatus ('Active'/'Due Soon' -> Continue, 'Overdue' -> Reassess, 'Expired' -> Escalate) — reuse, not a new continuity model. */
+export type GovernanceContinuitySignal = 'Continue' | 'Escalate' | 'Reassess';
+
+/** Every raw signal the GSRL resolves, preserved alongside the resolved state so the Governance Truth Card and Governance State History can show *why*, not just *what*. */
+export interface GovernanceStateSignalBreakdown {
+  authorityCurrency: AuthorityCurrencyStatus;
+  relianceBasis: RelianceBasisStatus;
+  evidenceSufficiency: EvidenceSufficiencyStatus;
+  admissibility: AdmissibilityOutcome;
+  reauthorisation: ReauthorisationOutcome;
+  governanceContinuity: GovernanceContinuitySignal;
+  governancePosition: AGPStatus | 'None';
+}
+
+export interface GovernanceStateHistoryEntry {
+  id: string;
+  assetId: string;
+  assetName: string;
+  previousState: UnifiedGovernanceState | null;
+  newState: UnifiedGovernanceState;
+  triggeringEvent: string;
+  triggeringEngine: string;
+  timestamp: string;
 }

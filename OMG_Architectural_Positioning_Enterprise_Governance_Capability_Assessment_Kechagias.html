@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OMG Architectural Positioning &amp; Enterprise Governance Capability Assessment</title>
+<style>
+:root{
+  --bg:#f5f7fb; --surface:#ffffff; --surface-alt:#eef2f8; --border:#d9e1ec; --border-strong:#b9c6db;
+  --text:#141d2e; --text-muted:#54627a; --text-faint:#8492a8;
+  --accent:#1f4e79; --accent-dark:#0f2c47; --accent-light:#e6eef7;
+  --a:#166a3f; --a-bg:#e2f5ea; --a-border:#a9dcc0;
+  --b:#96650a; --b-bg:#fbf0d9; --b-border:#edcf8f;
+  --c:#0d7a80; --c-bg:#dff3f4; --c-border:#a9dfe1;
+  --d:#4a3f9e; --d-bg:#eae7f9; --d-border:#c7bdec;
+  --e:#5b6472; --e-bg:#eef1f5; --e-border:#ccd3dd;
+  --f:#2a5aa8; --f-bg:#e6edfa; --f-border:#b9cbef;
+  --shadow: 0 1px 3px rgba(20,29,46,0.06), 0 8px 24px rgba(20,29,46,0.05);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1520; --surface:#161f30; --surface-alt:#1c2740; --border:#2a3852; --border-strong:#3a4b6b;
+    --text:#e7ecf5; --text-muted:#a9b6cc; --text-faint:#7c8aa3;
+    --accent:#6ea3d8; --accent-dark:#9dc3ec; --accent-light:#1c3350;
+    --a:#6fd39c; --a-bg:#123526; --a-border:#1e5b3e;
+    --b:#eec877; --b-bg:#3a2e0e; --b-border:#6b5219;
+    --c:#6fd6da; --c-bg:#0e2f31; --c-border:#195356;
+    --d:#b3a8ee; --d-bg:#241f42; --d-border:#3d3470;
+    --e:#a6b0c2; --e-bg:#1c222e; --e-border:#333c4d;
+    --f:#93b7ee; --f-bg:#152744; --f-border:#26426e;
+    --shadow: 0 1px 3px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.3);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f1520; --surface:#161f30; --surface-alt:#1c2740; --border:#2a3852; --border-strong:#3a4b6b;
+  --text:#e7ecf5; --text-muted:#a9b6cc; --text-faint:#7c8aa3;
+  --accent:#6ea3d8; --accent-dark:#9dc3ec; --accent-light:#1c3350;
+  --a:#6fd39c; --a-bg:#123526; --a-border:#1e5b3e;
+  --b:#eec877; --b-bg:#3a2e0e; --b-border:#6b5219;
+  --c:#6fd6da; --c-bg:#0e2f31; --c-border:#195356;
+  --d:#b3a8ee; --d-bg:#241f42; --d-border:#3d3470;
+  --e:#a6b0c2; --e-bg:#1c222e; --e-border:#333c4d;
+  --f:#93b7ee; --f-bg:#152744; --f-border:#26426e;
+  --shadow: 0 1px 3px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.3);
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{margin:0; background:var(--bg); color:var(--text); font-family:"Segoe UI","Helvetica Neue",Arial,sans-serif; font-size:14.5px; line-height:1.62;}
+h1,h2,h3,h4{font-family:"Segoe UI",Arial,sans-serif; color:var(--accent-dark); font-weight:800; text-wrap:balance;}
+p{margin:0 0 10px 0;}
+a{color:var(--accent);}
+.wrap{max-width:1180px; margin:0 auto; padding:0 24px;}
+
+.cover{background:linear-gradient(160deg, var(--accent-dark) 0%, var(--accent) 100%); color:#f2f6fb; padding:56px 0 40px 0;}
+.cover .kicker{font-size:11.5px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:#bcd4ec; margin-bottom:14px;}
+.cover h1{color:#ffffff; font-size:27px; margin:0 0 8px 0; line-height:1.28;}
+.cover .subtitle2{color:#cfe0f2; font-size:14.5px; font-weight:600; margin-bottom:18px;}
+.cover .prepared-for{background:rgba(255,255,255,0.09); border:1px solid rgba(255,255,255,0.22); border-radius:10px; padding:14px 18px; max-width:480px; margin-bottom:16px;}
+.cover .prepared-for .pf-label{font-size:10.5px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:#bcd4ec; margin-bottom:6px;}
+.cover .prepared-for .pf-name{font-size:16px; font-weight:800; color:#fff;}
+.cover .prepared-for .pf-org{font-size:12.5px; color:#d9e7f5; margin-top:2px;}
+.cover .meta-row{display:flex; flex-wrap:wrap; gap:10px; margin-top:6px;}
+.cover .meta-chip{background:rgba(255,255,255,0.10); border:1px solid rgba(255,255,255,0.22); border-radius:8px; padding:8px 14px; font-size:12.1px; color:#eaf2fa;}
+.cover .meta-chip b{color:#ffffff;}
+
+.position-banner{background:var(--surface); border-bottom:2px solid var(--accent);}
+.position-banner .wrap{padding:24px 24px;}
+.position-banner .label{font-size:11px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:var(--accent); margin-bottom:10px;}
+.position-banner blockquote{margin:0; padding:18px 22px; background:var(--accent-light); border-left:5px solid var(--accent); border-radius:0 10px 10px 0; font-size:14.5px; color:var(--text); font-style:normal; line-height:1.7;}
+.position-banner blockquote p{margin:0 0 10px 0;}
+.position-banner blockquote p:last-child{margin-bottom:0;}
+
+.topnav{position:sticky; top:0; z-index:50; background:var(--surface); border-bottom:1px solid var(--border); box-shadow:var(--shadow);}
+.topnav .wrap{display:flex; align-items:center; gap:2px; overflow-x:auto; padding:0 24px; flex-wrap:nowrap;}
+.topnav a{white-space:nowrap; display:inline-block; padding:12px 10px; font-size:11.5px; font-weight:700; color:var(--text-muted); text-decoration:none; border-bottom:3px solid transparent;}
+.topnav a:hover{color:var(--accent); border-bottom-color:var(--border-strong);}
+.topnav .brand{font-weight:800; color:var(--accent-dark); padding-right:14px; border-right:1px solid var(--border); margin-right:6px; white-space:nowrap; flex:none;}
+
+section{padding:42px 0;}
+section.alt{background:var(--surface-alt);}
+.section-head{margin-bottom:24px; max-width:900px;}
+.eyebrow{font-size:11px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:var(--accent); margin-bottom:8px;}
+h2.title{font-size:23px; margin:0 0 8px 0;}
+.section-sub{color:var(--text-muted); font-size:14px;}
+
+.card{background:var(--surface); border:1px solid var(--border); border-radius:12px; box-shadow:var(--shadow); padding:22px 24px;}
+.grid-2{display:grid; grid-template-columns:1fr 1fr; gap:18px;}
+.grid-3{display:grid; grid-template-columns:repeat(3,1fr); gap:16px;}
+.grid-4{display:grid; grid-template-columns:repeat(4,1fr); gap:14px;}
+@media(max-width:900px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr;}}
+
+.badge{display:inline-flex; align-items:center; gap:5px; font-size:10.6px; font-weight:800; letter-spacing:.02em; padding:4px 10px; border-radius:999px; border:1px solid; white-space:nowrap;}
+.b-A{color:var(--a); background:var(--a-bg); border-color:var(--a-border);}
+.b-B{color:var(--b); background:var(--b-bg); border-color:var(--b-border);}
+.b-C{color:var(--c); background:var(--c-bg); border-color:var(--c-border);}
+.b-D{color:var(--d); background:var(--d-bg); border-color:var(--d-border);}
+.b-E{color:var(--e); background:var(--e-bg); border-color:var(--e-border);}
+.b-F{color:var(--f); background:var(--f-bg); border-color:var(--f-border);}
+
+.legend{display:flex; flex-wrap:wrap; gap:8px; margin:14px 0 4px 0;}
+.legend .badge{padding:5px 11px; font-size:10.3px;}
+
+.maturity-row{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin:20px 0;}
+@media(max-width:900px){.maturity-row{grid-template-columns:repeat(2,1fr);}}
+.maturity-tile{background:var(--surface); border:2px solid var(--border); border-radius:12px; padding:16px 14px; text-align:center;}
+.maturity-tile.current{border-color:var(--accent); background:var(--accent-light); box-shadow:var(--shadow);}
+.maturity-tile .tname{font-size:12.5px; font-weight:800; color:var(--text);}
+.maturity-tile.current .tname{color:var(--accent-dark);}
+.maturity-tile .tdesc{font-size:11px; color:var(--text-muted); margin-top:4px;}
+
+.stat-row{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin:22px 0;}
+@media(max-width:900px){.stat-row{grid-template-columns:repeat(2,1fr);}}
+.stat{background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px 14px; text-align:center; box-shadow:var(--shadow);}
+.stat .num{font-size:23px; font-weight:800; color:var(--accent-dark); font-variant-numeric:tabular-nums;}
+.stat .lbl{font-size:10.2px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-muted); margin-top:4px; font-weight:700;}
+
+.verdict-box{background:var(--accent-light); border:1px solid var(--border-strong); border-left:5px solid var(--accent); border-radius:10px; padding:20px 22px; margin:20px 0; font-size:15px;}
+.verdict-box b{color:var(--accent-dark);}
+.pull-quote{border-left:4px solid var(--accent); background:var(--surface); border-radius:0 10px 10px 0; padding:14px 20px; margin:16px 0; font-style:italic; color:var(--text-muted); font-size:14px;}
+.excluded-box{background:var(--e-bg); border:1px solid var(--e-border); border-left:5px solid var(--e); border-radius:10px; padding:16px 20px; margin:16px 0; font-size:13.4px;}
+.excluded-box b{color:var(--e);}
+.note-box{background:var(--surface-alt); border:1px solid var(--border); border-left:5px solid var(--d); border-radius:10px; padding:14px 18px; margin:14px 0; font-size:13px;}
+.note-box b{color:var(--d);}
+
+table{width:100%; border-collapse:collapse; font-size:12.6px; background:var(--surface); border-radius:10px; overflow:hidden;}
+.table-wrap{overflow-x:auto; border:1px solid var(--border); border-radius:10px; box-shadow:var(--shadow);}
+th{background:var(--accent-dark); color:#eef4fb; text-align:left; padding:10px 12px; font-weight:700; font-size:11px; text-transform:uppercase; letter-spacing:.03em;}
+td{padding:9px 12px; border-top:1px solid var(--border); vertical-align:top;}
+tr:nth-child(even) td{background:var(--surface-alt);}
+.mono{font-family:"Consolas","Courier New",monospace; font-size:11.3px; background:var(--surface-alt); padding:1px 5px; border-radius:4px;}
+td.center{text-align:center;}
+.dot{display:inline-block; width:20px; height:20px; line-height:20px; border-radius:50%; font-size:12px; font-weight:800;}
+.dot.yes{background:var(--a-bg); color:var(--a); border:1px solid var(--a-border);}
+
+.boundary-svg-wrap{background:var(--surface); border:1px solid var(--border); border-radius:12px; box-shadow:var(--shadow); padding:22px; text-align:center;}
+.boundary-svg-wrap svg{max-width:100%; height:auto;}
+figcaption{font-size:12.2px; color:var(--text-muted); margin-top:10px;}
+
+.qcard{background:var(--surface); border:1px solid var(--border); border-radius:12px; box-shadow:var(--shadow); padding:20px 22px; margin-bottom:16px;}
+.qcard-head{display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:4px;}
+.qnum-tag{display:inline-flex; align-items:center; justify-content:center; min-width:26px; height:26px; padding:0 7px; border-radius:7px; background:var(--accent); color:#fff; font-weight:800; font-size:12px; margin-right:8px;}
+.qcard h4{font-size:15px; margin:0; display:inline;}
+.qfields{display:grid; grid-template-columns:1fr 1fr; gap:9px 22px; margin-top:12px;}
+@media(max-width:800px){.qfields{grid-template-columns:1fr;}}
+.qfield .flabel{font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); margin-bottom:3px;}
+.qfield .fval{font-size:12.7px; color:var(--text);}
+.qfield.full-row{grid-column:1/-1;}
+
+.scope-section{margin-bottom:24px;}
+.scope-section h3{display:flex; align-items:center; gap:10px; font-size:16px; margin-bottom:6px;}
+.scope-letter{width:30px; height:30px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:800; color:#fff; flex:none; font-size:14px;}
+
+.value-card{background:var(--surface); border:1px solid var(--border); border-radius:12px; box-shadow:var(--shadow); padding:18px 20px; margin-bottom:12px;}
+.value-card h4{margin:0 0 6px 0; font-size:14.5px; color:var(--accent-dark);}
+.value-card p{margin:0; font-size:13px; color:var(--text-muted);}
+.value-card .vs-grc{margin-top:8px; padding-top:8px; border-top:1px dashed var(--border); font-size:12.4px; color:var(--text);}
+.value-card .vs-grc b{color:var(--accent);}
+
+.gap-card{background:var(--surface); border:1px solid var(--f-border); border-left:4px solid var(--f); border-radius:10px; padding:16px 18px; margin-bottom:12px; box-shadow:var(--shadow);}
+.gap-card.resolved{border-color:var(--a-border); border-left-color:var(--a); background:var(--a-bg);}
+.gap-card h4{margin:0 0 4px 0; font-size:14.5px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+.gap-card .gap-num{width:24px; height:24px; border-radius:6px; background:var(--f); color:#fff; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; flex:none;}
+.gap-card.resolved .gap-num{background:var(--a);}
+.gap-card p{margin:0; font-size:13px; color:var(--text-muted);}
+
+.authority-card{background:var(--surface); border:1px solid var(--border); border-radius:12px; box-shadow:var(--shadow); padding:18px 20px; margin-bottom:12px;}
+.authority-card h4{margin:0 0 8px 0; font-size:14.5px; color:var(--accent-dark);}
+.authority-fields{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;}
+@media(max-width:800px){.authority-fields{grid-template-columns:1fr;}}
+.authority-fields .af{background:var(--surface-alt); border-radius:8px; padding:9px 11px;}
+.authority-fields .af .aflabel{font-size:9.8px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; color:var(--text-faint); margin-bottom:3px;}
+.authority-fields .af .afval{font-size:12.4px; color:var(--text);}
+
+.practitioner-card{background:var(--surface); border:1px solid var(--border); border-radius:12px; box-shadow:var(--shadow); padding:22px 24px; margin-bottom:20px;}
+.practitioner-card h3{margin:0 0 4px 0;}
+.practitioner-card .focus-tag{font-size:12px; color:var(--text-muted); margin-bottom:14px;}
+
+.demo-step{display:flex; gap:14px; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px 16px; margin-bottom:10px; box-shadow:var(--shadow);}
+.demo-num{flex:none; width:30px; height:30px; border-radius:8px; background:var(--accent); color:#fff; font-weight:800; display:flex; align-items:center; justify-content:center; font-size:13px;}
+.demo-step h4{margin:0 0 4px 0; font-size:13.8px;}
+.demo-step p{margin:0; font-size:12.8px; color:var(--text-muted);}
+
+.reco-item{display:flex; gap:14px; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px 16px; margin-bottom:10px; box-shadow:var(--shadow);}
+.reco-num{flex:none; width:30px; height:30px; border-radius:8px; background:var(--accent); color:#fff; font-weight:800; display:flex; align-items:center; justify-content:center; font-size:13px;}
+.reco-item h4{margin:0 0 4px 0; font-size:14px;}
+.reco-item p{margin:0; font-size:13px; color:var(--text-muted);}
+
+.conclusion-box{background:linear-gradient(160deg, var(--accent-dark) 0%, var(--accent) 100%); color:#f2f6fb; border-radius:14px; padding:30px 32px; margin-top:10px;}
+.conclusion-box p{color:#e9f1fa; font-size:15.5px; line-height:1.75; margin:0 0 12px 0;}
+.conclusion-box p:last-child{margin-bottom:0;}
+.conclusion-note{background:var(--surface); border:1px solid var(--border-strong); border-left:5px solid var(--b); border-radius:10px; padding:16px 20px; margin-top:16px; font-size:13.3px;}
+.conclusion-note b{color:var(--b);}
+
+footer{padding:30px 0 60px 0; color:var(--text-faint); font-size:12px; text-align:center;}
+.back-to-top{display:inline-block; margin-top:10px; font-size:12px; color:var(--accent); text-decoration:none; font-weight:700;}
+
+@media print{
+  .topnav{display:none;}
+  .cover{background:var(--accent-dark) !important; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
+  .conclusion-box{-webkit-print-color-adjust:exact; print-color-adjust:exact;}
+  section{padding:18px 0; break-inside:avoid-page;}
+  .card, .qcard, table, .practitioner-card, .gap-card, .value-card, .authority-card{break-inside:avoid;}
+  body{font-size:11.5px;}
+  a{text-decoration:none; color:inherit;}
+}
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <div class="wrap">
+    <div class="kicker">Response to Enterprise Governance Architecture Review Questions</div>
+    <h1>OMG Architectural Positioning &amp; Enterprise Governance Capability Assessment</h1>
+    <div class="subtitle2">An honest, evidence-based, architecturally defensible assessment of OMG's actual implemented functionality, current architecture, current operating model, and current roadmap — verified directly against the codebase, not a marketing document, not a traditional software audit, and not a gap analysis against IAM, SSO, security platforms, AI gateways, runtime platforms, workflow engines, SIEMs, control planes, or agent runtimes.</div>
+    <div class="prepared-for">
+      <div class="pf-label">Prepared For</div>
+      <div class="pf-name">Chris Kechagias</div>
+      <div class="pf-org">Governance Formation™ | Governance Five™</div>
+    </div>
+    <div class="meta-row">
+      <div class="meta-chip"><b>Method:</b> Direct codebase evidence, file and line cited throughout</div>
+      <div class="meta-chip"><b>Classification model:</b> A–F, applied to 18 questions</div>
+      <div class="meta-chip"><b>Standard:</b> No exaggeration, no invented capability, no invented deployment</div>
+    </div>
+  </div>
+</div>
+
+<div class="position-banner">
+  <div class="wrap">
+    <div class="label">Official OMG Positioning</div>
+    <blockquote>
+      <p>OMG (OrchestrAI Model Governance) is positioned as a Governance Intelligence and Governance Operations Platform.</p>
+      <p>Its purpose is to establish governance state, accountability, evidence, traceability, governance continuity, reassessment, governance intelligence, and decision reconstruction across AI assets, models, agents, prompts, tools, and knowledge assets.</p>
+      <p>OMG is not intended to replace IAM platforms, SSO platforms, runtime enforcement engines, AI gateways, workflow engines, SIEMs, security platforms, execution platforms, control planes, or agent runtimes.</p>
+      <p>Instead, OMG is designed to operate alongside those technologies by providing governance requirements, governance decisions, governance evidence, accountability, governance continuity, and governance intelligence.</p>
+    </blockquote>
+  </div>
+</div>
+
+<nav class="topnav">
+  <div class="wrap">
+    <span class="brand">OMG · Enterprise Governance Assessment</span>
+    <a href="#exec-summary">1. Exec Summary</a>
+    <a href="#positioning">2. Positioning</a>
+    <a href="#responsibility">3. Responsibility Matrix</a>
+    <a href="#questions">4. 18 Questions</a>
+    <a href="#value">Unique Value</a>
+    <a href="#evolution">Evolution</a>
+    <a href="#authority">Authority Boundary</a>
+    <a href="#practitioners">Practitioners</a>
+    <a href="#demonstration">Demonstration</a>
+    <a href="#recommendations">Recommendations</a>
+    <a href="#conclusion">Conclusion</a>
+  </div>
+</nav>
+
+<!-- ============ SECTION 1: EXECUTIVE SUMMARY ============ -->
+<section id="exec-summary">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Section 1</div>
+      <h2 class="title">Executive Summary</h2>
+    </div>
+
+    <div class="maturity-row">
+      <div class="maturity-tile"><div class="tname">Prototype</div><div class="tdesc">Passed — real, computed, multi-release platform</div></div>
+      <div class="maturity-tile current"><div class="tname">Functional Platform</div><div class="tdesc">Current position — sits here today</div></div>
+      <div class="maturity-tile"><div class="tname">Customer Validation</div><div class="tdesc">Not yet reached — no external customer use found in codebase</div></div>
+      <div class="maturity-tile"><div class="tname">Production Proven</div><div class="tdesc">Not yet reached — no production deployment evidence found</div></div>
+    </div>
+
+    <p><b>Current OMG maturity:</b> OMG has moved past a disposable prototype. It is a functional, internally coherent governance platform: 119 routed pages, 12 documented release entries (Releases 1–9 grouped, then 10 through 18.2 individually), and a working engine layer that actually computes governance verdicts from real seeded data rather than displaying static text. It has not reached Customer Validation or Production Proven — there is no evidence anywhere in the codebase of an external paying customer, a production data path, or a completed security assessment.</p>
+
+    <p><b>Current implementation status:</b> The governance domain model — asset/model/agent/tool/prompt registries, ownership, evidence, findings, corrective actions, certification, reassessment, and (as of the most recent release cycle) a composite Governability/Admissibility engine layer — is real and verified directly against code, not aspirational. A newer, deliberately bounded customer-workspace isolation model (Environment, Tenant, Workspace records with real data-tagging) also now exists alongside the original shared demonstration environment.</p>
+
+    <p><b>Current strengths:</b> Governance continuity and reassessment logic; evidence lifecycle and now evidence <i>sufficiency</i> scoring; a genuine composite governability verdict; decision reconstruction and traceability; a thorough RBAC action-key model (8 roles, 88 action keys); an honest, non-fabricated end-to-end demonstration built on real seeded data.</p>
+
+    <p><b>Current limitations:</b> No live backend data path exists for anything a user actually sees — <span class="mono">frontend/src/repositories/apiClient.ts</span> and <span class="mono">frontend/src/services/api.ts</span> are both present in the repository but imported by zero other files; every page runs on <span class="mono">localStorage</span>-backed seed data. No SSO/IAM integration exists. No SOC 2, ISO 27001, or penetration test exists or is claimed. Two independent, non-unified models of "governance change" now coexist in the codebase (detailed in Section 4, Question 9).</p>
+
+    <p><b>Architectural positioning:</b> OMG sits above runtime and execution systems, translating organisational authority into governance requirements and governance decisions, and stops at the human decision layer. It does not execute, enforce, or intercept anything — a boundary confirmed by direct inspection of every governance engine in the codebase, including the newest ones.</p>
+
+    <p><b>Enterprise applicability:</b> OMG is applicable today as a governance intelligence and operations layer that a customer's own IAM, runtime, and security investments plug into via ODF — not as a replacement for any of them.</p>
+
+    <div class="stat-row">
+      <div class="stat"><div class="num">119</div><div class="lbl">Routed Governance Pages</div></div>
+      <div class="stat"><div class="num">4</div><div class="lbl">Composite Governance Engines (Evidence, Authority, Admissibility, Governability)</div></div>
+      <div class="stat"><div class="num">8 / 88</div><div class="lbl">RBAC Roles / Action Keys</div></div>
+      <div class="stat"><div class="num">0</div><div class="lbl">Live Backend Data Paths in Use</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 2: ARCHITECTURAL POSITIONING ============ -->
+<section class="alt" id="positioning">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Section 2</div>
+      <h2 class="title">OMG Architectural Positioning</h2>
+      <p class="section-sub">Authority flows down into governance; governance flows down into execution. OMG occupies exactly one layer of that flow.</p>
+    </div>
+
+    <figure class="boundary-svg-wrap">
+      <svg viewBox="0 0 900 560" role="img" aria-label="Diagram showing a vertical flow: Organisational Authority, then Governance Requirements, then the OMG Governance Intelligence Layer, then Governance Decisions, then Runtime Platforms, then Execution Systems — with three bracketed zones marking Authority, Governance, and Execution, and OMG's own boundary stopping at the Human Decision Layer before Runtime Platforms.">
+        <defs>
+          <marker id="arrowD" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+          </marker>
+        </defs>
+
+        <!-- Zone brackets -->
+        <rect x="20" y="20" width="60" height="130" rx="10" fill="currentColor" opacity="0.05"/>
+        <text x="50" y="90" font-size="11" font-weight="800" text-anchor="middle" fill="currentColor" transform="rotate(-90 50 90)">AUTHORITY</text>
+
+        <rect x="20" y="160" width="60" height="270" rx="10" fill="currentColor" opacity="0.09"/>
+        <text x="50" y="295" font-size="11" font-weight="800" text-anchor="middle" fill="currentColor" transform="rotate(-90 50 295)">GOVERNANCE (OMG CORE)</text>
+
+        <rect x="20" y="440" width="60" height="110" rx="10" fill="currentColor" opacity="0.05"/>
+        <text x="50" y="495" font-size="11" font-weight="800" text-anchor="middle" fill="currentColor" transform="rotate(-90 50 495)">EXECUTION</text>
+
+        <!-- Flow boxes -->
+        <rect x="110" y="30" width="680" height="60" rx="10" fill="currentColor" opacity="0.07" stroke="currentColor" stroke-width="1.2"/>
+        <text x="450" y="55" font-size="13.5" font-weight="800" text-anchor="middle" fill="currentColor">Organisational Authority</text>
+        <text x="450" y="74" font-size="10.5" text-anchor="middle" fill="currentColor" opacity="0.75">Boards, executives, accountable owners — set governance intent and risk appetite</text>
+
+        <line x1="450" y1="90" x2="450" y2="118" stroke="currentColor" stroke-width="2" marker-end="url(#arrowD)"/>
+
+        <rect x="110" y="120" width="680" height="60" rx="10" fill="currentColor" opacity="0.07" stroke="currentColor" stroke-width="1.2"/>
+        <text x="450" y="145" font-size="13.5" font-weight="800" text-anchor="middle" fill="currentColor">Governance Requirements</text>
+        <text x="450" y="164" font-size="10.5" text-anchor="middle" fill="currentColor" opacity="0.75">Policies, regulatory obligations, risk thresholds — the input OMG operationalizes</text>
+
+        <line x1="450" y1="180" x2="450" y2="208" stroke="currentColor" stroke-width="2" marker-end="url(#arrowD)"/>
+
+        <rect x="90" y="210" width="720" height="150" rx="14" fill="currentColor" opacity="0.14" stroke="currentColor" stroke-width="1.6"/>
+        <text x="450" y="235" font-size="14.5" font-weight="800" text-anchor="middle" fill="currentColor">OMG GOVERNANCE INTELLIGENCE LAYER</text>
+        <text x="450" y="251" font-size="10.5" text-anchor="middle" fill="currentColor" opacity="0.75">Governance state · evidence · authority · reassessment · admissibility · governability · traceability</text>
+        <g font-size="10.3" fill="currentColor">
+          <rect x="112" y="264" width="216" height="26" rx="6" fill="currentColor" opacity="0.10"/>
+          <text x="220" y="281" text-anchor="middle">Evidence Sufficiency Engine</text>
+          <rect x="342" y="264" width="216" height="26" rx="6" fill="currentColor" opacity="0.10"/>
+          <text x="450" y="281" text-anchor="middle">Authority Currency Engine</text>
+          <rect x="572" y="264" width="216" height="26" rx="6" fill="currentColor" opacity="0.10"/>
+          <text x="680" y="281" text-anchor="middle">Admissibility Engine</text>
+          <rect x="112" y="296" width="676" height="26" rx="6" fill="currentColor" opacity="0.16" stroke="currentColor" stroke-width="0.8"/>
+          <text x="450" y="313" text-anchor="middle" font-weight="700">Governability Composite Verdict → Human Decision Layer</text>
+        </g>
+        <text x="450" y="348" font-size="10" text-anchor="middle" fill="currentColor" opacity="0.7">OMG's boundary ends here — advisory output only, no execution or enforcement below this line</text>
+
+        <line x1="450" y1="360" x2="450" y2="388" stroke="currentColor" stroke-width="2" stroke-dasharray="4 3" marker-end="url(#arrowD)"/>
+        <text x="470" y="378" font-size="9.5" fill="currentColor" opacity="0.7">ODF / customer-owned handoff</text>
+
+        <rect x="110" y="390" width="680" height="60" rx="10" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="5 4" opacity="0.6"/>
+        <text x="450" y="415" font-size="13.5" font-weight="800" text-anchor="middle" fill="currentColor" opacity="0.85">Governance Decisions</text>
+        <text x="450" y="434" font-size="10.5" text-anchor="middle" fill="currentColor" opacity="0.7">A durable, human-attributed record — consumed by, not executed by, OMG</text>
+
+        <line x1="450" y1="450" x2="450" y2="478" stroke="currentColor" stroke-width="2" marker-end="url(#arrowD)"/>
+
+        <rect x="110" y="480" width="680" height="34" rx="8" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="3 3" opacity="0.55"/>
+        <text x="450" y="502" font-size="12" font-weight="700" text-anchor="middle" fill="currentColor" opacity="0.85">Runtime Platforms — customer/external, not OMG</text>
+
+        <line x1="450" y1="514" x2="450" y2="524" stroke="currentColor" stroke-width="2" marker-end="url(#arrowD)"/>
+
+        <rect x="110" y="524" width="680" height="30" rx="8" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="3 3" opacity="0.55"/>
+        <text x="450" y="544" font-size="12" font-weight="700" text-anchor="middle" fill="currentColor" opacity="0.85">Execution Systems — customer/external, not OMG</text>
+      </svg>
+      <figcaption>OMG occupies the Governance Intelligence Layer only. Governance Requirements flow in from organisational authority; a Governability verdict and Governance Decision flow out to whatever runtime and execution systems the customer operates. Everything below the dashed line is explicitly outside OMG.</figcaption>
+    </figure>
+
+    <div class="grid-3" style="margin-top:22px;">
+      <div class="card"><h4 style="margin-top:0;color:var(--accent-dark);">Governance Authority</h4><p style="font-size:13px;color:var(--text-muted);">Who is accountable for a decision. OMG captures this descriptively — <span class="mono">GovernanceAuthorityProfile</span> (<span class="mono">types/index.ts:279-288</span>) — and now re-derives whether that authority is current via <span class="mono">authorityCurrencyEngine.ts</span>. It does not verify the named person's real-world identity or standing.</p></div>
+      <div class="card"><h4 style="margin-top:0;color:var(--accent-dark);">Governance Operations</h4><p style="font-size:13px;color:var(--text-muted);">The day-to-day work of assessing, approving, evidencing, and reassessing. This is OMG's deepest and most verified capability area — assets, evidence, findings, corrective actions, certification, and the new engine layer all operate here.</p></div>
+      <div class="card"><h4 style="margin-top:0;color:var(--accent-dark);">Runtime Enforcement &amp; Execution</h4><p style="font-size:13px;color:var(--text-muted);">Acting on a decision — blocking, pausing, executing, intercepting. Confirmed absent from OMG by direct inspection: no code anywhere in <span class="mono">frontend/src</span> or <span class="mono">backend/src</span> executes or intercepts a running process. The Kill Switch and Revalidation modules are 100% human-triggered recommendations.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 3: ENTERPRISE RESPONSIBILITY MATRIX ============ -->
+<section id="responsibility">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Section 3</div>
+      <h2 class="title">Enterprise Responsibility Matrix</h2>
+      <p class="section-sub">Ownership of each enterprise capability area, mapped to who actually holds it today. A capability can span more than one column.</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th style="width:20%;">Capability Area</th><th style="width:15%;text-align:center;">OMG Core</th><th style="width:15%;text-align:center;">Customer</th><th style="width:15%;text-align:center;">ODF</th><th style="width:15%;text-align:center;">External Platform</th><th>Note</th></tr></thead>
+        <tbody>
+          <tr><td>Identity</td><td class="center"></td><td class="center"><span class="dot yes">✓</span></td><td class="center"><span class="dot yes">✓</span></td><td class="center"><span class="dot yes">✓</span></td><td>OMG's own session model (Platform/Demo/Workspace) is demo-grade, not enterprise identity.</td></tr>
+          <tr><td>Authentication</td><td class="center"></td><td class="center"></td><td class="center"><span class="dot yes">✓</span></td><td class="center"><span class="dot yes">✓</span></td><td>Workspace/Platform logins use hardcoded or plaintext demo credentials, documented in code as non-production.</td></tr>
+          <tr><td>SSO</td><td class="center"></td><td class="center"></td><td class="center"><span class="dot yes">✓</span></td><td class="center"><span class="dot yes">✓</span></td><td>No SSO/SAML/OAuth dependency exists anywhere in either <span class="mono">package.json</span>.</td></tr>
+          <tr><td>Governance</td><td class="center"><span class="dot yes">✓</span></td><td class="center"></td><td class="center"></td><td class="center"></td><td>OMG's core mission — governance state, policy, reassessment, admissibility.</td></tr>
+          <tr><td>Evidence</td><td class="center"><span class="dot yes">✓</span></td><td class="center"></td><td class="center"></td><td class="center"></td><td>Evidence Registry, sufficiency scoring, traceability — all real.</td></tr>
+          <tr><td>Audit</td><td class="center"><span class="dot yes">✓</span></td><td class="center"></td><td class="center"></td><td class="center"></td><td><span class="mono">AuditLog</span> and <span class="mono">WorkspaceAuditEntry</span>, both actively written.</td></tr>
+          <tr><td>Accountability</td><td class="center"><span class="dot yes">✓</span></td><td class="center"></td><td class="center"></td><td class="center"></td><td>Ownership assignment and authority profile fields, core to every governed entity.</td></tr>
+          <tr><td>Runtime Controls</td><td class="center"></td><td class="center"><span class="dot yes">✓</span></td><td class="center"></td><td class="center"><span class="dot yes">✓</span></td><td>Explicitly not OMG — no execution interception exists.</td></tr>
+          <tr><td>Workflow</td><td class="center"></td><td class="center"></td><td class="center"><span class="dot yes">✓</span></td><td class="center"><span class="dot yes">✓</span></td><td>"AI Workflow" exists only as an asset classification label, not an execution engine.</td></tr>
+          <tr><td>Risk</td><td class="center"><span class="dot yes">✓</span></td><td class="center"></td><td class="center"></td><td class="center"></td><td>Risk level, risk owner, and risk-tiered thresholds are core, computed fields.</td></tr>
+          <tr><td>Compliance</td><td class="center"><span class="dot yes">✓</span></td><td class="center"><span class="dot yes">✓</span></td><td class="center"></td><td class="center"></td><td>OMG structures the Compliance Pack; the customer supplies the regulatory content.</td></tr>
+          <tr><td>SIEM</td><td class="center"></td><td class="center"></td><td class="center"></td><td class="center"><span class="dot yes">✓</span></td><td>No monitoring/telemetry ingestion exists in OMG.</td></tr>
+          <tr><td>Security</td><td class="center"><span class="dot yes">✓</span></td><td class="center"><span class="dot yes">✓</span></td><td class="center"></td><td class="center"></td><td>RBAC action-key model is core; formal security assurance (audits, certifications) is the customer's.</td></tr>
+          <tr><td>Execution</td><td class="center"></td><td class="center"><span class="dot yes">✓</span></td><td class="center"></td><td class="center"><span class="dot yes">✓</span></td><td>Explicitly not OMG.</td></tr>
+          <tr><td>Monitoring</td><td class="center"><span class="dot yes">✓</span></td><td class="center"></td><td class="center"></td><td class="center"><span class="dot yes">✓</span></td><td>Governance drift/health monitoring is OMG Core; infrastructure/runtime monitoring is external.</td></tr>
+          <tr><td>Agent Runtime</td><td class="center"></td><td class="center"></td><td class="center"></td><td class="center"><span class="dot yes">✓</span></td><td>OMG governs agents as registered assets; it does not host or execute them.</td></tr>
+          <tr><td>Control Plane</td><td class="center"></td><td class="center"><span class="dot yes">✓</span></td><td class="center"></td><td class="center"><span class="dot yes">✓</span></td><td>Explicitly not OMG.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 4: 18 QUESTIONS ============ -->
+<section class="alt" id="questions">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Section 4</div>
+      <h2 class="title">Response to Chris's 18 Questions</h2>
+      <p class="section-sub">Each answer covers Current Position, Current Capability, Evidence, Current Limitation, Planned Evolution, Classification, Honest Assessment, and Recommended Direction.</p>
+    </div>
+
+    <div class="qcard">
+      <div class="qcard-head"><div><span class="qnum-tag">1</span><h4>Product Maturity</h4></div><span class="badge b-F">F</span></div>
+      <div class="qfields">
+        <div class="qfield"><div class="flabel">Current Position</div><div class="fval">Functional Platform — past prototype, not yet customer-validated or production-proven.</div></div>
+        <div class="qfield"><div class="flabel">Current Capability</div><div class="fval">119 routed pages across 8 governance domains; a real, computed engine layer; 12 documented release entries.</div></div>
+        <div class="qfield"><div class="flabel">Evidence</div><div class="fval"><span class="mono">ReleaseNotesPage.tsx</span> (Releases 1–9 grouped, then 10–18.2); <span class="mono">frontend/src/pages</span> file count.</div></div>
+        <div class="qfield"><div class="flabel">Current Limitation</div><div class="fval">No PoC or production customer found anywhere in the codebase; no live backend data path in use.</div></div>
+        <div class="qfield"><div class="flabel">Planned Evolution</div><div class="fval">Customer validation via ODF pilots, ahead of any production-scale claim.</div></div>
+        <div class="qfield"><div class="flabel">Honest Assessment</div><div class="fval">This is validation-stage software with real depth, not a mature enterprise product. Both statements are true at once.</div></div>
+        <div class="qfield full-row"><div class="flabel">Recommended Direction</div><div class="fval">Earn maturity through real customer pilots via ODF; do not assert production readiness ahead of them.</div></div>
+      </div>
+    </div>
+
+    <div class="qcard">
+      <div class="qcard-head"><div><span class="qnum-tag">2</span><h4>Deployment Model</h4></div><span class="badge b-D">D</span></div>
+      <div class="qfields">
+        <div class="qfield"><div class="flabel">Current Position</div><div class="fval">SaaS-style demonstration deployment.</div></div>
+        <div class="qfield"><div class="flabel">Current Capability</div><div class="fval">Static frontend on Firebase Hosting; NestJS/Prisma backend on Render; Postgres via Neon — though the backend path is not actually wired to the UI (see Section 1).</div></div>
+        <div class="qfield"><div class="flabel">Evidence</div><div class="fval"><span class="mono">firebase.json</span>; <span class="mono">backend/prisma/schema.prisma</span> (<span class="mono">provider = "postgresql"</span>).</div></div>
+        <div class="qfield"><div class="flabel">Current Limitation</div><div class="fval">No CI/CD pipeline, no infrastructure-as-code, no jurisdictional hosting or Australia data-residency capability exists in the repository.</div></div>
+        <div class="qfield"><div class="flabel">Planned Evolution</div><div class="fval">Deployment pattern (SaaS / customer cloud / private cloud / on-premise / jurisdiction-specific) is an ODF onboarding decision, not a product default.</div></div>
+        <div class="qfield"><div class="flabel">Honest Assessment</div><div class="fval">Correctly scoped for a demonstration environment; not yet engineered for customer-specific hosting requirements.</div></div>
+        <div class="qfield full-row"><div class="flabel">Recommended Direction</div><div class="fval">Do not build jurisdictional hosting speculatively — implement per actual customer requirement through ODF.</div></div>
+      </div>
+    </div>
+
+    <div class="qcard">
+      <div class="qcard-head"><div><span class="qnum-tag">3</span><h4>External Governing Position</h4></div><span class="badge b-A">A</span><span class="badge b-B">B</span></div>
+      <div class="qfields">
+        <div class="qfield"><div class="flabel">Current Position</div><div class="fval">OMG can consume and operationalize externally-defined governance requirements — it does not determine them.</div></div>
+        <div class="qfield"><div class="flabel">Current Capability</div><div class="fval">Compliance Pack Builder (Regulatory Source → Requirement → Obligation → Control → Policy); Policy Registry.</div></div>
+        <div class="qfield"><div class="flabel">Evidence</div><div class="fval"><span class="mono">PolicyRegistryPage.tsx</span>; Governance Studio's Compliance Pack Builder tab.</div></div>
+        <div class="qfield"><div class="flabel">Current Limitation</div><div class="fval">The regulatory/policy content itself must be authored or imported by the customer — OMG provides the structure, not the interpretation.</div></div>
+        <div class="qfield"><div class="flabel">Planned Evolution</div><div class="fval">None required — this is a real, working structure today.</div></div>
+        <div class="qfield"><div class="flabel">Honest Assessment</div><div class="fval">A genuine <span class="mono">A</span> for the operationalization mechanism; <span class="mono">B</span> only in that regulatory interpretation itself is intentionally customer-supplied, not an OMG limitation.</div></div>
+        <div class="qfield full-row"><div class="flabel">Recommended Direction</div><div class="fval">Continue treating regulatory content as customer/ODF input to a real OMG structure.</div></div>
+      </div>
+    </div>
+
+    <div class="qcard">
+      <div class="qcard-head"><div><span class="qnum-tag">4</span><h4>Authority Boundary</h4></div><span class="badge b-A">A</span><span class="badge b-E">E</span></div>
+      <div class="qfields">
+        <div class="qfield"><div class="flabel">Current Position</div><div class="fval">OMG captures authority descriptively and now actively re-derives whether it is current — it does not verify real-world identity or lock authority.</div></div>
+        <div class="qfield"><div class="flabel">Current Capability</div><div class="fval"><span class="mono">GovernanceAuthorityProfile</span> (accountable owner, governance sponsor, risk owner, technical owner, compliance owner, override/kill-switch/reassessment authority) plus a working Authority Currency engine.</div></div>
+        <div class="qfield"><div class="flabel">Evidence</div><div class="fval"><span class="mono">types/index.ts:279-288</span>; <span class="mono">config/authorityCurrencyEngine.ts:19-30</span> — classifies <span class="mono">Current / Review Required / Expired / Not Applicable</span> from <span class="mono">lastReviewDate</span> against fixed 90/60-day windows.</div></div>
+        <div class="qfield"><div class="flabel">Current Limitation</div><div class="fval">Currency is derived purely from a review-date field, not from confirming the named person still holds that role in reality. No "authority locking" mechanism exists.</div></div>
+        <div class="qfield"><div class="flabel">Planned Evolution</div><div class="fval">Authority locking (freezing an authority assignment during an active reassessment) is a plausible, in-scope next step — not yet built.</div></div>
+        <div class="qfield"><div class="flabel">Honest Assessment</div><div class="fval">This question's originally-anticipated gap (Authority Currency) is closed. What remains — real-world identity verification — correctly belongs outside OMG Core.</div></div>
+        <div class="qfield full-row"><div class="flabel">Recommended Direction</div><div class="fval">Consider Authority Locking as the next natural extension; keep identity verification as ODF/IAM-integration territory.</div></div>
+      </div>
+    </div>
+
+    <div class="qcard">
+      <div class="qcard-head"><div><span class="qnum-tag">5</span><h4>Governance Configuration</h4></div><span class="badge b-C">C</span><span class="badge b-F">F</span></div>
+      <div class="qfields">
+        <div class="qfield"><div class="flabel">Current Position</div><div class="fval">Two real, interactive configuration surfaces exist; changing either is not itself governed.</div></div>
+        <div class="qfield"><div class="flabel">Current Capability</div><div class="fval">Governance Studio (Conditions, Policies, Outcomes, Actions, Rule Mapping, Compliance Packs, Customer Profiles) and Governability Studio (evidence-completeness minimums, authority review/warning periods).</div></div>
+        <div class="qfield"><div class="flabel">Evidence</div><div class="fval"><span class="mono">GovernabilityStudioPage.tsx</span>; <span class="mono">storageService.ts</span> — <span class="mono">updateGovernabilityConfig()</span> persists changes and calls <span class="mono">addAuditLog()</span>.</div></div>
+        <div class="qfield"><div class="flabel">Current Limitation</div><div class="fval">A configuration change is logged, not approved — there is no versioning or authorization workflow around changing the configuration itself.</div></div>
+        <div class="qfield"><div class="flabel">Planned Evolution</div><div class="fval">A formal configuration-change authorization workflow, configuration versioning, and configuration-approval evidence.</div></div>
+        <div class="qfield"><div class="flabel">Honest Assessment</div><div class="fval">Configuration itself is real and auditable; governance of the configuration process is the named, unresolved gap.</div></div>
+        <div class="qfield full-row"><div class="flabel">Recommended Direction</div><div class="fval">Apply OMG's own governance discipline to its own configuration surfaces.</div></div>
+      </div>
+    </div>
+
+    <div class="qcard">
+      <div class="qcard-head"><div><span class="qnum-tag">6</span><h4>Identity &amp; Delegation</h4></div><span class="badge b-B">B</span><span class="badge b-D">D</span></div>
+      <div class="qfields">
+        <div class="qfield"><div class="flabel">Current Position</div><div class="fval">A genuine three-way session model, not real enterprise identity.</div></div>
+        <div class="qfield"><div class="flabel">Current Capability</div><div class="fval">Distinct Platform, Demo, and Workspace login/session types; Workspace Login uses a real (though plaintext, demo-grade) password check; Platform Login uses a hardcoded credential.</div></div>
+        <div class="qfield"><div class="flabel">Evidence</div><div class="fval"><span class="mono">contexts/AuthContext.tsx</span> — <span class="mono">SessionType</span>, <span class="mono">loginToWorkspace()</span>, <span class="mono">loginToPlatform()</span>; <span class="mono">WorkspaceUser.password</span> is documented in code as non-production.</div></div>
+        <div class="qfield"><div class="flabel">Current Limitation</div><div class="fval">No real credential store, hashing, or SSO exists. A real architectural flaw was found and fixed this cycle: the Demo "Super Admin" persona previously doubled as platform administration via an unconditional role bypass — corrected by making platform access depend on session type, not persona role.</div></div>
+        <div class="qfield"><div class="flabel">Planned Evolution</div><div class="fval">Real identity binding, integrated with whichever IdP the customer already operates, delivered through ODF.</div></div>
+        <div class="qfield"><div class="flabel">Honest Assessment</div><div class="fval">The session/role-boundary logic is a genuine, partially-built Core capability; real authentication remains, correctly, outside Core.</div></div>
+        <div class="qfield full-row"><div class="flabel">Recommended Direction</div><div class="fval">Preserve the corrected session-boundary logic; deliver real IdP integration only through ODF.</div></div>
+      </div>
+    </div>
+
+    <div class="qcard">
+      <div class="qcard-head"><div><span class="qnum-tag">7</span><h4>Runtime Enforcement</h4></div><span class="badge b-E">E</span></div>
+      <div class="qfields">
+        <div class="qfield"><div class="flabel">Current Position</div><div class="fval"><b>OMG is not a runtime enforcement platform.</b> A deliberate architectural position, not a gap.</div></div>
+        <div class="qfield"><div class="flabel">Current Capability</div><div class="fval">OMG identifies governance state, admissibility, and governability status; it recommends, it does not act.</div></div>
+        <div class="qfield"><div class="flabel">Evidence</div><div class="fval">Every governance engine's header comment disclaims enforcement; the Kill Switch is 100% human-form-triggered (<span class="mono">KillSwitchCenterPage.tsx</span>); the newest engine, Post-Intervention Revalidation, returns a recommendation (<span class="mono">Continue</span>/<span class="mono">Remain Stopped</span>) with no execution side-effect (<span class="mono">storageService.ts:4385-4408</span>).</div></div>
+        <div class="qfield"><div class="flabel">Current Limitation</div><div class="fval">None relevant — this is by design, confirmed under the newest code as much as the oldest.</div></div>
+        <div class="qfield"><div class="flabel">Planned Evolution</div><div class="fval">None planned, deliberately. Enforcement belongs to the customer's runtime platform, which consumes OMG's governance decisions.</div></div>
+        <div class="qfield"><div class="flabel">Honest Assessment</div><div class="fval">This is OMG's most defensible architectural property.</div></div>
+        <div class="qfield full-row"><div class="flabel">Recommended Direction</div><div class="fval">Preserve this boundary; do not engineer it away.</div></div>
+      </div>
+    </div>
+
+    <div class="qcard">
+      <div class="qcard-head"><div><span class="qnum-tag">8</span><h4>Integration Architecture</h4></div><span class="badge b-D">D</span></div>
+      <div class="qfields">
+        <div class="qfield"><div class="flabel">Current Position</div><div class="fval">Intentionally limited today.</div></div>
+        <div class="qfield"><div class="flabel">Current Capability</div><div class="fval">The only network integration anywhere in the codebase is the frontend calling its own (currently unwired) backend.</div></div>
+        <div class="qfield"><div class="flabel">Evidence</div><div class="fval">Exhaustive check of both <span class="mono">package.json</span> files: no SSO/SAML/OAuth, webhook, or third-party API client dependency. One aspirational catalog entry exists — <span class="mono">config/customerWorkspaceFoundation.ts:39</span>, "Governance Event Webhook" — explicitly described as a future extension, not built.</div></div>
+        <div class="qfield"><div class="flabel">Current Limitation</div><div class="fval">No APIs, webhooks, or event contracts exist for external consumption.</div></div>
+        <div class="qfield"><div class="flabel">Planned Evolution</div><div class="fval">APIs, webhooks, and enterprise integrations delivered through ODF, based on actual customer requirements.</div></div>
+        <div class="qfield"><div class="flabel">Honest Assessment</div><div class="fval">Candidly true and correctly scoped — building speculative integrations ahead of customer need would be premature investment.</div></div>
+        <div class="qfield full-row"><div class="flabel">Recommended Direction</div><div class="fval">Build only on demonstrated customer demand.</div></div>
+      </div>
+    </div>
+
+    <div class="qcard">
+      <div class="qcard-head"><div><span class="qnum-tag">9</span><h4>Change &amp; Reassessment</h4></div><span class="badge b-A">A</span><span class="badge b-F">F</span></div>
+      <div class="qfields">
+        <div class="qfield"><div class="flabel">Current Position</div><div class="fval">One of OMG's strongest areas — and now carrying an internal consistency issue worth naming plainly.</div></div>
+        <div class="qfield"><div class="flabel">Current Capability</div><div class="fval">Governance Continuity, a 15-type reassessment taxonomy with a now-reachable filing entry point, Findings, Corrective Actions, Governance Journey, Decision Reconstruction — all closed-loop and computed.</div></div>
+        <div class="qfield"><div class="flabel">Evidence</div><div class="fval"><span class="mono">GovernabilityDashboardPage.tsx:63,173-178</span> — a working "File Reassessment Trigger" button calling <span class="mono">saveReassessmentTrigger()</span>, gated by <span class="mono">canPerform('reassessmentTrigger:create')</span>.</div></div>
+        <div class="qfield"><div class="flabel">Current Limitation</div><div class="fval">OMG now runs <b>two independent, non-unified models of "change"</b>: the simple <span class="mono">ReassessmentTrigger</span> that feeds the Governability Engine, and a separate, richer <span class="mono">ChangeRequest</span>/multi-step approval-chain system (Phase 10). The two declare incompatible <span class="mono">GovernanceState</span> enums (<span class="mono">types/index.ts:330-338</span> vs. <span class="mono">types/changeManagement.ts:137-147</span>) and never synchronize — <span class="mono">getCurrentGovernanceState()</span> never writes back to the asset's real governance state.</div></div>
+        <div class="qfield"><div class="flabel">Planned Evolution</div><div class="fval">Reconcile the two models, or explicitly document why both exist, before either is presented as "the" OMG change model.</div></div>
+        <div class="qfield"><div class="flabel">Honest Assessment</div><div class="fval">Genuinely strong, genuinely real — and genuinely carrying a duplication that should be resolved before this area is showcased further.</div></div>
+        <div class="qfield full-row"><div class="flabel">Recommended Direction</div><div class="fval">Prioritize unifying the change models — see Real OMG Evolution Opportunities below.</div></div>
+      </div>
+    </div>
+
+    <div class="qcard">
+      <div class="qcard-head"><div><span class="qnum-tag">10</span><h4>Evidence Integrity</h4></div><span class="badge b-A">A</span><span class="badge b-F">F</span></div>
+      <div class="qfields">
+        <div class="qfield"><div class="flabel">Current Position</div><div class="fval">Evidence lifecycle, sufficiency scoring, and traceability are all real; cryptographic integrity is not.</div></div>
+        <div class="qfield"><div class="flabel">Current Capability</div><div class="fval">Evidence Registry, Decision Reconstruction, Governance Journey, plus a working <span class="mono">computeEvidenceSufficiency()</span> engine scoring availability, recency, completeness, relevance, and context-alignment.</div></div>
+        <div class="qfield"><div class="flabel">Evidence</div><div class="fval"><span class="mono">config/evidenceSufficiencyEngine.ts:33</span>, verified against real seeded evidence records including expired/superseded examples.</div></div>
+        <div class="qfield"><div class="flabel">Current Limitation</div><div class="fval">Cryptographic verification and tamper-evidence mechanisms do not exist. Stated plainly, not assumed.</div></div>
+        <div class="qfield"><div class="flabel">Planned Evolution</div><div class="fval">Cryptographic integrity should be pursued only if a specific customer's assurance requirements call for it.</div></div>
+        <div class="qfield"><div class="flabel">Honest Assessment</div><div class="fval">Lifecycle and sufficiency are real, current, and computed — genuinely more than bookkeeping.</div></div>
+        <div class="qfield full-row"><div class="flabel">Recommended Direction</div><div class="fval">Do not build cryptographic integrity speculatively.</div></div>
+      </div>
+    </div>
+
+    <div class="qcard">
+      <div class="qcard-head"><div><span class="qnum-tag">11</span><h4>Safe Failure</h4></div><span class="badge b-E">E</span></div>
+      <div class="qfields">
+        <div class="qfield"><div class="flabel">Current Position</div><div class="fval">Not applicable to OMG's own scope, by design.</div></div>
+        <div class="qfield"><div class="flabel">Current Capability</div><div class="fval">OMG does not execute transactions, agents, or workflows, so it has no execution path to fail safely.</div></div>
+        <div class="qfield"><div class="flabel">Evidence</div><div class="fval">No code anywhere in <span class="mono">frontend/src</span> or <span class="mono">backend/src</span> executes or intercepts a running process.</div></div>
+        <div class="qfield"><div class="flabel">Current Limitation</div><div class="fval">If OMG's own availability is lost, governance visibility is lost — that is a legitimate OMG-availability concern, distinct from runtime safe-failure, and is an ODF/hosting design question.</div></div>
+        <div class="qfield"><div class="flabel">Planned Evolution</div><div class="fval">None within Core; hosting resilience is a deployment-pattern decision.</div></div>
+        <div class="qfield"><div class="flabel">Honest Assessment</div><div class="fval">Execution fail-safe behavior belongs to runtime systems, correctly.</div></div>
+        <div class="qfield full-row"><div class="flabel">Recommended Direction</div><div class="fval">No action needed within OMG Core.</div></div>
+      </div>
+    </div>
+
+    <div class="qcard">
+      <div class="qcard-head"><div><span class="qnum-tag">12</span><h4>Security &amp; Assurance</h4></div><span class="badge b-F">F</span></div>
+      <div class="qfields">
+        <div class="qfield"><div class="flabel">Current Position</div><div class="fval">Stated honestly — no certifications, audits, or penetration tests are claimed or exist.</div></div>
+        <div class="qfield"><div class="flabel">Current Capability</div><div class="fval">A real RBAC action-key permission model (8 roles, 88 action keys) with a backend role guard.</div></div>
+        <div class="qfield"><div class="flabel">Evidence</div><div class="fval"><span class="mono">roleActionMatrix.ts</span>; the backend guard's own doc comment states it performs authorization only, not authentication.</div></div>
+        <div class="qfield"><div class="flabel">Current Limitation</div><div class="fval">No SOC 2, ISO 27001, penetration test, or formal security audit exists.</div></div>
+        <div class="qfield"><div class="flabel">Planned Evolution</div><div class="fval">Pursue formal assurance only when a specific customer's production requirements call for it.</div></div>
+        <div class="qfield"><div class="flabel">Honest Assessment</div><div class="fval">Appropriate posture for evaluation-stage software, candidly documented.</div></div>
+        <div class="qfield full-row"><div class="flabel">Recommended Direction</div><div class="fval">Do not claim assurance ahead of an actual engagement.</div></div>
+      </div>
+    </div>
+
+    <div class="qcard">
+      <div class="qcard-head"><div><span class="qnum-tag">13</span><h4>Scale &amp; Performance</h4></div><span class="badge b-F">F</span></div>
+      <div class="qfields">
+        <div class="qfield"><div class="flabel">Current Position</div><div class="fval">Stated honestly — no metrics are claimed or exist.</div></div>
+        <div class="qfield"><div class="flabel">Current Capability</div><div class="fval">A functional dual-mode data architecture (evaluation <span class="mono">localStorage</span> / production Postgres schema) with a migration utility between them.</div></div>
+        <div class="qfield"><div class="flabel">Evidence</div><div class="fval">No load-testing artifacts, benchmark results, or performance documentation exist anywhere in the repository.</div></div>
+        <div class="qfield"><div class="flabel">Current Limitation</div><div class="fval">No scale, latency, or availability metrics have ever been measured.</div></div>
+        <div class="qfield"><div class="flabel">Planned Evolution</div><div class="fval">Scale and performance validation should follow real production deployment, not precede it.</div></div>
+        <div class="qfield"><div class="flabel">Honest Assessment</div><div class="fval">Nothing to report, and nothing invented here.</div></div>
+        <div class="qfield full-row"><div class="flabel">Recommended Direction</div><div class="fval">Unchanged — validate under real load when it exists.</div></div>
+      </div>
+    </div>
+
+    <div class="qcard">
+      <div class="qcard-head"><div><span class="qnum-tag">14</span><h4>Regulatory Content</h4></div><span class="badge b-A">A</span></div>
+      <div class="qfields">
+        <div class="qfield"><div class="flabel">Current Position</div><div class="fval">The regulatory operationalization framework is implemented and real.</div></div>
+        <div class="qfield"><div class="flabel">Current Capability</div><div class="fval">Regulatory mapping, requirement structuring, policy operationalization, compliance alignment.</div></div>
+        <div class="qfield"><div class="flabel">Evidence</div><div class="fval">Compliance Pack Builder (Regulatory Source → Requirement → Obligation → Control → Policy); <span class="mono">PolicyRegistryPage.tsx</span>.</div></div>
+        <div class="qfield"><div class="flabel">Current Limitation</div><div class="fval">Customers bring their own regulatory content and interpretations — by design, not by gap.</div></div>
+        <div class="qfield"><div class="flabel">Planned Evolution</div><div class="fval">None required.</div></div>
+        <div class="qfield"><div class="flabel">Honest Assessment</div><div class="fval">A genuine, working structure.</div></div>
+        <div class="qfield full-row"><div class="flabel">Recommended Direction</div><div class="fval">Continue as-is.</div></div>
+      </div>
+    </div>
+
+    <div class="qcard">
+      <div class="qcard-head"><div><span class="qnum-tag">15</span><h4>Data Ownership &amp; Portability</h4></div><span class="badge b-B">B</span><span class="badge b-F">F</span></div>
+      <div class="qfields">
+        <div class="qfield"><div class="flabel">Current Position</div><div class="fval">Customer ownership of governance data is the operating principle; full portability tooling is not yet built.</div></div>
+        <div class="qfield"><div class="flabel">Current Capability</div><div class="fval">A Workspace Governance Export Pack offering JSON, CSV, and print export, each recorded to the workspace audit trail; a separate evaluation-to-production migration utility.</div></div>
+        <div class="qfield"><div class="flabel">Evidence</div><div class="fval"><span class="mono">WorkspaceDashboardPage.tsx:167-200</span> — <span class="mono">handleExportJSON</span>/<span class="mono">handleExportCSV</span>/<span class="mono">handlePrint</span>, each calling <span class="mono">logExport()</span>.</div></div>
+        <div class="qfield"><div class="flabel">Current Limitation</div><div class="fval">Export is scoped to a single workspace's records, not a full platform-wide governance record export.</div></div>
+        <div class="qfield"><div class="flabel">Planned Evolution</div><div class="fval">Extend export scope beyond a single workspace if platform-wide portability becomes a real customer requirement.</div></div>
+        <div class="qfield"><div class="flabel">Honest Assessment</div><div class="fval">Real, audited, and meaningfully ahead of a single export button — but not yet comprehensive.</div></div>
+        <div class="qfield full-row"><div class="flabel">Recommended Direction</div><div class="fval">Governance Record Portability remains a genuine, named evolution opportunity (see below).</div></div>
+      </div>
+    </div>
+
+    <div class="qcard">
+      <div class="qcard-head"><div><span class="qnum-tag">16</span><h4>Partner &amp; IP Model</h4></div><span class="badge b-D">D</span></div>
+      <div class="qfields">
+        <div class="qfield"><div class="flabel">Current Position</div><div class="fval">A commercial/licensing principle, not a code-verifiable claim.</div></div>
+        <div class="qfield"><div class="flabel">Current Capability</div><div class="fval">Not applicable to codebase evidence.</div></div>
+        <div class="qfield"><div class="flabel">Evidence</div><div class="fval">Not applicable — this is a business/IP statement.</div></div>
+        <div class="qfield"><div class="flabel">Current Limitation</div><div class="fval">None to assess technically.</div></div>
+        <div class="qfield"><div class="flabel">Planned Evolution</div><div class="fval">N/A.</div></div>
+        <div class="qfield"><div class="flabel">Honest Assessment</div><div class="fval">Platform IP remains OMG's; customer-specific configuration remains customer-owned; partner accelerators remain partner-owned unless contractually agreed otherwise.</div></div>
+        <div class="qfield full-row"><div class="flabel">Recommended Direction</div><div class="fval">Communicate as an explicit commercial principle during ODF engagement.</div></div>
+      </div>
+    </div>
+
+    <div class="qcard">
+      <div class="qcard-head"><div><span class="qnum-tag">17</span><h4>Enterprise Implementation</h4></div><span class="badge b-D">D</span></div>
+      <div class="qfields">
+        <div class="qfield"><div class="flabel">Current Position</div><div class="fval">A strong ODF area, not a product feature to build in isolation.</div></div>
+        <div class="qfield"><div class="flabel">Current Capability</div><div class="fval">The governance domain model is complete enough to plug into a real enterprise's existing ecosystem via ODF.</div></div>
+        <div class="qfield"><div class="flabel">Evidence</div><div class="fval">Not a code-evidence question — this describes the delivery/engagement model.</div></div>
+        <div class="qfield"><div class="flabel">Current Limitation</div><div class="fval">None specific to OMG Core.</div></div>
+        <div class="qfield"><div class="flabel">Planned Evolution</div><div class="fval">Continue positioning as an ODF-led, ecosystem-inclusive engagement.</div></div>
+        <div class="qfield"><div class="flabel">Honest Assessment</div><div class="fval">OMG can work alongside System Integrators, cloud providers, security teams, governance teams, and runtime platforms — it does not need to absorb any of those roles itself.</div></div>
+        <div class="qfield full-row"><div class="flabel">Recommended Direction</div><div class="fval">Continue as-is.</div></div>
+      </div>
+    </div>
+
+    <div class="qcard">
+      <div class="qcard-head"><div><span class="qnum-tag">18</span><h4>End-to-End Demonstration Scenario</h4></div><span class="badge b-A">A</span><span class="badge b-F">F</span></div>
+      <div class="qfields">
+        <div class="qfield"><div class="flabel">Current Position</div><div class="fval">OMG's strongest, most on-mission asset — see the dedicated Demonstration section below for the full ten-step walkthrough.</div></div>
+        <div class="qfield"><div class="flabel">Current Capability</div><div class="fval">A genuine, non-fabricated story spanning requirement, assessment, approval, evidence, decision, material change, reassessment, review, escalation, and reconstruction — verified against real seeded data, not staged numbers.</div></div>
+        <div class="qfield"><div class="flabel">Evidence</div><div class="fval">Seeded assets ast-101 (Fraud Detection Sentinel Agent — Monitoring, clean evidence) and ast-106 (Enterprise Portfolio Multi-Agent System — No GO, expired evidence, open critical finding, revoked certification, active kill switch), both now carrying live computed Governability/Admissibility verdicts.</div></div>
+        <div class="qfield"><div class="flabel">Current Limitation</div><div class="fval">Steps 6–9 (Material Change, Reassessment, Review, Escalation) currently route through whichever of the two disconnected change models is used — see Question 9.</div></div>
+        <div class="qfield"><div class="flabel">Planned Evolution</div><div class="fval">Unify the change models so this scenario has one authoritative path, not two.</div></div>
+        <div class="qfield"><div class="flabel">Honest Assessment</div><div class="fval">Real, traceable, and now materially richer than the baseline version of this same demonstration.</div></div>
+        <div class="qfield full-row"><div class="flabel">Recommended Direction</div><div class="fval">Extend this same demonstration into the Workspace evaluation surface as the next frontier.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ UNIQUE VALUE ============ -->
+<section id="value">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Dedicated Section</div>
+      <h2 class="title">Where OMG Creates Unique Value</h2>
+      <p class="section-sub">What distinguishes these from a traditional GRC (Governance, Risk &amp; Compliance) system.</p>
+    </div>
+
+    <div class="value-card"><h4>Governance Continuity</h4><p>Tracks whether a decision remains valid over time, not just whether it was made once.</p><div class="vs-grc"><b>vs. traditional GRC:</b> most GRC tools record a point-in-time approval and stop; OMG continuously re-evaluates whether that approval still holds.</div></div>
+    <div class="value-card"><h4>Reassessment</h4><p>A 15-type trigger taxonomy with a working consequence pathway and a now-reachable human filing entry point.</p><div class="vs-grc"><b>vs. traditional GRC:</b> reassessment is usually a manual calendar reminder; here it is a typed, structured event with a defined downstream effect.</div></div>
+    <div class="value-card"><h4>Governance Journey</h4><p>A real, aggregated view of an asset's path from registration through production and monitoring.</p><div class="vs-grc"><b>vs. traditional GRC:</b> most GRC dashboards show current status only, not the journey that produced it.</div></div>
+    <div class="value-card"><h4>Decision Reconstruction</h4><p>Reconstructs the conditions under which a past decision was made, for comparison against current conditions.</p><div class="vs-grc"><b>vs. traditional GRC:</b> few GRC systems can answer "what did we know when we approved this?" as a first-class query.</div></div>
+    <div class="value-card"><h4>Evidence Traceability</h4><p>Links evidence to the specific risk assessment, review, decision, and reauthorization it supports.</p></div>
+    <div class="value-card"><h4>Five-Way Accountability</h4><p>Every governed asset carries five distinct accountability roles at once — business owner, technical owner, risk owner, compliance owner, and approver (<span class="mono">OwnershipAssignment</span>, <span class="mono">types/index.ts:44-50</span>) — not a single "owner" field.</p><div class="vs-grc"><b>vs. traditional GRC:</b> most systems track one owner per asset; OMG structurally requires five distinct accountable roles.</div></div>
+    <div class="value-card"><h4>Governability Assessment</h4><p>A single, composite, explainable verdict — <span class="mono">Governable / Governable With Conditions / Review Required / Governance Attention Required / Not Governable</span> — computed from evidence, authority, and admissibility together, not read off one field.</p></div>
+    <div class="value-card"><h4>Authority Currency</h4><p>Re-derives whether the named decision authority is still current, rather than trusting a static field indefinitely.</p></div>
+    <div class="value-card"><h4>Evidence Sufficiency</h4><p>Scores whether evidence is actually enough — availability, recency, completeness, relevance, and context-alignment — not merely present.</p></div>
+    <div class="value-card"><h4>Admissibility Assessment</h4><p>Diffs the conditions a decision was made under against current conditions, and recommends <span class="mono">Continue</span>, <span class="mono">Escalate</span>, <span class="mono">Reauthorize</span>, or <span class="mono">Pause</span> accordingly.</p></div>
+    <div class="value-card"><h4>Governance Intelligence</h4><p>A reasoning layer that composes multiple independent signals into one recommendation, advisory-only throughout.</p></div>
+  </div>
+</section>
+
+<!-- ============ REAL OMG EVOLUTION OPPORTUNITIES ============ -->
+<section class="alt" id="evolution">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Dedicated Section</div>
+      <h2 class="title">Real OMG Evolution Opportunities</h2>
+      <p class="section-sub">Honesty cuts both ways: several of the originally-anticipated evolution items are already built. Listing them as still-open would be its own form of exaggeration. Each is marked accordingly, with what genuinely remains.</p>
+    </div>
+
+    <div class="gap-card resolved"><h4><span class="gap-num">1</span>Evidence Sufficiency Engine — ALREADY BUILT</h4><p><span class="mono">config/evidenceSufficiencyEngine.ts:33</span>, computed live.</p></div>
+    <div class="gap-card resolved"><h4><span class="gap-num">2</span>Authority Currency Engine — ALREADY BUILT</h4><p><span class="mono">config/authorityCurrencyEngine.ts:22</span>, computed live.</p></div>
+    <div class="gap-card resolved"><h4><span class="gap-num">3</span>Governability Status Engine — ALREADY BUILT</h4><p><span class="mono">config/governabilityEngine.ts:26</span>, composing the above two plus admissibility into one verdict.</p></div>
+    <div class="gap-card resolved"><h4><span class="gap-num">4</span>Admissibility Assessment Engine — ALREADY BUILT</h4><p><span class="mono">config/admissibilityEngine.ts:25</span>, computed live.</p></div>
+    <div class="gap-card resolved"><h4><span class="gap-num">5</span>Dynamic Reassessment Triggering — ALREADY BUILT</h4><p><span class="mono">GovernabilityDashboardPage.tsx:63,173-178</span> — a real, reachable filing entry point.</p></div>
+
+    <div class="gap-card"><h4><span class="gap-num">6</span>Governance Signal Intelligence — GENUINE REMAINING OPPORTUNITY</h4><p>The Governability Engine's 3-signal composition (evidence, authority, material change) is real progress, but broader correlation across findings, drift, and policy violations together still goes only as far as the Drift engine's own <span class="mono">applyCompoundEscalation()</span> rule (<span class="mono">governanceDriftEngine.ts:109</span>).</p></div>
+    <div class="gap-card"><h4><span class="gap-num">7</span>Governance Record Portability — GENUINE REMAINING OPPORTUNITY</h4><p>JSON/CSV/Print export now exists and is audited, but is scoped to a single workspace rather than the full platform's governance record set.</p></div>
+    <div class="gap-card"><h4><span class="gap-num">8</span>Cross-System Governance Federation — GENUINE REMAINING OPPORTUNITY, NOT STARTED</h4><p>No external-system integration exists anywhere: the literal string denoting any named external decisioning system appears zero times in the codebase, and the only related artifact is one aspirational, explicitly-unbuilt catalog entry (<span class="mono">config/customerWorkspaceFoundation.ts:39</span>). If OMG is to hand governance context to, and receive decisions back from, an external system, that interface does not exist today in any form.</p></div>
+
+    <div class="note-box"><b>Additional item surfaced during this assessment, not in the original candidate list:</b> unifying the two disconnected change/<span class="mono">GovernanceState</span> models (Question 9) is arguably a higher-priority evolution item than several of the above, since it affects the integrity of a capability area already marketed as a strength.</div>
+  </div>
+</section>
+
+<!-- ============ AUTHORITY BOUNDARY ============ -->
+<section id="authority">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Dedicated Section</div>
+      <h2 class="title">Preserving Authority Across Governance &amp; Execution</h2>
+      <p class="section-sub">Addressing Chris's central concern directly: Authority, Accountability, Traceability, Governance, and Execution Boundaries.</p>
+    </div>
+
+    <div class="authority-card">
+      <h4>Organisational Authority</h4>
+      <div class="authority-fields">
+        <div class="af"><div class="aflabel">Current Support</div><div class="afval">Represented as named, descriptive roles per asset (accountable owner, governance sponsor).</div></div>
+        <div class="af"><div class="aflabel">Current Limitation</div><div class="afval">Static string fields — no organisational hierarchy or delegation graph is modeled.</div></div>
+        <div class="af"><div class="aflabel">Future Opportunity</div><div class="afval">A structured organisational authority hierarchy, if customer need justifies it.</div></div>
+      </div>
+    </div>
+    <div class="authority-card">
+      <h4>Governance Authority</h4>
+      <div class="authority-fields">
+        <div class="af"><div class="aflabel">Current Support</div><div class="afval">Real and re-derived: <span class="mono">GovernanceAuthorityProfile</span> plus the Authority Currency engine.</div></div>
+        <div class="af"><div class="aflabel">Current Limitation</div><div class="afval">Currency is date-derived, not identity-verified.</div></div>
+        <div class="af"><div class="aflabel">Future Opportunity</div><div class="afval">Authority Locking during active reassessment.</div></div>
+      </div>
+    </div>
+    <div class="authority-card">
+      <h4>Runtime Authority</h4>
+      <div class="authority-fields">
+        <div class="af"><div class="aflabel">Current Support</div><div class="afval">None — correctly out of scope.</div></div>
+        <div class="af"><div class="aflabel">Current Limitation</div><div class="afval">OMG has no runtime execution path to hold authority over.</div></div>
+        <div class="af"><div class="aflabel">Future Opportunity</div><div class="afval">None planned — belongs to the customer's runtime platform.</div></div>
+      </div>
+    </div>
+    <div class="authority-card">
+      <h4>Delegated Authority</h4>
+      <div class="authority-fields">
+        <div class="af"><div class="aflabel">Current Support</div><div class="afval">Descriptive <span class="mono">delegationScope</span> field on agent-type assets.</div></div>
+        <div class="af"><div class="aflabel">Current Limitation</div><div class="afval">A free-text description, not an enforced or verifiable delegation chain.</div></div>
+        <div class="af"><div class="aflabel">Future Opportunity</div><div class="afval">Structured delegation records, if a real use case requires it.</div></div>
+      </div>
+    </div>
+    <div class="authority-card">
+      <h4>Evidence Authority</h4>
+      <div class="authority-fields">
+        <div class="af"><div class="aflabel">Current Support</div><div class="afval"><span class="mono">EvidenceOwnership</span> — evidence owner, business owner, reviewer, approval authority, all captured per record.</div></div>
+        <div class="af"><div class="aflabel">Current Limitation</div><div class="afval">No cryptographic attestation of who actually supplied the evidence.</div></div>
+        <div class="af"><div class="aflabel">Future Opportunity</div><div class="afval">Cryptographic evidence attestation, only if customer assurance needs call for it.</div></div>
+      </div>
+    </div>
+    <div class="authority-card">
+      <h4>Decision Authority</h4>
+      <div class="authority-fields">
+        <div class="af"><div class="aflabel">Current Support</div><div class="afval">Durable, human-attributed decision records with Decision Reconstruction capability.</div></div>
+        <div class="af"><div class="aflabel">Current Limitation</div><div class="afval">Two coexisting change models can each independently claim to represent "the" decision state for an asset.</div></div>
+        <div class="af"><div class="aflabel">Future Opportunity</div><div class="afval">Unify into a single authoritative decision/state model.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PRACTITIONERS ============ -->
+<section class="alt" id="practitioners">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Practitioner Alignment</div>
+      <h2 class="title">Chris Kechagias, Kari, and Szilvia</h2>
+    </div>
+
+    <div class="practitioner-card">
+      <h3>Chris Kechagias</h3>
+      <div class="focus-tag">Governance Formation · Governance Architecture · Authority Structures</div>
+      <p><b>Strong alignment:</b> the layered Authority → Governance → Execution model this report opens with matches Governance Formation's own framing directly; OMG's Five-Way Accountability model and Authority Currency engine both speak to authority-structure concerns specifically.</p>
+      <p><b>Open architectural questions:</b> the two coexisting change models (Question 9) and the still-demo-grade identity layer (Question 6) are the two items most likely to draw follow-up scrutiny from an architecture review lens.</p>
+      <p><b>Future collaboration opportunity:</b> Authority Locking and a unified change/decision model are natural areas where Governance Five™ framing could directly inform OMG's roadmap.</p>
+    </div>
+
+    <div class="practitioner-card">
+      <h3>Kari</h3>
+      <div class="focus-tag">Responsible AI · Enterprise Governance</div>
+      <p><b>Strong alignment:</b> Governance State, Authorization Decision recording, and the new composite Governability verdict all map directly onto responsible-AI oversight needs.</p>
+      <p><b>Open architectural questions:</b> Execution Request and Runtime Effect Validation remain, correctly, outside OMG — worth confirming this boundary reads as a strength, not an absence, from a Responsible AI lens.</p>
+      <p><b>Future collaboration opportunity:</b> Governance Signal Intelligence, extended beyond the current 3-signal composition, is the most natural next step for responsible-AI-grade oversight.</p>
+    </div>
+
+    <div class="practitioner-card">
+      <h3>Szilvia</h3>
+      <div class="focus-tag">Regulatory Governance · Operational Governance</div>
+      <p><b>Strong alignment:</b> Continuous Governability, Authority Revalidation, Evidence Sufficiency Validation, and Admissibility Revalidation — all four of the items associated with Szilvia's runtime-governability discussion earlier in this engagement — are now built, computed capabilities, not future candidates.</p>
+      <p><b>Open architectural questions:</b> Runtime Revalidation (observing live execution) remains correctly out of scope; Context-Aware Governance is real for change-taxonomy purposes but still needs ODF-delivered infrastructure-level change detection.</p>
+      <p><b>Future collaboration opportunity:</b> Governance Record Portability and Cross-System Governance Federation are the two areas most relevant to a regulatory/operational governance lens going forward.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ DEMONSTRATION ============ -->
+<section id="demonstration">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">End-to-End Demonstration Scenario</div>
+      <h2 class="title">The exact ten-step scenario, walked through against real seeded data</h2>
+    </div>
+
+    <div class="demo-step"><div class="demo-num">1</div><div><h4>Governance Requirement enters OMG</h4><p>A policy or risk threshold is authored in Policy Registry / Compliance Pack Builder. <b>Real today.</b></p></div></div>
+    <div class="demo-step"><div class="demo-num">2</div><div><h4>Assessment</h4><p>The asset (e.g. ast-101, Fraud Detection Sentinel Agent) is assessed against risk, validation, and ownership criteria. <b>Real today.</b></p></div></div>
+    <div class="demo-step"><div class="demo-num">3</div><div><h4>Approval</h4><p>A governance decision is recorded, human-attributed. <b>Real today.</b></p></div></div>
+    <div class="demo-step"><div class="demo-num">4</div><div><h4>Evidence Collection</h4><p>Evidence records are attached and scored for sufficiency. <b>Real today</b> — <span class="mono">evidenceSufficiencyEngine.ts</span>.</p></div></div>
+    <div class="demo-step"><div class="demo-num">5</div><div><h4>Governance Decision</h4><p>A composite Governability verdict is computed. <b>Real today</b> — <span class="mono">governabilityEngine.ts</span>.</p></div></div>
+    <div class="demo-step"><div class="demo-num">6</div><div><h4>Material Change</h4><p>A change event occurs (e.g. a model update). <b>Real today, but routed through one of two disconnected models</b> — see Question 9.</p></div></div>
+    <div class="demo-step"><div class="demo-num">7</div><div><h4>Reassessment Trigger</h4><p>A trigger is filed via the now-reachable "File Reassessment Trigger" button. <b>Real today.</b></p></div></div>
+    <div class="demo-step"><div class="demo-num">8</div><div><h4>Governance Review</h4><p>Admissibility is recomputed against the new conditions, recommending Continue / Escalate / Reauthorize / Pause. <b>Real today</b> — <span class="mono">admissibilityEngine.ts</span>.</p></div></div>
+    <div class="demo-step"><div class="demo-num">9</div><div><h4>Escalation</h4><p>A recommendation to escalate is surfaced to a human decision-maker. <b>Real for the recommendation; the actual escalation routing/notification is not automated.</b></p></div></div>
+    <div class="demo-step"><div class="demo-num">10</div><div><h4>Decision Reconstruction</h4><p>The full history — what was known, when, and by whom — is reconstructed. <b>Real today</b>, verified against seeded ast-106 (Enterprise Portfolio Multi-Agent System — No GO, expired evidence, open critical finding, revoked certification, active kill switch).</p></div></div>
+
+    <div class="note-box"><b>Future evolution opportunity for this exact scenario:</b> steps 6–9 would be more defensible as a single, auditable path once the two change models (Question 9, Evolution Opportunity list) are unified.</div>
+  </div>
+</section>
+
+<!-- ============ RECOMMENDATIONS ============ -->
+<section class="alt" id="recommendations">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Strategic Recommendations</div>
+      <h2 class="title">In priority order</h2>
+    </div>
+    <div class="reco-item"><div class="reco-num">1</div><div><h4>Unify the two Change/GovernanceState models</h4><p>The highest-priority item — it affects the integrity of Question 9 and the End-to-End Demonstration alike.</p></div></div>
+    <div class="reco-item"><div class="reco-num">2</div><div><h4>Extend Governance Signal Intelligence beyond Compound Escalation</h4><p>Broaden cross-signal correlation across findings, drift, and policy violations together.</p></div></div>
+    <div class="reco-item"><div class="reco-num">3</div><div><h4>Extend Governance Record Portability beyond a single workspace</h4><p>Platform-wide export, if customer need arises.</p></div></div>
+    <div class="reco-item"><div class="reco-num">4</div><div><h4>Add a configuration-change authorization workflow</h4><p>Applies to both Governance Studio and Governability Studio.</p></div></div>
+    <div class="reco-item"><div class="reco-num">5</div><div><h4>Consider Authority Locking</h4><p>A natural extension of the now-built Authority Currency engine.</p></div></div>
+    <div class="reco-item"><div class="reco-num">6</div><div><h4>Scope Cross-System Governance Federation deliberately</h4><p>Nothing exists today — define the interface contract before building anything, likely as an ODF-delivered extension per customer.</p></div></div>
+    <div class="reco-item"><div class="reco-num">7</div><div><h4>Continue resisting speculative IAM, SSO, and infrastructure builds inside Core</h4><p>These remain correctly positioned as ODF Implementation Layer work, on actual customer demand.</p></div></div>
+  </div>
+</section>
+
+<!-- ============ CONCLUSION ============ -->
+<section id="conclusion">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Final Executive Conclusion</div>
+      <h2 class="title">The honest verdict</h2>
+    </div>
+    <div class="conclusion-box">
+      <p>OMG is best understood as a Governance Intelligence and Governance Operations Platform.</p>
+      <p>Its strongest capabilities lie in governance state management, accountability, evidence management, governance continuity, reassessment, traceability, and governance decision reconstruction.</p>
+      <p>The next evolution of OMG is not becoming a runtime platform, but strengthening governability intelligence through authority currency, evidence sufficiency, admissibility assessment, governability status, governance signal intelligence, and governance continuity — while preserving a clear architectural separation between authority, governance, and execution.</p>
+    </div>
+    <div class="conclusion-note">
+      <b>Current-state note:</b> as of this assessment, four of the six capabilities named above — authority currency, evidence sufficiency, admissibility assessment, and governability status — are no longer future strengthening targets; they are built, computed engines verified directly against code. The genuine remaining strengthening targets are governance signal intelligence (partially built), governance continuity of the change model specifically (currently split across two disconnected systems), and governance record portability (partially built). This note is included so the conclusion above is read as current, not aspirational.
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    Every classification in this report follows one rule: an item is only called an OMG gap after first determining it belongs to OMG Core — not to configuration, ODF implementation, customer environment, or a category explicitly outside OMG's stated scope. No capability, customer deployment, integration, or certification is claimed without direct codebase evidence. No code was modified in the course of this review.
+    <br><a class="back-to-top" href="#exec-summary">↑ Back to top</a>
+  </div>
+</footer>
+
+</body>
+</html>

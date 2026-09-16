@@ -432,6 +432,23 @@ export const NAV_DOMAINS: NavDomain[] = [
           { path: '/workspace-persona-landing', label: 'Choose Governance Perspective', icon: '🎭', description: 'Pick a starting evaluation lens for the current workspace session — Governance Admin, Risk Officer, Business Owner, Validator, Auditor or Viewer.', keywords: ['persona landing', 'perspective', 'evaluation lens', 'release 18.1 patch'] },
         ],
       },
+      {
+        label: 'Governance Authority & Position',
+        modules: [
+          { path: '/authority-provenance', label: 'Authority Provenance Registry', icon: '🪪', description: 'Traceable authority: source, delegation reference, effective/expiry dates and supersession history — OMG records and operationalizes authority, it does not create it.', keywords: ['authority provenance', 'delegation', 'authority source', 'authority lineage', 'release 19'], insight: {
+            whatItDoes: 'Records who holds which governance authority, where that grant came from, and whether it is still active, expired, suspended, delegated, superseded or pending review.',
+            whyItMatters: 'A named owner is not the same claim as a traceable, currently-valid grant of authority from an identifiable source.',
+            governanceOutcome: 'Authority Current / Authority At Risk / Authority Invalid, per asset — advisory only.',
+            keyArtifacts: ['Authority provenance records', 'Delegation references', 'Authority lineage'],
+          } },
+          { path: '/governance-position', label: 'Governance Position & Reauthorisation', icon: '📜', description: 'The Authorised Governance Position, its Reliance Basis, one Unified Governance State, a Reauthorisation recommendation, and an exportable Governance Position Contract.', keywords: ['governance position', 'reliance basis', 'unified governance state', 'reauthorisation', 'governance position contract', 'release 19'], insight: {
+            whatItDoes: 'Composes Governability, Reliance Basis and the active Authorised Governance Position into one canonical state, recommends whether reauthorisation is needed, and packages an approved position into a contract a downstream system may consume.',
+            whyItMatters: 'Governability asks whether a decision still holds up. Governance Position asks the sharper question: exactly what was authorised, subject to what, relying on what — and is that single truth still standing?',
+            governanceOutcome: 'One authoritative Governed / Conditionally Governed / Governance At Risk / Governance Invalid / Pending Reauthorisation / Retired state per asset — never a second, conflicting truth.',
+            keyArtifacts: ['Authorised Governance Position', 'Reliance Basis elements', 'Unified Governance State', 'Reauthorisation outcome', 'Governance Position Contract'],
+          } },
+        ],
+      },
     ],
   }),
 
