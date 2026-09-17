@@ -908,7 +908,7 @@ export const TOUR_STEPS: TourStep[] = [
     icon: '🧬',
     what: 'Duplicate a workspace — its assets, evidence, findings, alerts and reassessment triggers — into a fresh copy for a new round of testing.',
     why: 'POC testing, regression testing, scenario comparison and governance experimentation all need a clean starting point without losing the original.',
-    look: '"Chris Sandbox" becomes "Chris Sandbox v2" — same starting data, completely independent from that point forward.',
+    look: '"Governance Sandbox 1" becomes "Governance Sandbox 1 v2" — same starting data, completely independent from that point forward.',
   },
   {
     n: 69,
@@ -954,6 +954,33 @@ export const TOUR_STEPS: TourStep[] = [
     what: 'The Governance State Resolution Layer (GSRL): every governance workflow ultimately resolves into a single authoritative governance state, shown on the Governance Truth Card wherever an asset appears.',
     why: 'Findings have their own Open/In Progress/Closed status. Change requests have their own lifecycle. Governance Continuity has its own Continue/Reassess/Escalate. None of them should become, or compete to be, the platform\'s governance truth — the GSRL resolves them into one.',
     look: 'The same Governance Truth Card renders identically on the Governance Position page, the Governability Dashboard and the Authority Provenance Registry — one truth, wherever you look.',
+  },
+  {
+    n: 74,
+    title: 'External Governance Position Intake',
+    path: '/governance-position-intake',
+    icon: '📥',
+    what: 'A structured intake for governance positions authorised outside OMG — received, reviewed and, once accepted, operationalised as a real governance position against a named asset.',
+    why: 'A position formed by an external authority needs to be preserved exactly as received before OMG does anything with it. Accepting it is a distinct, auditable act, never an implicit one — and the state, scope and applicability actually authorised are carried through without reinterpretation.',
+    look: 'Every accepted intake shows its source system, source authority and the exact governance state it was authorised under — never a default value.',
+  },
+  {
+    n: 75,
+    title: 'Governance Position Evidence Registry',
+    path: '/governance-position',
+    icon: '🔗',
+    what: 'Links a governance position to runtime evidence or a reliance event already on file for the asset, without creating a second evidence store.',
+    why: 'A governance position and the evidence supporting it should be connected, not tracked in two separate places a reviewer has to cross-reference by hand.',
+    look: 'Linked evidence appears immediately against the position, and the same link is visible from the Traceability view.',
+  },
+  {
+    n: 76,
+    title: 'Governance Position Traceability',
+    path: '/governance-position-traceability',
+    icon: '🧵',
+    what: 'One connected view of a governance position\'s full lifecycle — Authority, Intake, Position, Contract, Evidence, Changed Conditions, and Reassessment or Reauthorisation history.',
+    why: 'Interoperability is only real if it can be traced end to end. Every stage shown here reads an existing OMG record — nothing is computed new for this view.',
+    look: 'A position accepted from an external authority shows that authority, its original reference, and every downstream effect in a single screen.',
   },
 ];
 
@@ -1015,9 +1042,9 @@ export const GUIDED_TOURS: GuidedTourDefinition[] = [
   {
     id: 'governability-intelligence',
     name: 'Governability Intelligence',
-    description: 'Governance Continuity vs. Runtime Governability — Evidence Sufficiency, Authority Currency, Admissibility, Authority Provenance, Governance Position, Reliance Basis, Reauthorisation and the one Unified Governance State they all resolve into.',
+    description: 'Governance Continuity vs. Runtime Governability — Evidence Sufficiency, Authority Currency, Admissibility, Authority Provenance, Governance Position, Reliance Basis, Reauthorisation, interoperability with externally authorised positions, and the one Unified Governance State they all resolve into.',
     icon: '🛡️',
-    stepTitles: ['Governability Dashboard', 'Evidence Sufficiency', 'Authority Currency', 'Admissibility', 'Reassessment', 'Authority Provenance', 'Governance Position', 'Reliance Basis', 'Reauthorisation', 'Unified Governance State', 'Decision Reconstruction', 'Export Pack'],
+    stepTitles: ['Governability Dashboard', 'Evidence Sufficiency', 'Authority Currency', 'Admissibility', 'Reassessment', 'Authority Provenance', 'Governance Position', 'Reliance Basis', 'Reauthorisation', 'Unified Governance State', 'External Governance Position Intake', 'Governance Position Evidence Registry', 'Governance Position Traceability', 'Decision Reconstruction', 'Export Pack'],
   },
   {
     id: 'workspace-evaluation',

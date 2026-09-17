@@ -212,7 +212,6 @@ const RELEASE_HISTORY: ReleaseEntry[] = [
     version: 'Release 19.1',
     date: '2026',
     title: 'Governance State Harmonisation Framework',
-    current: true,
     highlights: [
       'Governance State Resolution Layer (GSRL) — the one authoritative governance state, resolved directly from six raw signal providers (Authority Currency, Reliance Basis, Evidence Sufficiency, Admissibility, Reauthorisation, Governance Continuity), never from a pre-composed intermediate',
       'Architectural fix: Reauthorisation no longer depends on the Unified Governance State it used to feed into — that circular dependency is resolved; Reauthorisation and the GSRL are now siblings fed by the same upstream signals',
@@ -220,6 +219,43 @@ const RELEASE_HISTORY: ReleaseEntry[] = [
       'Governance State History — every genuine state transition recorded with its previous state, new state, triggering event, triggering engine and timestamp, enabling governance state reconstruction',
       'Dashboard Harmonisation — the Governability Dashboard now leads with the Unified Governance State breakdown as the one governance truth, with the existing Governability breakdown kept visible as one of its named input signals rather than a competing aggregation',
       'Local workflow states (Findings, the separate Change Request lifecycle, Governance Continuity\'s own date-based status) are explicitly untouched — this release harmonises interpretation, not the underlying workflows',
+    ],
+  },
+  {
+    version: 'Release 19.2',
+    date: '2026',
+    title: 'Practitioner Review Readiness Remediation',
+    highlights: [
+      'Self-healing name-based reconciliation — governance position, reliance and authority provenance records resolve to the currently loaded asset by its stable name, surviving any environment reseed rather than depending on a fixed identifier',
+      'Extended the same reconciliation to validation records, closing a second, independently discovered instance of the same class of issue',
+      'Terminology alignment across dashboards and reports — governance-outcome language standardised platform-wide',
+    ],
+  },
+  {
+    version: 'Release 20',
+    date: '2026',
+    title: 'Governance Position Lifecycle Interoperability Foundation',
+    highlights: [
+      'External Governance Position Intake — a structured intake lifecycle (Received / Under Review / Accepted / Rejected) for governance positions authorised outside OMG, preserved exactly as received before any operational action is taken',
+      'Authorised Governance Position Lifecycle extended with origin tracking — Internal or External Intake — and a direct link back to the intake it was accepted from',
+      'Governance Position Contract v2 — the existing contract handoff package extended with authority provenance, accountability references and evidence requirements',
+      'Governance Position Evidence Registry — links a governance position to runtime evidence or a reliance event already on file, without a second evidence store',
+      'Changed Condition Recognition — reuses the existing Reauthorisation Engine and Reassessment Trigger signals to surface when a position\'s conditions have changed, with no new detection logic',
+      'Reassessment Routing and Reauthorisation Routing — OMG creates and routes a request to the position\'s own named authority; it records the hand-off but never decides the outcome',
+      'Governance Position Traceability — one connected view of Authority, Intake, Position, Contract, Evidence, Changed Conditions and Reassessment/Reauthorisation history for a governed asset',
+    ],
+  },
+  {
+    version: 'Release 20.1',
+    date: '2026',
+    title: 'Governance Position Fidelity Hardening',
+    current: true,
+    highlights: [
+      'External Governance State Preservation — the governance state an external authority actually authorised is now a required, validated intake field, carried through to the position and contract without reinterpretation or a default value',
+      'Scope Preservation — scope now flows end to end from intake through the authorised position, its contract, and the traceability view',
+      'Applicability Preservation — applicability flows through the same end-to-end path as scope',
+      'Governance Position Evidence Registry Operator Experience — evidence association is now available directly from the Governance Position page, reusing the existing registry and its APIs',
+      'Governance Meaning Preservation — closes the specific gap where an externally authorised decision could be recorded with a different state than the one actually authorised',
     ],
   },
 ];
@@ -379,34 +415,36 @@ export const ReleaseNotesPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Roadmap */}
-      <section className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-5 flex flex-col gap-4">
-        <SectionHeader
-          title="Governance Roadmap"
-          subtitle="Architected in the navigation and RBAC model today; capability delivery follows."
-          icon="🧭"
-        />
+      {/* Roadmap — Release 20.2: hidden rather than shown empty when there are no entries to display. */}
+      {FUTURE_MODULES.length > 0 && (
+        <section className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-5 flex flex-col gap-4">
+          <SectionHeader
+            title="Governance Roadmap"
+            subtitle="Architected in the navigation and RBAC model today; capability delivery follows."
+            icon="🧭"
+          />
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2.5">
-          {FUTURE_MODULES.map(module => (
-            <div
-              key={module.path}
-              data-noglass
-              className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-sunken)] px-3.5 py-3"
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-base" aria-hidden>
-                  {module.icon}
-                </span>
-                <p className="text-[12.5px] font-bold text-[var(--text-primary)]">{module.label}</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2.5">
+            {FUTURE_MODULES.map(module => (
+              <div
+                key={module.path}
+                data-noglass
+                className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-sunken)] px-3.5 py-3"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-base" aria-hidden>
+                    {module.icon}
+                  </span>
+                  <p className="text-[12.5px] font-bold text-[var(--text-primary)]">{module.label}</p>
+                </div>
+                <p className="text-[11px] text-[var(--text-muted)] mt-1.5 leading-relaxed">
+                  {module.description}
+                </p>
               </div>
-              <p className="text-[11px] text-[var(--text-muted)] mt-1.5 leading-relaxed">
-                {module.description}
-              </p>
-            </div>
-          ))}
-        </div>
-      </section>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 };

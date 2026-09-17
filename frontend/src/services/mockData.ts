@@ -1555,18 +1555,18 @@ export const INITIAL_GOVERNABILITY_CONFIG: GovernabilityConfigEntry[] = [
  * through ODF onboarding, not seeded here.
  */
 export const INITIAL_WORKSPACES: Workspace[] = [
-  { id: 'wks-chris', name: 'Chris Sandbox', status: 'Active', tenantId: 'tnt-demo', environmentTier: 'DEV', createdAt: '2026-09-11', createdBy: 'Sarah Jenkins (Super Admin)' },
-  { id: 'wks-szilvia', name: 'Szilvia Sandbox', status: 'Active', tenantId: 'tnt-demo', environmentTier: 'DEV', createdAt: '2026-09-11', createdBy: 'Sarah Jenkins (Super Admin)' },
+  { id: 'wks-sandbox-1', name: 'Governance Sandbox 1', status: 'Active', tenantId: 'tnt-demo', environmentTier: 'DEV', createdAt: '2026-09-11', createdBy: 'Sarah Jenkins (Super Admin)' },
+  { id: 'wks-sandbox-2', name: 'Governance Sandbox 2', status: 'Active', tenantId: 'tnt-demo', environmentTier: 'DEV', createdAt: '2026-09-11', createdBy: 'Sarah Jenkins (Super Admin)' },
   { id: 'wks-banking-poc', name: 'Banking POC', status: 'Active', tenantId: 'tnt-bank-alpha', environmentTier: 'DEV', createdAt: '2026-09-11', createdBy: 'Sarah Jenkins (Super Admin)' },
-  { id: 'wks-rbi-eval', name: 'RBI Evaluation Workspace', status: 'Active', tenantId: 'tnt-demo', environmentTier: 'DEV', createdAt: '2026-09-11', createdBy: 'Sarah Jenkins (Super Admin)' },
+  { id: 'wks-regulatory-eval', name: 'Regulatory Evaluation Workspace', status: 'Active', tenantId: 'tnt-demo', environmentTier: 'DEV', createdAt: '2026-09-11', createdBy: 'Sarah Jenkins (Super Admin)' },
 ];
 
 /** DEMO-ONLY credentials — see the doc comment on WorkspaceUser in types/index.ts. Not real authentication. */
 export const INITIAL_WORKSPACE_USERS: WorkspaceUser[] = [
-  { id: 'wku-chris', workspaceId: 'wks-chris', name: 'Chris', email: 'chris@company.com', password: 'demo1234', role: 'Workspace Owner', status: 'Active', createdAt: '2026-09-11' },
-  { id: 'wku-szilvia', workspaceId: 'wks-szilvia', name: 'Szilvia', email: 'szilvia@company.com', password: 'demo1234', role: 'Workspace Owner', status: 'Active', createdAt: '2026-09-11' },
-  { id: 'wku-desh', workspaceId: 'wks-banking-poc', name: 'Desh', email: 'desh@bankingpoc.com', password: 'demo1234', role: 'Workspace Owner', status: 'Active', createdAt: '2026-09-11' },
-  { id: 'wku-latha', workspaceId: 'wks-rbi-eval', name: 'Latha', email: 'latha@rbieval.com', password: 'demo1234', role: 'Workspace Owner', status: 'Active', createdAt: '2026-09-11' },
+  { id: 'wku-sandbox-1', workspaceId: 'wks-sandbox-1', name: 'Sandbox User 1', email: 'sandbox1@company.com', password: 'demo1234', role: 'Workspace Owner', status: 'Active', createdAt: '2026-09-11' },
+  { id: 'wku-sandbox-2', workspaceId: 'wks-sandbox-2', name: 'Sandbox User 2', email: 'sandbox2@company.com', password: 'demo1234', role: 'Workspace Owner', status: 'Active', createdAt: '2026-09-11' },
+  { id: 'wku-poc-owner', workspaceId: 'wks-banking-poc', name: 'POC Owner', email: 'pocowner@bankingpoc.com', password: 'demo1234', role: 'Workspace Owner', status: 'Active', createdAt: '2026-09-11' },
+  { id: 'wku-eval-lead', workspaceId: 'wks-regulatory-eval', name: 'Evaluation Lead', email: 'evallead@regulatoryeval.com', password: 'demo1234', role: 'Workspace Owner', status: 'Active', createdAt: '2026-09-11' },
 ];
 
 /**

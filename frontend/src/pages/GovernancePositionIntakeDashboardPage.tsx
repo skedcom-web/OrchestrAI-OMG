@@ -159,15 +159,15 @@ export const GovernancePositionIntakeDashboardPage: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
           <div className="flex flex-col gap-1.5">
             <label className={labelClass}>Source System</label>
-            <input value={sourceSystem} onChange={e => setSourceSystem(e.target.value)} disabled={!canCreate} placeholder="e.g. Aegis" className={inputClass} />
+            <input value={sourceSystem} onChange={e => setSourceSystem(e.target.value)} disabled={!canCreate} placeholder="e.g. External Governance System" className={inputClass} />
           </div>
           <div className="flex flex-col gap-1.5">
             <label className={labelClass}>Source Authority</label>
-            <input value={sourceAuthority} onChange={e => setSourceAuthority(e.target.value)} disabled={!canCreate} placeholder="e.g. Astrynn Holdings Governance Committee" className={inputClass} />
+            <input value={sourceAuthority} onChange={e => setSourceAuthority(e.target.value)} disabled={!canCreate} placeholder="e.g. Governance Authority Board" className={inputClass} />
           </div>
           <div className="flex flex-col gap-1.5">
             <label className={labelClass}>Authority Reference</label>
-            <input value={authorityReference} onChange={e => setAuthorityReference(e.target.value)} disabled={!canCreate} placeholder="e.g. AEGIS-GOV-2026-004" className={inputClass} />
+            <input value={authorityReference} onChange={e => setAuthorityReference(e.target.value)} disabled={!canCreate} placeholder="e.g. GOV-REF-2026-001" className={inputClass} />
           </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">

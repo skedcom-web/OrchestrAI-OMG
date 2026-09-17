@@ -5000,7 +5000,7 @@ export async function createGovernancePositionIntake(data: Omit<GovernancePositi
  */
 export async function reviewGovernancePositionIntake(
   id: string,
-  data: { status: 'Under Review' | 'Accepted' | 'Rejected'; reviewedBy: string; reviewNotes?: string; assetId?: string; authorisedGovernanceState?: string; validFrom?: string; validUntil?: string }
+  data: { status: 'Under Review' | 'Accepted' | 'Rejected'; reviewedBy: string; reviewNotes?: string; assetId?: string; validFrom?: string; validUntil?: string }
 ): Promise<{ intake: GovernancePositionIntake; position?: AuthorisedGovernancePosition }> {
   const result = await apiGovernancePositionIntakeRepository.reviewIntake(id, data);
   addAuditLog(

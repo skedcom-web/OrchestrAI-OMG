@@ -420,7 +420,7 @@ export interface GovernancePositionIntakeRepository {
   createIntake(data: Partial<GovernancePositionIntake>): Promise<GovernancePositionIntake>;
   reviewIntake(
     id: string,
-    data: { status: 'Under Review' | 'Accepted' | 'Rejected'; reviewedBy: string; reviewNotes?: string; assetId?: string; authorisedGovernanceState?: string; validFrom?: string; validUntil?: string }
+    data: { status: 'Under Review' | 'Accepted' | 'Rejected'; reviewedBy: string; reviewNotes?: string; assetId?: string; validFrom?: string; validUntil?: string }
   ): Promise<{ intake: GovernancePositionIntake; position?: AuthorisedGovernancePosition }>;
 }
 

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Card } from '../components/ui/Card';
 import { Select } from '../components/ui/Select';
-import { getAssets, getGovernancePositionTraceability } from '../services/storageService';
+import { getAssets, getGovernancePositionTraceability, getEvidenceRecordsForAsset } from '../services/storageService';
 import type { GovernancePositionTraceability } from '../types';
 
 const Pill: React.FC<{ children: React.ReactNode; tone?: string }> = ({ children, tone = 'var(--text-muted)' }) => (
@@ -30,6 +30,7 @@ export const GovernancePositionTraceabilityPage: React.FC = () => {
   const [assetId, setAssetId] = useState(assets[0]?.id || '');
   const [trace, setTrace] = useState<GovernancePositionTraceability | null>(null);
   const [loading, setLoading] = useState(true);
+  const assetEvidence = assetId ? getEvidenceRecordsForAsset(assetId) : [];
 
   useEffect(() => {
     if (!assetId) return;
@@ -122,9 +123,16 @@ export const GovernancePositionTraceabilityPage: React.FC = () => {
               <p className="text-[10px] font-extrabold uppercase tracking-wider text-[var(--text-muted)] mb-2">Evidence</p>
               {trace.evidenceLinks.length > 0 ? (
                 <div className="flex flex-col gap-1.5">
-                  {trace.evidenceLinks.map(e => (
-                    <p key={e.id} className="text-[11px] text-[var(--text-muted)]">{e.linkType} — {e.evidenceRecordRef || e.relianceEventRef || 'unreferenced'}</p>
-                  ))}
+                  {trace.evidenceLinks.map(e => {
+                    const record = e.evidenceRecordRef ? assetEvidence.find(r => r.id === e.evidenceRecordRef) : undefined;
+                    return (
+                      <p key={e.id} className="text-[11px] text-[var(--text-muted)]">
+                        <b className="text-[var(--text-primary)]">{record ? record.name : (e.relianceEventRef || 'Unreferenced')}</b>
+                        {record && <> — {record.evidenceType}</>}
+                        {' '}· Link type: {e.linkType}
+                      </p>
+                    );
+                  })}
                 </div>
               ) : (
                 <p className="text-[11px] text-[var(--text-muted)]">No runtime evidence or reliance events linked to this position yet.</p>
