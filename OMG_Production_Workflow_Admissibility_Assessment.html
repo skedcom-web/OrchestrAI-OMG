@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OMG Production Workflow Admissibility Assessment</title>
+<style>
+:root{
+  --bg:#f5f7fb; --surface:#ffffff; --surface-alt:#eef2f8; --border:#d9e1ec; --border-strong:#b9c6db;
+  --text:#141d2e; --text-muted:#54627a; --text-faint:#8492a8;
+  --accent:#1f4e79; --accent-dark:#0f2c47; --accent-light:#e6eef7;
+  --yes:#166a3f; --yes-bg:#e2f5ea; --yes-border:#a9dcc0;
+  --no:#a3313a; --no-bg:#fbe4e6; --no-border:#eab3b8;
+  --partial:#96650a; --partial-bg:#fbf0d9; --partial-border:#edcf8f;
+  --shadow: 0 1px 3px rgba(20,29,46,0.06), 0 8px 24px rgba(20,29,46,0.05);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1520; --surface:#161f30; --surface-alt:#1c2740; --border:#2a3852; --border-strong:#3a4b6b;
+    --text:#e7ecf5; --text-muted:#a9b6cc; --text-faint:#7c8aa3;
+    --accent:#6ea3d8; --accent-dark:#9dc3ec; --accent-light:#1c3350;
+    --yes:#6fd39c; --yes-bg:#123526; --yes-border:#1e5b3e;
+    --no:#ef98a0; --no-bg:#3a1418; --no-border:#6b262c;
+    --partial:#eec877; --partial-bg:#3a2e0e; --partial-border:#6b5219;
+    --shadow: 0 1px 3px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.3);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f1520; --surface:#161f30; --surface-alt:#1c2740; --border:#2a3852; --border-strong:#3a4b6b;
+  --text:#e7ecf5; --text-muted:#a9b6cc; --text-faint:#7c8aa3;
+  --accent:#6ea3d8; --accent-dark:#9dc3ec; --accent-light:#1c3350;
+  --yes:#6fd39c; --yes-bg:#123526; --yes-border:#1e5b3e;
+  --no:#ef98a0; --no-bg:#3a1418; --no-border:#6b262c;
+  --partial:#eec877; --partial-bg:#3a2e0e; --partial-border:#6b5219;
+  --shadow: 0 1px 3px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.3);
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{margin:0; background:var(--bg); color:var(--text); font-family:"Segoe UI","Helvetica Neue",Arial,sans-serif; font-size:14.5px; line-height:1.62;}
+h1,h2,h3,h4{font-family:"Segoe UI",Arial,sans-serif; color:var(--accent-dark); font-weight:800; text-wrap:balance;}
+p{margin:0 0 10px 0;}
+a{color:var(--accent);}
+code{font-family:"Consolas","Courier New",monospace;}
+.wrap{max-width:1180px; margin:0 auto; padding:0 24px;}
+
+.cover{background:linear-gradient(160deg, var(--accent-dark) 0%, var(--accent) 100%); color:#f2f6fb; padding:52px 0 36px 0;}
+.cover .kicker{font-size:11.5px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:#bcd4ec; margin-bottom:14px;}
+.cover h1{color:#ffffff; font-size:26px; margin:0 0 10px 0; line-height:1.28;}
+.cover .subtitle{color:#d9e7f5; font-size:14.5px; max-width:860px; margin-bottom:16px;}
+.cover .meta-row{display:flex; flex-wrap:wrap; gap:10px; margin-top:6px;}
+.cover .meta-chip{background:rgba(255,255,255,0.10); border:1px solid rgba(255,255,255,0.22); border-radius:8px; padding:8px 14px; font-size:12.1px; color:#eaf2fa;}
+.cover .meta-chip b{color:#ffffff;}
+
+.topnav{position:sticky; top:0; z-index:50; background:var(--surface); border-bottom:1px solid var(--border); box-shadow:var(--shadow);}
+.topnav .wrap{display:flex; align-items:center; gap:2px; overflow-x:auto; padding:0 24px; flex-wrap:nowrap;}
+.topnav a{white-space:nowrap; display:inline-block; padding:12px 10px; font-size:11.6px; font-weight:700; color:var(--text-muted); text-decoration:none; border-bottom:3px solid transparent;}
+.topnav a:hover{color:var(--accent); border-bottom-color:var(--border-strong);}
+.topnav .brand{font-weight:800; color:var(--accent-dark); padding-right:14px; border-right:1px solid var(--border); margin-right:6px; white-space:nowrap; flex:none;}
+
+section{padding:38px 0;}
+section.alt{background:var(--surface-alt);}
+.section-head{margin-bottom:20px; max-width:900px;}
+.eyebrow{font-size:11px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:var(--accent); margin-bottom:8px;}
+h2.title{font-size:22px; margin:0 0 8px 0;}
+.section-sub{color:var(--text-muted); font-size:13.6px;}
+
+.card{background:var(--surface); border:1px solid var(--border); border-radius:12px; box-shadow:var(--shadow); padding:20px 22px;}
+
+table{width:100%; border-collapse:collapse; font-size:12.4px; background:var(--surface); border-radius:10px; overflow:hidden;}
+.table-wrap{overflow-x:auto; border:1px solid var(--border); border-radius:10px; box-shadow:var(--shadow); margin:14px 0;}
+th{background:var(--accent-dark); color:#eef4fb; text-align:left; padding:9px 11px; font-weight:700; font-size:10.6px; text-transform:uppercase; letter-spacing:.03em;}
+td{padding:8px 11px; border-top:1px solid var(--border); vertical-align:top;}
+tr:nth-child(even) td{background:var(--surface-alt);}
+.mono{font-family:"Consolas","Courier New",monospace; font-size:11px; background:var(--surface-alt); padding:1px 5px; border-radius:4px;}
+
+.pill{display:inline-flex; align-items:center; gap:5px; font-size:10.4px; font-weight:800; letter-spacing:.02em; padding:3px 9px; border-radius:999px; border:1px solid; white-space:nowrap;}
+.p-yes{color:var(--yes); background:var(--yes-bg); border-color:var(--yes-border);}
+.p-no{color:var(--no); background:var(--no-bg); border-color:var(--no-border);}
+.p-partial{color:var(--partial); background:var(--partial-bg); border-color:var(--partial-border);}
+
+.determination{background:var(--no-bg); border:1px solid var(--no-border); border-left:6px solid var(--no); border-radius:10px; padding:26px 28px; margin:20px 0; text-align:center;}
+.determination .verdict{font-size:17px; font-weight:800; color:var(--no); letter-spacing:.01em; line-height:1.5;}
+
+ul{margin:0 0 10px 0; padding-left:22px;}
+li{margin-bottom:6px;}
+
+footer{padding:28px 0 56px 0; color:var(--text-faint); font-size:12px; text-align:center;}
+.back-to-top{display:inline-block; margin-top:10px; font-size:12px; color:var(--accent); text-decoration:none; font-weight:700;}
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <div class="wrap">
+    <div class="kicker">Production-Backed Evidence Only — No Mock, Seed, or Local Data</div>
+    <h1>OMG Production Workflow Admissibility Assessment</h1>
+    <div class="subtitle">A direct query of the live production database against Javier Muñoz Burillo's required evaluation pattern: T0 Governance State → Material Change → Evidence Available At T1 → Consequential Action → Resulting Governance Position.</div>
+    <div class="meta-row">
+      <div class="meta-chip"><b>Source:</b> Live production database, queried directly at assessment time</div>
+      <div class="meta-chip"><b>Scope:</b> All 7 real AIAsset records, no sampling</div>
+      <div class="meta-chip"><b>Method:</b> Table-level record checks, not status-field inference</div>
+    </div>
+  </div>
+</div>
+
+<nav class="topnav">
+  <div class="wrap">
+    <span class="brand">ADMISSIBILITY ASSESSMENT</span>
+    <a href="#s1">1. Search Scope</a>
+    <a href="#s2">2. Tables Examined</a>
+    <a href="#s3">3. Pattern Required</a>
+    <a href="#s4">4. Assets Reviewed</a>
+    <a href="#s5">5. Evidence Found</a>
+    <a href="#s6">6. Missing Stages</a>
+    <a href="#s7">7. Determination</a>
+  </div>
+</nav>
+
+<!-- SECTION 1 -->
+<section id="s1">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Section 1</div>
+      <h2 class="title">Search Scope</h2>
+    </div>
+    <p>Every real <span class="mono">AIAsset</span> row in the live production database was queried directly and examined in full — 7 records, no sampling, no exclusions. For each asset, every related governance, evidence, authority, and action table was queried by that asset's real production-generated ID. <span class="mono">mockData.ts</span>, <span class="mono">backend/prisma/seed.js</span>, and browser <span class="mono">localStorage</span> were explicitly excluded as evidence sources — a record counts only if it exists as a row in the production database at query time.</p>
+  </div>
+</section>
+
+<!-- SECTION 2 -->
+<section class="alt" id="s2">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Section 2</div>
+      <h2 class="title">Tables Examined</h2>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <tr><th>Table</th><th>Purpose in Pattern</th><th>Rows Found (all 7 assets combined)</th></tr>
+        <tr><td class="mono">AIAsset</td><td>T0 Governance State, Authority Basis</td><td>7</td></tr>
+        <tr><td class="mono">EvidenceRecord</td><td>Evidence Basis (T0 and T1)</td><td>12</td></tr>
+        <tr><td class="mono">ReassessmentTrigger</td><td>Material Change</td><td>3</td></tr>
+        <tr><td class="mono">GovernanceReauthorizationRecord</td><td>Resulting Governance Position (state transition)</td><td>1</td></tr>
+        <tr><td class="mono">KillSwitchRecord</td><td>Consequential Action</td><td>0</td></tr>
+        <tr><td class="mono">OverrideRecord</td><td>Consequential Action</td><td>0</td></tr>
+        <tr><td class="mono">RetirementRecord</td><td>Consequential Action</td><td>0</td></tr>
+        <tr><td class="mono">CorrectiveAction</td><td>Remediation tracking (does not mutate asset state)</td><td>3</td></tr>
+        <tr><td class="mono">AuditLog</td><td>Audit Evidence</td><td>8 (entityId-matched to an asset)</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 3 -->
+<section id="s3">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Section 3</div>
+      <h2 class="title">Workflow Pattern Required</h2>
+    </div>
+    <div class="card">
+      <p style="margin-bottom:14px;"><b>T0 Governance State → Material Change → Evidence Available At T1 → Consequential Action → Resulting Governance Position</b></p>
+      <p style="margin-bottom:0;">A workflow qualifies only if all five of the following exist as production database records for the same asset:</p>
+      <ul style="margin-top:10px;">
+        <li>An approved asset or agent (T0 governance/decision state)</li>
+        <li>A real material change record</li>
+        <li>A real consequential action record</li>
+        <li>Real authority information</li>
+        <li>Real evidence records</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 4 -->
+<section class="alt" id="s4">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Section 4</div>
+      <h2 class="title">Matching Assets Reviewed</h2>
+      <p class="section-sub">Every real production asset, checked against every stage using table-level record counts, not status-field inference.</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <tr><th>Asset</th><th>Asset ID</th><th>Approved State</th><th>Material Change</th><th>Consequential Action</th><th>Complete Pattern</th></tr>
+        <tr><td>Fraud Detection Sentinel Agent</td><td class="mono">911ca4c2-eec8-…</td><td><span class="pill p-yes">YES</span></td><td><span class="pill p-no">NO</span></td><td><span class="pill p-no">NO</span></td><td><span class="pill p-no">NO</span></td></tr>
+        <tr><td>Customer Concierge Copilot</td><td class="mono">d29cbe52-d835-…</td><td><span class="pill p-yes">YES</span></td><td><span class="pill p-no">NO</span></td><td><span class="pill p-no">NO</span></td><td><span class="pill p-no">NO</span></td></tr>
+        <tr><td>Mortgage Document Intelligence Workflow</td><td class="mono">51d6064a-8c9a-…</td><td><span class="pill p-yes">YES</span></td><td><span class="pill p-no">NO</span></td><td><span class="pill p-no">NO</span></td><td><span class="pill p-no">NO</span></td></tr>
+        <tr><td>Retail Credit Scoring Engine</td><td class="mono">3ac17fde-a2ae-…</td><td><span class="pill p-partial">PARTIAL</span></td><td><span class="pill p-yes">YES</span></td><td><span class="pill p-no">NO</span></td><td><span class="pill p-no">NO</span></td></tr>
+        <tr><td>Enterprise Portfolio Multi-Agent System</td><td class="mono">e2176d37-7f15-…</td><td><span class="pill p-partial">PARTIAL</span></td><td><span class="pill p-yes">YES</span></td><td><span class="pill p-no">NO</span></td><td><span class="pill p-no">NO</span></td></tr>
+        <tr><td>AML Regulatory Intelligence RAG</td><td class="mono">7e3aac6d-fb32-…</td><td><span class="pill p-no">NO</span></td><td><span class="pill p-yes">YES</span></td><td><span class="pill p-no">NO</span></td><td><span class="pill p-no">NO</span></td></tr>
+        <tr><td>QA Audit Test Asset</td><td class="mono">67df14bc-b5ee-…</td><td><span class="pill p-no">NO</span></td><td><span class="pill p-no">NO</span></td><td><span class="pill p-no">NO</span></td><td><span class="pill p-no">NO</span></td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 5 -->
+<section id="s5">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Section 5</div>
+      <h2 class="title">Evidence Found</h2>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <tr><th>Record</th><th>Table</th><th>Primary Key</th><th>Asset</th><th>Key Fields</th></tr>
+        <tr><td>Material Change — Model Change</td><td class="mono">ReassessmentTrigger</td><td class="mono">(production UUID)</td><td>Retail Credit Scoring Engine</td><td>triggerType: MODEL_CHANGE, status: RESOLVED, dateDetected: 2026-08-01</td></tr>
+        <tr><td>Resulting Governance Position — state transition</td><td class="mono">GovernanceReauthorizationRecord</td><td class="mono">(production UUID)</td><td>Retail Credit Scoring Engine</td><td>previousState: REASSESSMENT_REQUIRED, newState: CONDITIONAL_GO, decision: CONDITIONAL_GO, reviewDate: 2026-08-05</td></tr>
+        <tr><td>Material Change — Control Failure</td><td class="mono">ReassessmentTrigger</td><td class="mono">(production UUID)</td><td>Enterprise Portfolio Multi-Agent System</td><td>triggerType: CONTROL_FAILURE, status: OPEN, dateDetected: 2026-08-06</td></tr>
+        <tr><td>Material Change — Regulatory Change</td><td class="mono">ReassessmentTrigger</td><td class="mono">(production UUID)</td><td>AML Regulatory Intelligence RAG</td><td>triggerType: REGULATORY_CHANGE, status: OPEN, dateDetected: 2026-09-16</td></tr>
+        <tr><td>Evidence — Independent Validation Report</td><td class="mono">EvidenceRecord</td><td class="mono">2a4b1fb4-44e1-…</td><td>Fraud Detection Sentinel Agent</td><td>status: ACTIVE, expiryDate: 2027-07-28</td></tr>
+        <tr><td>Evidence — Kill Switch Control Assessment</td><td class="mono">EvidenceRecord</td><td class="mono">dcd71fcd-20d8-…</td><td>Fraud Detection Sentinel Agent</td><td>status: ACTIVE, expiryDate: 2027-09-10</td></tr>
+        <tr><td>Authority fields (accountableOwner, governanceSponsor, killSwitchAuthority, etc.)</td><td class="mono">AIAsset</td><td>—</td><td>All 7 assets</td><td>Present as scalar fields on every asset record</td></tr>
+        <tr><td>Consequential Action of any kind</td><td class="mono">KillSwitchRecord / OverrideRecord / RetirementRecord</td><td>—</td><td>None</td><td><b>Zero rows exist in any of these three tables, for any asset, in production.</b></td></tr>
+      </table>
+    </div>
+    <p class="section-sub">Two assets carry a real, database-backed Material Change record with an open or resolved trigger. One asset (Retail Credit Scoring Engine) additionally carries a real, database-backed Resulting Governance Position record showing an actual state transition. Authority fields and Evidence records exist on every asset examined. No asset carries a Consequential Action record.</p>
+  </div>
+</section>
+
+<!-- SECTION 6 -->
+<section class="alt" id="s6">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Section 6</div>
+      <h2 class="title">Missing Stages</h2>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <tr><th>Stage</th><th>Status Across All 7 Assets</th></tr>
+        <tr><td>Approved Asset / Agent</td><td>Present for 3 assets fully, 2 assets partially, 2 assets absent</td></tr>
+        <tr><td>Authority Information</td><td>Present for all 7 assets</td></tr>
+        <tr><td>Evidence Records</td><td>Present for all 7 assets except QA Audit Test Asset</td></tr>
+        <tr><td>Material Change Record</td><td>Present for 3 of 7 assets</td></tr>
+        <tr><td><b>Consequential Action Record</b></td><td><b>Absent for all 7 assets — zero rows in KillSwitchRecord, OverrideRecord, and RetirementRecord combined, across the entire production database</b></td></tr>
+      </table>
+    </div>
+    <p>Where an asset's field values suggest an action occurred (Enterprise Portfolio Multi-Agent System's <span class="mono">operationalStatus: "Suspended"</span>; QA Audit Test Asset's <span class="mono">status: "Retirement"</span>), the corresponding action table was checked directly and found empty for that asset. These field values were not treated as evidence of a Consequential Action record.</p>
+  </div>
+</section>
+
+<!-- SECTION 7 -->
+<section id="s7">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Section 7</div>
+      <h2 class="title">Final Determination</h2>
+    </div>
+    <div class="determination">
+      <div class="verdict">"NO COMPLETE PRODUCTION WORKFLOW CURRENTLY EXISTS THAT SATISFIES THE FULL OMG → AEGIS EVALUATION PATTERN."</div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  Every record cited above was queried directly from the live production database at assessment time. No mock data, seed constants, or browser-local data were used as evidence.
+  <br><a class="back-to-top" href="#s1">↑ Back to top</a>
+</footer>
+
+</body>
+</html>

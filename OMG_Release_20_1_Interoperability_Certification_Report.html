@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OMG Release 20.1 Interoperability Report</title>
+<style>
+  :root {
+    --ink: #1a2230;
+    --ink-soft: #3d4657;
+    --muted: #6b7386;
+    --rule: #d9dde5;
+    --panel: #f6f7f9;
+    --accent: #1f3a5f;
+    --accent-soft: #eef2f7;
+    --ok: #1e6b45;
+    --ok-bg: #e8f5ee;
+    --ok-border: #bfe0cd;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: #ffffff;
+    color: var(--ink);
+  }
+
+  body {
+    font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    font-size: 15px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 56px 40px 80px 40px;
+  }
+
+  /* ---- Cover block ---- */
+  .cover {
+    border-bottom: 3px solid var(--accent);
+    padding-bottom: 28px;
+    margin-bottom: 40px;
+  }
+
+  .cover .eyebrow {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+
+  .cover h1 {
+    font-size: 30px;
+    line-height: 1.28;
+    margin: 0 0 6px 0;
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .cover .subtitle {
+    font-size: 15.5px;
+    color: var(--ink-soft);
+    max-width: 640px;
+    margin: 14px 0 22px 0;
+  }
+
+  .cover .meta {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px 32px;
+    font-size: 13px;
+    color: var(--muted);
+    max-width: 640px;
+  }
+
+  .cover .meta strong {
+    color: var(--ink-soft);
+    font-weight: 600;
+  }
+
+  /* ---- Section structure ---- */
+  section {
+    margin-bottom: 42px;
+  }
+
+  section:last-of-type {
+    margin-bottom: 0;
+  }
+
+  .section-label {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+
+  h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--ink);
+    margin: 0 0 16px 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  h3 {
+    font-size: 15.5px;
+    font-weight: 700;
+    color: var(--ink);
+    margin: 22px 0 8px 0;
+  }
+
+  p {
+    margin: 0 0 12px 0;
+    color: var(--ink-soft);
+  }
+
+  ul {
+    margin: 0 0 12px 0;
+    padding-left: 22px;
+    color: var(--ink-soft);
+  }
+
+  li {
+    margin-bottom: 6px;
+  }
+
+  strong { color: var(--ink); }
+
+  /* ---- Tables ---- */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 4px 0 8px 0;
+    font-size: 13.5px;
+  }
+
+  caption {
+    caption-side: top;
+    text-align: left;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  thead th {
+    text-align: left;
+    background: var(--accent);
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    padding: 10px 14px;
+  }
+
+  tbody td {
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--rule);
+    color: var(--ink-soft);
+    vertical-align: top;
+  }
+
+  tbody tr:nth-child(even) td {
+    background: var(--panel);
+  }
+
+  .table-wrap {
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .table-wrap table { margin: 0; }
+  .table-wrap thead th:first-child { border-top-left-radius: 6px; }
+  .table-wrap thead th:last-child { border-top-right-radius: 6px; }
+
+  .status {
+    display: inline-block;
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    color: var(--ok);
+    background: var(--ok-bg);
+    border: 1px solid var(--ok-border);
+    border-radius: 3px;
+    padding: 2px 10px;
+  }
+
+  /* ---- Lifecycle diagram ---- */
+  .lifecycle {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    margin: 20px 0 8px 0;
+  }
+
+  .lc-step {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 20px;
+    align-items: center;
+    padding: 14px 18px;
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+  }
+
+  .lc-step .lc-name {
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--accent);
+  }
+
+  .lc-step .lc-desc {
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    margin: 0;
+  }
+
+  .lc-arrow {
+    display: flex;
+    justify-content: flex-start;
+    padding-left: 128px;
+    color: var(--muted);
+    font-size: 16px;
+    line-height: 1;
+    padding-top: 6px;
+    padding-bottom: 6px;
+  }
+
+  /* ---- Boundary confirmation list ---- */
+  .confirm-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 28px;
+    margin: 10px 0 6px 0;
+  }
+
+  .confirm-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 13.5px;
+    color: var(--ink-soft);
+  }
+
+  .confirm-item .mark {
+    color: var(--ok);
+    font-weight: 700;
+    flex: none;
+  }
+
+  /* ---- Improvement panels (Section 8) ---- */
+  .improvement {
+    border: 1px solid var(--rule);
+    border-left: 4px solid var(--accent);
+    border-radius: 4px;
+    padding: 14px 18px;
+    margin-bottom: 14px;
+    background: var(--panel);
+  }
+
+  .improvement h4 {
+    margin: 0 0 6px 0;
+    font-size: 14px;
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .improvement p {
+    margin: 0;
+    font-size: 13.5px;
+  }
+
+  /* ---- Acknowledgement / closing note ---- */
+  .closing-note {
+    font-style: italic;
+    color: var(--ink-soft);
+    border-left: 3px solid var(--rule);
+    padding-left: 16px;
+    margin: 10px 0;
+  }
+
+  /* ---- Footer ---- */
+  footer {
+    margin-top: 56px;
+    padding-top: 18px;
+    border-top: 1px solid var(--rule);
+    font-size: 12px;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  /* ---- Print ---- */
+  @media print {
+    body { font-size: 12.5px; }
+    .page { padding: 0 8px; max-width: 100%; }
+    section { break-inside: avoid; page-break-inside: avoid; margin-bottom: 26px; }
+    .table-wrap, table { break-inside: avoid; }
+    .cover { break-after: avoid; }
+    a { color: inherit; text-decoration: none; }
+  }
+
+  @media (max-width: 640px) {
+    .page { padding: 32px 18px 60px 18px; }
+    .cover .meta { grid-template-columns: 1fr; }
+    .lc-step { grid-template-columns: 1fr; gap: 4px; }
+    .lc-arrow { padding-left: 0; }
+    .confirm-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="cover">
+    <div class="eyebrow">OrchestrAI Model Governance (OMG)</div>
+    <h1>OMG Release 20.1<br>Interoperability Capability Implementation &amp; Validation Report</h1>
+    <p class="subtitle">Summary of the implementation, validation, and architecture review of externally authorised governance position interoperability within the OrchestrAI Model Governance Platform (OMG).</p>
+    <div class="meta">
+      <div><strong>Prepared for:</strong> Chris Kechagias</div>
+      <div><strong>Scope:</strong> OMG Release 20 &amp; Release 20.1</div>
+      <div><strong>Document type:</strong> Implementation &amp; Validation Report</div>
+      <div><strong>Distribution:</strong> Governance &amp; Architecture Review</div>
+    </div>
+  </div>
+
+  <!-- SECTION 1 -->
+  <section>
+    <div class="section-label">Section 1</div>
+    <h2>Executive Summary</h2>
+    <p>
+      OMG Release 20 introduced a governance interoperability capability that allows externally authorised
+      governance positions — decisions made by an authority outside OMG — to be received, operationalised, and
+      managed within OMG's existing governance framework. Specifically, the capability enables an externally
+      authorised position to be:
+    </p>
+    <ul>
+      <li>Received into OMG in a structured, auditable form</li>
+      <li>Operationalised as a governed position against a named AI asset</li>
+      <li>Traced end to end, from originating authority through to current status</li>
+      <li>Associated with supporting evidence already held within OMG</li>
+      <li>Monitored for changed conditions affecting continued reliance</li>
+      <li>Routed back to the responsible authority when reassessment or reauthorisation becomes necessary</li>
+    </ul>
+    <p>
+      Following implementation, an independent architecture review of Release 20 identified three findings
+      requiring attention before the capability could be considered complete:
+    </p>
+    <ul>
+      <li>External governance state required faithful preservation, without reinterpretation by OMG</li>
+      <li>Scope and applicability required propagation through the full lifecycle, not only at intake</li>
+      <li>Evidence association required a governance-user interface, not only an underlying data model</li>
+    </ul>
+    <p>
+      OMG Release 20.1 addressed all three findings. Validation of both the original capability and the Release
+      20.1 corrections included: source-code review, production database verification, live API verification,
+      live browser-driven workflow execution, architecture boundary review, and reuse and duplication analysis.
+      This report summarises the resulting implementation and the validation activities performed.
+    </p>
+  </section>
+
+  <!-- SECTION 2 -->
+  <section>
+    <div class="section-label">Section 2</div>
+    <h2>Implemented Capabilities</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Capability</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>External Governance Position Intake</td><td><span class="status">Implemented</span></td></tr>
+          <tr><td>Authority Provenance Preservation</td><td><span class="status">Implemented</span></td></tr>
+          <tr><td>Governance Position Operationalisation</td><td><span class="status">Implemented</span></td></tr>
+          <tr><td>Governance Position Contracting</td><td><span class="status">Implemented</span></td></tr>
+          <tr><td>Evidence Association</td><td><span class="status">Implemented</span></td></tr>
+          <tr><td>Changed Condition Detection</td><td><span class="status">Implemented</span></td></tr>
+          <tr><td>Reassessment Routing</td><td><span class="status">Implemented</span></td></tr>
+          <tr><td>Reauthorisation Routing</td><td><span class="status">Implemented</span></td></tr>
+          <tr><td>Governance Position Traceability</td><td><span class="status">Implemented</span></td></tr>
+          <tr><td>Scope Preservation</td><td><span class="status">Implemented</span></td></tr>
+          <tr><td>Applicability Preservation</td><td><span class="status">Implemented</span></td></tr>
+          <tr><td>External Governance State Preservation</td><td><span class="status">Implemented</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- SECTION 3 -->
+  <section>
+    <div class="section-label">Section 3</div>
+    <h2>Interoperability Lifecycle</h2>
+    <p>The capability is structured as a linear lifecycle. Each stage is described below.</p>
+    <div class="lifecycle">
+      <div class="lc-step">
+        <div class="lc-name">External Authority</div>
+        <p class="lc-desc">A governance position is authorised by a party outside OMG — the originating source of the decision.</p>
+      </div>
+      <div class="lc-arrow">↓</div>
+      <div class="lc-step">
+        <div class="lc-name">Governance Position Intake</div>
+        <p class="lc-desc">The position is received into OMG exactly as authorised — including its source, reference, state, scope, applicability, conditions, and obligations — before any operational action is taken.</p>
+      </div>
+      <div class="lc-arrow">↓</div>
+      <div class="lc-step">
+        <div class="lc-name">Authorised Governance Position</div>
+        <p class="lc-desc">Once accepted, the intake is operationalised as a governed position against a named AI asset, preserving every field captured at intake without modification.</p>
+      </div>
+      <div class="lc-arrow">↓</div>
+      <div class="lc-step">
+        <div class="lc-name">Governance Position Contract</div>
+        <p class="lc-desc">A structured contract is issued from the position, packaging its conditions, obligations, scope, and applicability for downstream reference.</p>
+      </div>
+      <div class="lc-arrow">↓</div>
+      <div class="lc-step">
+        <div class="lc-name">Evidence Association</div>
+        <p class="lc-desc">Existing evidence held within OMG can be linked to the position, connecting the authorised decision to the operational record supporting it.</p>
+      </div>
+      <div class="lc-arrow">↓</div>
+      <div class="lc-step">
+        <div class="lc-name">Changed Condition Detection</div>
+        <p class="lc-desc">OMG's existing governance engines continuously assess whether conditions affecting the position's continued reliance have changed.</p>
+      </div>
+      <div class="lc-arrow">↓</div>
+      <div class="lc-step">
+        <div class="lc-name">Reassessment / Reauthorisation Request</div>
+        <p class="lc-desc">When a changed condition is detected, a reassessment or reauthorisation request is created, recording the reason and the affected position.</p>
+      </div>
+      <div class="lc-arrow">↓</div>
+      <div class="lc-step">
+        <div class="lc-name">Return To Responsible Authority</div>
+        <p class="lc-desc">The request is routed to the accountable authority for the affected asset. OMG records that the matter has been routed; the resulting decision remains with the authority.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 4 -->
+  <section>
+    <div class="section-label">Section 4</div>
+    <h2>What Was Validated</h2>
+    <p>Each item below was independently validated against the live, deployed environment rather than assumed from design intent.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Validation Area</th><th>Result</th></tr></thead>
+        <tbody>
+          <tr><td>Intake Creation</td><td><span class="status">Validated</span></td></tr>
+          <tr><td>Authority Preservation</td><td><span class="status">Validated</span></td></tr>
+          <tr><td>Provenance Preservation</td><td><span class="status">Validated</span></td></tr>
+          <tr><td>Governance State Preservation</td><td><span class="status">Validated</span></td></tr>
+          <tr><td>Scope Preservation</td><td><span class="status">Validated</span></td></tr>
+          <tr><td>Applicability Preservation</td><td><span class="status">Validated</span></td></tr>
+          <tr><td>Contract Generation</td><td><span class="status">Validated</span></td></tr>
+          <tr><td>Evidence Linking</td><td><span class="status">Validated</span></td></tr>
+          <tr><td>Changed Condition Detection</td><td><span class="status">Validated</span></td></tr>
+          <tr><td>Reassessment Routing</td><td><span class="status">Validated</span></td></tr>
+          <tr><td>Reauthorisation Routing</td><td><span class="status">Validated</span></td></tr>
+          <tr><td>Traceability Chain</td><td><span class="status">Validated</span></td></tr>
+          <tr><td>Governance Boundary Integrity</td><td><span class="status">Validated</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- SECTION 5 -->
+  <section>
+    <div class="section-label">Section 5</div>
+    <h2>Interoperability Objectives Alignment</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Objective</th><th>Result</th></tr></thead>
+        <tbody>
+          <tr><td>Receive Externally Formed Positions</td><td><span class="status">Validated</span></td></tr>
+          <tr><td>Preserve Authority</td><td><span class="status">Validated</span></td></tr>
+          <tr><td>Preserve Provenance</td><td><span class="status">Validated</span></td></tr>
+          <tr><td>Preserve Governance State</td><td><span class="status">Validated</span></td></tr>
+          <tr><td>Preserve Scope</td><td><span class="status">Validated</span></td></tr>
+          <tr><td>Preserve Applicability</td><td><span class="status">Validated</span></td></tr>
+          <tr><td>Preserve Conditions</td><td><span class="status">Validated</span></td></tr>
+          <tr><td>Preserve Obligations</td><td><span class="status">Validated</span></td></tr>
+          <tr><td>Operationalise Position</td><td><span class="status">Validated</span></td></tr>
+          <tr><td>Expose Requirements Downstream</td><td><span class="status">Validated</span></td></tr>
+          <tr><td>Associate Evidence</td><td><span class="status">Validated</span></td></tr>
+          <tr><td>Detect Changed Conditions</td><td><span class="status">Validated</span></td></tr>
+          <tr><td>Trigger Reassessment</td><td><span class="status">Validated</span></td></tr>
+          <tr><td>Trigger Reauthorisation</td><td><span class="status">Validated</span></td></tr>
+          <tr><td>Route Matters Back To Authority</td><td><span class="status">Validated</span></td></tr>
+          <tr><td>Avoid Recreating Governance Judgement</td><td><span class="status">Validated</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      The implemented capability was reviewed against each of the interoperability objectives above and validated
+      through both implementation review and live workflow testing on the deployed platform.
+    </p>
+  </section>
+
+  <!-- SECTION 6 -->
+  <section>
+    <div class="section-label">Section 6</div>
+    <h2>Governance Boundary Review</h2>
+    <p>
+      The implementation was reviewed to confirm that OMG remains a governance operations capability, and does
+      not become a governance formation capability — that is, OMG operationalises and manages governance
+      positions, but does not create or substitute for the governance judgement of a responsible authority.
+    </p>
+    <h3>Confirmed</h3>
+    <div class="confirm-grid">
+      <div class="confirm-item"><span class="mark">✓</span> No shadow authority model</div>
+      <div class="confirm-item"><span class="mark">✓</span> No shadow accountability model</div>
+      <div class="confirm-item"><span class="mark">✓</span> No parallel governance state engine</div>
+      <div class="confirm-item"><span class="mark">✓</span> No parallel reauthorisation engine</div>
+      <div class="confirm-item"><span class="mark">✓</span> No duplicate governance workflow</div>
+      <div class="confirm-item"><span class="mark">✓</span> No governance decision generation by OMG</div>
+    </div>
+    <p>Within this boundary, OMG:</p>
+    <ul>
+      <li>Preserves governance information exactly as authorised</li>
+      <li>Operationalises governance positions against named assets</li>
+      <li>Associates evidence already held within the platform</li>
+      <li>Detects changed conditions using existing governance engines</li>
+      <li>Routes matters to the responsible authority when action is required</li>
+    </ul>
+    <p>
+      Governance decisions themselves — whether to approve, condition, suspend, or revoke a position — remain
+      with the responsible authority at all times.
+    </p>
+  </section>
+
+  <!-- SECTION 7 -->
+  <section>
+    <div class="section-label">Section 7</div>
+    <h2>Architecture Reuse</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Existing OMG Service</th><th>Assessment</th></tr></thead>
+        <tbody>
+          <tr><td>Governance State Resolution Layer (GSRL)</td><td><span class="status">Reused</span></td></tr>
+          <tr><td>Governance Continuity</td><td><span class="status">Reused</span></td></tr>
+          <tr><td>Reauthorisation Engine</td><td><span class="status">Reused</span></td></tr>
+          <tr><td>Authority Provenance Framework</td><td><span class="status">Extended</span></td></tr>
+          <tr><td>Accountability Model</td><td><span class="status">Reused</span></td></tr>
+          <tr><td>Governance Contract Framework</td><td><span class="status">Extended</span></td></tr>
+          <tr><td>Audit Framework</td><td><span class="status">Extended</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      Release 20.1 was intentionally implemented through extension and reuse of these existing OMG governance
+      services rather than the creation of parallel governance systems. No new governance-state engine, authority
+      model, or reauthorisation logic was introduced; existing services were extended to carry additional
+      information, and existing computation was reused unchanged.
+    </p>
+  </section>
+
+  <!-- SECTION 8 -->
+  <section>
+    <div class="section-label">Section 8</div>
+    <h2>Release 20.1 Improvements</h2>
+    <div class="improvement">
+      <h4>External Governance State Preservation</h4>
+      <p>External governance state is now captured at intake and preserved without reinterpretation through operationalisation and contracting.</p>
+    </div>
+    <div class="improvement">
+      <h4>Scope Preservation</h4>
+      <p>Scope now flows through the complete lifecycle — from intake, through the authorised position and its contract, to the traceability view.</p>
+    </div>
+    <div class="improvement">
+      <h4>Applicability Preservation</h4>
+      <p>Applicability now flows through the complete lifecycle, alongside scope, with the same end-to-end consistency.</p>
+    </div>
+    <div class="improvement">
+      <h4>Evidence Registry Usability</h4>
+      <p>Evidence association is now available directly through the governance-user interface, in addition to the underlying data model introduced in Release 20.</p>
+    </div>
+  </section>
+
+  <!-- SECTION 9 -->
+  <section>
+    <div class="section-label">Section 9</div>
+    <h2>Summary of Findings</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Area</th><th>Result</th></tr></thead>
+        <tbody>
+          <tr><td>Interoperability Capability</td><td><span class="status">PASS</span></td></tr>
+          <tr><td>Governance Boundary Integrity</td><td><span class="status">PASS</span></td></tr>
+          <tr><td>Traceability</td><td><span class="status">PASS</span></td></tr>
+          <tr><td>Architecture Reuse</td><td><span class="status">PASS</span></td></tr>
+          <tr><td>Authority Preservation</td><td><span class="status">PASS</span></td></tr>
+          <tr><td>State Preservation</td><td><span class="status">PASS</span></td></tr>
+          <tr><td>Evidence Association</td><td><span class="status">PASS</span></td></tr>
+          <tr><td>Reassessment Routing</td><td><span class="status">PASS</span></td></tr>
+          <tr><td>Reauthorisation Routing</td><td><span class="status">PASS</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- SECTION 10 -->
+  <section>
+    <div class="section-label">Section 10</div>
+    <h2>Conclusion</h2>
+    <p>
+      The interoperability capability described in this report has been implemented as a governance-operating
+      capability within OMG. The implementation enables externally authorised governance positions to be
+      received, preserved, operationalised, traced, associated with evidence, monitored for changed conditions,
+      and routed back to responsible authorities when reassessment or reauthorisation is required.
+    </p>
+    <p>
+      The implementation was reviewed for governance-boundary integrity, architecture reuse, and alignment with
+      the interoperability objectives set out in this report. The final implementation preserves externally
+      authorised governance information without reinterpretation, while maintaining a clear separation between
+      governance operations, which OMG performs, and governance formation, which remains the responsibility of
+      the authorising party.
+    </p>
+  </section>
+
+  <!-- SECTION 11 -->
+  <section>
+    <div class="section-label">Section 11</div>
+    <h2>Acknowledgement</h2>
+    <p class="closing-note">
+      The interoperability concepts discussed by Chris Kechagias provided useful input during the design and
+      review of this capability. This report summarises the resulting implementation and validation activities
+      completed within OMG.
+    </p>
+  </section>
+
+  <footer>
+    <span>OrchestrAI Model Governance (OMG)</span>
+    <span>Release 20.1 — Interoperability Capability Implementation &amp; Validation Report</span>
+  </footer>
+
+</div>
+</body>
+</html>
