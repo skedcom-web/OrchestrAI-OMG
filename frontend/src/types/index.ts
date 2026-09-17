@@ -2455,6 +2455,9 @@ export interface AuthorisedGovernancePosition {
   assetId: string;
   assetName: string;
   authorisedGovernanceState: string;
+  /** Release 20.1 — carried verbatim from the source intake (External Intake positions) or set directly (Internal positions). */
+  scope?: string;
+  applicability?: string;
   conditions: string[];
   obligations: string[];
   assumptions: string[];
@@ -2569,6 +2572,9 @@ export interface GovernancePositionContract {
   assetId: string;
   assetName: string;
   governancePositionId: string;
+  /** Release 20.1 — carried verbatim from the position that issued this contract. */
+  scope?: string;
+  applicability?: string;
   conditions: string[];
   obligations: string[];
   monitoringExpectations: string[];
@@ -2649,11 +2655,23 @@ export type GovernancePositionIntakeStatus = 'Received' | 'Under Review' | 'Acce
  * record itself is never mutated into a position, so what was actually
  * received stays intact and auditable on its own.
  */
+/**
+ * Release 20.1, Capability 1 — the governance state the external authority
+ * actually authorised. A plain string on the wire (matching every other
+ * governance-state field in this codebase, e.g. AuthorisedGovernancePosition.
+ * authorisedGovernanceState), but constrained to this set on the intake form
+ * so an operator cannot type an ungoverned value at the one point where
+ * fidelity to the external decision matters most.
+ */
+export type ExternalGovernanceState = 'Monitoring' | 'Conditional GO' | 'GO' | 'No GO' | 'Suspended' | 'Restricted' | 'Revoked';
+
 export interface GovernancePositionIntake {
   id: string;
   sourceSystem: string;
   sourceAuthority: string;
   authorityReference: string;
+  /** Release 20.1 — required, captured verbatim from the external authority; never defaulted at acceptance. */
+  externalGovernanceState: ExternalGovernanceState;
   scope: string;
   applicability: string;
   conditions: string[];

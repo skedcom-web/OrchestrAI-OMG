@@ -92,6 +92,7 @@ export const GovernancePositionTraceabilityPage: React.FC = () => {
                   <p className="text-[11.5px] font-semibold text-[var(--text-primary)]">{trace.intake.sourceAuthority}</p>
                   <p className="text-[11px] text-[var(--text-muted)]">via {trace.intake.sourceSystem} — reference {trace.intake.authorityReference}</p>
                   <p className="text-[11px] text-[var(--text-muted)] mt-1">Origin: External Intake</p>
+                  <p className="text-[11px] text-[var(--text-muted)] mt-1"><b className="text-[var(--text-primary)]">Source-authorised state:</b> {trace.intake.externalGovernanceState || 'not captured'}</p>
                 </>
               ) : trace.position?.authorityProvenanceRef ? (
                 <>
@@ -104,10 +105,12 @@ export const GovernancePositionTraceabilityPage: React.FC = () => {
             </Card>
 
             <Card className="!p-5">
-              <p className="text-[10px] font-extrabold uppercase tracking-wider text-[var(--text-muted)] mb-2">Conditions &amp; Obligations</p>
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-[var(--text-muted)] mb-2">Scope, Applicability, Conditions &amp; Obligations</p>
               {trace.position ? (
                 <>
-                  <p className="text-[11px] text-[var(--text-muted)]"><b className="text-[var(--text-primary)]">Conditions:</b> {trace.position.conditions.join('; ') || 'None'}</p>
+                  {trace.position.scope && <p className="text-[11px] text-[var(--text-muted)]"><b className="text-[var(--text-primary)]">Scope:</b> {trace.position.scope}</p>}
+                  {trace.position.applicability && <p className="text-[11px] text-[var(--text-muted)] mt-1"><b className="text-[var(--text-primary)]">Applicability:</b> {trace.position.applicability}</p>}
+                  <p className="text-[11px] text-[var(--text-muted)] mt-1"><b className="text-[var(--text-primary)]">Conditions:</b> {trace.position.conditions.join('; ') || 'None'}</p>
                   <p className="text-[11px] text-[var(--text-muted)] mt-1"><b className="text-[var(--text-primary)]">Obligations:</b> {trace.position.obligations.join('; ') || 'None'}</p>
                 </>
               ) : (

@@ -4940,6 +4940,8 @@ export async function issueGovernancePositionContract(agpId: string, issuedBy: s
   const priorVersions = governancePositionContractsCache.filter(c => c.governancePositionId === agpId).length;
   const withV2Fields: Omit<GovernancePositionContract, 'id'> = {
     ...built,
+    scope: agp.scope,
+    applicability: agp.applicability,
     authorityProvenanceRef: agp.authorityProvenanceRef,
     accountabilityReferences: agp.accountabilityReferences,
     evidenceRequirements: agp.evidenceRequirements || [],

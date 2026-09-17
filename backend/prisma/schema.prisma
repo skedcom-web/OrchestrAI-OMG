@@ -2196,6 +2196,14 @@ model GovernancePositionIntake {
   sourceSystem             String
   sourceAuthority          String
   authorityReference       String
+  /// Release 20.1 — Capability 1: the governance state the external
+  /// authority actually authorised (e.g. "Conditional GO", "Suspended").
+  /// Captured at intake time so acceptance never has to guess or default it.
+  /// Nullable only to accommodate the handful of pre-20.1 intake rows that
+  /// predate this field's existence — every intake created from 20.1 onward
+  /// is required (enforced in the API layer, not the schema) to supply one;
+  /// see reviewGovernancePositionIntake's BadRequestException.
+  externalGovernanceState  String?
   scope                    String   @db.Text
   applicability            String   @db.Text
   conditions               String[]
@@ -2234,6 +2242,12 @@ model AuthorisedGovernancePosition {
   assetName String
 
   authorisedGovernanceState String
+  /// Release 20.1 — Capability 2/3: carried verbatim from the source intake
+  /// (or set directly for an Internal-origin position). Nullable because an
+  /// Internal position authorised before scope/applicability existed as a
+  /// concept — never on an External Intake position, which always has both.
+  scope                     String?  @db.Text
+  applicability             String?  @db.Text
   conditions                String[]
   obligations               String[]
   assumptions               String[]
@@ -2282,6 +2296,10 @@ model GovernancePositionContract {
   monitoringExpectations String[]
   reviewRequirements     String[]
   reportingRequirements  String[]
+
+  /// Release 20.1 — Capability 2/3: carried verbatim from the position.
+  scope         String? @db.Text
+  applicability String? @db.Text
 
   /// Release 20 v2 additions.
   authorityProvenanceRef   String?

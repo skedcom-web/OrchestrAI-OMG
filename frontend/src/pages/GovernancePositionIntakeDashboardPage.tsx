@@ -8,9 +8,12 @@ import {
   createGovernancePositionIntake,
   reviewGovernancePositionIntake,
 } from '../services/storageService';
-import type { GovernancePositionIntake, GovernancePositionIntakeStatus } from '../types';
+import type { ExternalGovernanceState, GovernancePositionIntake, GovernancePositionIntakeStatus } from '../types';
 
 const STATUSES: GovernancePositionIntakeStatus[] = ['Received', 'Under Review', 'Accepted', 'Rejected'];
+
+/** Release 20.1, Capability 1 — the exact set of states an external authority can authorise; no free text, no default. */
+const EXTERNAL_GOVERNANCE_STATES: ExternalGovernanceState[] = ['Monitoring', 'Conditional GO', 'GO', 'No GO', 'Suspended', 'Restricted', 'Revoked'];
 
 const STATUS_TONE: Record<GovernancePositionIntakeStatus, string> = {
   'Received': 'var(--text-muted)',
@@ -47,6 +50,7 @@ export const GovernancePositionIntakeDashboardPage: React.FC = () => {
   const [sourceSystem, setSourceSystem] = useState('');
   const [sourceAuthority, setSourceAuthority] = useState('');
   const [authorityReference, setAuthorityReference] = useState('');
+  const [externalGovernanceState, setExternalGovernanceState] = useState<ExternalGovernanceState | ''>('');
   const [scope, setScope] = useState('');
   const [applicability, setApplicability] = useState('');
   const [conditions, setConditions] = useState('');
@@ -75,11 +79,12 @@ export const GovernancePositionIntakeDashboardPage: React.FC = () => {
   }, [intakes]);
 
   const handleCreate = async () => {
-    if (!canCreate || !sourceSystem || !sourceAuthority || !authorityReference) return;
+    if (!canCreate || !sourceSystem || !sourceAuthority || !authorityReference || !externalGovernanceState) return;
     await createGovernancePositionIntake({
       sourceSystem,
       sourceAuthority,
       authorityReference,
+      externalGovernanceState,
       scope,
       applicability,
       conditions: listToLines(conditions),
@@ -89,7 +94,7 @@ export const GovernancePositionIntakeDashboardPage: React.FC = () => {
       accountabilityReferences: {},
       versionMetadata: { version: '1' },
     });
-    setSourceSystem(''); setSourceAuthority(''); setAuthorityReference('');
+    setSourceSystem(''); setSourceAuthority(''); setAuthorityReference(''); setExternalGovernanceState('');
     setScope(''); setApplicability(''); setConditions(''); setObligations(''); setEvidenceRequirements('');
     reload();
   };
@@ -114,12 +119,14 @@ export const GovernancePositionIntakeDashboardPage: React.FC = () => {
     if (!canReview) return;
     const assetId = reviewAssetId[intake.id];
     if (!assetId) return;
+    // Release 20.1 fidelity fix: authorisedGovernanceState is no longer sent
+    // here at all — the backend copies it verbatim from the intake's own
+    // externalGovernanceState, never a caller-supplied or default value.
     await reviewGovernancePositionIntake(intake.id, {
       status: 'Accepted',
       reviewedBy: currentUser?.name || 'David Chen (Governance Admin)',
       reviewNotes: reviewNotes[intake.id],
       assetId,
-      authorisedGovernanceState: 'Monitoring',
       validFrom: new Date().toISOString().split('T')[0],
     });
     reload();
@@ -163,6 +170,15 @@ export const GovernancePositionIntakeDashboardPage: React.FC = () => {
             <input value={authorityReference} onChange={e => setAuthorityReference(e.target.value)} disabled={!canCreate} placeholder="e.g. AEGIS-GOV-2026-004" className={inputClass} />
           </div>
         </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+          <Select
+            label="External Governance State (required — exactly as authorised by the source authority)"
+            value={externalGovernanceState}
+            onChange={e => setExternalGovernanceState(e.target.value as ExternalGovernanceState)}
+            disabled={!canCreate}
+            options={[{ value: '', label: 'Select the authorised state…' }, ...EXTERNAL_GOVERNANCE_STATES.map(s => ({ value: s, label: s }))]}
+          />
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
           <div className="flex flex-col gap-1.5">
             <label className={labelClass}>Scope</label>
@@ -189,7 +205,7 @@ export const GovernancePositionIntakeDashboardPage: React.FC = () => {
         </div>
         <button
           onClick={handleCreate}
-          disabled={!canCreate || !sourceSystem || !sourceAuthority || !authorityReference}
+          disabled={!canCreate || !sourceSystem || !sourceAuthority || !authorityReference || !externalGovernanceState}
           className="px-4 py-2.5 rounded-xl text-xs font-bold text-white shadow-md hover:shadow-lg transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           style={{ background: 'var(--grad-brand)' }}
         >
@@ -209,6 +225,7 @@ export const GovernancePositionIntakeDashboardPage: React.FC = () => {
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 mb-1 flex-wrap">
                     <Pill tone={STATUS_TONE[intake.status]}>{intake.status}</Pill>
+                    <Pill tone="var(--accent-strong)">{intake.externalGovernanceState || 'No state captured'}</Pill>
                     <span className="text-sm font-bold text-[var(--text-primary)]">{intake.sourceAuthority}</span>
                     <span className="text-[11px] text-[var(--text-muted)]">via {intake.sourceSystem}</span>
                   </div>

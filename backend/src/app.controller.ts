@@ -1197,6 +1197,13 @@ export class AppController {
   @Post('governance-position-intakes')
   @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER')
   async createGovernancePositionIntake(@Body() body: any) {
+    // Release 20.1, Capability 1 — "No hardcoded default state": the
+    // external authority's actual authorised state must be captured at
+    // intake time, or the intake is rejected outright rather than silently
+    // proceeding without it.
+    if (!body.externalGovernanceState) {
+      throw new BadRequestException('externalGovernanceState is required — record the governance state exactly as the external authority authorised it.');
+    }
     return this.prisma.governancePositionIntake.create({ data: body });
   }
 
@@ -1206,6 +1213,12 @@ export class AppController {
    * the real AuthorisedGovernancePosition in the same transaction — the
    * intake row itself is never mutated into a position, so what was actually
    * received stays intact and auditable on its own record.
+   *
+   * Release 20.1 fidelity fix: authorisedGovernanceState, scope and
+   * applicability are now copied verbatim from the intake's own captured
+   * fields — never a caller-supplied override, never a hardcoded default.
+   * A pre-20.1 intake without externalGovernanceState cannot be accepted
+   * until it is corrected, rather than silently defaulting.
    */
   @Patch('governance-position-intakes/:id/review')
   @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
@@ -1217,7 +1230,6 @@ export class AppController {
       reviewedBy: string;
       reviewNotes?: string;
       assetId?: string;
-      authorisedGovernanceState?: string;
       validFrom?: string;
       validUntil?: string;
     },
@@ -1229,6 +1241,9 @@ export class AppController {
       const assetId = body.assetId || intake.assetId;
       if (!assetId) {
         throw new BadRequestException('Accepting a governance position intake requires an assetId to operationalise it against.');
+      }
+      if (!intake.externalGovernanceState) {
+        throw new BadRequestException('This intake has no externalGovernanceState on file and cannot be accepted until the source authority\'s actual authorised state is recorded.');
       }
       const asset = await this.prisma.aIAsset.findUnique({ where: { id: assetId } });
       if (!asset) throw new NotFoundException(`Asset ${assetId} not found`);
@@ -1242,7 +1257,9 @@ export class AppController {
           data: {
             assetId,
             assetName: asset.name,
-            authorisedGovernanceState: body.authorisedGovernanceState || 'Monitoring',
+            authorisedGovernanceState: intake.externalGovernanceState,
+            scope: intake.scope,
+            applicability: intake.applicability,
             conditions: intake.conditions,
             obligations: intake.obligations,
             assumptions: [],

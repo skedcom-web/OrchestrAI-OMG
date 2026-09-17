@@ -21,8 +21,13 @@ import {
   routeReauthorisationRequestToAuthority,
   getReassessmentRequestsForPosition,
   getReauthorisationRequestsForPosition,
+  getEvidenceRecordsForAsset,
+  getGovernancePositionEvidenceLinks,
+  linkGovernancePositionEvidence,
 } from '../services/storageService';
-import type { RelianceElementStatus, RelianceElementType, ReassessmentRequest, ReauthorisationRequest } from '../types';
+import type { RelianceElementStatus, RelianceElementType, ReassessmentRequest, ReauthorisationRequest, GovernancePositionEvidence, GovernancePositionEvidenceLinkType } from '../types';
+
+const EVIDENCE_LINK_TYPES: GovernancePositionEvidenceLinkType[] = ['Runtime Evidence', 'Reliance Event'];
 
 const RELIANCE_TYPES: RelianceElementType[] = ['Assumption', 'Required Control', 'Required Evidence', 'Regulatory Dependency', 'Operational Dependency'];
 const RELIANCE_STATUSES: RelianceElementStatus[] = ['Valid', 'Degraded', 'Broken'];
@@ -78,6 +83,32 @@ export const GovernancePositionPage: React.FC = () => {
     getReassessmentRequestsForPosition(activeAgp.id).then(setReassessmentRequests).catch(() => setReassessmentRequests([]));
     getReauthorisationRequestsForPosition(activeAgp.id).then(setReauthorisationRequests).catch(() => setReauthorisationRequests([]));
   }, [activeAgp, refreshTick]);
+
+  // Release 20.1, Capability 4 — Evidence Registry Operator Experience.
+  const canEvidenceLink = canPerform('governancePositionEvidence:link');
+  const assetEvidence = useMemo(() => (assetId ? getEvidenceRecordsForAsset(assetId) : []), [assetId]);
+  const [evidenceLinks, setEvidenceLinks] = useState<GovernancePositionEvidence[]>([]);
+  const [linkEvidenceRecordId, setLinkEvidenceRecordId] = useState('');
+  const [linkType, setLinkType] = useState<GovernancePositionEvidenceLinkType>('Runtime Evidence');
+
+  useEffect(() => {
+    if (!activeAgp) { setEvidenceLinks([]); return; }
+    getGovernancePositionEvidenceLinks(activeAgp.id).then(setEvidenceLinks).catch(() => setEvidenceLinks([]));
+  }, [activeAgp, refreshTick]);
+
+  const handleLinkEvidence = async () => {
+    if (!activeAgp || !asset || !canEvidenceLink || !linkEvidenceRecordId) return;
+    await linkGovernancePositionEvidence({
+      positionId: activeAgp.id,
+      assetId: asset.id,
+      assetName: asset.name,
+      linkType,
+      evidenceRecordRef: linkEvidenceRecordId,
+      linkedBy: currentUser?.name || 'David Chen (Governance Admin)',
+    });
+    setLinkEvidenceRecordId('');
+    refresh();
+  };
 
   const refresh = () => setRefreshTick(t => t + 1);
 
@@ -245,6 +276,12 @@ export const GovernancePositionPage: React.FC = () => {
             {activeAgp.authorityProvenanceRef && (
               <p className="text-[11px] text-[var(--text-muted)]">Authority Reference: {activeAgp.authorityProvenanceRef}</p>
             )}
+            {activeAgp.scope && (
+              <p className="text-[11px] text-[var(--text-muted)]">Scope: {activeAgp.scope}</p>
+            )}
+            {activeAgp.applicability && (
+              <p className="text-[11px] text-[var(--text-muted)]">Applicability: {activeAgp.applicability}</p>
+            )}
           </div>
         ) : (
           <p className="text-[11px] text-[var(--text-muted)] mb-3">No Active Authorised Governance Position for this asset — Unified Governance State cannot reach "Governed" until one is authorised.</p>
@@ -333,6 +370,50 @@ export const GovernancePositionPage: React.FC = () => {
         </Card>
       )}
 
+      {activeAgp && (
+        <Card className="!p-5">
+          <p className="text-[10px] font-extrabold uppercase tracking-wider text-[var(--text-muted)] mb-2">Governance Position Evidence Registry (Release 20.1, Capability 4)</p>
+          <p className="text-[11px] text-[var(--text-muted)] mb-3">
+            Links this position to runtime evidence or a reliance event already on file for this asset — no new evidence store, just the connection.
+          </p>
+          {evidenceLinks.length > 0 && (
+            <div className="flex flex-col gap-1.5 mb-3">
+              {evidenceLinks.map(link => {
+                const record = assetEvidence.find(e => e.id === link.evidenceRecordRef);
+                return (
+                  <div key={link.id} className="px-3 py-2 rounded-lg bg-[var(--bg-sunken)] flex items-center justify-between gap-2">
+                    <span className="text-[11px] text-[var(--text-muted)]">{link.linkType} — {record ? record.name : (link.evidenceRecordRef || link.relianceEventRef || 'unreferenced')}</span>
+                    <span className="text-[10.5px] text-[var(--text-faint)]">linked by {link.linkedBy}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          {evidenceLinks.length === 0 && (
+            <p className="text-[11px] text-[var(--text-muted)] mb-3">No evidence linked to this position yet.</p>
+          )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+            <Select
+              label="Evidence Record"
+              value={linkEvidenceRecordId}
+              onChange={e => setLinkEvidenceRecordId(e.target.value)}
+              disabled={!canEvidenceLink || assetEvidence.length === 0}
+              options={[{ value: '', label: assetEvidence.length === 0 ? 'No evidence on file for this asset' : 'Select an evidence record…' }, ...assetEvidence.map(e => ({ value: e.id, label: e.name }))]}
+            />
+            <Select
+              label="Link Type"
+              value={linkType}
+              onChange={e => setLinkType(e.target.value as GovernancePositionEvidenceLinkType)}
+              disabled={!canEvidenceLink}
+              options={EVIDENCE_LINK_TYPES.map(t => ({ value: t, label: t }))}
+            />
+          </div>
+          <button onClick={handleLinkEvidence} disabled={!canEvidenceLink || !linkEvidenceRecordId} className="px-4 py-2.5 rounded-xl text-xs font-bold text-white shadow-md hover:shadow-lg transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed" style={{ background: 'var(--grad-brand)' }}>
+            Link Evidence
+          </button>
+        </Card>
+      )}
+
       <Card className="!p-5">
         <p className="text-[10px] font-extrabold uppercase tracking-wider text-[var(--text-muted)] mb-2">Governance Position Contract (Domain G)</p>
         <p className="text-[11px] text-[var(--text-muted)] mb-3">
@@ -347,7 +428,13 @@ export const GovernancePositionPage: React.FC = () => {
             Export Latest Contract (JSON)
           </button>
         </div>
-        {contracts.length > 0 && <p className="text-[10.5px] text-[var(--text-muted)] mt-2">{contracts.length} contract(s) issued for this asset. Most recent issued {new Date(contracts[0].issuedAt).toLocaleString()}.</p>}
+        {contracts.length > 0 && (
+          <>
+            <p className="text-[10.5px] text-[var(--text-muted)] mt-2">{contracts.length} contract(s) issued for this asset. Most recent issued {new Date(contracts[0].issuedAt).toLocaleString()} (v{contracts[0].version || 1}).</p>
+            {contracts[0].scope && <p className="text-[11px] text-[var(--text-muted)] mt-1">Scope: {contracts[0].scope}</p>}
+            {contracts[0].applicability && <p className="text-[11px] text-[var(--text-muted)] mt-1">Applicability: {contracts[0].applicability}</p>}
+          </>
+        )}
       </Card>
     </div>
   );
