@@ -1299,7 +1299,7 @@ export interface AuditLog {
   userName: string;
   userRole: string;
   action: string;
-  entityType: 'Asset' | 'User' | 'Ownership' | 'Risk' | 'Decision' | 'Validation' | 'Evidence' | 'Finding' | 'DecisionPackage' | 'ComplianceAssessment' | 'CompliancePackage' | 'KillSwitch' | 'Override' | 'Incident' | 'Retirement' | 'ScheduledReview' | 'CorrectiveAction' | 'GovernanceReviewPackage' | 'Policy' | 'PolicyMapping' | 'PolicyViolation' | 'ExecutiveReport' | 'ChangeRequest' | 'StateTransition' | 'ReassessmentTrigger' | 'GovernanceReauthorizationRecord' | 'EvidenceRecord' | 'Model' | 'KnowledgeAsset' | 'Prompt' | 'Tool' | 'AgentToolGrant' | 'GovernanceControl' | 'ControlAttachment' | 'ControlTestResult' | 'CertificationProgram' | 'CertificationRecord' | 'CertificationEvidence' | 'GovernabilityConfigEntry' | 'Workspace' | 'WorkspaceUser' | 'AuthorityProvenanceRecord' | 'GovernanceRelianceElement' | 'AuthorisedGovernancePosition' | 'GovernancePositionContract' | 'GovernanceStateHistoryEntry';
+  entityType: 'Asset' | 'User' | 'Ownership' | 'Risk' | 'Decision' | 'Validation' | 'Evidence' | 'Finding' | 'DecisionPackage' | 'ComplianceAssessment' | 'CompliancePackage' | 'KillSwitch' | 'Override' | 'Incident' | 'Retirement' | 'ScheduledReview' | 'CorrectiveAction' | 'GovernanceReviewPackage' | 'Policy' | 'PolicyMapping' | 'PolicyViolation' | 'ExecutiveReport' | 'ChangeRequest' | 'StateTransition' | 'ReassessmentTrigger' | 'GovernanceReauthorizationRecord' | 'EvidenceRecord' | 'Model' | 'KnowledgeAsset' | 'Prompt' | 'Tool' | 'AgentToolGrant' | 'GovernanceControl' | 'ControlAttachment' | 'ControlTestResult' | 'CertificationProgram' | 'CertificationRecord' | 'CertificationEvidence' | 'GovernabilityConfigEntry' | 'Workspace' | 'WorkspaceUser' | 'AuthorityProvenanceRecord' | 'GovernanceRelianceElement' | 'AuthorisedGovernancePosition' | 'GovernancePositionContract' | 'GovernanceStateHistoryEntry' | 'GovernancePositionIntake' | 'GovernancePositionEvidence' | 'ReassessmentRequest' | 'ReauthorisationRequest';
   entityId: string;
   entityName: string;
   details: string;
@@ -2472,6 +2472,19 @@ export interface AuthorisedGovernancePosition {
   workspaceId?: string;
   tenantId?: string;
   environmentId?: string;
+
+  /**
+   * Release 20 — Governance Position Lifecycle Interoperability Foundation.
+   * "Internal" = authorised inside OMG (the pre-Release-20 path, via
+   * saveAuthorisedGovernancePosition). "External Intake" = accepted from a
+   * GovernancePositionIntake — sourceIntakeId then names which one.
+   */
+  positionOrigin?: 'Internal' | 'External Intake';
+  authorityProvenanceRef?: string;
+  accountabilityReferences?: Record<string, string>;
+  evidenceRequirements?: string[];
+  reassessmentTriggerTypes?: string[];
+  sourceIntakeId?: string;
 }
 
 /* -------------------- Domain D — Unified Governance State ---------------- */
@@ -2566,6 +2579,17 @@ export interface GovernancePositionContract {
   workspaceId?: string;
   tenantId?: string;
   environmentId?: string;
+
+  /** Release 20 — Contract v2 (Capability 2). */
+  authorityProvenanceRef?: string;
+  accountabilityReferences?: Record<string, string>;
+  evidenceRequirements?: string[];
+  reassessmentTriggerTypes?: string[];
+  positionOrigin?: 'Internal' | 'External Intake';
+  /** "Position Origin / Why Reference" — a human-readable note on why this position exists (e.g. the intake's authorityReference, or an internal decision reference). */
+  whyReference?: string;
+  version?: number;
+  status?: string;
 }
 
 /* ================================================================
@@ -2603,4 +2627,118 @@ export interface GovernanceStateHistoryEntry {
   triggeringEvent: string;
   triggeringEngine: string;
   timestamp: string;
+}
+
+/* ================================================================
+ * Release 20 — Governance Position Lifecycle Interoperability Foundation.
+ * Theme: Authority -> OMG -> Execution -> Evidence -> Reassessment -> Authority.
+ *
+ * Rule (Capability 5): OMG routes matters back to organisational authority.
+ * OMG never recreates governance judgement — nothing in this section lets
+ * OMG decide a reassessment or reauthorisation outcome on its own; it only
+ * records the authority's own decision once reported back.
+ * ================================================================ */
+
+/** Capability 1 — External Governance Position Intake lifecycle. */
+export type GovernancePositionIntakeStatus = 'Received' | 'Under Review' | 'Accepted' | 'Rejected';
+
+/**
+ * As-received record of an externally authorised governance position, before
+ * OMG operationalises anything. Accepting an intake creates a real
+ * AuthorisedGovernancePosition (positionOrigin: 'External Intake') — this
+ * record itself is never mutated into a position, so what was actually
+ * received stays intact and auditable on its own.
+ */
+export interface GovernancePositionIntake {
+  id: string;
+  sourceSystem: string;
+  sourceAuthority: string;
+  authorityReference: string;
+  scope: string;
+  applicability: string;
+  conditions: string[];
+  obligations: string[];
+  evidenceRequirements: string[];
+  reassessmentTriggerTypes: string[];
+  accountabilityReferences: Record<string, string>;
+  versionMetadata: Record<string, string>;
+  status: GovernancePositionIntakeStatus;
+  reviewedBy?: string;
+  reviewedAt?: string;
+  reviewNotes?: string;
+  assetId?: string;
+  assetName?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Capability 3 — Governance Position Evidence Registry. Links a position (and optionally the contract issued from it) to runtime evidence or a reliance event — no second evidence store, just a link. */
+export type GovernancePositionEvidenceLinkType = 'Runtime Evidence' | 'Reliance Event';
+
+export interface GovernancePositionEvidence {
+  id: string;
+  positionId: string;
+  contractId?: string;
+  assetId: string;
+  assetName: string;
+  linkType: GovernancePositionEvidenceLinkType;
+  evidenceRecordRef?: string;
+  relianceEventRef?: string;
+  linkedAt: string;
+  linkedBy: string;
+}
+
+/**
+ * Capability 5 — Authority Return Path. Shared status vocabulary: OMG only
+ * ever moves a request OPEN -> ROUTED (handed back to the named authority).
+ * ACKNOWLEDGED/RESOLVED are set only via recordReassessmentRequestResponse /
+ * recordReauthorisationRequestResponse, i.e. only once the authority's own
+ * response has been reported back into OMG.
+ */
+export type GovernanceRequestStatus = 'Open' | 'Routed' | 'Acknowledged' | 'Resolved';
+
+export interface ReassessmentRequest {
+  id: string;
+  positionId: string;
+  assetId: string;
+  assetName: string;
+  triggerReason: string;
+  supportingEvidenceRefs: string[];
+  status: GovernanceRequestStatus;
+  routedTo?: string;
+  routedAt?: string;
+  authorityResponse?: string;
+  respondedAt?: string;
+  createdAt: string;
+  createdBy: string;
+}
+
+export interface ReauthorisationRequest {
+  id: string;
+  positionId: string;
+  assetId: string;
+  assetName: string;
+  changedConditions: string[];
+  governanceImpactSummary: string;
+  status: GovernanceRequestStatus;
+  routedTo?: string;
+  routedAt?: string;
+  authorityResponse?: string;
+  respondedAt?: string;
+  createdAt: string;
+  createdBy: string;
+}
+
+/** Capability 6 — Cross-Layer Traceability. Assembled read model, not a stored entity: walks Authority -> Intake -> Position -> Contract -> Runtime Activity -> Evidence -> Changed Condition -> Reassessment Request -> Authority for one asset's active position. */
+export interface GovernancePositionTraceability {
+  assetId: string;
+  assetName: string;
+  intake: GovernancePositionIntake | null;
+  position: AuthorisedGovernancePosition | null;
+  contracts: GovernancePositionContract[];
+  runtimeGovernanceState: UnifiedGovernanceState | null;
+  evidenceLinks: GovernancePositionEvidence[];
+  changedConditions: ReauthorisationTriggerType[];
+  reassessmentRequests: ReassessmentRequest[];
+  reauthorisationRequests: ReauthorisationRequest[];
 }

@@ -1177,6 +1177,236 @@ export class AppController {
     return this.prisma.governanceReauthorizationRecord.create({ data: body });
   }
 
+  // --- RELEASE 20: GOVERNANCE POSITION LIFECYCLE INTEROPERABILITY FOUNDATION ---
+  // Theme: Authority -> OMG -> Execution -> Evidence -> Reassessment -> Authority.
+
+  @Get('governance-position-intakes')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER', 'AUDITOR')
+  async getGovernancePositionIntakes() {
+    return this.prisma.governancePositionIntake.findMany({ orderBy: { createdAt: 'desc' } });
+  }
+
+  @Get('governance-position-intakes/:id')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER', 'AUDITOR')
+  async getGovernancePositionIntake(@Param('id') id: string) {
+    const record = await this.prisma.governancePositionIntake.findUnique({ where: { id } });
+    if (!record) throw new NotFoundException(`Governance position intake ${id} not found`);
+    return record;
+  }
+
+  @Post('governance-position-intakes')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER')
+  async createGovernancePositionIntake(@Body() body: any) {
+    return this.prisma.governancePositionIntake.create({ data: body });
+  }
+
+  /**
+   * Capability 1 lifecycle: Received -> Under Review -> Accepted / Rejected.
+   * Accepting an intake operationalises it (Executive Summary #3) by creating
+   * the real AuthorisedGovernancePosition in the same transaction — the
+   * intake row itself is never mutated into a position, so what was actually
+   * received stays intact and auditable on its own record.
+   */
+  @Patch('governance-position-intakes/:id/review')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async reviewGovernancePositionIntake(
+    @Param('id') id: string,
+    @Body()
+    body: {
+      status: 'UNDER_REVIEW' | 'ACCEPTED' | 'REJECTED';
+      reviewedBy: string;
+      reviewNotes?: string;
+      assetId?: string;
+      authorisedGovernanceState?: string;
+      validFrom?: string;
+      validUntil?: string;
+    },
+  ) {
+    const intake = await this.prisma.governancePositionIntake.findUnique({ where: { id } });
+    if (!intake) throw new NotFoundException(`Governance position intake ${id} not found`);
+
+    if (body.status === 'ACCEPTED') {
+      const assetId = body.assetId || intake.assetId;
+      if (!assetId) {
+        throw new BadRequestException('Accepting a governance position intake requires an assetId to operationalise it against.');
+      }
+      const asset = await this.prisma.aIAsset.findUnique({ where: { id: assetId } });
+      if (!asset) throw new NotFoundException(`Asset ${assetId} not found`);
+
+      return this.prisma.$transaction(async tx => {
+        await tx.authorisedGovernancePosition.updateMany({
+          where: { assetId, status: 'Active' },
+          data: { status: 'Superseded' },
+        });
+        const position = await tx.authorisedGovernancePosition.create({
+          data: {
+            assetId,
+            assetName: asset.name,
+            authorisedGovernanceState: body.authorisedGovernanceState || 'Monitoring',
+            conditions: intake.conditions,
+            obligations: intake.obligations,
+            assumptions: [],
+            positionOrigin: 'External Intake',
+            authorityProvenanceRef: intake.authorityReference,
+            accountabilityReferences: intake.accountabilityReferences as any,
+            evidenceRequirements: intake.evidenceRequirements,
+            reassessmentTriggerTypes: intake.reassessmentTriggerTypes,
+            sourceIntakeId: intake.id,
+            validFrom: body.validFrom ? new Date(body.validFrom) : new Date(),
+            validUntil: body.validUntil ? new Date(body.validUntil) : null,
+            status: 'Active',
+            createdBy: body.reviewedBy,
+          },
+        });
+        const updatedIntake = await tx.governancePositionIntake.update({
+          where: { id },
+          data: {
+            status: 'ACCEPTED',
+            reviewedBy: body.reviewedBy,
+            reviewedAt: new Date(),
+            reviewNotes: body.reviewNotes,
+            assetId,
+          },
+        });
+        return { intake: updatedIntake, position };
+      });
+    }
+
+    return this.prisma.governancePositionIntake.update({
+      where: { id },
+      data: {
+        status: body.status,
+        reviewedBy: body.reviewedBy,
+        reviewedAt: new Date(),
+        reviewNotes: body.reviewNotes,
+      },
+    });
+  }
+
+  @Get('authorised-governance-positions')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER', 'BUSINESS_OWNER', 'VALIDATOR', 'AUDITOR', 'VIEWER')
+  async getAuthorisedGovernancePositions(@Query('assetId') assetId?: string) {
+    return this.prisma.authorisedGovernancePosition.findMany({
+      where: assetId ? { assetId } : undefined,
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  @Post('authorised-governance-positions')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async createAuthorisedGovernancePosition(@Body() body: any) {
+    const { assetId } = body;
+    return this.prisma.$transaction(async tx => {
+      await tx.authorisedGovernancePosition.updateMany({
+        where: { assetId, status: 'Active' },
+        data: { status: 'Superseded' },
+      });
+      return tx.authorisedGovernancePosition.create({ data: body });
+    });
+  }
+
+  @Get('governance-position-contracts')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER', 'BUSINESS_OWNER', 'AUDITOR', 'VIEWER')
+  async getGovernancePositionContracts(@Query('assetId') assetId?: string, @Query('positionId') positionId?: string) {
+    return this.prisma.governancePositionContract.findMany({
+      where: { ...(assetId ? { assetId } : {}), ...(positionId ? { positionId } : {}) },
+      orderBy: { issuedAt: 'desc' },
+    });
+  }
+
+  @Post('governance-position-contracts')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async createGovernancePositionContract(@Body() body: any) {
+    return this.prisma.governancePositionContract.create({ data: body });
+  }
+
+  @Get('governance-position-evidence')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER', 'AUDITOR', 'VIEWER')
+  async getGovernancePositionEvidence(@Query('positionId') positionId?: string, @Query('assetId') assetId?: string) {
+    return this.prisma.governancePositionEvidence.findMany({
+      where: { ...(positionId ? { positionId } : {}), ...(assetId ? { assetId } : {}) },
+      orderBy: { linkedAt: 'desc' },
+    });
+  }
+
+  @Post('governance-position-evidence')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER')
+  async createGovernancePositionEvidence(@Body() body: any) {
+    return this.prisma.governancePositionEvidence.create({ data: body });
+  }
+
+  /**
+   * Capability 5 — Authority Return Path. OMG creates and routes these
+   * requests; it never sets them to ACKNOWLEDGED/RESOLVED itself — that only
+   * happens via the /respond endpoint, which records what the authority
+   * itself reported back, never an OMG-inferred outcome.
+   */
+  @Get('reassessment-requests')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER', 'AUDITOR')
+  async getReassessmentRequests(@Query('positionId') positionId?: string) {
+    return this.prisma.reassessmentRequest.findMany({
+      where: positionId ? { positionId } : undefined,
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  @Post('reassessment-requests')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER')
+  async createReassessmentRequest(@Body() body: any) {
+    return this.prisma.reassessmentRequest.create({ data: body });
+  }
+
+  @Patch('reassessment-requests/:id/route')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async routeReassessmentRequest(@Param('id') id: string, @Body() body: { routedTo: string }) {
+    return this.prisma.reassessmentRequest.update({
+      where: { id },
+      data: { status: 'ROUTED', routedTo: body.routedTo, routedAt: new Date() },
+    });
+  }
+
+  @Patch('reassessment-requests/:id/respond')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async respondReassessmentRequest(@Param('id') id: string, @Body() body: { status: 'ACKNOWLEDGED' | 'RESOLVED'; authorityResponse: string }) {
+    return this.prisma.reassessmentRequest.update({
+      where: { id },
+      data: { status: body.status, authorityResponse: body.authorityResponse, respondedAt: new Date() },
+    });
+  }
+
+  @Get('reauthorisation-requests')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER', 'AUDITOR')
+  async getReauthorisationRequests(@Query('positionId') positionId?: string) {
+    return this.prisma.reauthorisationRequest.findMany({
+      where: positionId ? { positionId } : undefined,
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  @Post('reauthorisation-requests')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER')
+  async createReauthorisationRequest(@Body() body: any) {
+    return this.prisma.reauthorisationRequest.create({ data: body });
+  }
+
+  @Patch('reauthorisation-requests/:id/route')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async routeReauthorisationRequest(@Param('id') id: string, @Body() body: { routedTo: string }) {
+    return this.prisma.reauthorisationRequest.update({
+      where: { id },
+      data: { status: 'ROUTED', routedTo: body.routedTo, routedAt: new Date() },
+    });
+  }
+
+  @Patch('reauthorisation-requests/:id/respond')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async respondReauthorisationRequest(@Param('id') id: string, @Body() body: { status: 'ACKNOWLEDGED' | 'RESOLVED'; authorityResponse: string }) {
+    return this.prisma.reauthorisationRequest.update({
+      where: { id },
+      data: { status: body.status, authorityResponse: body.authorityResponse, respondedAt: new Date() },
+    });
+  }
+
   // --- RELEASE 5: COMPLIANCE PACK FRAMEWORK ENDPOINTS ---
   @Get('compliance-packs')
   @Roles(

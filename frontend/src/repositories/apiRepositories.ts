@@ -16,6 +16,12 @@ import type {
   AgentToolGrantRepository,
   AssessorCertificationRepository,
   AssetRepository,
+  AuthorisedGovernancePositionRepository,
+  GovernancePositionContractRepository,
+  GovernancePositionEvidenceRepository,
+  GovernancePositionIntakeRepository,
+  ReassessmentRequestRepository,
+  ReauthorisationRequestRepository,
   CompliancePackRepository,
   ConditionDefinitionRepository,
   ConfidenceAssessmentRepository,
@@ -55,6 +61,12 @@ import type {
   AIAsset,
   AssessorCertification,
   AgentToolGrant,
+  AuthorisedGovernancePosition,
+  GovernancePositionContract,
+  GovernancePositionEvidence,
+  GovernancePositionIntake,
+  ReassessmentRequest,
+  ReauthorisationRequest,
   AssetKnowledgeUsage,
   AssetModelUsage,
   AssetPromptUsage,
@@ -1798,6 +1810,268 @@ export const apiConfidenceAssessmentRepository: ConfidenceAssessmentRepository =
     if (data.confidenceLevel) body.confidenceLevel = enumMaps.confidenceLevel.toBackend(data.confidenceLevel);
     const row = await apiRequest<any>('/confidence-assessments', { method: 'POST', body: JSON.stringify(body) });
     return confidenceFromBackend(row);
+  },
+};
+
+/* ================================================================
+ * Release 20 — Governance Position Lifecycle Interoperability Foundation.
+ * ================================================================ */
+
+function intakeToBackend(data: Partial<GovernancePositionIntake>) {
+  const body: Record<string, unknown> = { ...data };
+  delete body.id;
+  delete body.assetName;
+  delete body.createdAt;
+  delete body.updatedAt;
+  if (data.status) body.status = enumMaps.governancePositionIntakeStatus.toBackend(data.status);
+  return body;
+}
+
+function intakeFromBackend(row: any, assetName = ''): GovernancePositionIntake {
+  return {
+    id: row.id,
+    sourceSystem: row.sourceSystem,
+    sourceAuthority: row.sourceAuthority,
+    authorityReference: row.authorityReference,
+    scope: row.scope,
+    applicability: row.applicability,
+    conditions: row.conditions || [],
+    obligations: row.obligations || [],
+    evidenceRequirements: row.evidenceRequirements || [],
+    reassessmentTriggerTypes: row.reassessmentTriggerTypes || [],
+    accountabilityReferences: row.accountabilityReferences || {},
+    versionMetadata: row.versionMetadata || {},
+    status: enumMaps.governancePositionIntakeStatus.toFrontend(row.status),
+    reviewedBy: row.reviewedBy || undefined,
+    reviewedAt: row.reviewedAt || undefined,
+    reviewNotes: row.reviewNotes || undefined,
+    assetId: row.assetId || undefined,
+    assetName: row.assetId ? assetName : undefined,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  };
+}
+
+function agpToBackend(data: Partial<AuthorisedGovernancePosition>) {
+  const body: Record<string, unknown> = { ...data };
+  delete body.id;
+  delete body.createdAt;
+  if (data.validFrom) body.validFrom = new Date(data.validFrom).toISOString();
+  if (data.validUntil) body.validUntil = new Date(data.validUntil).toISOString();
+  return body;
+}
+
+function agpFromBackend(row: any): AuthorisedGovernancePosition {
+  return {
+    id: row.id,
+    assetId: row.assetId,
+    assetName: row.assetName,
+    authorisedGovernanceState: row.authorisedGovernanceState,
+    conditions: row.conditions || [],
+    obligations: row.obligations || [],
+    assumptions: row.assumptions || [],
+    relianceElementIds: row.relianceElementIds || [],
+    authorityReferenceIds: row.authorityReferenceIds || [],
+    validFrom: String(row.validFrom).split('T')[0],
+    validUntil: row.validUntil ? String(row.validUntil).split('T')[0] : undefined,
+    status: row.status,
+    createdAt: row.createdAt,
+    createdBy: row.createdBy,
+    positionOrigin: row.positionOrigin || 'Internal',
+    authorityProvenanceRef: row.authorityProvenanceRef || undefined,
+    accountabilityReferences: row.accountabilityReferences || undefined,
+    evidenceRequirements: row.evidenceRequirements || [],
+    reassessmentTriggerTypes: row.reassessmentTriggerTypes || [],
+    sourceIntakeId: row.sourceIntakeId || undefined,
+  };
+}
+
+function contractToBackend(data: Partial<GovernancePositionContract>) {
+  const body: Record<string, unknown> = { ...data };
+  delete body.id;
+  delete body.governancePositionId;
+  body.positionId = data.governancePositionId;
+  return body;
+}
+
+function contractFromBackend(row: any): GovernancePositionContract {
+  return {
+    id: row.id,
+    assetId: row.assetId,
+    assetName: row.assetName,
+    governancePositionId: row.positionId,
+    conditions: row.conditions || [],
+    obligations: row.obligations || [],
+    monitoringExpectations: row.monitoringExpectations || [],
+    reviewRequirements: row.reviewRequirements || [],
+    reportingRequirements: row.reportingRequirements || [],
+    issuedAt: row.issuedAt,
+    issuedBy: row.issuedBy,
+    authorityProvenanceRef: row.authorityProvenanceRef || undefined,
+    accountabilityReferences: row.accountabilityReferences || undefined,
+    evidenceRequirements: row.evidenceRequirements || [],
+    reassessmentTriggerTypes: row.reassessmentTriggerTypes || [],
+    positionOrigin: row.positionOrigin || 'Internal',
+    whyReference: row.whyReference || undefined,
+    version: row.version,
+    status: row.status,
+  };
+}
+
+function positionEvidenceToBackend(data: Partial<GovernancePositionEvidence>) {
+  const body: Record<string, unknown> = { ...data };
+  delete body.id;
+  delete body.linkedAt;
+  return body;
+}
+
+function positionEvidenceFromBackend(row: any): GovernancePositionEvidence {
+  return {
+    id: row.id,
+    positionId: row.positionId,
+    contractId: row.contractId || undefined,
+    assetId: row.assetId,
+    assetName: row.assetName,
+    linkType: row.linkType,
+    evidenceRecordRef: row.evidenceRecordRef || undefined,
+    relianceEventRef: row.relianceEventRef || undefined,
+    linkedAt: row.linkedAt,
+    linkedBy: row.linkedBy,
+  };
+}
+
+function reassessmentRequestFromBackend(row: any): ReassessmentRequest {
+  return {
+    id: row.id,
+    positionId: row.positionId,
+    assetId: row.assetId,
+    assetName: row.assetName,
+    triggerReason: row.triggerReason,
+    supportingEvidenceRefs: row.supportingEvidenceRefs || [],
+    status: enumMaps.governanceRequestStatus.toFrontend(row.status),
+    routedTo: row.routedTo || undefined,
+    routedAt: row.routedAt || undefined,
+    authorityResponse: row.authorityResponse || undefined,
+    respondedAt: row.respondedAt || undefined,
+    createdAt: row.createdAt,
+    createdBy: row.createdBy,
+  };
+}
+
+function reauthorisationRequestFromBackend(row: any): ReauthorisationRequest {
+  return {
+    id: row.id,
+    positionId: row.positionId,
+    assetId: row.assetId,
+    assetName: row.assetName,
+    changedConditions: row.changedConditions || [],
+    governanceImpactSummary: row.governanceImpactSummary,
+    status: enumMaps.governanceRequestStatus.toFrontend(row.status),
+    routedTo: row.routedTo || undefined,
+    routedAt: row.routedAt || undefined,
+    authorityResponse: row.authorityResponse || undefined,
+    respondedAt: row.respondedAt || undefined,
+    createdAt: row.createdAt,
+    createdBy: row.createdBy,
+  };
+}
+
+export const apiGovernancePositionIntakeRepository: GovernancePositionIntakeRepository = {
+  async getIntakes() {
+    const rows = await fetchOrEmpty<any>('/governance-position-intakes');
+    return rows.map(r => intakeFromBackend(r));
+  },
+  async createIntake(data) {
+    const row = await apiRequest<any>('/governance-position-intakes', { method: 'POST', body: JSON.stringify(intakeToBackend(data)) });
+    return intakeFromBackend(row);
+  },
+  async reviewIntake(id, data) {
+    const backendStatus = data.status === 'Under Review' ? 'UNDER_REVIEW' : data.status === 'Accepted' ? 'ACCEPTED' : 'REJECTED';
+    const result = await apiRequest<any>(`/governance-position-intakes/${id}/review`, {
+      method: 'PATCH',
+      body: JSON.stringify({ ...data, status: backendStatus }),
+    });
+    if (result.intake) {
+      return { intake: intakeFromBackend(result.intake), position: result.position ? agpFromBackend(result.position) : undefined };
+    }
+    return { intake: intakeFromBackend(result) };
+  },
+};
+
+export const apiAuthorisedGovernancePositionRepository: AuthorisedGovernancePositionRepository = {
+  async getPositions(assetId) {
+    const rows = await fetchOrEmpty<any>(`/authorised-governance-positions${assetId ? `?assetId=${assetId}` : ''}`);
+    return rows.map(agpFromBackend);
+  },
+  async createPosition(data) {
+    const row = await apiRequest<any>('/authorised-governance-positions', { method: 'POST', body: JSON.stringify(agpToBackend(data)) });
+    return agpFromBackend(row);
+  },
+};
+
+export const apiGovernancePositionContractRepository: GovernancePositionContractRepository = {
+  async getContracts(assetId) {
+    const rows = await fetchOrEmpty<any>(`/governance-position-contracts${assetId ? `?assetId=${assetId}` : ''}`);
+    return rows.map(contractFromBackend);
+  },
+  async createContract(data) {
+    const row = await apiRequest<any>('/governance-position-contracts', { method: 'POST', body: JSON.stringify(contractToBackend(data)) });
+    return contractFromBackend(row);
+  },
+};
+
+export const apiGovernancePositionEvidenceRepository: GovernancePositionEvidenceRepository = {
+  async getLinks(positionId) {
+    const rows = await fetchOrEmpty<any>(`/governance-position-evidence?positionId=${positionId}`);
+    return rows.map(positionEvidenceFromBackend);
+  },
+  async createLink(data) {
+    const row = await apiRequest<any>('/governance-position-evidence', { method: 'POST', body: JSON.stringify(positionEvidenceToBackend(data)) });
+    return positionEvidenceFromBackend(row);
+  },
+};
+
+export const apiReassessmentRequestRepository: ReassessmentRequestRepository = {
+  async getRequests(positionId) {
+    const rows = await fetchOrEmpty<any>(`/reassessment-requests?positionId=${positionId}`);
+    return rows.map(reassessmentRequestFromBackend);
+  },
+  async createRequest(data) {
+    const row = await apiRequest<any>('/reassessment-requests', { method: 'POST', body: JSON.stringify(data) });
+    return reassessmentRequestFromBackend(row);
+  },
+  async routeRequest(id, routedTo) {
+    const row = await apiRequest<any>(`/reassessment-requests/${id}/route`, { method: 'PATCH', body: JSON.stringify({ routedTo }) });
+    return reassessmentRequestFromBackend(row);
+  },
+  async respondToRequest(id, status, authorityResponse) {
+    const row = await apiRequest<any>(`/reassessment-requests/${id}/respond`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status: status === 'Acknowledged' ? 'ACKNOWLEDGED' : 'RESOLVED', authorityResponse }),
+    });
+    return reassessmentRequestFromBackend(row);
+  },
+};
+
+export const apiReauthorisationRequestRepository: ReauthorisationRequestRepository = {
+  async getRequests(positionId) {
+    const rows = await fetchOrEmpty<any>(`/reauthorisation-requests?positionId=${positionId}`);
+    return rows.map(reauthorisationRequestFromBackend);
+  },
+  async createRequest(data) {
+    const row = await apiRequest<any>('/reauthorisation-requests', { method: 'POST', body: JSON.stringify(data) });
+    return reauthorisationRequestFromBackend(row);
+  },
+  async routeRequest(id, routedTo) {
+    const row = await apiRequest<any>(`/reauthorisation-requests/${id}/route`, { method: 'PATCH', body: JSON.stringify({ routedTo }) });
+    return reauthorisationRequestFromBackend(row);
+  },
+  async respondToRequest(id, status, authorityResponse) {
+    const row = await apiRequest<any>(`/reauthorisation-requests/${id}/respond`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status: status === 'Acknowledged' ? 'ACKNOWLEDGED' : 'RESOLVED', authorityResponse }),
+    });
+    return reauthorisationRequestFromBackend(row);
   },
 };
 

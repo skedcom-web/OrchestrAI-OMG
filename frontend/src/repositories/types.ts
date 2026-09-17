@@ -400,3 +400,59 @@ export interface ConfidenceAssessmentRepository {
   getConfidenceAssessments(): Promise<ConfidenceAssessment[]>;
   createConfidenceAssessment(data: Partial<ConfidenceAssessment>): Promise<ConfidenceAssessment>;
 }
+
+/* ================================================================
+ * Release 20 — Governance Position Lifecycle Interoperability Foundation.
+ * ================================================================ */
+
+import type {
+  AuthorisedGovernancePosition,
+  GovernancePositionContract,
+  GovernancePositionEvidence,
+  GovernancePositionIntake,
+  ReassessmentRequest,
+  ReauthorisationRequest,
+} from '../types';
+
+/** Capability 1 — External Governance Position Intake. Accepting an intake creates a real AuthorisedGovernancePosition in the same call. */
+export interface GovernancePositionIntakeRepository {
+  getIntakes(): Promise<GovernancePositionIntake[]>;
+  createIntake(data: Partial<GovernancePositionIntake>): Promise<GovernancePositionIntake>;
+  reviewIntake(
+    id: string,
+    data: { status: 'Under Review' | 'Accepted' | 'Rejected'; reviewedBy: string; reviewNotes?: string; assetId?: string; authorisedGovernanceState?: string; validFrom?: string; validUntil?: string }
+  ): Promise<{ intake: GovernancePositionIntake; position?: AuthorisedGovernancePosition }>;
+}
+
+/** Domain C, migrated to real persistence under Release 20. */
+export interface AuthorisedGovernancePositionRepository {
+  getPositions(assetId?: string): Promise<AuthorisedGovernancePosition[]>;
+  createPosition(data: Omit<AuthorisedGovernancePosition, 'id' | 'createdAt'>): Promise<AuthorisedGovernancePosition>;
+}
+
+/** Domain G, migrated to real persistence and extended to v2 under Release 20. */
+export interface GovernancePositionContractRepository {
+  getContracts(assetId?: string): Promise<GovernancePositionContract[]>;
+  createContract(data: Omit<GovernancePositionContract, 'id'>): Promise<GovernancePositionContract>;
+}
+
+/** Capability 3 — Governance Position Evidence Registry. */
+export interface GovernancePositionEvidenceRepository {
+  getLinks(positionId: string): Promise<GovernancePositionEvidence[]>;
+  createLink(data: Omit<GovernancePositionEvidence, 'id' | 'linkedAt'>): Promise<GovernancePositionEvidence>;
+}
+
+/** Capability 5 — Authority Return Path. OMG creates and routes; only /respond records an authority's own reported outcome. */
+export interface ReassessmentRequestRepository {
+  getRequests(positionId: string): Promise<ReassessmentRequest[]>;
+  createRequest(data: Omit<ReassessmentRequest, 'id' | 'createdAt' | 'status'>): Promise<ReassessmentRequest>;
+  routeRequest(id: string, routedTo: string): Promise<ReassessmentRequest>;
+  respondToRequest(id: string, status: 'Acknowledged' | 'Resolved', authorityResponse: string): Promise<ReassessmentRequest>;
+}
+
+export interface ReauthorisationRequestRepository {
+  getRequests(positionId: string): Promise<ReauthorisationRequest[]>;
+  createRequest(data: Omit<ReauthorisationRequest, 'id' | 'createdAt' | 'status'>): Promise<ReauthorisationRequest>;
+  routeRequest(id: string, routedTo: string): Promise<ReauthorisationRequest>;
+  respondToRequest(id: string, status: 'Acknowledged' | 'Resolved', authorityResponse: string): Promise<ReauthorisationRequest>;
+}

@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
 import { Select } from '../components/ui/Select';
 import { GovernanceTruthCard } from '../components/governance/GovernanceTruthCard';
@@ -13,8 +14,15 @@ import {
   saveAuthorisedGovernancePosition,
   issueGovernancePositionContract,
   getGovernancePositionContractsForAsset,
+  detectChangedConditionsForPosition,
+  createReassessmentRequest,
+  routeReassessmentRequestToAuthority,
+  createReauthorisationRequest,
+  routeReauthorisationRequestToAuthority,
+  getReassessmentRequestsForPosition,
+  getReauthorisationRequestsForPosition,
 } from '../services/storageService';
-import type { RelianceElementStatus, RelianceElementType } from '../types';
+import type { RelianceElementStatus, RelianceElementType, ReassessmentRequest, ReauthorisationRequest } from '../types';
 
 const RELIANCE_TYPES: RelianceElementType[] = ['Assumption', 'Required Control', 'Required Evidence', 'Regulatory Dependency', 'Operational Dependency'];
 const RELIANCE_STATUSES: RelianceElementStatus[] = ['Valid', 'Degraded', 'Broken'];
@@ -57,6 +65,20 @@ export const GovernancePositionPage: React.FC = () => {
   const [agpAssumptions, setAgpAssumptions] = useState('');
   const [agpValidUntil, setAgpValidUntil] = useState('');
 
+  // Release 20 — Capabilities 4 & 5: Changed Condition Recognition and the Authority Return Path.
+  const canReassessmentCreate = canPerform('reassessmentRequest:create');
+  const canReauthorisationCreate = canPerform('reauthorisationRequest:create');
+  const changedConditions = useMemo(() => (activeAgp ? detectChangedConditionsForPosition(activeAgp.id) : null), [activeAgp, refreshTick]);
+  const [reassessmentRequests, setReassessmentRequests] = useState<ReassessmentRequest[]>([]);
+  const [reauthorisationRequests, setReauthorisationRequests] = useState<ReauthorisationRequest[]>([]);
+  const [requestReason, setRequestReason] = useState('');
+
+  useEffect(() => {
+    if (!activeAgp) { setReassessmentRequests([]); setReauthorisationRequests([]); return; }
+    getReassessmentRequestsForPosition(activeAgp.id).then(setReassessmentRequests).catch(() => setReassessmentRequests([]));
+    getReauthorisationRequestsForPosition(activeAgp.id).then(setReauthorisationRequests).catch(() => setReauthorisationRequests([]));
+  }, [activeAgp, refreshTick]);
+
   const refresh = () => setRefreshTick(t => t + 1);
 
   const handleAddElement = () => {
@@ -95,6 +117,42 @@ export const GovernancePositionPage: React.FC = () => {
     refresh();
   };
 
+  /**
+   * Capability 5 — Authority Return Path. Creates the request, then
+   * immediately routes it back to the position's own named authority
+   * (accountableOwner) — OMG never decides the matter, it only hands it off
+   * and records that hand-off.
+   */
+  const handleRequestReassessment = async () => {
+    if (!activeAgp || !asset || !canReassessmentCreate || !requestReason) return;
+    const created = await createReassessmentRequest({
+      positionId: activeAgp.id,
+      assetId: asset.id,
+      assetName: asset.name,
+      triggerReason: requestReason,
+      supportingEvidenceRefs: [],
+      createdBy: currentUser?.name || 'David Chen (Governance Admin)',
+    });
+    await routeReassessmentRequestToAuthority(created.id, asset.authorityProfile?.accountableOwner || asset.ownership.approver || asset.ownership.businessOwner || 'David Chen (Governance Admin)');
+    setRequestReason('');
+    refresh();
+  };
+
+  const handleRequestReauthorisation = async () => {
+    if (!activeAgp || !asset || !canReauthorisationCreate || !requestReason) return;
+    const created = await createReauthorisationRequest({
+      positionId: activeAgp.id,
+      assetId: asset.id,
+      assetName: asset.name,
+      changedConditions: changedConditions?.triggerTypes || [],
+      governanceImpactSummary: requestReason,
+      createdBy: currentUser?.name || 'David Chen (Governance Admin)',
+    });
+    await routeReauthorisationRequestToAuthority(created.id, asset.authorityProfile?.accountableOwner || asset.ownership.approver || asset.ownership.businessOwner || 'David Chen (Governance Admin)');
+    setRequestReason('');
+    refresh();
+  };
+
   const handleExportContract = () => {
     if (contracts.length === 0) return;
     const blob = new Blob([JSON.stringify(contracts[0], null, 2)], { type: 'application/json' });
@@ -108,13 +166,18 @@ export const GovernancePositionPage: React.FC = () => {
 
   return (
     <div className="flex flex-col gap-6 pb-12">
-      <div>
-        <h1 className="text-3xl font-extrabold text-[var(--text-primary)]">Governance Position &amp; Reauthorisation</h1>
-        <p className="text-sm text-[var(--text-secondary)] mt-1 max-w-2xl">
-          Release 19.1 — Governance State Harmonisation. One authoritative Governance Truth, resolved by the Governance
-          State Resolution Layer from Authority Currency, Reliance Basis, Evidence Sufficiency, Admissibility,
-          Reauthorisation and Governance Continuity — advisory only; runtime implementation stays entirely external.
-        </p>
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div>
+          <h1 className="text-3xl font-extrabold text-[var(--text-primary)]">Governance Position &amp; Reauthorisation</h1>
+          <p className="text-sm text-[var(--text-secondary)] mt-1 max-w-2xl">
+            Release 19.1 — Governance State Harmonisation. One authoritative Governance Truth, resolved by the Governance
+            State Resolution Layer from Authority Currency, Reliance Basis, Evidence Sufficiency, Admissibility,
+            Reauthorisation and Governance Continuity — advisory only; runtime implementation stays entirely external.
+          </p>
+        </div>
+        <Link to="/governance-position-traceability" className="text-xs font-bold text-[var(--accent-strong)] shrink-0 hover:underline">
+          View Cross-Layer Traceability →
+        </Link>
       </div>
 
       <Select label="Asset" value={assetId} onChange={e => setAssetId(e.target.value)} options={assets.map(a => ({ value: a.id, label: a.name }))} />
@@ -169,9 +232,19 @@ export const GovernancePositionPage: React.FC = () => {
         <p className="text-[10px] font-extrabold uppercase tracking-wider text-[var(--text-muted)] mb-1">Authorised Governance Position (Domain C)</p>
         {activeAgp ? (
           <div className="mb-3 px-3 py-2.5 rounded-lg bg-[var(--bg-sunken)]">
-            <div className="flex items-center gap-2 mb-1"><Pill tone="var(--status-success)">Active</Pill><span className="text-xs font-bold text-[var(--text-primary)]">{activeAgp.authorisedGovernanceState}</span></div>
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
+              <Pill tone="var(--status-success)">Active</Pill>
+              <Pill tone={activeAgp.positionOrigin === 'External Intake' ? 'var(--accent-strong)' : 'var(--text-muted)'}>{activeAgp.positionOrigin || 'Internal'}</Pill>
+              <span className="text-xs font-bold text-[var(--text-primary)]">{activeAgp.authorisedGovernanceState}</span>
+            </div>
             <p className="text-[11px] text-[var(--text-muted)]">Conditions: {activeAgp.conditions.join('; ') || 'None'}</p>
             <p className="text-[11px] text-[var(--text-muted)]">Obligations: {activeAgp.obligations.join('; ') || 'None'}</p>
+            {(activeAgp.evidenceRequirements?.length || 0) > 0 && (
+              <p className="text-[11px] text-[var(--text-muted)]">Evidence Requirements: {activeAgp.evidenceRequirements!.join('; ')}</p>
+            )}
+            {activeAgp.authorityProvenanceRef && (
+              <p className="text-[11px] text-[var(--text-muted)]">Authority Reference: {activeAgp.authorityProvenanceRef}</p>
+            )}
           </div>
         ) : (
           <p className="text-[11px] text-[var(--text-muted)] mb-3">No Active Authorised Governance Position for this asset — Unified Governance State cannot reach "Governed" until one is authorised.</p>
@@ -208,6 +281,57 @@ export const GovernancePositionPage: React.FC = () => {
         </button>
         <p className="text-[10.5px] text-[var(--text-muted)] mt-2">Authorising a new position automatically supersedes any previously Active position for this asset — an asset never has more than one Active position at once.</p>
       </Card>
+
+      {activeAgp && (
+        <Card className="!p-5">
+          <p className="text-[10px] font-extrabold uppercase tracking-wider text-[var(--text-muted)] mb-2">Changed Condition Recognition &amp; Authority Return Path (Release 20, Capabilities 4–5)</p>
+          <p className="text-[11px] text-[var(--text-muted)] mb-3">
+            Reuses the existing Reauthorisation Engine and Reassessment Trigger signals — no new detection logic. OMG
+            routes a detected change back to the position's own named authority; it never decides the outcome itself.
+          </p>
+          {changedConditions && (
+            <div className="mb-3 px-3 py-2.5 rounded-lg bg-[var(--bg-sunken)]">
+              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                <Pill tone={changedConditions.hasChangedConditions ? 'var(--status-warning)' : 'var(--status-success)'}>
+                  {changedConditions.hasChangedConditions ? 'Changed Conditions Detected' : 'No Changed Conditions'}
+                </Pill>
+                {changedConditions.reauthorisationOutcome && <span className="text-[11px] text-[var(--text-muted)]">Reauthorisation Engine: {changedConditions.reauthorisationOutcome}</span>}
+              </div>
+              {changedConditions.triggerTypes.length > 0 && (
+                <p className="text-[11px] text-[var(--text-muted)]">Trigger types: {changedConditions.triggerTypes.join(', ')}</p>
+              )}
+            </div>
+          )}
+          {(reassessmentRequests.length > 0 || reauthorisationRequests.length > 0) && (
+            <div className="flex flex-col gap-1.5 mb-3">
+              {reassessmentRequests.map(r => (
+                <div key={r.id} className="px-3 py-2 rounded-lg bg-[var(--bg-sunken)] flex items-center justify-between gap-2">
+                  <span className="text-[11px] text-[var(--text-muted)]">Reassessment: {r.triggerReason}</span>
+                  <Pill tone="var(--status-warning)">{r.status}{r.routedTo ? ` → ${r.routedTo}` : ''}</Pill>
+                </div>
+              ))}
+              {reauthorisationRequests.map(r => (
+                <div key={r.id} className="px-3 py-2 rounded-lg bg-[var(--bg-sunken)] flex items-center justify-between gap-2">
+                  <span className="text-[11px] text-[var(--text-muted)]">Reauthorisation: {r.governanceImpactSummary}</span>
+                  <Pill tone="var(--status-warning)">{r.status}{r.routedTo ? ` → ${r.routedTo}` : ''}</Pill>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="flex flex-col gap-1.5 mb-3">
+            <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Reason / Governance Impact Summary</label>
+            <textarea value={requestReason} onChange={e => setRequestReason(e.target.value)} rows={2} className="w-full px-3.5 py-2.5 rounded-xl bg-[var(--bg-input)] text-[var(--text-primary)] border border-[var(--border-color)] text-sm focus:outline-none focus:border-[var(--border-focus)]" />
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            <button onClick={handleRequestReassessment} disabled={!canReassessmentCreate || !requestReason} className="px-4 py-2.5 rounded-xl text-xs font-bold text-white shadow-md hover:shadow-lg transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed" style={{ background: 'var(--grad-brand)' }}>
+              Request Reassessment
+            </button>
+            <button onClick={handleRequestReauthorisation} disabled={!canReauthorisationCreate || !requestReason} className="px-4 py-2.5 rounded-xl text-xs font-bold border border-[var(--border-color)] text-[var(--text-secondary)] hover:border-[var(--accent-border)] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+              Request Reauthorisation
+            </button>
+          </div>
+        </Card>
+      )}
 
       <Card className="!p-5">
         <p className="text-[10px] font-extrabold uppercase tracking-wider text-[var(--text-muted)] mb-2">Governance Position Contract (Domain G)</p>

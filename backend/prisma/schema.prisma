@@ -263,12 +263,12 @@ enum QualityControlStatus {
 }
 
 model KnowledgeAsset {
-  id             String               @id @default(uuid())
+  id             String              @id @default(uuid())
   name           String
   sourceType     KnowledgeSourceType
-  description    String               @db.Text
-  riskLevel      RiskLevel            @default(MEDIUM)
-  lifecycleStage LifecycleStage       @default(REGISTER)
+  description    String              @db.Text
+  riskLevel      RiskLevel           @default(MEDIUM)
+  lifecycleStage LifecycleStage      @default(REGISTER)
 
   accountableOwner String
   knowledgeOwner   String
@@ -277,7 +277,7 @@ model KnowledgeAsset {
   freshnessSLA         String?
   lastRefreshedAt      DateTime?
   qualityControlStatus QualityControlStatus @default(NOT_READY)
-  qualityNotes         String?               @db.Text
+  qualityNotes         String?              @db.Text
 
   decisionOutcome       DecisionOutcome @default(PENDING)
   decisionJustification String?         @db.Text
@@ -357,11 +357,11 @@ model Prompt {
 
 /// Immutable version history — an edit creates a new row, never overwrites one.
 model PromptVersion {
-  id            String @id @default(uuid())
+  id            String  @id @default(uuid())
   promptId      String
-  prompt        Prompt @relation(fields: [promptId], references: [id], onDelete: Cascade)
+  prompt        Prompt  @relation(fields: [promptId], references: [id], onDelete: Cascade)
   versionNumber Int
-  templateBody  String @db.Text
+  templateBody  String  @db.Text
   changeNotes   String? @db.Text
 
   // Evidence / injection-control review for this specific version.
@@ -429,12 +429,12 @@ enum ToolClassification {
 }
 
 model Tool {
-  id             String              @id @default(uuid())
+  id             String             @id @default(uuid())
   name           String
   classification ToolClassification
-  description    String              @db.Text
-  riskLevel      RiskLevel           @default(MEDIUM)
-  lifecycleStage LifecycleStage      @default(REGISTER)
+  description    String             @db.Text
+  riskLevel      RiskLevel          @default(MEDIUM)
+  lifecycleStage LifecycleStage     @default(REGISTER)
 
   accountableOwner String
   toolOwner        String
@@ -527,14 +527,14 @@ model GovernanceControl {
 
 /// Polymorphic — spans Asset, Model, Knowledge, Prompt and Tool equally.
 model ControlAttachment {
-  id          String            @id @default(uuid())
-  controlId   String
-  control     GovernanceControl @relation(fields: [controlId], references: [id], onDelete: Cascade)
-  entityType  String
-  entityId    String
-  entityName  String
-  attachedBy  String
-  attachedAt  DateTime          @default(now())
+  id         String            @id @default(uuid())
+  controlId  String
+  control    GovernanceControl @relation(fields: [controlId], references: [id], onDelete: Cascade)
+  entityType String
+  entityId   String
+  entityName String
+  attachedBy String
+  attachedAt DateTime          @default(now())
 
   testResults ControlTestResult[]
 
@@ -587,10 +587,10 @@ enum CertificationStatus {
 }
 
 model CertificationProgram {
-  id                 String    @id @default(uuid())
+  id                 String @id @default(uuid())
   name               String
-  criteria           String    @db.Text
-  description        String    @db.Text
+  criteria           String @db.Text
+  description        String @db.Text
   validityPeriodDays Int
 
   isArchived    Boolean   @default(false)
@@ -617,8 +617,8 @@ model CertificationRecord {
 
   status CertificationStatus @default(ACTIVE)
 
-  issuedAt DateTime @default(now())
-  issuedBy String
+  issuedAt  DateTime @default(now())
+  issuedBy  String
   expiresAt DateTime
 
   renewedAt    DateTime?
@@ -638,14 +638,14 @@ model CertificationRecord {
 }
 
 model CertificationEvidence {
-  id           String              @id @default(uuid())
-  recordId     String
-  record       CertificationRecord @relation(fields: [recordId], references: [id], onDelete: Cascade)
-  title        String
-  description  String              @db.Text
-  evidenceRef  String?
-  submittedBy  String
-  submittedAt  DateTime            @default(now())
+  id          String              @id @default(uuid())
+  recordId    String
+  record      CertificationRecord @relation(fields: [recordId], references: [id], onDelete: Cascade)
+  title       String
+  description String              @db.Text
+  evidenceRef String?
+  submittedBy String
+  submittedAt DateTime            @default(now())
 
   @@map("certification_evidence")
 }
@@ -726,11 +726,11 @@ model AIAsset {
   // Release 1 — Governance Authority Profile (Capability 1)
   /// Ultimately accountable individual — distinct from AssetOwner.businessOwner.
   /// Q1 Stabilization: required — no asset may exist without named accountability.
-  accountableOwner       String
-  governanceSponsor      String
-  humanOverrideAuthority String?
-  killSwitchAuthority    String?
-  reassessmentAuthority  String?
+  accountableOwner         String
+  governanceSponsor        String
+  humanOverrideAuthority   String?
+  killSwitchAuthority      String?
+  reassessmentAuthority    String?
   /// Release 4 — completes the Authority Profile as flat, API-writable scalars
   /// (distinct from the legacy User-relation-based AssetOwner.riskOwner etc.).
   /// Q1 Stabilization: required — no asset may exist without named accountability.
@@ -782,36 +782,40 @@ model AIAsset {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  owners                AssetOwner?
-  decisions             DecisionRecord[]
-  riskAssessments       RiskAssessment[]
-  validations           ValidationRecord[]
-  reassessmentTriggers  ReassessmentTrigger[]
-  reauthorizations      GovernanceReauthorizationRecord[]
-  evidenceRecords       EvidenceRecord[]
-  evidence              EvidenceDocument[]
-  findings              Finding[]
-  complianceAssessments ComplianceAssessmentRecord[]
-  killSwitches          KillSwitchRecord[]
-  overrides             OverrideRecord[]
-  incidents             GovernanceIncident[]
-  retirements           RetirementRecord[]
-  scheduledReviews      ScheduledReview[]
-  correctiveActions     CorrectiveAction[]
-  alerts                GovernanceAlert[]
-  auditLogs             AuditLog[]
-  policyViolations      PolicyViolation[]
-  changeRequests        ChangeRequest[]
-  stateTransitions      StateTransition[]
-  governanceFindings    GovernanceFinding[]
-  recommendedActions    RecommendedAction[]
-  governanceDrifts      GovernanceDrift[]
+  owners                      AssetOwner?
+  decisions                   DecisionRecord[]
+  riskAssessments             RiskAssessment[]
+  validations                 ValidationRecord[]
+  reassessmentTriggers        ReassessmentTrigger[]
+  reauthorizations            GovernanceReauthorizationRecord[]
+  evidenceRecords             EvidenceRecord[]
+  evidence                    EvidenceDocument[]
+  findings                    Finding[]
+  complianceAssessments       ComplianceAssessmentRecord[]
+  killSwitches                KillSwitchRecord[]
+  overrides                   OverrideRecord[]
+  incidents                   GovernanceIncident[]
+  retirements                 RetirementRecord[]
+  scheduledReviews            ScheduledReview[]
+  correctiveActions           CorrectiveAction[]
+  alerts                      GovernanceAlert[]
+  auditLogs                   AuditLog[]
+  policyViolations            PolicyViolation[]
+  changeRequests              ChangeRequest[]
+  stateTransitions            StateTransition[]
+  governanceFindings          GovernanceFinding[]
+  recommendedActions          RecommendedAction[]
+  governanceDrifts            GovernanceDrift[]
   governanceAssessmentRecords GovernanceAssessmentRecord[]
   consensusAssessments        ConsensusAssessment[]
   modelUsages                 AssetModelUsage[]
   knowledgeUsages             AssetKnowledgeUsage[]
   promptUsages                AssetPromptUsage[]
   toolGrants                  AgentToolGrant[]
+
+  /// Release 20 — Governance Position Lifecycle Interoperability Foundation.
+  governancePositionIntakes     GovernancePositionIntake[]
+  authorisedGovernancePositions AuthorisedGovernancePosition[]
 
   @@map("ai_assets")
 }
@@ -870,9 +874,9 @@ model DecisionRecord {
   /// set and remains a perfectly valid Approval/Rejection-shaped decision;
   /// the application layer derives a display decisionType from `outcome`
   /// when this is null rather than backfilling history.
-  decisionType     DecisionType?
-  authorityRole    String?
-  linkedEvidenceIds String[]     @default([])
+  decisionType      DecisionType?
+  authorityRole     String?
+  linkedEvidenceIds String[]      @default([])
 
   @@map("decision_records")
 }
@@ -1951,15 +1955,15 @@ model GovernanceDrift {
 /// a single point-in-time read — there is nothing to compare against without
 /// a stored prior snapshot. Recorded by an explicit action, not a cron.
 model GovernanceEffectivenessSnapshot {
-  id                        String   @id @default(uuid())
-  recordedAt                DateTime @default(now())
-  effectivenessScore        Int
-  evidenceComplianceScore   Int
-  reviewComplianceScore     Int
-  findingsReductionScore    Int
+  id                          String   @id @default(uuid())
+  recordedAt                  DateTime @default(now())
+  effectivenessScore          Int
+  evidenceComplianceScore     Int
+  reviewComplianceScore       Int
+  findingsReductionScore      Int
   reassessmentTimelinessScore Int
-  policyAdherenceScore      Int
-  driftResolutionScore      Int
+  policyAdherenceScore        Int
+  driftResolutionScore        Int
 
   @@map("governance_effectiveness_snapshots")
 }
@@ -2069,13 +2073,13 @@ enum AssessorCertificationStatus {
 }
 
 model AssessorCertification {
-  id                  String                       @id @default(uuid())
+  id                  String                      @id @default(uuid())
   assessorName        String
   assessorRole        String
   certificationStatus AssessorCertificationStatus
   calibrationAccuracy Int
   scenariosAttempted  Int
-  certificationDate   DateTime                     @default(now())
+  certificationDate   DateTime                    @default(now())
   expiryDate          DateTime
 
   @@map("assessor_certifications")
@@ -2092,9 +2096,9 @@ enum ConsensusAssessmentStatus {
 }
 
 model ConsensusAssessment {
-  id             String                     @id @default(uuid())
+  id             String                    @id @default(uuid())
   assetId        String
-  asset          AIAsset                    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  asset          AIAsset                   @relation(fields: [assetId], references: [id], onDelete: Cascade)
   assessmentType GovernanceAssessmentType
   initiatedBy    String
   /// [{ name, role, submitted }] — OMG has no standalone user-account
@@ -2104,7 +2108,7 @@ model ConsensusAssessment {
   status         ConsensusAssessmentStatus @default(OPEN)
   consensusScore Float?
   varianceScore  Float?
-  createdAt      DateTime                   @default(now())
+  createdAt      DateTime                  @default(now())
   closedAt       DateTime?
 
   submittedScores GovernanceAssessmentRecord[]
@@ -2151,4 +2155,227 @@ model AuditLog {
   asset   AIAsset? @relation(fields: [assetId], references: [id])
 
   @@map("audit_logs")
+}
+
+// =============================================================================
+// RELEASE 20 — Governance Position Lifecycle Interoperability Foundation.
+// Theme: Authority -> OMG -> Execution -> Evidence -> Reassessment -> Authority.
+// Rule (Capability 5): OMG routes matters back to authority. OMG never
+// recreates governance judgement — every request record below is created and
+// routed by OMG, never decided by OMG; the decision fields on
+// ReassessmentRequest/ReauthorisationRequest below are populated only when an
+// authority-side response is recorded back into OMG, never inferred.
+// =============================================================================
+
+enum GovernancePositionIntakeStatus {
+  RECEIVED
+  UNDER_REVIEW
+  ACCEPTED
+  REJECTED
+}
+
+/// Capability 5 — Authority Return Path. Shared status vocabulary for
+/// Reassessment/Reauthorisation Requests: OMG only ever moves a request
+/// through OPEN -> ROUTED (handed back to the named authority) and records
+/// ACKNOWLEDGED/RESOLVED only when the authority itself reports a response —
+/// OMG never sets a request to ACKNOWLEDGED or RESOLVED on its own judgement.
+enum GovernanceRequestStatus {
+  OPEN
+  ROUTED
+  ACKNOWLEDGED
+  RESOLVED
+}
+
+/// Capability 1 — External Governance Position Intake. Captures an externally
+/// authorised governance position exactly as received, before OMG does
+/// anything with it. Accepting an intake creates the AuthorisedGovernancePosition
+/// below (via acceptedPosition) — the intake row itself is never mutated into
+/// a position, so the as-received record always stays intact.
+model GovernancePositionIntake {
+  id                       String   @id @default(uuid())
+  sourceSystem             String
+  sourceAuthority          String
+  authorityReference       String
+  scope                    String   @db.Text
+  applicability            String   @db.Text
+  conditions               String[]
+  obligations              String[]
+  evidenceRequirements     String[]
+  reassessmentTriggerTypes String[]
+  accountabilityReferences Json
+  versionMetadata          Json
+
+  status      GovernancePositionIntakeStatus @default(RECEIVED)
+  reviewedBy  String?
+  reviewedAt  DateTime?
+  reviewNotes String?                        @db.Text
+
+  assetId String?
+  asset   AIAsset? @relation(fields: [assetId], references: [id], onDelete: SetNull)
+
+  acceptedPosition AuthorisedGovernancePosition?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("governance_position_intakes")
+}
+
+/// Release 19 Domain C, migrated to real persistence under Release 20 —
+/// previously a frontend-only/localStorage concept. Enhanced per Capability 2
+/// (Governance Position Contract v2 fields folded directly onto the position,
+/// since a position and its own authorisation basis are one record, not two)
+/// plus Capability 1's origin tracking (Internal authorisation vs accepted
+/// External Intake).
+model AuthorisedGovernancePosition {
+  id        String  @id @default(uuid())
+  assetId   String
+  asset     AIAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  assetName String
+
+  authorisedGovernanceState String
+  conditions                String[]
+  obligations               String[]
+  assumptions               String[]
+  relianceElementIds        String[] @default([])
+  authorityReferenceIds     String[] @default([])
+
+  /// Release 20 additions.
+  positionOrigin           String   @default("Internal") // "Internal" | "External Intake"
+  authorityProvenanceRef   String?
+  accountabilityReferences Json?
+  evidenceRequirements     String[] @default([])
+  reassessmentTriggerTypes String[] @default([])
+
+  sourceIntakeId String?                   @unique
+  sourceIntake   GovernancePositionIntake? @relation(fields: [sourceIntakeId], references: [id])
+
+  validFrom  DateTime
+  validUntil DateTime?
+  status     String // Active | Superseded | Expired | Suspended
+
+  createdAt DateTime @default(now())
+  createdBy String
+
+  contracts               GovernancePositionContract[]
+  evidenceLinks           GovernancePositionEvidence[]
+  reassessmentRequests    ReassessmentRequest[]
+  reauthorisationRequests ReauthorisationRequest[]
+
+  @@map("authorised_governance_positions")
+}
+
+/// Release 19 Domain G, migrated to real persistence and extended to v2 under
+/// Release 20 (Capability 2). A contract is issued from an
+/// AuthorisedGovernancePosition and stays immutable once issued — a new
+/// material change re-authorises the position and issues a new contract
+/// version, it never edits a prior one.
+model GovernancePositionContract {
+  id         String                       @id @default(uuid())
+  positionId String
+  position   AuthorisedGovernancePosition @relation(fields: [positionId], references: [id], onDelete: Cascade)
+  assetId    String
+  assetName  String
+
+  conditions             String[]
+  obligations            String[]
+  monitoringExpectations String[]
+  reviewRequirements     String[]
+  reportingRequirements  String[]
+
+  /// Release 20 v2 additions.
+  authorityProvenanceRef   String?
+  accountabilityReferences Json?
+  evidenceRequirements     String[] @default([])
+  reassessmentTriggerTypes String[] @default([])
+  positionOrigin           String   @default("Internal")
+  whyReference             String?  @db.Text
+
+  version Int    @default(1)
+  status  String @default("Active")
+
+  issuedAt DateTime @default(now())
+  issuedBy String
+
+  @@map("governance_position_contracts")
+}
+
+/// Capability 3 — Governance Position Evidence Registry. Links a governance
+/// position (and optionally the contract issued from it) to runtime evidence
+/// or a reliance event, without creating a second evidence store — every
+/// evidenceRecordRef below points at an existing EvidenceRecord row by id.
+model GovernancePositionEvidence {
+  id         String                       @id @default(uuid())
+  positionId String
+  position   AuthorisedGovernancePosition @relation(fields: [positionId], references: [id], onDelete: Cascade)
+  contractId String?
+  assetId    String
+  assetName  String
+
+  linkType String // "Runtime Evidence" | "Reliance Event"
+
+  /// Loose reference, matching EvidenceRecord's own existing
+  /// riskAssessmentRef/decisionRecordRef convention — not every linked record
+  /// type is guaranteed to still exist.
+  evidenceRecordRef String?
+  relianceEventRef  String?
+
+  linkedAt DateTime @default(now())
+  linkedBy String
+
+  @@map("governance_position_evidence")
+}
+
+/// Capability 5 — Authority Return Path. A material change detected against
+/// a position, routed back to the authority that granted it. OMG never
+/// resolves this itself — see GovernanceRequestStatus.
+model ReassessmentRequest {
+  id         String                       @id @default(uuid())
+  positionId String
+  position   AuthorisedGovernancePosition @relation(fields: [positionId], references: [id], onDelete: Cascade)
+  assetId    String
+  assetName  String
+
+  triggerReason          String   @db.Text
+  supportingEvidenceRefs String[] @default([])
+
+  status   GovernanceRequestStatus @default(OPEN)
+  routedTo String?
+  routedAt DateTime?
+
+  /// Populated only when the authority's own response is recorded back into
+  /// OMG — never inferred or auto-filled by OMG itself.
+  authorityResponse String?   @db.Text
+  respondedAt       DateTime?
+
+  createdAt DateTime @default(now())
+  createdBy String
+
+  @@map("reassessment_requests")
+}
+
+/// Capability 5 — Authority Return Path, reauthorisation variant: routed when
+/// changed conditions require the authority to re-decide the position itself,
+/// not merely reassess evidence.
+model ReauthorisationRequest {
+  id         String                       @id @default(uuid())
+  positionId String
+  position   AuthorisedGovernancePosition @relation(fields: [positionId], references: [id], onDelete: Cascade)
+  assetId    String
+  assetName  String
+
+  changedConditions       String[]
+  governanceImpactSummary String   @db.Text
+
+  status   GovernanceRequestStatus @default(OPEN)
+  routedTo String?
+  routedAt DateTime?
+
+  authorityResponse String?   @db.Text
+  respondedAt       DateTime?
+
+  createdAt DateTime @default(now())
+  createdBy String
+
+  @@map("reauthorisation_requests")
 }

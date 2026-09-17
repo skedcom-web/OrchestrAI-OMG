@@ -26,6 +26,8 @@ import type {
   GovernanceClassification,
   GovernanceConditionType,
   GovernanceFindingStatus,
+  GovernancePositionIntakeStatus,
+  GovernanceRequestStatus,
   GovernancePolicySeverity,
   GovernancePolicyStatus,
   GovernanceState,
@@ -190,6 +192,15 @@ const TRIGGER_TYPE: Record<ReassessmentTriggerType, string> = {
 
 const TRIGGER_STATUS: Record<ReassessmentTriggerStatus, string> = {
   'Open': 'OPEN', 'Under Review': 'UNDER_REVIEW', 'Resolved': 'RESOLVED', 'Dismissed': 'DISMISSED',
+};
+
+/** Release 20 — Governance Position Lifecycle Interoperability Foundation. */
+const GOVERNANCE_POSITION_INTAKE_STATUS: Record<GovernancePositionIntakeStatus, string> = {
+  'Received': 'RECEIVED', 'Under Review': 'UNDER_REVIEW', 'Accepted': 'ACCEPTED', 'Rejected': 'REJECTED',
+};
+
+const GOVERNANCE_REQUEST_STATUS: Record<GovernanceRequestStatus, string> = {
+  'Open': 'OPEN', 'Routed': 'ROUTED', 'Acknowledged': 'ACKNOWLEDGED', 'Resolved': 'RESOLVED',
 };
 
 const SEVERITY: Record<FindingSeverity, string> = { 'Low': 'LOW', 'Medium': 'MEDIUM', 'High': 'HIGH', 'Critical': 'CRITICAL' };
@@ -374,6 +385,8 @@ export const enumMaps = {
   evidenceStatus: { toBackend: toBackend(EVIDENCE_STATUS), toFrontend: toFrontend(EVIDENCE_STATUS) },
   triggerType: { toBackend: toBackend(TRIGGER_TYPE), toFrontend: toFrontend(TRIGGER_TYPE) },
   triggerStatus: { toBackend: toBackend(TRIGGER_STATUS), toFrontend: toFrontend(TRIGGER_STATUS) },
+  governancePositionIntakeStatus: { toBackend: toBackend(GOVERNANCE_POSITION_INTAKE_STATUS), toFrontend: toFrontend(GOVERNANCE_POSITION_INTAKE_STATUS) },
+  governanceRequestStatus: { toBackend: toBackend(GOVERNANCE_REQUEST_STATUS), toFrontend: toFrontend(GOVERNANCE_REQUEST_STATUS) },
   severity: { toBackend: toBackend(SEVERITY), toFrontend: toFrontend(SEVERITY) },
   compliancePackStatus: { toBackend: toBackend(COMPLIANCE_PACK_STATUS), toFrontend: toFrontend(COMPLIANCE_PACK_STATUS) },
   requirementPriority: { toBackend: toBackend(REQUIREMENT_PRIORITY), toFrontend: toFrontend(REQUIREMENT_PRIORITY) },

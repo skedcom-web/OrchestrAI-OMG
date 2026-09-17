@@ -441,11 +441,23 @@ export const NAV_DOMAINS: NavDomain[] = [
             governanceOutcome: 'Authority Current / Authority At Risk / Authority Invalid, per asset — advisory only.',
             keyArtifacts: ['Authority provenance records', 'Delegation references', 'Authority lineage'],
           } },
+          { path: '/governance-position-intake', label: 'Governance Position Intake', icon: '📥', description: 'Release 20, Capability 1 — receives externally authorised governance positions exactly as sent, and operationalises accepted ones as a real Authorised Governance Position.', keywords: ['governance position intake', 'external authority', 'interoperability', 'release 20'], insight: {
+            whatItDoes: 'Records an externally authorised governance position (source system, authority, scope, conditions, obligations, evidence requirements) through Received → Under Review → Accepted/Rejected, then authorises a real position against a named asset on acceptance.',
+            whyItMatters: 'A governance position that arrives from outside OMG needs to be preserved exactly as received before OMG does anything with it — accepting it is a distinct, auditable act, never an implicit one.',
+            governanceOutcome: 'A new Authorised Governance Position, originated as "External Intake" — advisory only, same as every internally authorised position.',
+            keyArtifacts: ['Governance position intakes', 'Accepted governance positions', 'Intake review audit trail'],
+          } },
           { path: '/governance-position', label: 'Governance Position & Reauthorisation', icon: '📜', description: 'The Authorised Governance Position, its Reliance Basis, one Unified Governance State, a Reauthorisation recommendation, and an exportable Governance Position Contract.', keywords: ['governance position', 'reliance basis', 'unified governance state', 'reauthorisation', 'governance position contract', 'release 19'], insight: {
             whatItDoes: 'Composes Governability, Reliance Basis and the active Authorised Governance Position into one canonical state, recommends whether reauthorisation is needed, and packages an approved position into a contract a downstream system may consume.',
             whyItMatters: 'Governability asks whether a decision still holds up. Governance Position asks the sharper question: exactly what was authorised, subject to what, relying on what — and is that single truth still standing?',
             governanceOutcome: 'One authoritative Governed / Conditionally Governed / Governance At Risk / Governance Invalid / Pending Reauthorisation / Retired state per asset — never a second, conflicting truth.',
             keyArtifacts: ['Authorised Governance Position', 'Reliance Basis elements', 'Unified Governance State', 'Reauthorisation outcome', 'Governance Position Contract'],
+          } },
+          { path: '/governance-position-traceability', label: 'Governance Position Traceability', icon: '🔗', description: 'Release 20, Capability 6 — walks one asset\'s position end to end: Authority → Intake → Position → Contract → Runtime Activity → Evidence → Changed Condition → Reassessment Request → Authority.', keywords: ['traceability', 'cross-layer', 'lifecycle', 'release 20'], insight: {
+            whatItDoes: 'Assembles the full lifecycle chain for one asset\'s current governance position from records that already exist elsewhere in OMG — no new computation, just one connected view.',
+            whyItMatters: 'A governance position that changes hands between an external authority, OMG, and a runtime needs to be traceable end to end, not scattered across five separate screens.',
+            governanceOutcome: 'A read-only trace — advisory, informational, never itself a governance decision.',
+            keyArtifacts: ['Authority provenance', 'Intake record', 'Position', 'Contract', 'Evidence links', 'Reassessment/reauthorisation requests'],
           } },
         ],
       },

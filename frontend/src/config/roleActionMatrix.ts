@@ -66,6 +66,13 @@ export type ActionKey =
   | 'relianceElement:edit'
   | 'governancePosition:create'
   | 'governancePositionContract:issue'
+  | 'governancePositionIntake:create'
+  | 'governancePositionIntake:review'
+  | 'governancePositionEvidence:link'
+  | 'reassessmentRequest:create'
+  | 'reassessmentRequest:route'
+  | 'reauthorisationRequest:create'
+  | 'reauthorisationRequest:route'
   | 'compliancePack:create'
   | 'compliancePack:edit'
   | 'compliancePack:delete'
@@ -202,6 +209,13 @@ export const ROLE_ACTION_MATRIX: Record<ActionKey, UserRole[]> = {
   'relianceElement:edit': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER'],
   'governancePosition:create': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
   'governancePositionContract:issue': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
+  'governancePositionIntake:create': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER'],
+  'governancePositionIntake:review': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
+  'governancePositionEvidence:link': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER'],
+  'reassessmentRequest:create': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER'],
+  'reassessmentRequest:route': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
+  'reauthorisationRequest:create': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER'],
+  'reauthorisationRequest:route': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
 
   'reauthorizationRecord:create': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
 

@@ -97,9 +97,16 @@ import type {
   AuthorisedGovernancePosition,
   UnifiedGovernanceStateResult,
   ReauthorisationResult,
+  ReauthorisationOutcome,
+  ReauthorisationTriggerType,
   GovernancePositionContract,
   GovernanceContinuitySignal,
-  GovernanceStateHistoryEntry
+  GovernanceStateHistoryEntry,
+  GovernancePositionIntake,
+  GovernancePositionEvidence,
+  ReassessmentRequest,
+  ReauthorisationRequest,
+  GovernancePositionTraceability
 } from '../types';
 import {
   INITIAL_ASSETS,
@@ -206,6 +213,12 @@ import {
   apiAssessorCertificationRepository,
   apiConsensusAssessmentRepository,
   apiConfidenceAssessmentRepository,
+  apiGovernancePositionIntakeRepository,
+  apiAuthorisedGovernancePositionRepository,
+  apiGovernancePositionContractRepository,
+  apiGovernancePositionEvidenceRepository,
+  apiReassessmentRequestRepository,
+  apiReauthorisationRequestRepository,
 } from '../repositories/apiRepositories';
 
 /**
@@ -4770,7 +4783,13 @@ export function getRelianceBasisForAsset(assetId: string): RelianceBasisResult |
   return computeRelianceBasis(assetId, asset.name, relianceElementsCache);
 }
 
-/** Domain C — Authorised Governance Position (AGP). */
+/**
+ * Domain C — Authorised Governance Position (AGP). Migrated to real backend
+ * persistence under Release 20 (previously frontend-only/localStorage) —
+ * INITIAL_AUTHORISED_GOVERNANCE_POSITIONS remains only as the offline
+ * fallback seed, exactly like assetsCache/evidenceCache; bootstrapPersistence
+ * overwrites this with live Neon data.
+ */
 let agpCache: AuthorisedGovernancePosition[] = getItem<AuthorisedGovernancePosition[]>(STORAGE_KEYS.AUTHORISED_GOVERNANCE_POSITIONS, INITIAL_AUTHORISED_GOVERNANCE_POSITIONS);
 function persistAgpCache() { setItem(STORAGE_KEYS.AUTHORISED_GOVERNANCE_POSITIONS, agpCache); }
 
@@ -4779,20 +4798,24 @@ export function getAgpsForAsset(assetId: string): AuthorisedGovernancePosition[]
 }
 
 /** Principle 3 — Single Governance Truth: authorising a new position for an asset automatically supersedes whichever position was previously Active for it, so an asset never has more than one Active AGP at once. */
-export function saveAuthorisedGovernancePosition(data: Omit<AuthorisedGovernancePosition, 'id' | 'createdAt'>): AuthorisedGovernancePosition {
+export async function saveAuthorisedGovernancePosition(data: Omit<AuthorisedGovernancePosition, 'id' | 'createdAt'>): Promise<AuthorisedGovernancePosition> {
   agpCache = agpCache.map(p =>
     p.assetId === data.assetId && p.status === 'Active' ? { ...p, status: 'Superseded' as const } : p
   );
-  const created: AuthorisedGovernancePosition = { ...data, id: `agp-${Date.now().toString().slice(-6)}`, createdAt: new Date().toISOString() };
-  agpCache = [created, ...agpCache];
+  const draft: AuthorisedGovernancePosition = { ...data, id: `local-${Date.now()}`, createdAt: new Date().toISOString() };
+  agpCache = [draft, ...agpCache];
   persistAgpCache();
   addAuditLog(
     'usr-1', data.createdBy, 'GOVERNANCE_ADMIN', 'GOVERNANCE_POSITION_AUTHORISED', 'AuthorisedGovernancePosition',
-    created.id, created.assetName,
-    `Authorised governance position for ${created.assetName}: state "${created.authorisedGovernanceState}", ${created.conditions.length} condition(s), ${created.obligations.length} obligation(s).`,
+    draft.id, draft.assetName,
+    `Authorised governance position for ${draft.assetName}: state "${draft.authorisedGovernanceState}", ${draft.conditions.length} condition(s), ${draft.obligations.length} obligation(s).`,
     { workspaceId: data.workspaceId, tenantId: data.tenantId, environmentId: data.environmentId }
   );
-  recordGovernanceStateIfChanged(created.assetId, `New Authorised Governance Position: "${created.authorisedGovernanceState}"`, 'Governance Position Management');
+  recordGovernanceStateIfChanged(draft.assetId, `New Authorised Governance Position: "${draft.authorisedGovernanceState}"`, 'Governance Position Management');
+
+  const created = await apiAuthorisedGovernancePositionRepository.createPosition(data);
+  agpCache = agpCache.map(p => (p.id === draft.id ? created : p));
+  persistAgpCache();
   return created;
 }
 
@@ -4899,28 +4922,257 @@ export function recordGovernanceStateIfChanged(assetId: string, triggeringEvent:
   );
 }
 
-/** Domain G — Governance Position Contract. A data package only; runtime implementation of anything in it remains entirely external to OMG. */
+/**
+ * Domain G — Governance Position Contract. A data package only; runtime
+ * implementation of anything in it remains entirely external to OMG.
+ * Migrated to real backend persistence under Release 20, extended to v2
+ * (Capability 2): every contract now also carries authority provenance,
+ * accountability references, evidence requirements and reassessment trigger
+ * types straight from the position it was issued from.
+ */
 let governancePositionContractsCache: GovernancePositionContract[] = getItem<GovernancePositionContract[]>(STORAGE_KEYS.GOVERNANCE_POSITION_CONTRACTS, []);
 function persistGovernancePositionContractsCache() { setItem(STORAGE_KEYS.GOVERNANCE_POSITION_CONTRACTS, governancePositionContractsCache); }
 
-export function issueGovernancePositionContract(agpId: string, issuedBy: string): GovernancePositionContract | null {
+export async function issueGovernancePositionContract(agpId: string, issuedBy: string): Promise<GovernancePositionContract | null> {
   const agp = agpCache.find(p => p.id === agpId);
   if (!agp) return null;
   const built = buildGovernancePositionContract(agp, issuedBy);
-  const created: GovernancePositionContract = { ...built, id: `gpc-${Date.now().toString().slice(-6)}` };
-  governancePositionContractsCache = [created, ...governancePositionContractsCache];
+  const priorVersions = governancePositionContractsCache.filter(c => c.governancePositionId === agpId).length;
+  const withV2Fields: Omit<GovernancePositionContract, 'id'> = {
+    ...built,
+    authorityProvenanceRef: agp.authorityProvenanceRef,
+    accountabilityReferences: agp.accountabilityReferences,
+    evidenceRequirements: agp.evidenceRequirements || [],
+    reassessmentTriggerTypes: agp.reassessmentTriggerTypes || [],
+    positionOrigin: agp.positionOrigin || 'Internal',
+    whyReference: agp.authorityProvenanceRef ? `Authorised under reference ${agp.authorityProvenanceRef}` : undefined,
+    version: priorVersions + 1,
+    status: 'Active',
+  };
+  const draft: GovernancePositionContract = { ...withV2Fields, id: `local-${Date.now()}` };
+  governancePositionContractsCache = [draft, ...governancePositionContractsCache];
   persistGovernancePositionContractsCache();
   addAuditLog(
     'usr-1', issuedBy, 'GOVERNANCE_ADMIN', 'GOVERNANCE_POSITION_CONTRACT_ISSUED', 'GovernancePositionContract',
-    created.id, created.assetName,
-    `Issued a Governance Position Contract for ${created.assetName} from position ${agp.id} — for external/downstream consumption only, no runtime effect within OMG.`,
+    draft.id, draft.assetName,
+    `Issued a Governance Position Contract (v${draft.version}) for ${draft.assetName} from position ${agp.id} — for external/downstream consumption only, no runtime effect within OMG.`,
     { workspaceId: agp.workspaceId, tenantId: agp.tenantId, environmentId: agp.environmentId }
   );
+
+  const created = await apiGovernancePositionContractRepository.createContract(withV2Fields);
+  governancePositionContractsCache = governancePositionContractsCache.map(c => (c.id === draft.id ? created : c));
+  persistGovernancePositionContractsCache();
   return created;
 }
 
 export function getGovernancePositionContractsForAsset(assetId: string): GovernancePositionContract[] {
   return governancePositionContractsCache.filter(c => c.assetId === assetId);
+}
+
+/* ================================================================
+ * Release 20 — Governance Position Lifecycle Interoperability Foundation.
+ * Theme: Authority -> OMG -> Execution -> Evidence -> Reassessment -> Authority.
+ * ================================================================ */
+
+/** Capability 1 — External Governance Position Intake. Fetched on demand by the Intake Dashboard, not folded into bootstrapPersistence's global sync (a workflow queue, not a value read on every page like the AGP is). */
+export async function getGovernancePositionIntakes(): Promise<GovernancePositionIntake[]> {
+  return apiGovernancePositionIntakeRepository.getIntakes();
+}
+
+export async function createGovernancePositionIntake(data: Omit<GovernancePositionIntake, 'id' | 'status' | 'createdAt' | 'updatedAt'>): Promise<GovernancePositionIntake> {
+  const created = await apiGovernancePositionIntakeRepository.createIntake({ ...data, status: 'Received' });
+  addAuditLog(
+    'usr-1', 'David Chen (Governance Admin)', 'GOVERNANCE_ADMIN', 'GOVERNANCE_POSITION_INTAKE_RECEIVED', 'GovernancePositionIntake',
+    created.id, created.sourceAuthority,
+    `Received an externally authorised governance position from ${created.sourceSystem} (source authority: ${created.sourceAuthority}, reference ${created.authorityReference}).`
+  );
+  return created;
+}
+
+/**
+ * Capability 1 lifecycle. Accepting an intake creates a real
+ * AuthorisedGovernancePosition (positionOrigin: 'External Intake') in the
+ * same call — see the backend transaction. This is the one place OMG
+ * "operationalises" an externally authorised position (Executive Summary
+ * #3); the intake row itself is never mutated into a position.
+ */
+export async function reviewGovernancePositionIntake(
+  id: string,
+  data: { status: 'Under Review' | 'Accepted' | 'Rejected'; reviewedBy: string; reviewNotes?: string; assetId?: string; authorisedGovernanceState?: string; validFrom?: string; validUntil?: string }
+): Promise<{ intake: GovernancePositionIntake; position?: AuthorisedGovernancePosition }> {
+  const result = await apiGovernancePositionIntakeRepository.reviewIntake(id, data);
+  addAuditLog(
+    'usr-1', data.reviewedBy, 'GOVERNANCE_ADMIN', `GOVERNANCE_POSITION_INTAKE_${data.status.toUpperCase().replace(' ', '_')}`, 'GovernancePositionIntake',
+    id, result.intake.sourceAuthority,
+    `Governance position intake from ${result.intake.sourceAuthority} moved to ${data.status}${data.reviewNotes ? `: ${data.reviewNotes}` : '.'}`
+  );
+  if (result.position) {
+    agpCache = agpCache.map(p => (p.assetId === result.position!.assetId && p.status === 'Active' && p.id !== result.position!.id ? { ...p, status: 'Superseded' as const } : p));
+    agpCache = [result.position, ...agpCache];
+    persistAgpCache();
+    recordGovernanceStateIfChanged(result.position.assetId, `Externally authorised governance position accepted from ${result.intake.sourceAuthority}`, 'Governance Position Intake');
+  }
+  return result;
+}
+
+/** Capability 3 — Governance Position Evidence Registry. */
+export async function getGovernancePositionEvidenceLinks(positionId: string): Promise<GovernancePositionEvidence[]> {
+  return apiGovernancePositionEvidenceRepository.getLinks(positionId);
+}
+
+export async function linkGovernancePositionEvidence(data: Omit<GovernancePositionEvidence, 'id' | 'linkedAt'>): Promise<GovernancePositionEvidence> {
+  const created = await apiGovernancePositionEvidenceRepository.createLink(data);
+  addAuditLog(
+    'usr-1', data.linkedBy, 'GOVERNANCE_ADMIN', 'GOVERNANCE_POSITION_EVIDENCE_LINKED', 'GovernancePositionEvidence',
+    created.id, created.assetName,
+    `Linked ${created.linkType} to governance position ${created.positionId} for ${created.assetName}.`
+  );
+  return created;
+}
+
+/**
+ * Capability 4 — Changed Condition Recognition. Reuses existing engines
+ * exactly as the blueprint requires ("Reuse existing OMG capabilities:
+ * Governance Continuity, Reauthorisation Engine, Reassessment Triggers") —
+ * no new detection logic, just reading what those engines already computed
+ * for this asset and reporting it against the position's own conditions.
+ * Advisory only: this never files a request itself, it only surfaces what a
+ * human would act on via createReassessmentRequest/createReauthorisationRequest.
+ */
+export interface ChangedConditionAssessment {
+  positionId: string;
+  assetId: string;
+  hasChangedConditions: boolean;
+  reauthorisationOutcome: ReauthorisationOutcome | null;
+  triggerTypes: ReauthorisationTriggerType[];
+  reasons: string[];
+}
+
+export function detectChangedConditionsForPosition(positionId: string): ChangedConditionAssessment | null {
+  const position = agpCache.find(p => p.id === positionId);
+  if (!position) return null;
+  const reauthorisation = getReauthorisationForAsset(position.assetId);
+  if (!reauthorisation) return null;
+  return {
+    positionId,
+    assetId: position.assetId,
+    hasChangedConditions: reauthorisation.outcome !== 'Continue',
+    reauthorisationOutcome: reauthorisation.outcome,
+    triggerTypes: reauthorisation.triggerTypes,
+    reasons: reauthorisation.reasons,
+  };
+}
+
+/**
+ * Capability 5 — Authority Return Path. Rule: "OMG routes matters back to
+ * authority. OMG never recreates governance judgement." createReassessmentRequest
+ * only records that a change was detected; routeReassessmentRequestToAuthority
+ * only records that OMG handed it to a named authority; only
+ * recordReassessmentRequestResponse (called once a human reports the
+ * authority's own reply) ever sets an outcome — OMG computes none of it.
+ */
+export async function createReassessmentRequest(data: Omit<ReassessmentRequest, 'id' | 'createdAt' | 'status'>): Promise<ReassessmentRequest> {
+  const created = await apiReassessmentRequestRepository.createRequest(data);
+  addAuditLog(
+    'usr-1', data.createdBy, 'GOVERNANCE_ADMIN', 'REASSESSMENT_REQUEST_CREATED', 'ReassessmentRequest',
+    created.id, created.assetName,
+    `Reassessment request created for ${created.assetName} against position ${created.positionId}: ${created.triggerReason}`
+  );
+  return created;
+}
+
+export async function routeReassessmentRequestToAuthority(id: string, routedTo: string): Promise<ReassessmentRequest> {
+  const updated = await apiReassessmentRequestRepository.routeRequest(id, routedTo);
+  addAuditLog(
+    'usr-1', 'David Chen (Governance Admin)', 'GOVERNANCE_ADMIN', 'REASSESSMENT_REQUEST_ROUTED', 'ReassessmentRequest',
+    updated.id, updated.assetName,
+    `Reassessment request routed back to ${routedTo}. OMG does not decide this matter — it is now with the named authority.`
+  );
+  return updated;
+}
+
+export async function recordReassessmentRequestResponse(id: string, status: 'Acknowledged' | 'Resolved', authorityResponse: string): Promise<ReassessmentRequest> {
+  const updated = await apiReassessmentRequestRepository.respondToRequest(id, status, authorityResponse);
+  addAuditLog(
+    'usr-1', 'David Chen (Governance Admin)', 'GOVERNANCE_ADMIN', 'REASSESSMENT_REQUEST_RESPONSE_RECORDED', 'ReassessmentRequest',
+    updated.id, updated.assetName,
+    `Recorded the authority's own response to reassessment request ${updated.id}: ${authorityResponse}`
+  );
+  return updated;
+}
+
+export async function getReassessmentRequestsForPosition(positionId: string): Promise<ReassessmentRequest[]> {
+  return apiReassessmentRequestRepository.getRequests(positionId);
+}
+
+export async function createReauthorisationRequest(data: Omit<ReauthorisationRequest, 'id' | 'createdAt' | 'status'>): Promise<ReauthorisationRequest> {
+  const created = await apiReauthorisationRequestRepository.createRequest(data);
+  addAuditLog(
+    'usr-1', data.createdBy, 'GOVERNANCE_ADMIN', 'REAUTHORISATION_REQUEST_CREATED', 'ReauthorisationRequest',
+    created.id, created.assetName,
+    `Reauthorisation request created for ${created.assetName} against position ${created.positionId}: ${created.governanceImpactSummary}`
+  );
+  return created;
+}
+
+export async function routeReauthorisationRequestToAuthority(id: string, routedTo: string): Promise<ReauthorisationRequest> {
+  const updated = await apiReauthorisationRequestRepository.routeRequest(id, routedTo);
+  addAuditLog(
+    'usr-1', 'David Chen (Governance Admin)', 'GOVERNANCE_ADMIN', 'REAUTHORISATION_REQUEST_ROUTED', 'ReauthorisationRequest',
+    updated.id, updated.assetName,
+    `Reauthorisation request routed back to ${routedTo}. OMG does not decide this matter — it is now with the named authority.`
+  );
+  return updated;
+}
+
+export async function recordReauthorisationRequestResponse(id: string, status: 'Acknowledged' | 'Resolved', authorityResponse: string): Promise<ReauthorisationRequest> {
+  const updated = await apiReauthorisationRequestRepository.respondToRequest(id, status, authorityResponse);
+  addAuditLog(
+    'usr-1', 'David Chen (Governance Admin)', 'GOVERNANCE_ADMIN', 'REAUTHORISATION_REQUEST_RESPONSE_RECORDED', 'ReauthorisationRequest',
+    updated.id, updated.assetName,
+    `Recorded the authority's own response to reauthorisation request ${updated.id}: ${authorityResponse}`
+  );
+  return updated;
+}
+
+export async function getReauthorisationRequestsForPosition(positionId: string): Promise<ReauthorisationRequest[]> {
+  return apiReauthorisationRequestRepository.getRequests(positionId);
+}
+
+/**
+ * Capability 6 — Cross-Layer Traceability. Assembled read model, walking
+ * Authority -> Intake -> Position -> Contract -> Runtime Activity -> Evidence
+ * -> Changed Condition -> Reassessment Request -> Authority for one asset's
+ * current position — every step sourced from an existing function above,
+ * nothing new computed here.
+ */
+export async function getGovernancePositionTraceability(assetId: string): Promise<GovernancePositionTraceability | null> {
+  const asset = assetsCache.find(a => a.id === assetId);
+  if (!asset) return null;
+  const position = getActiveAgpForAsset(assetId);
+  const contracts = getGovernancePositionContractsForAsset(assetId);
+  const unified = getUnifiedGovernanceStateForAsset(assetId);
+  const changedConditions = position ? detectChangedConditionsForPosition(position.id) : null;
+
+  const [intakes, evidenceLinks, reassessmentRequests, reauthorisationRequests] = await Promise.all([
+    position?.sourceIntakeId ? apiGovernancePositionIntakeRepository.getIntakes() : Promise.resolve([]),
+    position ? getGovernancePositionEvidenceLinks(position.id) : Promise.resolve([]),
+    position ? getReassessmentRequestsForPosition(position.id) : Promise.resolve([]),
+    position ? getReauthorisationRequestsForPosition(position.id) : Promise.resolve([]),
+  ]);
+
+  return {
+    assetId,
+    assetName: asset.name,
+    intake: position?.sourceIntakeId ? (intakes.find(i => i.id === position.sourceIntakeId) || null) : null,
+    position,
+    contracts,
+    runtimeGovernanceState: unified?.state || null,
+    evidenceLinks,
+    changedConditions: changedConditions?.triggerTypes || [],
+    reassessmentRequests,
+    reauthorisationRequests,
+  };
 }
 
 /**
@@ -5955,6 +6207,8 @@ export function bootstrapPersistence(options?: { force?: boolean }): Promise<voi
         assessorCertifications,
         consensusAssessments,
         confidenceAssessments,
+        authorisedGovernancePositions,
+        governancePositionContracts,
       ] = await Promise.all([
         safeSync(apiAssetRepository.getAssets(true), assetsCache), // Q1 Stabilization — include archived so the local cache is complete; getAssets()/getArchivedAssets() split the view.
         safeSync(apiEvidenceRepository.getEvidence(), evidenceCache),
@@ -5991,12 +6245,25 @@ export function bootstrapPersistence(options?: { force?: boolean }): Promise<voi
         safeSync(apiAssessorCertificationRepository.getCertifications(), assessorCertificationsCache),
         safeSync(apiConsensusAssessmentRepository.getRounds(), consensusAssessmentsCache),
         safeSync(apiConfidenceAssessmentRepository.getConfidenceAssessments(), confidenceAssessmentsCache),
+        // Release 20 — Domain C/G migrated from frontend-only to real Neon
+        // persistence; reconcileGovernanceSeedAssetReferences() below still
+        // handles the offline-fallback case where INITIAL_AUTHORISED_
+        // GOVERNANCE_POSITIONS' old mockData ids need remapping to real ones.
+        safeSync(apiAuthorisedGovernancePositionRepository.getPositions(), agpCache),
+        safeSync(apiGovernancePositionContractRepository.getContracts(), governancePositionContractsCache),
       ]);
 
       const assetNameById = new Map(assets.map(a => [a.id, a.name]));
 
       assetsCache = assets.map(normalizeAsset);
       persistAssetsCache();
+
+      // Release 20 — assigned before reconcileGovernanceSeedAssetReferences()
+      // so its by-name remap runs against whichever source actually
+      // answered (real Neon rows, already correctly attached; or the local
+      // fallback seed, which still needs remapping).
+      agpCache = authorisedGovernancePositions;
+      governancePositionContractsCache = governancePositionContracts;
 
       // Release 19.2 — Production Data Alignment. Release 19's seed records
       // (Authority Provenance, Reliance Basis, Authorised Governance
@@ -6009,6 +6276,8 @@ export function bootstrapPersistence(options?: { force?: boolean }): Promise<voi
       // real asset data arrives. Self-healing: runs on every successful
       // sync, so it survives redeployment and any reseeding of Neon.
       reconcileGovernanceSeedAssetReferences();
+      persistAgpCache();
+      persistGovernancePositionContractsCache();
 
       evidenceCache = evidence.map(e => ({ ...e, assetName: (e.assetId ? assetNameById.get(e.assetId) : undefined) || e.assetName }));
       persistEvidenceCache();
