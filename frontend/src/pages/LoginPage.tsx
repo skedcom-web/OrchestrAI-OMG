@@ -126,7 +126,7 @@ export const LoginPage: React.FC = () => {
                   MANAGED AI ASSETS
                 </span>
                 <p className="text-2xl font-black text-white mt-0.5">9 Asset Classes</p>
-                <span className="text-[10px] text-cyan-300 font-semibold">100% Visibility</span>
+                <span className="text-[10px] text-cyan-300 font-semibold">Full Asset Visibility</span>
               </div>
               <div>
                 <span className="text-[10px] font-extrabold uppercase tracking-widest text-blue-200">

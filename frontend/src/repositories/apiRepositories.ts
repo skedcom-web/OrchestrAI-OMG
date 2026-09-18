@@ -59,11 +59,13 @@ import type {
   RegulatoryRequirementRepository,
   RegulatorySourceRepository,
   RequirementRepository,
+  AuditLogRepository,
 } from './types';
 import type {
   ActionRule,
   AIAsset,
   AssessorCertification,
+  AuditLog,
   AgentToolGrant,
   AuthorisedGovernancePosition,
   GovernancePositionContract,
@@ -2197,6 +2199,34 @@ export const apiGovernanceOutcomeRepository: GovernanceOutcomeRepository = {
   async createOutcome(data) {
     const row = await apiRequest<any>('/governance-outcomes', { method: 'POST', body: JSON.stringify(data) });
     return governanceOutcomeFromBackend(row);
+  },
+};
+
+function auditLogFromBackend(row: any): AuditLog {
+  return {
+    id: row.id,
+    timestamp: row.timestamp,
+    userId: row.userId || undefined,
+    userName: row.userName,
+    userRole: row.userRole,
+    action: row.action,
+    entityType: row.entityType,
+    entityId: row.entityId,
+    entityName: row.entityName,
+    details: row.details,
+    ipAddress: row.ipAddress || undefined,
+  };
+}
+
+/** Release 21.1 — the first real write path for the central Audit & Reporting trail (was localStorage-only). */
+export const apiAuditLogRepository: AuditLogRepository = {
+  async getLogs() {
+    const rows = await fetchOrEmpty<any>('/audit-logs');
+    return rows.map(auditLogFromBackend);
+  },
+  async createLog(data) {
+    const row = await apiRequest<any>('/audit-logs', { method: 'POST', body: JSON.stringify(data) });
+    return auditLogFromBackend(row);
   },
 };
 

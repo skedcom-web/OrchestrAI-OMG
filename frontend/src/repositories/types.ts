@@ -12,6 +12,7 @@ import type {
   ActionRule,
   AIAsset,
   AssessorCertification,
+  AuditLog,
   AssetKnowledgeUsage,
   AssetModelUsage,
   CompliancePack,
@@ -486,4 +487,10 @@ export interface ActionExecutionRepository {
 export interface GovernanceOutcomeRepository {
   getOutcomes(actionId: string): Promise<GovernanceOutcomeRecord[]>;
   createOutcome(data: Omit<GovernanceOutcomeRecord, 'id' | 'recordedDate'>): Promise<GovernanceOutcomeRecord>;
+}
+
+/** R21.1 — gives the central Audit & Reporting trail a real, shared write path (was localStorage-only). */
+export interface AuditLogRepository {
+  getLogs(): Promise<AuditLog[]>;
+  createLog(data: AuditLog): Promise<AuditLog>;
 }

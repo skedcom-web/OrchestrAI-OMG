@@ -2373,4 +2373,20 @@ export class AppController {
       take: 50,
     });
   }
+
+  // Release 21.1 — the central Audit & Reporting trail previously had no
+  // write path at all; every entry came from the original seed. This gives
+  // it one, reusing the existing AuditLog table exactly as-is. userId,
+  // workspaceId/tenantId/environmentId and the client-side id/timestamp are
+  // dropped: the frontend's user ids are synthetic placeholders (no FK
+  // guarantee against User), the workspace-scope fields don't exist on this
+  // table, and the server's own clock is the more trustworthy timestamp.
+  @Post('audit-logs')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER', 'AUDITOR')
+  async createAuditLog(@Body() body: any) {
+    const { userName, userRole, action, entityType, entityId, entityName, details, ipAddress } = body;
+    return this.prisma.auditLog.create({
+      data: { userName, userRole, action, entityType, entityId, entityName, details, ipAddress },
+    });
+  }
 }

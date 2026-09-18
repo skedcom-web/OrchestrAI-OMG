@@ -182,9 +182,9 @@ export const OmgOverviewPage: React.FC = () => {
             <div className="grid grid-cols-2 gap-3 mt-3">
               {[
                 ['Assets under governance', metrics.totalAssets, 'var(--accent-primary)'],
-                ['Approved for production', metrics.decisionBreakdown.GO, 'var(--status-success)'],
+                ['Approved for production', metrics.liveGovernedAssetsCount, 'var(--status-success)'],
                 ['High & critical risk', metrics.riskBreakdown.High + metrics.riskBreakdown.Critical, 'var(--status-danger)'],
-                ['Governance health', `${metrics.tenantGovernanceHealthScore}%`, 'var(--status-info)'],
+                ['Tenant Governance Health Score', `${metrics.tenantGovernanceHealthScore}%`, 'var(--status-info)'],
               ].map(([label, value, tone]) => (
                 <div
                   key={String(label)}
@@ -204,6 +204,11 @@ export const OmgOverviewPage: React.FC = () => {
                 </div>
               ))}
             </div>
+            <p className="text-[10px] text-[var(--text-muted)] mt-3 leading-snug">
+              "Approved for production" reflects each asset's current governance state, not just its original
+              decision. Tenant Governance Health Score is a separate, tenant-wide indicator — per-asset state is
+              authoritative on the Governability Dashboard.
+            </p>
             <button
               onClick={() => navigate('/command-center')}
               className="mt-3 w-full text-[11px] font-bold text-[var(--accent-primary)] hover:underline cursor-pointer text-left"

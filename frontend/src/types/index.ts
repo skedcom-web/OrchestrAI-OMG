@@ -1333,6 +1333,10 @@ export interface GovernanceMetrics {
   pendingReviewsCount: number;
   pendingValidationCount: number;
   decisionBreakdown: Record<DecisionOutcome, number>;
+  /** Release 21.1 — live count of assets whose current Unified Governance State (GSRL) is
+   * Governed or Conditionally Governed, distinct from decisionBreakdown.GO which is a
+   * historical decision field. See "Approved for production" on the tenant overview. */
+  liveGovernedAssetsCount: number;
   ownershipCompletionRate: number;
   highRiskUnapprovedCount: number;
   totalValidations: number;

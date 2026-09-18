@@ -982,6 +982,15 @@ export const TOUR_STEPS: TourStep[] = [
     why: 'Interoperability is only real if it can be traced end to end. Every stage shown here reads an existing OMG record — nothing is computed new for this view.',
     look: 'A position accepted from an external authority shows that authority, its original reference, and every downstream effect in a single screen.',
   },
+  {
+    n: 77,
+    title: 'Consequential Action Governance',
+    path: '/consequential-action-governance',
+    icon: '⚠️',
+    what: 'Closes the lifecycle a Reassessment Trigger opens: a Consequential Action (Kill Switch, Retirement, Override and related actions) is requested, validated against current Authority and Evidence standing, decided by a named person, executed through the same real mechanisms those actions already use elsewhere in OMG, and its outcome recorded.',
+    why: 'A governance program is only as strong as its ability to act on what it finds. Every stage here reuses an existing OMG computation or mechanism — nothing here decides or executes on its own.',
+    look: 'Each action shows its live Authority and Evidence Validation result at the moment of decision, then its execution and outcome — a complete, human-decided chain from request to close.',
+  },
 ];
 
 /* ================== Section 5b — seven named guided tours ================= */
@@ -1044,7 +1053,7 @@ export const GUIDED_TOURS: GuidedTourDefinition[] = [
     name: 'Governability Intelligence',
     description: 'Governance Continuity vs. Runtime Governability — Evidence Sufficiency, Authority Currency, Admissibility, Authority Provenance, Governance Position, Reliance Basis, Reauthorisation, interoperability with externally authorised positions, and the one Unified Governance State they all resolve into.',
     icon: '🛡️',
-    stepTitles: ['Governability Dashboard', 'Evidence Sufficiency', 'Authority Currency', 'Admissibility', 'Reassessment', 'Authority Provenance', 'Governance Position', 'Reliance Basis', 'Reauthorisation', 'Unified Governance State', 'External Governance Position Intake', 'Governance Position Evidence Registry', 'Governance Position Traceability', 'Decision Reconstruction', 'Export Pack'],
+    stepTitles: ['Governability Dashboard', 'Evidence Sufficiency', 'Authority Currency', 'Admissibility', 'Reassessment', 'Authority Provenance', 'Governance Position', 'Reliance Basis', 'Reauthorisation', 'Unified Governance State', 'External Governance Position Intake', 'Governance Position Evidence Registry', 'Governance Position Traceability', 'Consequential Action Governance', 'Decision Reconstruction', 'Export Pack'],
   },
   {
     id: 'workspace-evaluation',

@@ -231,6 +231,7 @@ import {
   apiGovernanceDecisionRepository,
   apiActionExecutionRepository,
   apiGovernanceOutcomeRepository,
+  apiAuditLogRepository,
 } from '../repositories/apiRepositories';
 
 /**
@@ -374,6 +375,14 @@ export function addAuditLog(
 
   const updatedLogs = [newLog, ...logs];
   setItem(STORAGE_KEYS.AUDIT_LOGS, updatedLogs);
+
+  // Release 21.1 — previously this function only wrote to localStorage, so
+  // no action from any user ever reached the shared, central Audit &
+  // Reporting trail. This is additive: the local write above is unchanged
+  // for every existing caller; the backend write is fire-and-forget so nothing
+  // here starts awaiting a network round trip it didn't await before.
+  fireAndForget(apiAuditLogRepository.createLog(newLog), `audit log for ${entityType} ${entityId}`);
+
   return newLog;
 }
 
@@ -5960,6 +5969,10 @@ export function getGovernanceMetrics(): GovernanceMetrics {
   const evidenceRecords = getEvidenceRecords();
   const allAgentToolGrants = getAgentToolGrants();
   const allAuditLogs = getAuditLogs();
+  // Release 21.1 (certification finding P1-01) — "Approved for production" must
+  // reflect current governance truth, not the historical decisionOutcome field.
+  const liveGovernedAssetsCount = getAllUnifiedGovernanceStates()
+    .filter(s => s.state === 'Governed' || s.state === 'Conditionally Governed').length;
 
   let readyCount = 0;
   let condReadyCount = 0;
@@ -6019,6 +6032,7 @@ export function getGovernanceMetrics(): GovernanceMetrics {
     pendingReviewsCount: 0,
     pendingValidationCount: 0,
     decisionBreakdown: { 'GO': 0, 'CONDITIONAL GO': 0, 'NO GO': 0, 'PENDING': 0 },
+    liveGovernedAssetsCount,
     ownershipCompletionRate: 0,
     highRiskUnapprovedCount: 0,
     totalValidations: validations.length,

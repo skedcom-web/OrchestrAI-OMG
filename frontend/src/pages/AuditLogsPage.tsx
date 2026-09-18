@@ -1,12 +1,33 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
 import { getAuditLogs } from '../services/storageService';
+import { apiAuditLogRepository } from '../repositories/apiRepositories';
 import type { AuditLog } from '../types';
 
 export const AuditLogsPage: React.FC = () => {
-  const [logs] = useState<AuditLog[]>(() => getAuditLogs());
+  const [logs, setLogs] = useState<AuditLog[]>(() => getAuditLogs());
   const [search, setSearch] = useState('');
+
+  // Release 21.1 — the local list above is this browser's own recent
+  // activity; the backend list is the shared, persisted trail every user's
+  // actions now write to (see addAuditLog in storageService.ts). Merging
+  // them, deduped by id, is what makes this page show Release 21 lifecycle
+  // events instead of only the original seed rows.
+  useEffect(() => {
+    let cancelled = false;
+    apiAuditLogRepository.getLogs().then(remoteLogs => {
+      if (cancelled) return;
+      setLogs(localLogs => {
+        const seen = new Set(remoteLogs.map(l => l.id));
+        const localOnly = localLogs.filter(l => !seen.has(l.id));
+        return [...remoteLogs, ...localOnly].sort(
+          (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+        );
+      });
+    });
+    return () => { cancelled = true; };
+  }, []);
 
   const filteredLogs = logs.filter(
     l =>

@@ -9,10 +9,19 @@ import {
   getAllUnifiedGovernanceStates,
   getReassessmentTriggers,
   saveReassessmentTrigger,
+  saveReauthorizationRecord,
   computeRevalidation,
 } from '../services/storageService';
 import { REASSESSMENT_TRIGGER_TYPES } from '../config/governanceContinuity';
-import type { GovernabilityStatus, ReassessmentTriggerType, RevalidationResult, UnifiedGovernanceState } from '../types';
+import type { GovernabilityStatus, ReassessmentTriggerType, RevalidationResult, UnifiedGovernanceState, DecisionOutcome, GovernanceState } from '../types';
+
+/** Release 21.1 — the reauthorization decision a reviewer records maps directly
+ * to the governance state it restores; no separate "new state" field to fill in. */
+function newStateForDecision(decision: DecisionOutcome, assetStatus: string): GovernanceState {
+  if (decision === 'GO') return assetStatus === 'Production' ? 'Monitoring' : 'Authorized';
+  if (decision === 'CONDITIONAL GO') return 'Conditional GO';
+  return 'No GO';
+}
 
 const STATUS_TONE: Record<GovernabilityStatus, string> = {
   'Governable': 'var(--status-success)',
@@ -59,7 +68,21 @@ export const GovernabilityDashboardPage: React.FC = () => {
   const [revalContext, setRevalContext] = useState('');
   const [revalResult, setRevalResult] = useState<RevalidationResult | null>(null);
 
+  // Release 21.1 — Governance Continuity Closure (certification finding P4-01):
+  // saveReauthorizationRecord() already existed and already restores an
+  // asset's governance state; no page called it. This is that page.
+  const pendingReauthAssets = useMemo(
+    () => assets.filter(a => unifiedStates.find(s => s.assetId === a.id)?.state === 'Pending Reauthorisation'),
+    [assets, unifiedStates]
+  );
+  const [reauthAssetId, setReauthAssetId] = useState('');
+  const [reauthDecision, setReauthDecision] = useState<DecisionOutcome>('GO');
+  const [reauthReason, setReauthReason] = useState('');
+  const [reauthNotes, setReauthNotes] = useState('');
+  const [filingReauth, setFilingReauth] = useState(false);
+
   const canFile = canPerform('reassessmentTrigger:create');
+  const canReauthorize = canPerform('reauthorizationRecord:create');
 
   const breakdown = useMemo(() => {
     const counts: Record<GovernabilityStatus, number> = {
@@ -100,6 +123,30 @@ export const GovernabilityDashboardPage: React.FC = () => {
     setUnifiedStates(getAllUnifiedGovernanceStates());
     setTriggerComment('');
     setFiling(false);
+  };
+
+  const selectedReauthAssetId = reauthAssetId || pendingReauthAssets[0]?.id || '';
+  const reauthAsset = assets.find(a => a.id === selectedReauthAssetId);
+
+  const handleFileReauthorization = async () => {
+    if (!selectedReauthAssetId || !reauthAsset || !reauthReason || !canReauthorize) return;
+    setFilingReauth(true);
+    await saveReauthorizationRecord({
+      assetId: selectedReauthAssetId,
+      reviewedBy: currentUser?.name || 'David Chen (Governance Admin)',
+      reviewDate: new Date().toISOString(),
+      decision: reauthDecision,
+      reason: reauthReason,
+      supportingNotes: reauthNotes,
+      previousState: reauthAsset.governanceState ?? 'Reassessment Required',
+      newState: newStateForDecision(reauthDecision, reauthAsset.status),
+    });
+    setResults(getAllGovernabilityResults());
+    setUnifiedStates(getAllUnifiedGovernanceStates());
+    setReauthAssetId('');
+    setReauthReason('');
+    setReauthNotes('');
+    setFilingReauth(false);
   };
 
   const handleRevalidate = () => {
@@ -223,6 +270,70 @@ export const GovernabilityDashboardPage: React.FC = () => {
           Filing a trigger raises a Governance Alert, requires reassessment, and appears on this asset's Governance
           Journey Timeline — it never suspends the asset automatically.
         </p>
+      </Card>
+
+      {/* ============== RELEASE 21.1 — FILE A REAUTHORIZATION (closes the loop a Reassessment Trigger opens) ============== */}
+      <Card className="!p-5 border-[var(--accent-border)]">
+        <p className="text-[10px] font-extrabold uppercase tracking-wider text-[var(--text-muted)] mb-3">File a Reauthorization</p>
+        {pendingReauthAssets.length === 0 ? (
+          <p className="text-[11px] text-[var(--text-muted)]">No assets are currently Pending Reauthorisation.</p>
+        ) : (
+          <>
+            {!canReauthorize && <p className="text-[11px] text-[var(--text-muted)] mb-3">Your role can view governance state but not file a reauthorization.</p>}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <Select
+                label="Asset"
+                value={selectedReauthAssetId}
+                onChange={e => setReauthAssetId(e.target.value)}
+                options={pendingReauthAssets.map(a => ({ value: a.id, label: a.name }))}
+                disabled={!canReauthorize}
+              />
+              <Select
+                label="Decision"
+                value={reauthDecision}
+                onChange={e => setReauthDecision(e.target.value as DecisionOutcome)}
+                options={[
+                  { value: 'GO', label: 'GO' },
+                  { value: 'CONDITIONAL GO', label: 'Conditional GO' },
+                  { value: 'NO GO', label: 'No GO' },
+                ]}
+                disabled={!canReauthorize}
+              />
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Reason</label>
+                <input
+                  value={reauthReason}
+                  onChange={e => setReauthReason(e.target.value)}
+                  disabled={!canReauthorize}
+                  placeholder="Why is this asset being reauthorized?"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-[var(--bg-input)] text-[var(--text-primary)] border border-[var(--border-color)] text-sm focus:outline-none focus:border-[var(--border-focus)]"
+                />
+              </div>
+            </div>
+            <div className="mt-3 flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Supporting Notes (optional)</label>
+              <input
+                value={reauthNotes}
+                onChange={e => setReauthNotes(e.target.value)}
+                disabled={!canReauthorize}
+                placeholder="Evidence or reassessment outcome supporting this decision"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[var(--bg-input)] text-[var(--text-primary)] border border-[var(--border-color)] text-sm focus:outline-none focus:border-[var(--border-focus)]"
+              />
+            </div>
+            <button
+              onClick={handleFileReauthorization}
+              disabled={!canReauthorize || !reauthReason || filingReauth}
+              className="mt-3 px-4 py-2.5 rounded-xl text-xs font-bold text-white shadow-md hover:shadow-lg transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ background: 'var(--grad-brand)' }}
+            >
+              {filingReauth ? 'Filing…' : 'File Reauthorization'}
+            </button>
+            <p className="text-[10.5px] text-[var(--text-muted)] mt-2">
+              Reauthorizing restores this asset's governance state and moves it out of Pending Reauthorisation —
+              the decision recorded here is always a named person's, never automatic.
+            </p>
+          </>
+        )}
       </Card>
 
       {/* ============== MODULE 12 — POST-INTERVENTION REVALIDATION ============== */}
