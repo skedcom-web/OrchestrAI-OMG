@@ -2095,7 +2095,6 @@ export const apiReauthorisationRequestRepository: ReauthorisationRequestReposito
 function consequentialActionToBackend(data: Partial<ConsequentialActionRecord>) {
   const body: Record<string, unknown> = { ...data };
   delete body.id;
-  delete body.assetName;
   delete body.createdAt;
   delete body.updatedAt;
   if (data.actionType) body.actionType = enumMaps.consequentialActionType.toBackend(data.actionType);
