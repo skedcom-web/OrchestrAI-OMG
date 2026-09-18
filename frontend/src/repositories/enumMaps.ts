@@ -28,6 +28,9 @@ import type {
   GovernanceFindingStatus,
   GovernancePositionIntakeStatus,
   GovernanceRequestStatus,
+  ConsequentialActionType,
+  ConsequentialActionStatus,
+  GovernanceActionDecision,
   GovernancePolicySeverity,
   GovernancePolicyStatus,
   GovernanceState,
@@ -197,6 +200,20 @@ const TRIGGER_STATUS: Record<ReassessmentTriggerStatus, string> = {
 /** Release 20 — Governance Position Lifecycle Interoperability Foundation. */
 const GOVERNANCE_POSITION_INTAKE_STATUS: Record<GovernancePositionIntakeStatus, string> = {
   'Received': 'RECEIVED', 'Under Review': 'UNDER_REVIEW', 'Accepted': 'ACCEPTED', 'Rejected': 'REJECTED',
+};
+
+/** Release 21 — Consequential Action Governance Completion. */
+const CONSEQUENTIAL_ACTION_TYPE: Record<ConsequentialActionType, string> = {
+  'Kill Switch': 'KILL_SWITCH', 'Retirement': 'RETIREMENT', 'Override': 'OVERRIDE',
+  'Access Revocation': 'ACCESS_REVOCATION', 'Permission Suspension': 'PERMISSION_SUSPENSION', 'Account Freeze': 'ACCOUNT_FREEZE',
+};
+
+const CONSEQUENTIAL_ACTION_STATUS: Record<ConsequentialActionStatus, string> = {
+  'Requested': 'REQUESTED', 'Under Review': 'UNDER_REVIEW', 'Decided': 'DECIDED', 'Executed': 'EXECUTED', 'Closed': 'CLOSED',
+};
+
+const GOVERNANCE_ACTION_DECISION: Record<GovernanceActionDecision, string> = {
+  'Approved': 'APPROVED', 'Rejected': 'REJECTED', 'Escalated': 'ESCALATED', 'Deferred': 'DEFERRED',
 };
 
 const GOVERNANCE_REQUEST_STATUS: Record<GovernanceRequestStatus, string> = {
@@ -387,6 +404,9 @@ export const enumMaps = {
   triggerStatus: { toBackend: toBackend(TRIGGER_STATUS), toFrontend: toFrontend(TRIGGER_STATUS) },
   governancePositionIntakeStatus: { toBackend: toBackend(GOVERNANCE_POSITION_INTAKE_STATUS), toFrontend: toFrontend(GOVERNANCE_POSITION_INTAKE_STATUS) },
   governanceRequestStatus: { toBackend: toBackend(GOVERNANCE_REQUEST_STATUS), toFrontend: toFrontend(GOVERNANCE_REQUEST_STATUS) },
+  consequentialActionType: { toBackend: toBackend(CONSEQUENTIAL_ACTION_TYPE), toFrontend: toFrontend(CONSEQUENTIAL_ACTION_TYPE) },
+  consequentialActionStatus: { toBackend: toBackend(CONSEQUENTIAL_ACTION_STATUS), toFrontend: toFrontend(CONSEQUENTIAL_ACTION_STATUS) },
+  governanceActionDecision: { toBackend: toBackend(GOVERNANCE_ACTION_DECISION), toFrontend: toFrontend(GOVERNANCE_ACTION_DECISION) },
   severity: { toBackend: toBackend(SEVERITY), toFrontend: toFrontend(SEVERITY) },
   compliancePackStatus: { toBackend: toBackend(COMPLIANCE_PACK_STATUS), toFrontend: toFrontend(COMPLIANCE_PACK_STATUS) },
   requirementPriority: { toBackend: toBackend(REQUIREMENT_PRIORITY), toFrontend: toFrontend(REQUIREMENT_PRIORITY) },

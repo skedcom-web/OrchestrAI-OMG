@@ -1424,6 +1424,111 @@ export class AppController {
     });
   }
 
+  // --- RELEASE 21: CONSEQUENTIAL ACTION GOVERNANCE COMPLETION ---
+  // Approval -> Governed Asset -> Material Change -> Reassessment Trigger ->
+  // Reassessment -> Governance State Transition -> Consequential Action
+  // Request -> Authority Validation -> Evidence Validation -> Governance
+  // Decision -> Action Execution -> Outcome Recording.
+
+  @Get('consequential-actions')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER', 'AUDITOR')
+  async getConsequentialActions(@Query('assetId') assetId?: string) {
+    return this.prisma.consequentialActionRecord.findMany({
+      where: assetId ? { assetId } : undefined,
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  @Get('consequential-actions/:id')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER', 'AUDITOR')
+  async getConsequentialAction(@Param('id') id: string) {
+    const record = await this.prisma.consequentialActionRecord.findUnique({ where: { id } });
+    if (!record) throw new NotFoundException(`Consequential action ${id} not found`);
+    return record;
+  }
+
+  @Post('consequential-actions')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER')
+  async createConsequentialAction(@Body() body: any) {
+    return this.prisma.consequentialActionRecord.create({ data: body });
+  }
+
+  @Patch('consequential-actions/:id')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER')
+  async updateConsequentialAction(@Param('id') id: string, @Body() body: any) {
+    return this.prisma.consequentialActionRecord.update({ where: { id }, data: body });
+  }
+
+  @Get('governance-decisions')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER', 'AUDITOR')
+  async getGovernanceDecisions(@Query('actionId') actionId?: string) {
+    return this.prisma.governanceDecisionRecord.findMany({
+      where: actionId ? { actionId } : undefined,
+      orderBy: { decisionTimestamp: 'desc' },
+    });
+  }
+
+  /**
+   * Creating a decision also advances the parent action's status, in one
+   * transaction — the action never sits "REQUESTED" once a decision exists.
+   * The decision itself (Approved/Rejected/Escalated/Deferred) is always
+   * supplied by the caller — this endpoint records a human decision, it
+   * never computes or infers one.
+   */
+  @Post('governance-decisions')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async createGovernanceDecision(@Body() body: any) {
+    const { actionId, decision } = body;
+    return this.prisma.$transaction(async tx => {
+      const record = await tx.governanceDecisionRecord.create({ data: body });
+      await tx.consequentialActionRecord.update({
+        where: { id: actionId },
+        data: { status: decision === 'APPROVED' ? 'DECIDED' : 'CLOSED' },
+      });
+      return record;
+    });
+  }
+
+  @Get('action-executions')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER', 'AUDITOR')
+  async getActionExecutions(@Query('actionId') actionId?: string) {
+    return this.prisma.actionExecutionRecord.findMany({
+      where: actionId ? { actionId } : undefined,
+      orderBy: { executionTimestamp: 'desc' },
+    });
+  }
+
+  @Post('action-executions')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN')
+  async createActionExecution(@Body() body: any) {
+    const { actionId } = body;
+    return this.prisma.$transaction(async tx => {
+      const record = await tx.actionExecutionRecord.create({ data: body });
+      await tx.consequentialActionRecord.update({ where: { id: actionId }, data: { status: 'EXECUTED' } });
+      return record;
+    });
+  }
+
+  @Get('governance-outcomes')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER', 'AUDITOR')
+  async getGovernanceOutcomes(@Query('actionId') actionId?: string) {
+    return this.prisma.governanceOutcomeRecord.findMany({
+      where: actionId ? { actionId } : undefined,
+      orderBy: { recordedDate: 'desc' },
+    });
+  }
+
+  @Post('governance-outcomes')
+  @Roles('SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER')
+  async createGovernanceOutcome(@Body() body: any) {
+    const { actionId } = body;
+    return this.prisma.$transaction(async tx => {
+      const record = await tx.governanceOutcomeRecord.create({ data: body });
+      await tx.consequentialActionRecord.update({ where: { id: actionId }, data: { status: 'CLOSED' } });
+      return record;
+    });
+  }
+
   // --- RELEASE 5: COMPLIANCE PACK FRAMEWORK ENDPOINTS ---
   @Get('compliance-packs')
   @Roles(

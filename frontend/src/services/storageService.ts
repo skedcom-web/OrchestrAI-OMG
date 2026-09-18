@@ -106,7 +106,15 @@ import type {
   GovernancePositionEvidence,
   ReassessmentRequest,
   ReauthorisationRequest,
-  GovernancePositionTraceability
+  GovernancePositionTraceability,
+  ConsequentialActionRecord,
+  ConsequentialActionType,
+  GovernanceDecisionRecord,
+  GovernanceActionDecision,
+  ActionValidationResult,
+  ActionExecutionRecord,
+  GovernanceOutcomeRecord,
+  GovernanceOutcomeType
 } from '../types';
 import {
   INITIAL_ASSETS,
@@ -179,7 +187,7 @@ import {
 import { generateActionDrafts } from '../config/governanceActionsEngine';
 import { computeGovernability, type GovernabilityConfigOverrides } from '../config/governabilityEngine';
 import { computeAuthorityCurrency, DEFAULT_AUTHORITY_REVIEW_PERIOD_DAYS, DEFAULT_AUTHORITY_WARNING_PERIOD_DAYS } from '../config/authorityCurrencyEngine';
-import { DEFAULT_EVIDENCE_COMPLETENESS_MINIMUMS } from '../config/evidenceSufficiencyEngine';
+import { computeEvidenceSufficiency, DEFAULT_EVIDENCE_COMPLETENESS_MINIMUMS } from '../config/evidenceSufficiencyEngine';
 import { computeAuthorityProvenance } from '../config/authorityProvenanceEngine';
 import { computeRelianceBasis } from '../config/relianceBasisEngine';
 import { computeReauthorisation } from '../config/reauthorisationEngine';
@@ -219,6 +227,10 @@ import {
   apiGovernancePositionEvidenceRepository,
   apiReassessmentRequestRepository,
   apiReauthorisationRequestRepository,
+  apiConsequentialActionRepository,
+  apiGovernanceDecisionRepository,
+  apiActionExecutionRepository,
+  apiGovernanceOutcomeRepository,
 } from '../repositories/apiRepositories';
 
 /**
@@ -5175,6 +5187,190 @@ export async function getGovernancePositionTraceability(assetId: string): Promis
     reassessmentRequests,
     reauthorisationRequests,
   };
+}
+
+/* ================================================================
+ * Release 21 — Consequential Action Governance Completion.
+ * Approval -> Governed Asset -> Material Change -> Reassessment Trigger ->
+ * Reassessment -> Governance State Transition -> Consequential Action
+ * Request -> Authority Validation -> Evidence Validation -> Governance
+ * Decision -> Action Execution -> Outcome Recording.
+ * ================================================================ */
+
+export async function getConsequentialActionsForAsset(assetId: string): Promise<ConsequentialActionRecord[]> {
+  return apiConsequentialActionRepository.getActions(assetId);
+}
+
+/** R21.1 — Consequential Action Registry. */
+export async function createConsequentialActionRequest(data: {
+  assetId: string;
+  assetName: string;
+  actionType: ConsequentialActionType;
+  requestedBy: string;
+  reason: string;
+}): Promise<ConsequentialActionRecord> {
+  const created = await apiConsequentialActionRepository.createAction({
+    assetId: data.assetId,
+    assetName: data.assetName,
+    actionType: data.actionType,
+    requestedBy: data.requestedBy,
+    requestedDate: new Date().toISOString(),
+    reason: data.reason,
+  });
+  addAuditLog(
+    'usr-1', data.requestedBy, 'GOVERNANCE_ADMIN', 'CONSEQUENTIAL_ACTION_REQUESTED', 'ConsequentialActionRecord',
+    created.id, created.assetName,
+    `${created.actionType} requested for ${created.assetName}: ${created.reason}`
+  );
+  return created;
+}
+
+export interface ActionValidationSnapshot {
+  authorityValidationResult: ActionValidationResult;
+  authorityReasons: string[];
+  evidenceValidationResult: ActionValidationResult;
+  evidenceReasons: string[];
+}
+
+/**
+ * R21.2 + R21.3 — Action-Time Authority Validation and Evidence Validation.
+ * Reuses computeAuthorityCurrency() and computeEvidenceSufficiency()
+ * unchanged — no new detection logic, exactly as the blueprint requires.
+ * PASS requires the strict, current-standing result from each engine
+ * (Authority Currency "Current"; Evidence Sufficiency "Sufficient") — a
+ * consequential action is not the place to accept a merely-partial signal.
+ * Pure computation: callers decide when to snapshot this into a decision.
+ */
+export function computeActionValidation(assetId: string): ActionValidationSnapshot | null {
+  const asset = assetsCache.find(a => a.id === assetId);
+  if (!asset) return null;
+
+  const authority = computeAuthorityCurrency(asset, DEFAULT_AUTHORITY_REVIEW_PERIOD_DAYS, DEFAULT_AUTHORITY_WARNING_PERIOD_DAYS);
+  const assetEvidence = getEvidenceRecordsForAsset(assetId);
+  const assetTriggers = getReassessmentTriggers().filter(t => t.assetId === assetId);
+  const evidence = computeEvidenceSufficiency(asset, assetEvidence, assetTriggers, DEFAULT_EVIDENCE_COMPLETENESS_MINIMUMS);
+
+  return {
+    authorityValidationResult: authority.status === 'Current' ? 'PASS' : 'FAIL',
+    authorityReasons: authority.reasons,
+    evidenceValidationResult: evidence.status === 'Sufficient' ? 'PASS' : 'FAIL',
+    evidenceReasons: evidence.reasons,
+  };
+}
+
+/**
+ * R21.4 — Governance Decision Record. Snapshots the current Authority/
+ * Evidence Validation result at the moment of decision — never recomputed
+ * afterward, so the record reflects exactly what was checked when the
+ * decision was made. The decision itself (Approved/Rejected/Escalated/
+ * Deferred) is always the caller's explicit choice — this function computes
+ * validation signals, it never chooses or infers the decision.
+ */
+export async function recordGovernanceDecision(data: {
+  assetId: string;
+  actionId: string;
+  decision: GovernanceActionDecision;
+  approver: string;
+  rationale: string;
+}): Promise<GovernanceDecisionRecord | null> {
+  const validation = computeActionValidation(data.assetId);
+  if (!validation) return null;
+
+  const created = await apiGovernanceDecisionRepository.createDecision({
+    assetId: data.assetId,
+    actionId: data.actionId,
+    decision: data.decision,
+    authorityValidationResult: validation.authorityValidationResult,
+    evidenceValidationResult: validation.evidenceValidationResult,
+    rationale: data.rationale,
+    approver: data.approver,
+  });
+  addAuditLog(
+    'usr-1', data.approver, 'GOVERNANCE_ADMIN', 'GOVERNANCE_DECISION_RECORDED', 'GovernanceDecisionRecord',
+    created.id, data.assetId,
+    `Governance decision ${created.decision} for action ${data.actionId} — Authority Validation: ${created.authorityValidationResult}, Evidence Validation: ${created.evidenceValidationResult}. ${data.rationale}`
+  );
+  return created;
+}
+
+/**
+ * R21.5 — Action Execution Record. Where the action type has a real,
+ * existing OMG mechanism, this invokes that mechanism directly rather than
+ * duplicating it — Kill Switch and Retirement genuinely mutate the asset's
+ * operational state; the IAM-adjacent action types have no OMG-side state
+ * to mutate and are recorded as operational fact only.
+ */
+export async function executeConsequentialAction(data: {
+  actionId: string;
+  assetId: string;
+  actionType: ConsequentialActionType;
+  decisionId?: string;
+  executedBy: string;
+  executionType: string; // e.g. "Kill Switch Activated", "Kill Switch Released", "Retirement Executed"
+  reason?: string;
+}): Promise<ActionExecutionRecord> {
+  let executionStatus = 'Completed';
+
+  if (data.actionType === 'Kill Switch') {
+    if (data.executionType.toLowerCase().includes('release')) {
+      const active = getKillSwitches().find(k => k.assetId === data.assetId && k.status === 'Activated');
+      if (active) releaseKillSwitch(active.id, data.executedBy, data.reason || 'Released as part of the governed consequential action lifecycle.');
+    } else {
+      requestKillSwitch({ assetId: data.assetId, requestedBy: data.executedBy, approvedBy: data.executedBy, reason: data.reason || 'Executed as an approved consequential action.' });
+    }
+  } else if (data.actionType === 'Retirement') {
+    retireAsset({ assetId: data.assetId, requestedBy: data.executedBy, approvedBy: data.executedBy, notes: data.reason || 'Executed as an approved consequential action.' });
+  } else if (data.actionType === 'Override') {
+    recordOverride({ assetId: data.assetId, requestedBy: data.executedBy, approvedBy: data.executedBy, actionTaken: data.executionType, triggerReason: data.reason || 'Executed as an approved consequential action.' });
+  } else {
+    // Access Revocation / Permission Suspension / Account Freeze — no OMG-side
+    // state to mutate; OMG records that this occurred, consistent with not
+    // performing Identity Management itself.
+    executionStatus = 'Recorded (executed outside OMG)';
+  }
+
+  const created = await apiActionExecutionRepository.createExecution({
+    actionId: data.actionId,
+    decisionId: data.decisionId,
+    executionType: data.executionType,
+    executedBy: data.executedBy,
+    executionStatus,
+  });
+  addAuditLog(
+    'usr-1', data.executedBy, 'GOVERNANCE_ADMIN', 'ACTION_EXECUTION_RECORDED', 'ActionExecutionRecord',
+    created.id, data.assetId,
+    `${data.executionType} recorded for consequential action ${data.actionId} — status: ${executionStatus}`
+  );
+  return created;
+}
+
+/** R21.6 — Governance Outcome Registry. Records the operational outcome as fact; does not adjudicate whether it was the right outcome. */
+export async function recordConsequentialActionOutcome(data: {
+  actionId: string;
+  decisionId?: string;
+  outcomeType: GovernanceOutcomeType;
+  outcomeDescription: string;
+  recordedBy: string;
+}): Promise<GovernanceOutcomeRecord> {
+  const created = await apiGovernanceOutcomeRepository.createOutcome(data);
+  addAuditLog(
+    'usr-1', data.recordedBy, 'GOVERNANCE_ADMIN', 'GOVERNANCE_OUTCOME_RECORDED', 'GovernanceOutcomeRecord',
+    created.id, data.actionId,
+    `Outcome ${created.outcomeType} recorded for consequential action ${data.actionId}: ${data.outcomeDescription}`
+  );
+  return created;
+}
+
+export async function getGovernanceDecisionsForAction(actionId: string): Promise<GovernanceDecisionRecord[]> {
+  return apiGovernanceDecisionRepository.getDecisions(actionId);
+}
+
+export async function getActionExecutionsForAction(actionId: string): Promise<ActionExecutionRecord[]> {
+  return apiActionExecutionRepository.getExecutions(actionId);
+}
+
+export async function getGovernanceOutcomesForAction(actionId: string): Promise<GovernanceOutcomeRecord[]> {
+  return apiGovernanceOutcomeRepository.getOutcomes(actionId);
 }
 
 /**

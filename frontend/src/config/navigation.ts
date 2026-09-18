@@ -459,6 +459,12 @@ export const NAV_DOMAINS: NavDomain[] = [
             governanceOutcome: 'A read-only trace — advisory, informational, never itself a governance decision.',
             keyArtifacts: ['Authority provenance', 'Intake record', 'Position', 'Contract', 'Evidence links', 'Reassessment/reauthorisation requests'],
           } },
+          { path: '/consequential-action-governance', label: 'Consequential Action Governance', icon: '⚖️', description: 'Release 21 — requests, action-time authority and evidence validation, governance decision, execution and outcome recording for consequential actions (Kill Switch, Retirement, Override and related actions).', keywords: ['consequential action', 'kill switch', 'retirement', 'governance decision', 'action execution', 'governance outcome', 'release 21'], insight: {
+            whatItDoes: 'Completes the governance lifecycle from a reassessed material change through to a recorded operational outcome: a consequential action is requested, validated against current authority and evidence using the existing engines, explicitly decided by a human, executed (invoking the real existing mechanism where one exists), and its outcome recorded.',
+            whyItMatters: 'A reassessment that concludes something must change needs a persisted, auditable record of what happened next — not just the reassessment itself, but the request, the validation it was checked against, the decision, the execution and the result.',
+            governanceOutcome: 'A complete, production-backed record chain per consequential action — advisory at every decision point; OMG never decides or executes on its own.',
+            keyArtifacts: ['Consequential action request', 'Authority/Evidence validation snapshot', 'Governance decision', 'Action execution record', 'Governance outcome record'],
+          } },
         ],
       },
     ],

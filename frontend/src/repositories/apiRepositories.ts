@@ -22,6 +22,10 @@ import type {
   GovernancePositionIntakeRepository,
   ReassessmentRequestRepository,
   ReauthorisationRequestRepository,
+  ConsequentialActionRepository,
+  GovernanceDecisionRepository,
+  ActionExecutionRepository,
+  GovernanceOutcomeRepository,
   CompliancePackRepository,
   ConditionDefinitionRepository,
   ConfidenceAssessmentRepository,
@@ -67,6 +71,10 @@ import type {
   GovernancePositionIntake,
   ReassessmentRequest,
   ReauthorisationRequest,
+  ConsequentialActionRecord,
+  GovernanceDecisionRecord,
+  ActionExecutionRecord,
+  GovernanceOutcomeRecord,
   AssetKnowledgeUsage,
   AssetModelUsage,
   AssetPromptUsage,
@@ -2077,6 +2085,119 @@ export const apiReauthorisationRequestRepository: ReauthorisationRequestReposito
       body: JSON.stringify({ status: status === 'Acknowledged' ? 'ACKNOWLEDGED' : 'RESOLVED', authorityResponse }),
     });
     return reauthorisationRequestFromBackend(row);
+  },
+};
+
+/* ================================================================
+ * Release 21 — Consequential Action Governance Completion.
+ * ================================================================ */
+
+function consequentialActionToBackend(data: Partial<ConsequentialActionRecord>) {
+  const body: Record<string, unknown> = { ...data };
+  delete body.id;
+  delete body.assetName;
+  delete body.createdAt;
+  delete body.updatedAt;
+  if (data.actionType) body.actionType = enumMaps.consequentialActionType.toBackend(data.actionType);
+  if (data.status) body.status = enumMaps.consequentialActionStatus.toBackend(data.status);
+  return body;
+}
+
+function consequentialActionFromBackend(row: any, assetName = ''): ConsequentialActionRecord {
+  return {
+    id: row.id,
+    assetId: row.assetId,
+    assetName: row.assetName || assetName,
+    actionType: enumMaps.consequentialActionType.toFrontend(row.actionType),
+    requestedBy: row.requestedBy,
+    requestedDate: row.requestedDate,
+    reason: row.reason,
+    status: enumMaps.consequentialActionStatus.toFrontend(row.status),
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  };
+}
+
+function governanceDecisionFromBackend(row: any): GovernanceDecisionRecord {
+  return {
+    id: row.id,
+    assetId: row.assetId,
+    actionId: row.actionId,
+    decision: enumMaps.governanceActionDecision.toFrontend(row.decision),
+    authorityValidationResult: row.authorityValidationResult,
+    evidenceValidationResult: row.evidenceValidationResult,
+    rationale: row.rationale,
+    approver: row.approver,
+    decisionTimestamp: row.decisionTimestamp,
+  };
+}
+
+function actionExecutionFromBackend(row: any): ActionExecutionRecord {
+  return {
+    id: row.id,
+    actionId: row.actionId,
+    decisionId: row.decisionId || undefined,
+    executionType: row.executionType,
+    executedBy: row.executedBy,
+    executionTimestamp: row.executionTimestamp,
+    executionStatus: row.executionStatus,
+  };
+}
+
+function governanceOutcomeFromBackend(row: any): GovernanceOutcomeRecord {
+  return {
+    id: row.id,
+    actionId: row.actionId,
+    decisionId: row.decisionId || undefined,
+    outcomeType: row.outcomeType,
+    outcomeDescription: row.outcomeDescription,
+    recordedBy: row.recordedBy,
+    recordedDate: row.recordedDate,
+  };
+}
+
+export const apiConsequentialActionRepository: ConsequentialActionRepository = {
+  async getActions(assetId) {
+    const rows = await fetchOrEmpty<any>(`/consequential-actions${assetId ? `?assetId=${assetId}` : ''}`);
+    return rows.map(r => consequentialActionFromBackend(r));
+  },
+  async createAction(data) {
+    const row = await apiRequest<any>('/consequential-actions', { method: 'POST', body: JSON.stringify(consequentialActionToBackend(data)) });
+    return consequentialActionFromBackend(row, data.assetName);
+  },
+};
+
+export const apiGovernanceDecisionRepository: GovernanceDecisionRepository = {
+  async getDecisions(actionId) {
+    const rows = await fetchOrEmpty<any>(`/governance-decisions?actionId=${actionId}`);
+    return rows.map(governanceDecisionFromBackend);
+  },
+  async createDecision(data) {
+    const body: Record<string, unknown> = { ...data, decision: enumMaps.governanceActionDecision.toBackend(data.decision) };
+    const row = await apiRequest<any>('/governance-decisions', { method: 'POST', body: JSON.stringify(body) });
+    return governanceDecisionFromBackend(row);
+  },
+};
+
+export const apiActionExecutionRepository: ActionExecutionRepository = {
+  async getExecutions(actionId) {
+    const rows = await fetchOrEmpty<any>(`/action-executions?actionId=${actionId}`);
+    return rows.map(actionExecutionFromBackend);
+  },
+  async createExecution(data) {
+    const row = await apiRequest<any>('/action-executions', { method: 'POST', body: JSON.stringify(data) });
+    return actionExecutionFromBackend(row);
+  },
+};
+
+export const apiGovernanceOutcomeRepository: GovernanceOutcomeRepository = {
+  async getOutcomes(actionId) {
+    const rows = await fetchOrEmpty<any>(`/governance-outcomes?actionId=${actionId}`);
+    return rows.map(governanceOutcomeFromBackend);
+  },
+  async createOutcome(data) {
+    const row = await apiRequest<any>('/governance-outcomes', { method: 'POST', body: JSON.stringify(data) });
+    return governanceOutcomeFromBackend(row);
   },
 };
 

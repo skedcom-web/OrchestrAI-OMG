@@ -73,6 +73,10 @@ export type ActionKey =
   | 'reassessmentRequest:route'
   | 'reauthorisationRequest:create'
   | 'reauthorisationRequest:route'
+  | 'consequentialAction:request'
+  | 'consequentialAction:decide'
+  | 'consequentialAction:execute'
+  | 'consequentialAction:recordOutcome'
   | 'compliancePack:create'
   | 'compliancePack:edit'
   | 'compliancePack:delete'
@@ -216,6 +220,10 @@ export const ROLE_ACTION_MATRIX: Record<ActionKey, UserRole[]> = {
   'reassessmentRequest:route': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
   'reauthorisationRequest:create': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER'],
   'reauthorisationRequest:route': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
+  'consequentialAction:request': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER'],
+  'consequentialAction:decide': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
+  'consequentialAction:execute': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
+  'consequentialAction:recordOutcome': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN', 'RISK_OFFICER'],
 
   'reauthorizationRecord:create': ['SUPER_ADMIN', 'GOVERNANCE_ADMIN'],
 

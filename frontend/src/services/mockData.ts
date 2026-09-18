@@ -202,7 +202,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       // gated individually by roleActionMatrix.ts, not by hiding the page.
       '/mapping-workspace', '/requirement-registry', '/obligation-library',
       '/governance-intelligence', '/governance-actions', '/decision-traceability', '/governance-studio',
-      '/governability-dashboard', '/governability-studio', '/authority-provenance', '/governance-position', '/governance-position-intake', '/governance-position-traceability', '/workspace-dashboard', '/workspace-audit-trail', '/workspace-persona-landing',
+      '/governability-dashboard', '/governability-studio', '/authority-provenance', '/governance-position', '/governance-position-intake', '/governance-position-traceability', '/consequential-action-governance', '/workspace-dashboard', '/workspace-audit-trail', '/workspace-persona-landing',
       '/archived-assets', '/governance-readiness',
       // OMG vNext — Governance Intelligence (Value, Drift, Health)
       '/governance-value', '/governance-drift', '/governance-health',
@@ -239,7 +239,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       // Q1 Stabilization — see note on Governance Admin above.
       '/mapping-workspace', '/requirement-registry', '/obligation-library',
       '/governance-intelligence', '/governance-actions', '/decision-traceability', '/governance-studio',
-      '/governability-dashboard', '/governability-studio', '/authority-provenance', '/governance-position', '/governance-position-intake', '/governance-position-traceability', '/workspace-dashboard', '/workspace-audit-trail', '/workspace-persona-landing',
+      '/governability-dashboard', '/governability-studio', '/authority-provenance', '/governance-position', '/governance-position-intake', '/governance-position-traceability', '/consequential-action-governance', '/workspace-dashboard', '/workspace-audit-trail', '/workspace-persona-landing',
       '/archived-assets', '/governance-readiness',
       // OMG vNext — Governance Intelligence (Value, Drift, Health)
       '/governance-value', '/governance-drift', '/governance-health',
@@ -273,7 +273,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       // Q1 Stabilization — see note on Governance Admin above.
       '/mapping-workspace', '/requirement-registry', '/obligation-library',
       '/governance-intelligence', '/governance-actions', '/decision-traceability', '/governance-studio',
-      '/governability-dashboard', '/governability-studio', '/authority-provenance', '/governance-position', '/governance-position-intake', '/governance-position-traceability', '/workspace-dashboard', '/workspace-audit-trail', '/workspace-persona-landing',
+      '/governability-dashboard', '/governability-studio', '/authority-provenance', '/governance-position', '/governance-position-intake', '/governance-position-traceability', '/consequential-action-governance', '/workspace-dashboard', '/workspace-audit-trail', '/workspace-persona-landing',
       '/archived-assets', '/governance-readiness',
       // OMG vNext — Governance Intelligence (Value, Drift, Health)
       '/governance-value', '/governance-drift', '/governance-health',
@@ -307,7 +307,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       // Q1 Stabilization — see note on Governance Admin above.
       '/mapping-workspace', '/requirement-registry', '/obligation-library',
       '/governance-intelligence', '/governance-actions', '/decision-traceability', '/governance-studio',
-      '/governability-dashboard', '/governability-studio', '/authority-provenance', '/governance-position', '/governance-position-intake', '/governance-position-traceability', '/workspace-dashboard', '/workspace-audit-trail', '/workspace-persona-landing',
+      '/governability-dashboard', '/governability-studio', '/authority-provenance', '/governance-position', '/governance-position-intake', '/governance-position-traceability', '/consequential-action-governance', '/workspace-dashboard', '/workspace-audit-trail', '/workspace-persona-landing',
       '/archived-assets', '/governance-readiness',
       // OMG vNext — Governance Intelligence (Value, Drift, Health)
       '/governance-value', '/governance-drift', '/governance-health',
@@ -345,7 +345,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       // Q1 Stabilization — see note on Governance Admin above.
       '/mapping-workspace', '/requirement-registry', '/obligation-library',
       '/governance-intelligence', '/governance-actions', '/decision-traceability', '/governance-studio',
-      '/governability-dashboard', '/governability-studio', '/authority-provenance', '/governance-position', '/governance-position-intake', '/governance-position-traceability', '/workspace-dashboard', '/workspace-audit-trail', '/workspace-persona-landing',
+      '/governability-dashboard', '/governability-studio', '/authority-provenance', '/governance-position', '/governance-position-intake', '/governance-position-traceability', '/consequential-action-governance', '/workspace-dashboard', '/workspace-audit-trail', '/workspace-persona-landing',
       '/archived-assets', '/governance-readiness',
       // OMG vNext — Governance Intelligence (Value, Drift, Health)
       '/governance-value', '/governance-drift', '/governance-health',
@@ -377,7 +377,7 @@ export const DEMO_PERSONAS: PersonaDemoUser[] = [
       // Q1 Stabilization — see note on Governance Admin above.
       '/mapping-workspace', '/requirement-registry', '/obligation-library',
       '/governance-intelligence', '/governance-actions', '/decision-traceability', '/governance-studio',
-      '/governability-dashboard', '/governability-studio', '/authority-provenance', '/governance-position', '/governance-position-intake', '/governance-position-traceability', '/workspace-dashboard', '/workspace-audit-trail', '/workspace-persona-landing',
+      '/governability-dashboard', '/governability-studio', '/authority-provenance', '/governance-position', '/governance-position-intake', '/governance-position-traceability', '/consequential-action-governance', '/workspace-dashboard', '/workspace-audit-trail', '/workspace-persona-landing',
       '/archived-assets', '/governance-readiness',
       // OMG vNext — Governance Intelligence (Value, Drift, Health)
       '/governance-value', '/governance-drift', '/governance-health',

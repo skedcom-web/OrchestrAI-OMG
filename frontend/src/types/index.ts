@@ -1299,7 +1299,7 @@ export interface AuditLog {
   userName: string;
   userRole: string;
   action: string;
-  entityType: 'Asset' | 'User' | 'Ownership' | 'Risk' | 'Decision' | 'Validation' | 'Evidence' | 'Finding' | 'DecisionPackage' | 'ComplianceAssessment' | 'CompliancePackage' | 'KillSwitch' | 'Override' | 'Incident' | 'Retirement' | 'ScheduledReview' | 'CorrectiveAction' | 'GovernanceReviewPackage' | 'Policy' | 'PolicyMapping' | 'PolicyViolation' | 'ExecutiveReport' | 'ChangeRequest' | 'StateTransition' | 'ReassessmentTrigger' | 'GovernanceReauthorizationRecord' | 'EvidenceRecord' | 'Model' | 'KnowledgeAsset' | 'Prompt' | 'Tool' | 'AgentToolGrant' | 'GovernanceControl' | 'ControlAttachment' | 'ControlTestResult' | 'CertificationProgram' | 'CertificationRecord' | 'CertificationEvidence' | 'GovernabilityConfigEntry' | 'Workspace' | 'WorkspaceUser' | 'AuthorityProvenanceRecord' | 'GovernanceRelianceElement' | 'AuthorisedGovernancePosition' | 'GovernancePositionContract' | 'GovernanceStateHistoryEntry' | 'GovernancePositionIntake' | 'GovernancePositionEvidence' | 'ReassessmentRequest' | 'ReauthorisationRequest';
+  entityType: 'Asset' | 'User' | 'Ownership' | 'Risk' | 'Decision' | 'Validation' | 'Evidence' | 'Finding' | 'DecisionPackage' | 'ComplianceAssessment' | 'CompliancePackage' | 'KillSwitch' | 'Override' | 'Incident' | 'Retirement' | 'ScheduledReview' | 'CorrectiveAction' | 'GovernanceReviewPackage' | 'Policy' | 'PolicyMapping' | 'PolicyViolation' | 'ExecutiveReport' | 'ChangeRequest' | 'StateTransition' | 'ReassessmentTrigger' | 'GovernanceReauthorizationRecord' | 'EvidenceRecord' | 'Model' | 'KnowledgeAsset' | 'Prompt' | 'Tool' | 'AgentToolGrant' | 'GovernanceControl' | 'ControlAttachment' | 'ControlTestResult' | 'CertificationProgram' | 'CertificationRecord' | 'CertificationEvidence' | 'GovernabilityConfigEntry' | 'Workspace' | 'WorkspaceUser' | 'AuthorityProvenanceRecord' | 'GovernanceRelianceElement' | 'AuthorisedGovernancePosition' | 'GovernancePositionContract' | 'GovernanceStateHistoryEntry' | 'GovernancePositionIntake' | 'GovernancePositionEvidence' | 'ReassessmentRequest' | 'ReauthorisationRequest' | 'ConsequentialActionRecord' | 'GovernanceDecisionRecord' | 'ActionExecutionRecord' | 'GovernanceOutcomeRecord';
   entityId: string;
   entityName: string;
   details: string;
@@ -2759,4 +2759,76 @@ export interface GovernancePositionTraceability {
   changedConditions: ReauthorisationTriggerType[];
   reassessmentRequests: ReassessmentRequest[];
   reauthorisationRequests: ReauthorisationRequest[];
+}
+
+/* ================================================================
+ * Release 21 — Consequential Action Governance Completion.
+ * Approval -> Governed Asset -> Material Change -> Reassessment Trigger ->
+ * Reassessment -> Governance State Transition -> Consequential Action
+ * Request -> Authority Validation -> Evidence Validation -> Governance
+ * Decision -> Action Execution -> Outcome Recording.
+ *
+ * Authority Validation and Evidence Validation reuse the existing
+ * computeAuthorityCurrency() / computeEvidenceSufficiency() engines
+ * unchanged — this section only persists their PASS/FAIL result at the
+ * moment a decision is recorded, exactly as R21.2/R21.3 specify.
+ * ================================================================ */
+
+export type ConsequentialActionType = 'Kill Switch' | 'Retirement' | 'Override' | 'Access Revocation' | 'Permission Suspension' | 'Account Freeze';
+export type ConsequentialActionStatus = 'Requested' | 'Under Review' | 'Decided' | 'Executed' | 'Closed';
+
+/** R21.1 — Consequential Action Registry. */
+export interface ConsequentialActionRecord {
+  id: string;
+  assetId: string;
+  assetName: string;
+  actionType: ConsequentialActionType;
+  requestedBy: string;
+  requestedDate: string;
+  reason: string;
+  status: ConsequentialActionStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** R21.2/R21.3 — the stored result of reusing an existing engine's output at decision time, never recomputed after the fact. */
+export type ActionValidationResult = 'PASS' | 'FAIL';
+
+export type GovernanceActionDecision = 'Approved' | 'Rejected' | 'Escalated' | 'Deferred';
+
+/** R21.4 — Governance Decision Record. An immutable decision trail. */
+export interface GovernanceDecisionRecord {
+  id: string;
+  assetId: string;
+  actionId: string;
+  decision: GovernanceActionDecision;
+  authorityValidationResult: ActionValidationResult;
+  evidenceValidationResult: ActionValidationResult;
+  rationale: string;
+  approver: string;
+  decisionTimestamp: string;
+}
+
+/** R21.5 — Action Execution Record. One approved action may have more than one execution over time (e.g. a temporary Kill Switch: Activated, then later Released). */
+export interface ActionExecutionRecord {
+  id: string;
+  actionId: string;
+  decisionId?: string;
+  executionType: string;
+  executedBy: string;
+  executionTimestamp: string;
+  executionStatus: string;
+}
+
+export type GovernanceOutcomeType = 'Completed' | 'Failed' | 'Reversed' | 'Superseded';
+
+/** R21.6 — Governance Outcome Registry. OMG records the outcome as fact; it does not adjudicate whether the outcome was the right one. */
+export interface GovernanceOutcomeRecord {
+  id: string;
+  actionId: string;
+  decisionId?: string;
+  outcomeType: GovernanceOutcomeType;
+  outcomeDescription: string;
+  recordedBy: string;
+  recordedDate: string;
 }

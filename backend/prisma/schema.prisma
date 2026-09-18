@@ -817,6 +817,10 @@ model AIAsset {
   governancePositionIntakes     GovernancePositionIntake[]
   authorisedGovernancePositions AuthorisedGovernancePosition[]
 
+  /// Release 21 — Consequential Action Governance Completion.
+  consequentialActions ConsequentialActionRecord[]
+  governanceDecisions  GovernanceDecisionRecord[]
+
   @@map("ai_assets")
 }
 
@@ -2396,4 +2400,132 @@ model ReauthorisationRequest {
   createdBy String
 
   @@map("reauthorisation_requests")
+}
+
+// =============================================================================
+// RELEASE 21 — Consequential Action Governance Completion.
+// Closes the lifecycle gap an admissibility assessment found in production:
+// Approval -> Governed Asset -> Material Change -> Reassessment Trigger ->
+// Reassessment -> Governance State Transition stopped there, with no
+// production-backed record of what happened next. This adds:
+// Consequential Action Request -> Authority Validation -> Evidence
+// Validation -> Governance Decision -> Action Execution -> Outcome Recording.
+//
+// Reuse, not invention: Authority Validation and Evidence Validation reuse
+// the existing computeAuthorityCurrency() / computeEvidenceSufficiency()
+// engines unchanged (computed frontend-side, exactly like every other
+// governance engine in OMG) — this schema only persists their PASS/FAIL
+// result at decision time. Action Execution, where the action type has a
+// real existing OMG mechanism (Kill Switch, Retirement, Override), invokes
+// that existing mechanism rather than duplicating it; the three
+// IAM-adjacent action types (Access Revocation, Permission Suspension,
+// Account Freeze) have no OMG-side state to mutate and are recorded as
+// operational fact only, consistent with "OMG does not do Identity
+// Management."
+// =============================================================================
+
+enum ConsequentialActionType {
+  KILL_SWITCH
+  RETIREMENT
+  OVERRIDE
+  ACCESS_REVOCATION
+  PERMISSION_SUSPENSION
+  ACCOUNT_FREEZE
+}
+
+enum ConsequentialActionStatus {
+  REQUESTED
+  UNDER_REVIEW
+  DECIDED
+  EXECUTED
+  CLOSED
+}
+
+enum GovernanceActionDecision {
+  APPROVED
+  REJECTED
+  ESCALATED
+  DEFERRED
+}
+
+/// R21.1 — Consequential Action Registry. Every consequential action as a
+/// first-class, persisted governance record — the request itself, distinct
+/// from its later validation, decision, execution and outcome.
+model ConsequentialActionRecord {
+  id            String                    @id @default(uuid())
+  assetId       String
+  asset         AIAsset                   @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  assetName     String
+  actionType    ConsequentialActionType
+  requestedBy   String
+  requestedDate DateTime                  @default(now())
+  reason        String                    @db.Text
+  status        ConsequentialActionStatus @default(REQUESTED)
+  createdAt     DateTime                  @default(now())
+  updatedAt     DateTime                  @updatedAt
+
+  decision   GovernanceDecisionRecord?
+  executions ActionExecutionRecord[]
+  outcomes   GovernanceOutcomeRecord[]
+
+  @@map("consequential_action_records")
+}
+
+/// R21.2 + R21.3 + R21.4 — Governance Decision Record. An immutable decision
+/// trail: the action-time Authority Validation and Evidence Validation
+/// results (PASS/FAIL, reusing the existing engines) are captured here as
+/// the record of what was checked before the decision was made — never
+/// recomputed retroactively, never overwritten.
+model GovernanceDecisionRecord {
+  id                        String                    @id @default(uuid())
+  assetId                   String
+  asset                     AIAsset                   @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  actionId                  String                    @unique
+  action                    ConsequentialActionRecord @relation(fields: [actionId], references: [id], onDelete: Cascade)
+  decision                  GovernanceActionDecision
+  authorityValidationResult String
+  evidenceValidationResult  String
+  rationale                 String                    @db.Text
+  approver                  String
+  decisionTimestamp         DateTime                  @default(now())
+
+  executions ActionExecutionRecord[]
+  outcomes   GovernanceOutcomeRecord[]
+
+  @@map("governance_decision_records")
+}
+
+/// R21.5 — Action Execution Record. Records that an approved consequential
+/// action was actually carried out — one action may have more than one
+/// execution record over time (e.g. a temporary Kill Switch: Activated,
+/// then later Released).
+model ActionExecutionRecord {
+  id                 String                    @id @default(uuid())
+  actionId           String
+  action             ConsequentialActionRecord @relation(fields: [actionId], references: [id], onDelete: Cascade)
+  decisionId         String?
+  decision           GovernanceDecisionRecord? @relation(fields: [decisionId], references: [id], onDelete: SetNull)
+  executionType      String
+  executedBy         String
+  executionTimestamp DateTime                  @default(now())
+  executionStatus    String
+
+  @@map("action_execution_records")
+}
+
+/// R21.6 — Governance Outcome Registry. The operational outcome of a
+/// consequential action, recorded as fact — OMG records the outcome, it
+/// does not adjudicate whether the outcome was the right one.
+model GovernanceOutcomeRecord {
+  id                 String                    @id @default(uuid())
+  actionId           String
+  action             ConsequentialActionRecord @relation(fields: [actionId], references: [id], onDelete: Cascade)
+  decisionId         String?
+  decision           GovernanceDecisionRecord? @relation(fields: [decisionId], references: [id], onDelete: SetNull)
+  outcomeType        String
+  outcomeDescription String                    @db.Text
+  recordedBy         String
+  recordedDate       DateTime                  @default(now())
+
+  @@map("governance_outcome_records")
 }

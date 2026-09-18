@@ -456,3 +456,34 @@ export interface ReauthorisationRequestRepository {
   routeRequest(id: string, routedTo: string): Promise<ReauthorisationRequest>;
   respondToRequest(id: string, status: 'Acknowledged' | 'Resolved', authorityResponse: string): Promise<ReauthorisationRequest>;
 }
+
+/* ================================================================
+ * Release 21 — Consequential Action Governance Completion.
+ * ================================================================ */
+
+import type {
+  ActionExecutionRecord,
+  ConsequentialActionRecord,
+  GovernanceDecisionRecord,
+  GovernanceOutcomeRecord,
+} from '../types';
+
+export interface ConsequentialActionRepository {
+  getActions(assetId?: string): Promise<ConsequentialActionRecord[]>;
+  createAction(data: Omit<ConsequentialActionRecord, 'id' | 'createdAt' | 'updatedAt' | 'status'>): Promise<ConsequentialActionRecord>;
+}
+
+export interface GovernanceDecisionRepository {
+  getDecisions(actionId: string): Promise<GovernanceDecisionRecord[]>;
+  createDecision(data: Omit<GovernanceDecisionRecord, 'id' | 'decisionTimestamp'>): Promise<GovernanceDecisionRecord>;
+}
+
+export interface ActionExecutionRepository {
+  getExecutions(actionId: string): Promise<ActionExecutionRecord[]>;
+  createExecution(data: Omit<ActionExecutionRecord, 'id' | 'executionTimestamp'>): Promise<ActionExecutionRecord>;
+}
+
+export interface GovernanceOutcomeRepository {
+  getOutcomes(actionId: string): Promise<GovernanceOutcomeRecord[]>;
+  createOutcome(data: Omit<GovernanceOutcomeRecord, 'id' | 'recordedDate'>): Promise<GovernanceOutcomeRecord>;
+}
